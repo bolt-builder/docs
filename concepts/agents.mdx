@@ -1,0 +1,135 @@
+---
+title: "Agents — Bolt's Ten Built-in and Custom AI Personas"
+sidebarTitle: "Agents"
+description: "Bolt ships ten built-in agents, each with a distinct role, toolset, and access level. Learn how to switch, configure, and create your own agents."
+---
+
+Bolt treats every AI persona as a named **agent**: a system prompt paired with a precisely scoped set of tool permissions. Rather than running one general-purpose model for every task, you pick the agent whose access and focus matches what you need — whether that is auditing security, writing docs, or wiring up a full framework migration.
+
+## Access levels
+
+Every built-in agent is assigned one of three access tiers that determine which tools it can invoke:
+
+| Level | Permissions granted | Typical use |
+|-------|---------------------|-------------|
+| **Full** | Read files, write/edit files, run shell commands | Active coding, debugging, refactoring, migrations |
+| **Edit** | Read files, write/edit files — no shell | Documentation, comment updates, safe prose edits |
+| **Read** | Read files only — no writes, no shell | Planning, research, code review, audits |
+
+## Built-in agents
+
+Bolt ships ten specialised agents out of the box. Switch between them in the TUI by pressing <kbd>Tab</kbd>.
+
+| Agent | Access | Description |
+|-------|--------|-------------|
+| `code` | Full | Default: reads, writes, and runs code |
+| `plan` | Read | Explores the codebase and produces a plan without changing code |
+| `ask` | Read | Questions and research — no file edits |
+| `code-review` | Read | Reviews changes for correctness, style, and security |
+| `debug` | Full | Debugs failing tests, crashes, and logic errors |
+| `refactor` | Full | Safe refactoring with test verification at each step |
+| `docs` | Edit | Writes and updates documentation and comments |
+| `security` | Read | Security audit: vulnerabilities, secrets, and dangerous patterns |
+| `migrate` | Full | Framework upgrades and dependency migrations |
+| `perf` | Full | Performance analysis and optimization |
+
+## Subagents
+
+In addition to the ten primary agents, Bolt exposes two built-in **subagents** that primary agents can delegate work to during a session. You never select a subagent manually — they are dispatched automatically when a primary agent decides to spawn one.
+
+| Subagent | Role |
+|----------|------|
+| `@general` | Complex multi-step task delegation requiring broad capabilities |
+| `@explore` | Fast, read-only codebase research — traverses files without side effects |
+
+<Tip>
+  When you need to understand an unfamiliar codebase quickly, start with the `ask` or `plan` agent. Behind the scenes they can dispatch the `@explore` subagent to index your project at high speed before producing an answer — without touching a single file.
+</Tip>
+
+## Switching agents
+
+**In the TUI** — press <kbd>Tab</kbd> to cycle through the list of available agents at any time during a session. The active agent is shown in the session footer.
+
+**Non-interactively** — pass `--agent <name>` to `bolt run` to pin a specific agent for the duration of that run:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Listing agents
+
+To see all available agents — both built-in and custom — with their modes and permission configuration:
+
+```bash
+bolt agent list
+```
+
+## Custom agents
+
+You can create your own agents in two ways.
+
+### Generate with `bolt agent create`
+
+The interactive wizard generates an agent file using an LLM and writes it to disk:
+
+```bash
+bolt agent create
+```
+
+All flags are optional. Provide them to run non-interactively:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | Description |
+|------|-------------|
+| `--description` | What the agent should do (used as the LLM prompt for generation) |
+| `--path` | Directory in which to write the generated agent file |
+| `--mode` | `all` (default), `primary`, or `subagent` |
+| `--permissions` | Comma-separated list of permissions to allow. Omit for all. |
+| `--model` / `-m` | Model to use in `provider/model` format |
+
+### Write a markdown file manually
+
+An agent is just a markdown file with YAML frontmatter. Place it in `.bolt/agents/` inside your project or in the global agents directory:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+The filename (without `.md`) becomes the agent's identifier.
+
+### Available permissions
+
+Permissions are the fine-grained tool gates you control when creating a custom agent:
+
+| Permission | Controls |
+|------------|----------|
+| `bash` | Shell command execution |
+| `read` | File reading |
+| `edit` | File writing and editing (also gates `write` and `apply_patch`) |
+| `glob` | File glob/directory listing |
+| `grep` | File search via ripgrep |
+| `webfetch` | HTTP fetch from the web |
+| `task` | Spawning subagent tasks |
+| `todowrite` | Creating and updating todo items |
+| `websearch` | Web search queries |
+| `lsp` | Language server protocol operations |
+| `skill` | Accessing project skills |

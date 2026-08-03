@@ -1,0 +1,94 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Bolt",
+  "projectDescription": "Bolt is a terminal-first AI coding agent that runs in your terminal as a TUI, supporting ten specialized agents, sessions, MCP servers, plugins, GitHub integration, and a desktop app—powered by any LLM provider.",
+  "theme": "luma",
+  "primaryColor": "#240cde",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/agents",
+              "concepts/sessions",
+              "concepts/providers-and-models",
+              "concepts/configuration"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/mcp-servers",
+              "guides/plugins",
+              "guides/github-integration",
+              "guides/remote-sessions",
+              "guides/desktop-app"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/commands",
+              "reference/configuration-schema",
+              "reference/environment-variables",
+              "reference/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Terminal-first TUI built with Effect, OpenTUI, and SolidJS",
+    "Ten specialized built-in agents (code, plan, ask, code-review, debug, refactor, docs, security, migrate, perf)",
+    "Persistent sessions with detach, attach, fork, share, import, and export",
+    "MCP (Model Context Protocol) server management with OAuth support",
+    "Plugin system for extending functionality",
+    "Remote session attach over HTTP with basic auth and mDNS discovery",
+    "GitHub Actions integration and PR checkout",
+    "AI-powered git commit message generation and code review",
+    "Desktop app with multi-window, tabs, file tree, and auto-updates",
+    "Headless API server with built-in web UI",
+    "Local SQLite-backed session storage queryable with `bolt db`",
+    "Support for dozens of LLM providers via AI SDK"
+  ],
+  "publicApiSurface": [
+    "bolt (launch interactive TUI)",
+    "bolt run [prompt]",
+    "bolt attach <url>",
+    "bolt serve",
+    "bolt web",
+    "bolt session list / delete",
+    "bolt agent list / create",
+    "bolt providers (auth)",
+    "bolt models [provider]",
+    "bolt mcp add / list / auth / logout / debug",
+    "bolt plugin install",
+    "bolt github install / run",
+    "bolt pr <number>",
+    "bolt commit",
+    "bolt review",
+    "bolt export / import",
+    "bolt stats",
+    "bolt logs",
+    "bolt db [query]",
+    "bolt upgrade",
+    "bolt uninstall",
+    "bolt completion",
+    "bolt debug info / config / lsp / snapshot ...",
+    "bolt acp"
+  ]
+}

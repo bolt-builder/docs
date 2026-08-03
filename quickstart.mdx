@@ -1,0 +1,142 @@
+---
+title: "Get Started with Bolt in Under a Minute"
+sidebarTitle: "Quickstart"
+description: "Install Bolt, open your project, connect a provider, and run your first AI prompt — all in under 60 seconds with this step-by-step guide."
+---
+
+This guide walks you through installing Bolt, launching it in a project, connecting an AI provider, and running your first prompt. The whole flow takes under a minute.
+
+<Steps>
+  <Step title="Install Bolt">
+    The quickest path is the official install script, which works on macOS and Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Prefer a package manager? Install globally with npm, bun, pnpm, or yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    For the desktop app on macOS (no Gatekeeper detour):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    See the [Installation guide](/installation) for all methods, including Homebrew, Chocolatey, Scoop, and Windows-specific notes.
+  </Step>
+  <Step title="Open your project">
+    Navigate to any project directory and launch the interactive TUI:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt picks up your project context automatically — reading your file tree, understanding the stack, and making it available to every agent from the moment you open it.
+  </Step>
+  <Step title="Configure an AI provider">
+    On first launch, Bolt will prompt you to configure a provider if none is set. You can also run this at any time:
+
+    ```bash
+    bolt providers
+    ```
+
+    This opens the provider management flow where you can add API keys for OpenAI, Anthropic, and other supported LLM providers. Configuration is saved to `.bolt/bolt.jsonc` in your project root.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Type a prompt and explore agents">
+    Once inside the TUI, type your prompt and press Enter. Use **Tab** to switch between Bolt's ten built-in agents at any time — the current agent is shown in the status bar.
+
+    You can also run prompts directly from the command line without opening the TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Built-in agents
+
+Switch agents with `Tab` in the TUI, or pass `--agent <name>` to `bolt run`. Each agent has a defined access level to match its purpose.
+
+| Agent | Access | Description |
+| --- | --- | --- |
+| `code` | Full | Default: reads, writes, and runs code |
+| `plan` | Read | Explores the codebase and produces a plan without changing files |
+| `ask` | Read | Questions and research — no file edits |
+| `code-review` | Read | Reviews changes for correctness, style, and security |
+| `debug` | Full | Debugs failing tests, crashes, and logic errors |
+| `refactor` | Full | Safe refactoring with test verification at each step |
+| `docs` | Edit | Writes and updates documentation and comments |
+| `security` | Read | Security audit: vulnerabilities, secrets, patterns |
+| `migrate` | Full | Framework upgrades and dependency migrations |
+| `perf` | Full | Performance analysis and optimization |
+
+There are also two built-in subagents for delegation: `@general` for complex multi-step tasks and `@explore` for fast read-only codebase research. You can define your own agents as Markdown files or generate one with `bolt agent create`.
+
+## Common commands to try next
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Pass `--mini` to `bolt` or `bolt attach` for a compact UI that takes up less terminal space — great for smaller windows or split-pane layouts.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` accepts `--auto`, `--yolo`, and `--dangerously-skip-permissions` flags that auto-approve all permission prompts without asking. Use these only in trusted environments — they allow the agent to read, write, and execute without confirmation.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt supports shell completions for bash, zsh, fish, and other shells. Generate and install completions with:
+
+  ```bash
+  bolt completion
+  ```
+
+  Follow the printed instructions to source the completion script in your shell config.
+</Note>

@@ -1,0 +1,68 @@
+---
+title: "Custom Agents in Bolt"
+sidebarTitle: "Custom Agents"
+description: "Define your own Bolt agents as Markdown files — pick a model, set access level, restrict tools, and add domain-specific instructions."
+---
+
+Beyond the ten built-in agents, you can define your own. Custom agents are Markdown files with a frontmatter block that describes the agent's model, access level, and available tools, plus a body that acts as its system prompt.
+
+## Creating an agent
+
+The fastest path is the built-in generator, which asks a few questions and writes the file for you:
+
+```bash
+bolt agent create
+```
+
+Agents live under `.opencode/agent/` in the project (or your global config directory for personal agents). Each agent is a single `.md` file whose filename becomes the agent's name.
+
+## Anatomy of an agent file
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Common frontmatter fields:
+
+| Field | Purpose |
+| --- | --- |
+| `name` | Agent name used with `--agent`. |
+| `description` | One-line summary shown in listings. |
+| `model` | Default model in `provider/model` format. |
+| `access` | `full`, `edit`, or `read` (see [Permissions](/concepts/permissions)). |
+| `tools` | Optional allow-list restricting which [tools](/concepts/tools) the agent may call. |
+
+## Using a custom agent
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+In the TUI, press `Tab` to cycle through agents; custom agents appear alongside the built-ins.
+
+## Subagents
+
+Agents can delegate to subagents through the `task` tool. Bolt ships with `@general` and `@explore`, and any custom agent whose file lives under `.opencode/agent/` can also be invoked as a subagent by name.
+
+## Related
+
+- [Agents](/concepts/agents) — the built-in agent lineup.
+- [Tools](/concepts/tools) — what you can add to `tools:`.
+- [Custom Tools](/extending/custom-tools) — build the tool the agent will call.

@@ -1,0 +1,22 @@
+---
+title: "Skills: Reusable Agent Playbooks"
+sidebarTitle: "Skills"
+description: "Skills are named, reusable playbooks the agent can invoke through the skill tool — handy for canned workflows like 'ship a release' or 'run the full lint suite'."
+---
+
+Skills are named, reusable playbooks that live alongside your project and are invoked through the `skill` tool. Where a custom tool is a single executable action, a skill is a scripted workflow the agent can follow step-by-step: gather these files, run these commands, decide what to do next based on the output.
+
+Use skills when:
+
+- You have a workflow you keep re-explaining in prompts ("first run the linter, then …").
+- You want the agent to follow a specific decision tree.
+- You want the same workflow available to every session and every agent in the project.
+
+## Where they live
+
+Skills are files under `.opencode/skill/` (or `.opencode/skills/`) in the project root. Each file describes the trigger name, when the agent should use it, and the steps involved. The `skill` [tool](/concepts/tools) exposes them to the model.
+
+## Related
+
+- [Custom Tools](/extending/custom-tools) — lower-level, single-action extension.
+- [Custom Agents](/extending/custom-agents) — bake instructions into an agent instead.

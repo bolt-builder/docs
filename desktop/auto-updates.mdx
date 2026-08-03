@@ -1,0 +1,26 @@
+---
+title: "Bolt Desktop Auto-Updates"
+sidebarTitle: "Auto-Updates"
+description: "How the Bolt desktop app updates itself across dev, beta, and production channels — and how to switch channels or roll back."
+---
+
+The desktop app auto-updates in the background across three release channels:
+
+| Channel | Cadence | Who it's for |
+| --- | --- | --- |
+| `prod` | Stable releases only. | Everyone by default. |
+| `beta` | Release candidates. | Teams that want a heads-up on the next stable. |
+| `dev` | Nightly-ish. | Early adopters and contributors. |
+
+## Change channels
+
+Switch channels from the app's settings pane. On next launch, the app checks the selected channel for a newer build; you can also trigger a check manually.
+
+## Under the hood
+
+Updates are downloaded in the background and applied on next launch. If an update fails to apply, the app keeps the previous version and shows an error — there's no in-between state.
+
+## Related
+
+- [Install](/desktop/install) — first-time install paths.
+- [Features](/desktop/features) — what you get in the desktop app.

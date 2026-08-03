@@ -1,0 +1,191 @@
+---
+title: "Sessions — Durable Conversational History in Bolt"
+sidebarTitle: "Sessions"
+description: "Sessions are Bolt's unit of persistent work: each stores a full conversation in local SQLite so you can detach, resume, fork, share, and export anytime."
+---
+
+A **session** is Bolt's primary unit of work. Every prompt you send, every file the agent reads or edits, and every tool call the model makes are durably recorded in that session's history. Because sessions live in a local SQLite database, they survive process restarts, can be listed and queried at any time, and never leave your machine unless you explicitly share or export them.
+
+<Note>
+  All session data is stored locally in a SQLite database on your own machine. Nothing is sent to external servers unless you enable sharing. Use `bolt db path` to find the exact database file.
+</Note>
+
+## Session lifecycle
+
+A session starts the moment you send your first prompt and ends only when you delete it. Between those two points you can freely detach, resume, branch, or hand it off.
+
+<Steps>
+  <Step title="Create or continue a session">
+    Launch the TUI to start a new session interactively, or pass a prompt to `bolt run` to create one non-interactively:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Detach and come back later">
+    Close the TUI at any time — the session is persisted automatically. Resume your most recent session with `--continue`, or target a specific session by ID with `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Fork before experimenting">
+    Use `--fork` to branch from the current session history before trying a risky change. The fork is an independent session that does not affect the original:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Share and collaborate">
+    Generate a share URL with `--share`. Anyone with the link can view the session transcript in a browser:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Session management commands
+
+### List sessions
+
+```bash
+bolt session list
+```
+
+Outputs a formatted table of all sessions with their ID, title, and last-updated time. Add `--format json` to get machine-readable output, or `-n <N>` to limit to the most recent N sessions:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Delete a session
+
+```bash
+bolt session delete <sessionID>
+```
+
+Permanently removes the session and all its messages from the local database.
+
+## Run flags for session control
+
+These flags are available on `bolt run`:
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--continue` | `-c` | Continue the most recent session |
+| `--session <id>` | `-s` | Continue a specific session by ID |
+| `--fork` | | Fork the session before continuing (requires `--continue` or `--session`) |
+| `--share` | | Generate a share URL for the session |
+| `--title <title>` | | Set or override the session title |
+
+## Exporting sessions
+
+Export a session's full transcript as JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+The `--sanitize` flag replaces file paths, code content, tool inputs and outputs, and other potentially sensitive fields with `[redacted:kind:id]` placeholders — useful for sharing transcripts with teammates or filing bug reports.
+
+## Importing sessions
+
+Import a session from a local JSON file or directly from a share URL:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Imported sessions appear in your local session list and are fully resumable.
+
+## Querying the session database
+
+Bolt exposes the underlying SQLite database directly for power users.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Output format defaults to tab-separated values; add `--format json` for JSON output.
+
+## Token usage and cost statistics
+
+`bolt stats` aggregates token usage and cost data across all your sessions:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+The output includes total sessions, messages, input/output/reasoning/cache tokens, total cost, average cost per day, average and median tokens per session, and a tool-usage breakdown. Pass `--models` to also show a per-model breakdown of messages, tokens, and cost.
+
+## Fork and share workflow
+
+Here is a complete example of forking a session and sharing the result:
+
+<Steps>
+  <Step title="Start work in a new session">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Fork before the risky next step">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    The forked session ID is printed to the console. The original session is untouched.
+  </Step>
+  <Step title="Share the fork for review">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    The share URL is printed once the session goes idle.
+  </Step>
+  <Step title="Import on another machine">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

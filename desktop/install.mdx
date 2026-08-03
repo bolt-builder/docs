@@ -1,0 +1,116 @@
+---
+title: "Bolt desktop app: multi-window AI coding sessions"
+sidebarTitle: "Install"
+description: "Install the Bolt desktop app for multi-window sessions, an integrated terminal, prompt composer with image paste, auto-updates, and 17 UI languages."
+url: "desktop/install"
+---
+
+The Bolt desktop app wraps the same engine as the CLI in a full Electron shell. Every feature available in the terminal — agents, MCP servers, plugins, remote sessions, sessions you can fork and share — works identically in the desktop app, with the addition of a multi-window and multi-tab experience, a graphical settings UI, native notifications, and auto-updates. If you already use the CLI, the desktop app is a drop-in complement, not a replacement.
+
+---
+
+## Installation
+
+### macOS
+
+<Steps>
+  <Step title="Install with the one-liner (recommended)">
+    Open a terminal and run:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    The script downloads the latest release, verifies it, and places the app in `/Applications`. No Gatekeeper pop-up.
+  </Step>
+
+  <Step title="Launch the app">
+    Open **Bolt** from `/Applications` or Spotlight. On first launch, Bolt asks you to choose a default LLM provider and creates a global config file.
+  </Step>
+</Steps>
+
+<Tip>
+  The one-liner installs the app in a way that bypasses the macOS Gatekeeper "unidentified developer" dialog, so you get straight into coding without extra security prompts.
+</Tip>
+
+### All platforms — download from releases
+
+Download the latest installer for your platform from the [Bolt releases page](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Platform | Installer type |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` installer |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  On Windows, Bolt includes WSL (Windows Subsystem for Linux) integration. When WSL is available, Bolt can open sessions directly inside your WSL distribution — giving you a Linux-native agent environment with a native Windows UI around it.
+</Note>
+
+---
+
+## Features
+
+### Multi-window and multi-tab session management
+
+Open as many windows as you like, each with its own set of tabs. Tabs map directly to Bolt sessions, so you can run an agent on a refactor in one tab, ask a question in another, and run a background job in a third — all at the same time.
+
+### Prompt composer
+
+The prompt composer supports rich input: paste text, drag in files as attachments, or paste an image directly from your clipboard. Bolt encodes the image and sends it to any vision-capable model automatically.
+
+### Integrated terminal and file tree
+
+A split-pane layout gives you the agent conversation on one side and a live terminal and project file tree on the other. You can run commands, inspect output, and feed the results back to the agent without switching apps.
+
+### Command palette
+
+Press `Cmd/Ctrl+K` to open the command palette. From here you can switch sessions, change agents, open settings, or trigger any action without reaching for a mouse.
+
+### Full settings UI
+
+The settings panel covers every option that lives in `.bolt/bolt.jsonc` — keybindings, model selection, LLM providers, MCP servers, and auth — with dropdowns, toggles, and inline validation. You rarely need to edit the config file by hand.
+
+### Native notifications
+
+Bolt fires a native OS notification when a long-running task finishes. Click the notification to jump directly to the session.
+
+### Deep links
+
+Open a specific session by navigating to a `bolt://` URL. Useful for sharing session links with teammates or bookmarking work-in-progress.
+
+### Auto-updates
+
+The desktop app updates itself across three channels:
+
+| Channel | Description |
+|---------|-------------|
+| `prod` | Stable releases, updated on each production tag |
+| `beta` | Pre-release builds for early access to new features |
+| `dev` | Nightly builds from the `dev` branch |
+
+Switch channels in **Settings → About**.
+
+### 17 UI languages
+
+Bolt's interface is localised into 17 languages. Change the display language in **Settings → Appearance → Language**.
+
+---
+
+## Related docs
+
+<CardGroup cols={2}>
+  <Card title="Remote Sessions" icon="server" href="/guides/remote-sessions">
+    Run a headless server on a remote machine and attach from the desktop app or the CLI.
+  </Card>
+  <Card title="MCP Servers" icon="plug" href="/guides/mcp-servers">
+    Add external tools and APIs to your agents using the Model Context Protocol.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/guides/plugins">
+    Extend Bolt with custom providers, auth methods, and workspace adapters.
+  </Card>
+  <Card title="GitHub Integration" icon="github" href="/guides/github-integration">
+    Automate PRs, commit messages, and code review from the desktop app or CI.
+  </Card>
+</CardGroup>

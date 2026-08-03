@@ -1,0 +1,33 @@
+---
+title: "Bolt Web UI"
+sidebarTitle: "Web UI"
+description: "bolt web serves a browser-based UI on top of a running Bolt server — useful for shared team boxes, remote machines, and anywhere a TUI isn't practical."
+---
+
+`bolt web` starts a Bolt server and serves a browser UI in front of it. It's the same engine as the TUI, just rendered in a browser tab.
+
+## Start it
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Then open the printed URL. When exposing over a network, set basic auth first:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## When to use the web UI
+
+- Running Bolt on a beefy remote machine but driving it from a laptop.
+- Sharing a live session with a teammate for pair-debugging.
+- Environments where a full TUI is awkward (Chromebooks, tablets, coworking machines).
+
+## Related
+
+- [Headless Server](/server/headless-server) — the underlying API server.
+- [Remote Sessions](/server/remote-sessions) — attach a TUI to the same server the web UI serves.

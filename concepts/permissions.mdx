@@ -1,0 +1,53 @@
+---
+title: "Permissions: Controlling What Bolt Agents Can Do"
+sidebarTitle: "Permissions"
+description: "How Bolt's per-agent access levels, permission prompts, and config-level allow/deny rules keep the agent from doing things you didn't approve."
+---
+
+Bolt agents can read files, write files, and run shell commands. That power is scoped through two layers: a per-agent access level, and interactive permission prompts you can approve, deny, or configure ahead of time.
+
+## Agent access levels
+
+Each built-in agent has a declared access level:
+
+| Access level | Read files | Write files | Run shell commands |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Built-in mappings:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Switch agents with `Tab` in the TUI, or pass `--agent <name>` to `bolt run`.
+
+## Interactive prompts
+
+Within an agent's access level, potentially destructive actions still prompt for confirmation. You can approve once, approve for the session, or deny. Denied calls return an error to the agent and it moves on.
+
+## Non-interactive approval
+
+For CI, scripts, or trusted local workflows, `bolt run` supports flags that skip prompts:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo`, and `--dangerously-skip-permissions` let the agent read, write, and execute without asking. Use them only in trusted environments.
+</Warning>
+
+## Config-level rules
+
+You can pre-deny (or pre-allow) specific tools for the whole project by adding a `permission` block to `.bolt/bolt.jsonc`. This applies to every session in the project, including non-interactive `bolt run` calls. See [Configuration](/concepts/configuration) for the schema.
+
+## Related
+
+- [Agents](/concepts/agents) — which agents have which access levels.
+- [Tools](/concepts/tools) — the full list of tools that permissions gate.
+- [Configuration](/concepts/configuration) — setting durable permission rules.

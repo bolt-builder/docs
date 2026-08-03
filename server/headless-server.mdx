@@ -1,0 +1,52 @@
+---
+title: "Run Bolt as a Headless Server"
+sidebarTitle: "Headless Server"
+description: "bolt serve exposes a full Bolt runtime over HTTP so any TUI, web UI, editor integration, or script can attach to it locally or across the network."
+---
+
+`bolt serve` runs a headless Bolt server that exposes the full engine over HTTP: sessions, agents, tools, provider access, MCP, and streaming events. Anything Bolt can do interactively, it can do over the API.
+
+## Start a server
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  Binding to `0.0.0.0` exposes Bolt on your network. Always set `BOLT_SERVER_USERNAME` and `BOLT_SERVER_PASSWORD` before doing so.
+</Warning>
+
+## Attach a TUI
+
+From any machine that can reach the server:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Or run a one-shot prompt against a remote server:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+Set credentials via environment variables (see [Env Variables](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+All clients must send matching credentials.
+
+## Related
+
+- [Remote Sessions](/server/remote-sessions) — attaching, mDNS discovery, and shared servers.
+- [Web UI](/server/web-ui) — the browser front-end.
+- [ACP](/server/acp) — driving Bolt from Zed and other editors.

@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI Keybinds"
+sidebarTitle: "Keybinds"
+description: "The essential Bolt TUI shortcuts: switching agents with Tab, mini mode, push-to-talk voice, and everything else you can drive from the keyboard."
+---
+
+The Bolt TUI is designed to be driven end-to-end from the keyboard. This page lists the shortcuts you'll reach for most often. For the exhaustive list, run `bolt` and open the in-app help.
+
+## Essentials
+
+| Keys | Action |
+| --- | --- |
+| `Tab` | Cycle to the next agent (`code`, `plan`, `ask`, ...). The current agent is shown in the status bar. |
+| `Shift+Tab` | Cycle to the previous agent. |
+| `Enter` | Send the current message. |
+| `Esc` | Cancel the in-flight turn. |
+| `Ctrl+C` | Interrupt the current tool call. |
+| `Ctrl+D` | Detach from the session (leaves it running on the server). |
+
+## Modes
+
+### `--mini` mode
+
+Start Bolt with a compact split-footer layout that takes up less terminal space, great for split panes:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk voice
+
+Hold the configured push-to-talk key to dictate a prompt using speech-to-text, then release to send. Configure the key and the STT provider in `.bolt/bolt.jsonc`.
+
+## Related
+
+- [Slash commands](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw`, and friends.
+- [Sessions](/concepts/sessions) — detach, resume, fork, and share from the keyboard.

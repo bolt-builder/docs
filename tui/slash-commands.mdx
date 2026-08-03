@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI Slash Commands"
+sidebarTitle: "Slash Commands"
+description: "The slash commands you can run inside the Bolt TUI — /memory, /plan, /todos, /btw — and how they change the current session's behavior."
+---
+
+Slash commands are typed into the TUI prompt and change how the current session behaves. They don't send anything to the model; they run locally against Bolt itself.
+
+## Reference
+
+| Command | What it does |
+| --- | --- |
+| `/memory` | Show project-memory status for this session. |
+| \`/memory use on | off\` | Whether this session reads from [project memory](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Whether this session writes back to project memory when the turn closes. |
+| `/plan` | Switch the current session into planning mode (read-only, produces a plan). |
+| `/todos` | Show the agent's current structured task list. |
+| `/btw` | Inject an out-of-band note ("by the way...") that the agent will see on its next turn without triggering a full response. |
+
+<Tip>
+  Slash commands are session-scoped. To make a preference durable, set it in `.bolt/bolt.jsonc` instead. See [Configuration](/concepts/configuration).
+</Tip>
+
+## Adding your own
+
+Custom slash commands can be contributed by [plugins](/extending/plugins) and by files in `.opencode/command/`. Each command is a Markdown file whose frontmatter describes the trigger and behavior.
+
+## Related
+
+- [Keybinds](/tui/keybinds) — keyboard shortcuts for the TUI.
+- [Project Memory](/concepts/project-memory) — what `/memory` toggles.

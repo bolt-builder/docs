@@ -1,0 +1,46 @@
+---
+title: "Project Memory: Persistent Context Across Bolt Sessions"
+sidebarTitle: "Project Memory"
+description: "Bolt captures what it learns about your project at the end of every turn and injects it into new sessions so the agent doesn't relearn your codebase every time."
+---
+
+Project memory is what makes Bolt feel like it already knows your project. When a session ends its turn, Bolt distills what was useful and writes it to a per-project memory store. When you open a new session, Bolt injects a memory index plus the latest session digest into the system prompt so the agent starts with real context instead of a blank slate.
+
+## How capture works
+
+At the close of every conversational turn, Bolt asks the model to summarize durable facts that will be useful next time: conventions, architecture notes, file layout, build/test commands, gotchas, and open threads. These are written to disk under the project's memory directory, alongside a rolling digest of the most recent session.
+
+Memory is per-project. Two checkouts of the same repo on the same machine share memory; unrelated projects never see each other's memory.
+
+## Explicit tools
+
+Agents can also read and write memory directly during a session:
+
+- `memory_save` — record a specific fact the agent should remember next time.
+- `memory_recall` — look up something the agent (or you) captured previously.
+
+You can ask the agent to "remember that we use pnpm, not npm" and it will call `memory_save` for you.
+
+## Per-session controls
+
+Inside the TUI you can toggle memory behavior for the current session with slash commands:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+This is useful when you want a throwaway exploratory session that doesn't pollute your memory, or a read-only session that still benefits from prior context.
+
+## Inspecting and editing memory
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Memory is stored as plain files on disk under the project's Bolt data directory, so you can grep, edit, or delete entries directly. To find the exact path on your machine, run `bolt debug paths`.
+
+## Related
+
+- [Sessions](/concepts/sessions) — the durable conversations that produce memory entries.
+- [Configuration](/concepts/configuration) — where memory is stored and how to override the path.

@@ -1,0 +1,28 @@
+---
+title: "ACP: Drive Bolt from Zed and Other Editors"
+sidebarTitle: "ACP (Editors)"
+description: "Bolt speaks the Agent Client Protocol so editors like Zed can host it as a native AI backend, no separate app or TUI required."
+---
+
+Bolt implements the Agent Client Protocol (ACP), which is how editors like Zed talk to AI agents. Once configured, the editor spawns `bolt acp` as a subprocess and drives it directly — you get Bolt's agents, tools, sessions, and provider stack without leaving your editor.
+
+## Enable ACP
+
+In your editor's AI settings, add Bolt as an ACP-compatible agent and point it at:
+
+```bash
+bolt acp
+```
+
+The editor will manage the process lifecycle. Configure providers, models, and MCP servers as you normally would in `.bolt/bolt.jsonc` — they apply here too.
+
+## What you get
+
+- Every Bolt agent, callable from the editor's AI panel.
+- Shared sessions with the TUI and web UI (via the local database).
+- The same tool set, permissions model, and project memory as any other Bolt entry point.
+
+## Related
+
+- [Headless Server](/server/headless-server) — the parallel HTTP interface.
+- [Configuration](/concepts/configuration) — the config file ACP inherits.

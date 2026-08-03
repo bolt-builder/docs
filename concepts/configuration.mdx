@@ -1,0 +1,193 @@
+---
+title: "Configuration — bolt.jsonc Settings and Global Overrides"
+sidebarTitle: "Configuration"
+description: "Bolt reads layered JSONC config files from your project and OS config dirs. Set providers, MCP servers, instructions, plugins, and environment overrides."
+---
+
+Bolt uses a layered configuration system: a **global** config file for user-wide defaults, and a **per-project** config file for repository-specific settings. Both files use the JSONC format (JSON with comments), and both are automatically created with a `$schema` pointer that enables editor autocompletion.
+
+## Config file locations
+
+### Per-project config
+
+Created automatically on first run inside your project:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Commit this file to share provider configuration, MCP servers, and custom instructions with the rest of your team. Sensitive credentials should never go here — use environment variables or the global config instead.
+
+### Global config
+
+Applies to all projects on your machine. Bolt looks for the first matching file in your OS config directory:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferred)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Where is the global config directory?">
+  Bolt follows the XDG Base Directory Specification on Linux and macOS (`~/.config/bolt/`) and `%APPDATA%\bolt\` on Windows. Run `bolt debug config` to print the full resolved configuration on your machine.
+</Accordion>
+
+## Minimal config example
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+The `$schema` field enables IntelliSense and validation in editors that support JSON Schema. Bolt writes this field automatically if it is missing.
+
+## Configuration reference
+
+### `provider`
+
+Configure provider-specific options such as custom base URLs, region settings, or named credentials:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Register [Model Context Protocol](https://modelcontextprotocol.io) servers that the agent can call as tools:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Manage MCP servers interactively with `bolt mcp add`, `bolt mcp list`, `bolt mcp auth`, and `bolt mcp debug`.
+
+### `instructions`
+
+Append custom system instructions that are injected into every session. Useful for enforcing coding conventions, style guides, or project-specific rules:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instructions from multiple config files (global \+ project) are merged and deduplicated automatically.
+
+### `plugin`
+
+Load Bolt plugins. Plugins can add new tools, providers, context sources, and hooks:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Remote config via `url`
+
+Fetch config from a remote URL at startup. Useful for centralised team configuration:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Variable substitution
+
+Config values can reference environment variables using a `$VAR_NAME` or `${VAR_NAME}` syntax. Substitution happens at load time, before the config is parsed:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="How do I use environment variables in config?">
+  Reference any environment variable with `$VAR_NAME` or `${VAR_NAME}` anywhere in a string config value. Bolt substitutes the value at load time. If the variable is not set the literal string `$VAR_NAME` is used — Bolt does not fail silently or throw an error for missing substitutions.
+</Accordion>
+
+## Environment variable overrides
+
+These environment variables let you redirect or override the config entirely, which is useful for CI, containers, and testing:
+
+| Variable | Description |
+| --- | --- |
+| `BOLT_CONFIG` | Absolute path to a config file to load instead of the project-local one |
+| `BOLT_CONFIG_DIR` | Override the directory that Bolt searches for config files |
+| `BOLT_CONFIG_CONTENT` | Provide raw JSONC config content as a string — no file needed |
+
+`BOLT_CONFIG_CONTENT` is especially handy in containerised environments where mounting a file is inconvenient:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Which config takes precedence when multiple sources are active?">
+  Bolt merges configs in this order (later entries win):
+
+  1. Global config file (`bolt.jsonc` / `bolt.json` in the OS config dir)
+  2. Remote configs fetched from `url` entries in the global config
+  3. Per-project config files (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` file (if set)
+  5. `BOLT_CONFIG_CONTENT` (if set)
+
+  Array fields such as `instructions` are concatenated across sources rather than replaced. Object fields are deep-merged with later values winning on conflicts.
+</Accordion>

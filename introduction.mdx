@@ -1,0 +1,106 @@
+---
+title: "Bolt: AI Coding Agent for Your Terminal"
+sidebarTitle: "Introduction"
+description: "Bolt is an open-source AI coding agent for your terminal — ten specialized agents, durable sessions, project memory, 75+ LLM providers, TUI, API server, web UI, and desktop app."
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Your terminal, now with a full AI engineering team inside it.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt is a terminal-first AI coding agent built on [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui), and [SolidJS](https://www.solidjs.com). Point it at any project and it picks up context automatically: it explores your code, follows your conventions, executes shell commands, edits files, runs tests, and ships changes.
+
+Ten built-in agents (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) plus `@general` and `@explore` subagents cover the whole engineering loop. Sessions are durable: detach, re-attach (even to a remote server), fork, share, export, and import at any time. Project memory persists what the agent learns between sessions. Extensible via MCP servers (with OAuth), plugins, custom agents, and custom tools.
+
+Bolt is open source under the PolyForm Noncommercial 1.0.0 license.
+
+## Why Bolt?
+
+Bolt is designed around the way developers actually work: in the terminal, across multiple sessions, on real codebases. Here's what sets it apart:
+
+- **Terminal-first TUI.** A fast, keyboard-driven interface built with [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui), and [SolidJS](https://www.solidjs.com). It feels native because it is.
+- **A whole team of agents.** Ten specialized agents — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, and `perf` — plus subagents for research and multi-step delegation. Switch between them with `Tab`.
+- **Sessions you can leave and re-join.** Detach from a session and attach later, even on a remote server. Fork, share, export, and import work at any time. Sessions are stored in SQLite and fully inspectable with `bolt db`.
+- **Extensible by design.** MCP servers with full OAuth support, a plugin system, GitHub integration, a built-in API server, and a web UI.
+- **Desktop app.** The same engine wrapped in a multi-window, multi-tab desktop experience — with an integrated terminal, file tree, command palette, 17 UI languages, and auto-updates.
+
+## Built-in agents
+
+Bolt ships with ten specialized agents. Each agent has a defined level of file-system access to match its purpose.
+
+| Agent | Access | Description |
+| --- | --- | --- |
+| `code` | Full | Default: reads, writes, and runs code |
+| `plan` | Read | Explores the codebase and produces a plan without changing files |
+| `ask` | Read | Questions and research — no file edits |
+| `code-review` | Read | Reviews changes for correctness, style, and security |
+| `debug` | Full | Debugs failing tests, crashes, and logic errors |
+| `refactor` | Full | Safe refactoring with test verification at each step |
+| `docs` | Edit | Writes and updates documentation and comments |
+| `security` | Read | Security audit: vulnerabilities, secrets, patterns |
+| `migrate` | Full | Framework upgrades and dependency migrations |
+| `perf` | Full | Performance analysis and optimization |
+
+You can also define your own agents as Markdown files or generate one with `bolt agent create`.
+
+## Desktop app
+
+Bolt also ships as a standalone desktop app with multi-window and multi-tab session management, a prompt composer with attachment and clipboard image paste support, an integrated terminal and file tree, a command palette, full settings for keybindings, models, providers and servers, native notifications, deep links, WSL integration on Windows, and auto-updates across dev, beta, and production channels.
+
+Download the desktop app from the [releases page](https://github.com/Bolt-builder/bolt-cli/releases), or install it in one line on macOS with no Gatekeeper detour:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Explore the docs
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Bolt via curl, npm, or your system package manager on macOS, Linux, and Windows.
+  </Card>
+
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Open the TUI, run your first prompt, and ship an AI-generated commit in under a minute.
+  </Card>
+
+  <Card title="Agents" icon="users" href="/concepts/agents">
+    Ten built-in agents plus subagents. Learn what each one does and how to write your own.
+  </Card>
+
+  <Card title="Project Memory" icon="brain" href="/concepts/project-memory">
+    How Bolt remembers your project across sessions and how to control what gets captured.
+  </Card>
+
+  <Card title="MCP Servers" icon="plug" href="/extending/mcp-servers">
+    Connect external tools and data sources to Bolt via the Model Context Protocol.
+  </Card>
+
+  <Card title="Headless server" icon="server" href="/server/headless-server">
+    Run `bolt serve`, attach a TUI from any machine, and drive Bolt from the API.
+  </Card>
+</CardGroup>

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Bolt",
+  "theme": "luma",
+  "colors": {
+    "primary": "#240cde"
+  },
+  "favicon": "https://media.brand.dev/70746e66-696b-4d93-8f48-a655711b8b04.png",
+  "logo": {
+    "light": "https://media.brand.dev/92ec1177-fdd5-47ff-acab-1fae8521ac29.svg",
+    "dark": "https://media.brand.dev/92ec1177-fdd5-47ff-acab-1fae8521ac29.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/bolt-builder/bolt-cli"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/bolt-builder/bolt-cli"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/agents",
+              "concepts/sessions",
+              "concepts/providers-and-models",
+              "concepts/configuration",
+              "concepts/project-memory",
+              "concepts/tools",
+              "concepts/permissions"
+            ]
+          },
+          {
+            "group": "TUI",
+            "pages": [
+              "tui/keybinds",
+              "tui/slash-commands"
+            ]
+          },
+          {
+            "group": "Extending Bolt",
+            "pages": [
+              "extending/mcp-servers",
+              "extending/plugins",
+              "extending/custom-agents",
+              "extending/custom-tools",
+              "extending/skills"
+            ]
+          },
+          {
+            "group": "Server & Automation",
+            "pages": [
+              "server/headless-server",
+              "server/web-ui",
+              "server/remote-sessions",
+              "server/acp",
+              "server/github-actions"
+            ]
+          },
+          {
+            "group": "Desktop App",
+            "pages": [
+              "desktop/install",
+              "desktop/features",
+              "desktop/auto-updates"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/commands",
+              "reference/configuration-schema",
+              "reference/environment-variables",
+              "reference/local-database",
+              "reference/stats-and-cost",
+              "reference/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

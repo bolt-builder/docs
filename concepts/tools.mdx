@@ -1,0 +1,53 @@
+---
+title: "Tools: What Bolt Agents Can Actually Do"
+sidebarTitle: "Tools"
+description: "The complete list of built-in tools available to Bolt agents, plus how to add your own tools through plugins, MCP servers, or the .opencode/tool directory."
+---
+
+Agents in Bolt do work by calling tools. Every action you see in the TUI (reading a file, running tests, searching the web) is the model choosing a tool and Bolt executing it. Each agent has a declared access level that determines which tools it may call without asking you first (see [Permissions](/concepts/permissions)).
+
+## Built-in tools
+
+| Tool | What it does |
+| --- | --- |
+| `read` | Read a file from disk. |
+| `write` | Create a new file or overwrite an existing one. |
+| `edit` | Apply a targeted edit (find/replace) to a file. |
+| `apply_patch` | Apply a unified-diff style patch across one or more files. |
+| `glob` | List files matching a glob pattern. |
+| `grep` | Search file contents by regex/text. |
+| `bash` | Run a shell command. |
+| `task` | Delegate a subtask to a subagent (`@general`, `@explore`, or a custom subagent). |
+| `todowrite` | Maintain the agent's structured task list for multi-step work. |
+| `webfetch` | Fetch a URL and return its contents. |
+| `websearch` | Search the web. |
+| `skill` | Invoke a named skill (see [Skills](/extending/skills)). |
+| `memory_save` | Persist a fact to [project memory](/concepts/project-memory). |
+| `memory_recall` | Look up a previously-saved memory. |
+| `question` | Ask you a clarifying question and wait for a reply. |
+
+### Experimental
+
+| Tool | What it does |
+| --- | --- |
+| `lsp` | Query a language server for definitions, references, and diagnostics. |
+| `execute` | Run code in an isolated code-mode sandbox. |
+| `plan` | Produce a structured plan before making changes. |
+
+Experimental tools may change or be renamed between releases.
+
+## Extending the tool set
+
+Beyond built-ins, Bolt can call tools from three sources:
+
+- **Custom tools** in `.opencode/tool/` (or `.opencode/tools/`) at the project root. See [Custom Tools](/extending/custom-tools).
+- **Plugin tools** contributed by any installed [plugin](/extending/plugins).
+- **MCP tools** from any [MCP server](/extending/mcp-servers) configured for the project.
+
+All three feel identical from the agent's point of view: they show up in the tool list, honor the agent's access level, and appear in the TUI's tool-call output.
+
+## Related
+
+- [Agents](/concepts/agents) — which agents can call which tools.
+- [Permissions](/concepts/permissions) — how tool access is gated per agent.
+- [MCP Servers](/extending/mcp-servers) — the most common way to add real-world tools.

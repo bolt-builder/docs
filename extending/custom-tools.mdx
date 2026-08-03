@@ -1,0 +1,36 @@
+---
+title: "Custom Tools in Bolt"
+sidebarTitle: "Custom Tools"
+description: "Add project-specific tools to Bolt by dropping executable files into .opencode/tool/. Each file becomes a tool the agent can call."
+---
+
+Custom tools let you expose anything you can script (shell scripts, Node/Bun/Python programs, small binaries) as a tool the agent can invoke by name. They're the simplest way to give Bolt access to your project's own build, deploy, or data workflows.
+
+## Where they live
+
+Drop files into one of:
+
+- `.opencode/tool/` — project-scoped, checked in with the repo.
+- `.opencode/tools/` — accepted as an alias for the above.
+
+Each file becomes a tool named after the file (minus its extension). Tools are picked up automatically the next time Bolt starts.
+
+## Anatomy of a tool
+
+A custom tool declares its name, description, and input schema in a header, then implements the behavior. The exact shape depends on the runtime you pick (shell script, TypeScript, etc.), but every tool must:
+
+1. Advertise a JSON Schema for its inputs so the model knows how to call it.
+2. Return a value (or an error) that Bolt can render in the TUI and feed back to the model.
+
+Once loaded, the tool appears in the agent's tool list next to built-in tools like `bash` and `grep`, and is gated by the same [permission](/concepts/permissions) system.
+
+## When to use a custom tool vs. an MCP server
+
+- **Custom tool** — small, project-specific, no reuse across projects. Fast to write.
+- **MCP server** — shared across projects, or wraps a real external service with auth. See [MCP Servers](/extending/mcp-servers).
+- **Plugin tool** — distributed as an npm package alongside other extension points. See [Plugins](/extending/plugins).
+
+## Related
+
+- [Tools](/concepts/tools) — built-in tool reference.
+- [Plugins](/extending/plugins) — the extension surface for tools plus more.

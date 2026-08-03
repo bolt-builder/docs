@@ -1,0 +1,145 @@
+---
+title: "Extend Bolt with plugins"
+sidebarTitle: "Plugins"
+description: "Install and build Bolt plugins to add custom AI providers, authentication methods, tools, and workspace adapters to any project or globally."
+url: "extending/plugins"
+---
+
+Plugins let you extend Bolt beyond its built-in capabilities. A plugin is a Node or Bun module that exports a Bolt plugin manifest; when loaded, it can register new LLM providers, custom authentication methods, additional tools, and workspace adapters. Plugins can be installed for a single project or applied globally across all of your work.
+
+## Installing a plugin
+
+Use `bolt plugin install` (alias: `bolt plug`) to install a plugin from npm and automatically register it in your config:
+
+```bash
+bolt plugin install <module>
+```
+
+### Flags
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--global` | `-g` | Install into the global config instead of the current project |
+| `--force` | `-f` | Replace an existing entry for the same module |
+
+### Scope: project vs. global
+
+By default, `bolt plugin install` adds the plugin to the project-level `.bolt/bolt.jsonc`. Pass `--global` to add it to your user-wide config so it loads in every project.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Run `bolt --pure` (or set `OPENCODE_PURE=1`) to start Bolt with all external plugins disabled. This is useful for debugging whether a plugin is causing unexpected behaviour, without uninstalling it.
+</Note>
+
+---
+
+## Installing a published plugin
+
+<Steps>
+  <Step title="Find the plugin package">
+    Search npm for packages with `bolt-plugin` or `opencode-plugin` in the name, or follow a link from a provider's documentation.
+  </Step>
+
+  <Step title="Install into your project">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt installs the package, reads its manifest to detect server and TUI targets, then writes the entry to `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Verify the config">
+    Open `.bolt/bolt.jsonc` and confirm the plugin entry was added:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Start a session">
+    ```bash
+    bolt
+    ```
+
+    Bolt loads the plugin at startup. Any providers or tools it registers are immediately available.
+  </Step>
+</Steps>
+
+---
+
+## Manual plugin configuration
+
+You can register plugins by editing `.bolt/bolt.jsonc` directly. This is useful for local plugins under development:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Relative paths are resolved from the project root. Both TypeScript and JavaScript entry points are supported.
+
+---
+
+## Building a plugin
+
+Plugins are authored against the `@opencode-ai/plugin` package, which provides the `Hooks` interface your module must satisfy.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+A minimal plugin exports a function that receives a `PluginInput` object and returns a `Hooks` object:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Available hook types
+
+| Hook | Purpose |
+|------|---------|
+| `auth` | Register custom authentication providers with a `methods` array |
+| `event` | React to session events (messages, tool calls, completions) |
+| `config` | Respond to configuration changes at runtime |
+| `dispose` | Clean up resources when the plugin is unloaded |
+
+The `PluginInput` object exposes the `client` (a typed Bolt API client), `project`, `worktree`, `directory`, and `serverUrl` so your plugin can interact with the running server.
+
+---
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `OPENCODE_PURE` | Set to `1` to run without any external plugins |
