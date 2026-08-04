@@ -1,0 +1,68 @@
+---
+title: "Agent tùy chỉnh trong Bolt"
+sidebarTitle: "Agent tùy chỉnh"
+description: "Định nghĩa agent Bolt của riêng bạn dưới dạng tệp Markdown — chọn mô hình, đặt mức truy cập, giới hạn công cụ và thêm hướng dẫn đặc thù cho lĩnh vực."
+---
+
+Ngoài mười agent tích hợp sẵn, bạn có thể định nghĩa agent của riêng mình. Agent tùy chỉnh là các tệp Markdown có khối frontmatter mô tả mô hình, mức truy cập và các công cụ có sẵn của agent, cộng với phần thân đóng vai trò như system prompt của nó.
+
+## Tạo một agent
+
+Cách nhanh nhất là sử dụng trình sinh tích hợp sẵn, nó hỏi một vài câu và ghi tệp cho bạn:
+
+```bash
+bolt agent create
+```
+
+Agent nằm dưới `.opencode/agent/` trong dự án (hoặc thư mục cấu hình toàn cục của bạn cho các agent cá nhân). Mỗi agent là một tệp `.md` đơn có tên tệp trở thành tên của agent.
+
+## Giải phẫu tệp agent
+
+```md
+---
+name: "e2e-writer"
+description: "Viết và cập nhật các test end-to-end Playwright"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+Bạn là một chuyên gia viết test end-to-end Playwright. Khi được yêu cầu thêm test:
+
+1. Đọc các test hiện có trong `e2e/` trước để khớp phong cách.
+2. Ưu tiên selector dựa trên vai trò.
+3. Luôn chạy `pnpm e2e -- --reporter=list` sau khi chỉnh sửa.
+```
+
+Các trường frontmatter phổ biến:
+
+| Trường | Mục đích |
+| --- | --- |
+| `name` | Tên agent được dùng với `--agent`. |
+| `description` | Tóm tắt một dòng hiển thị trong các danh sách. |
+| `model` | Mô hình mặc định ở định dạng `provider/model`. |
+| `access` | `full`, `edit`, hoặc `read` (xem [Quyền](/concepts/permissions)). |
+| `tools` | Danh sách allow tùy chọn giới hạn [công cụ](/concepts/tools) mà agent có thể gọi. |
+
+## Sử dụng agent tùy chỉnh
+
+```bash
+bolt run --agent e2e-writer "thêm test cho luồng đăng ký"
+```
+
+Trong TUI, nhấn `Tab` để duyệt qua các agent; các agent tùy chỉnh xuất hiện cùng với các agent tích hợp sẵn.
+
+## Subagent
+
+Các agent có thể ủy thác cho subagent qua công cụ `task`. Bolt được trang bị sẵn `@general` và `@explore`, và bất kỳ agent tùy chỉnh nào có tệp nằm dưới `.opencode/agent/` cũng có thể được gọi làm subagent theo tên.
+
+## Liên quan
+
+- [Agent](/concepts/agents) — dàn agent tích hợp sẵn.
+- [Công cụ](/concepts/tools) — những gì bạn có thể thêm vào `tools:`.
+- [Công cụ tùy chỉnh](/extending/custom-tools) — xây công cụ mà agent sẽ gọi.

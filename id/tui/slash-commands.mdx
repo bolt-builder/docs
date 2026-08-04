@@ -1,0 +1,31 @@
+---
+title: "Slash Command TUI Bolt"
+sidebarTitle: "Slash Commands"
+description: "Slash command yang dapat kamu jalankan di dalam TUI Bolt — /memory, /plan, /todos, /btw — dan bagaimana mereka mengubah perilaku sesi saat ini."
+---
+
+Slash command diketik ke prompt TUI dan mengubah bagaimana sesi saat ini berperilaku. Mereka tidak mengirim apa pun ke model; mereka berjalan secara lokal terhadap Bolt itu sendiri.
+
+## Referensi
+
+| Perintah | Fungsinya |
+| --- | --- |
+| `/memory` | Menampilkan status project-memory untuk sesi ini. |
+| \`/memory use on | off\` | Apakah sesi ini membaca dari [project memory](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Apakah sesi ini menulis kembali ke project memory ketika giliran ditutup. |
+| `/plan` | Alihkan sesi saat ini ke mode planning (hanya-baca, menghasilkan rencana). |
+| `/todos` | Menampilkan daftar tugas terstruktur agent saat ini. |
+| `/btw` | Menyuntikkan catatan di luar band ("ngomong-ngomong...") yang akan dilihat agent pada giliran berikutnya tanpa memicu respons penuh. |
+
+<Tip>
+  Slash command dilingkupi sesi. Untuk membuat preferensi bertahan lama, atur di `.bolt/bolt.jsonc` sebagai gantinya. Lihat [Configuration](/concepts/configuration).
+</Tip>
+
+## Menambahkan milikmu sendiri
+
+Slash command kustom dapat disumbangkan oleh [plugin](/extending/plugins) dan oleh file di `.opencode/command/`. Setiap perintah adalah file Markdown yang frontmatter-nya mendeskripsikan pemicu dan perilaku.
+
+## Terkait
+
+- [Keybinds](/tui/keybinds) — pintasan keyboard untuk TUI.
+- [Project Memory](/concepts/project-memory) — apa yang di-toggle oleh `/memory`.

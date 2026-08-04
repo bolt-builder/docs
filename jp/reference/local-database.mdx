@@ -1,0 +1,38 @@
+---
+title: "ローカルデータベース (bolt db)"
+sidebarTitle: "ローカルデータベース"
+description: "Bolt はすべてのセッション、メッセージ、ツール呼び出しをローカル SQLite データベースに保存します。bolt db で直接検査、バックアップ、照会できます。"
+---
+
+Bolt はすべてのセッション、メッセージ、ツール呼び出しをローカル SQLite データベースに保存します。完全に検査可能で完全にあなたのもの — セッションを明示的に共有しない限り、何もアップロードされません。
+
+## 一般的な操作
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## バックアップ
+
+単一の SQLite ファイルであるため、バックアップはコピーです。
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+長期保存や転送用には `bolt export` / `bolt import` を優先してください — スキーマ移行を生き延びる、可搬性のある JSON 表現を生成します。
+
+## スキーマ概要
+
+- `sessions` — セッションごとに 1 行、タイトル、プロジェクト、タイムスタンプ、ステータスを含む。
+- `messages` — セッションごとの完全なターンログ。
+- `tool_calls` — 入力、出力、時間を含むすべての呼び出し。
+
+正確なカラムは変化します。ライブスキーマを見るには `PRAGMA table_info(<table>)` を使用してください。
+
+## 関連
+
+- [セッション](/concepts/sessions) — データベースが保存するもの。
+- [統計とコスト](/reference/stats-and-cost) — 同じデータの集約ビュー。

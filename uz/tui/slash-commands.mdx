@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI Slash buyruqlari"
+sidebarTitle: "Slash buyruqlari"
+description: "Bolt TUI ichida ishga tushirishingiz mumkin bo'lgan slash buyruqlari — /memory, /plan, /todos, /btw — va ular joriy sessiya xatti-harakatini qanday o'zgartiradi."
+---
+
+Slash buyruqlari TUI promptga yoziladi va joriy sessiya qanday ishlashini o'zgartiradi. Ular modelga hech narsa yubormaydi; ular mahalliy tarzda Bolt'ning o'ziga qarshi ishlaydi.
+
+## Ma'lumotnoma
+
+| Buyruq | U nima qiladi |
+| --- | --- |
+| `/memory` | Bu sessiya uchun loyiha-xotira statusini ko'rsatish. |
+| \`/memory use on | off\` | Bu sessiya [loyiha xotirasidan](/concepts/project-memory) o'qiydimi. |
+| \`/memory contribute on | off\` | Navbat yopilganda bu sessiya loyiha xotirasiga qaytib yozadimi. |
+| `/plan` | Joriy sessiyani rejalashtirish rejimiga o'tkazing (faqat o'qish, reja ishlab chiqadi). |
+| `/todos` | Agentning joriy strukturalangan vazifalar ro'yxatini ko'rsatish. |
+| `/btw` | To'liq javobni ishga tushirmasdan agent keyingi navbatida ko'radigan out-of-band eslatma ("aytmoqchi...") ni kiritish. |
+
+<Tip>
+  Slash buyruqlari sessiya bilan chegaralangan. Afzallikni saqlab qolish uchun uni o'rniga `.bolt/bolt.jsonc` da o'rnating. [Configuration](/concepts/configuration) ga qarang.
+</Tip>
+
+## O'zingiznikini qo'shish
+
+Custom slash buyruqlari [plugins](/extending/plugins) tomonidan va `.opencode/command/` dagi fayllar tomonidan qo'shilishi mumkin. Har bir buyruq — trigger va xatti-harakatni tavsiflaydigan frontmatter bilan Markdown fayl.
+
+## Aloqador
+
+- [Keybinds](/tui/keybinds) — TUI uchun klaviatura yorliqlari.
+- [Project Memory](/concepts/project-memory) — `/memory` nimani almashtiradi.

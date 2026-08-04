@@ -1,0 +1,53 @@
+---
+title: "权限：控制 Bolt 代理可以做什么"
+sidebarTitle: "权限"
+description: "Bolt 的按代理访问级别、权限提示和配置级允许/拒绝规则如何防止代理执行你未批准的操作。"
+---
+
+Bolt 代理可以读取文件、写入文件和运行 shell 命令。这些能力通过两层进行范围限定：按代理的访问级别，以及你可以批准、拒绝或提前配置的交互式权限提示。
+
+## 代理访问级别
+
+每个内置代理都声明了一个访问级别：
+
+| 访问级别 | 读取文件 | 写入文件 | 运行 shell 命令 |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+内置映射：
+
+- **Full** — `code`、`debug`、`refactor`、`migrate`、`perf`
+- **Edit** — `docs`
+- **Read** — `plan`、`ask`、`code-review`、`security`
+
+在 TUI 中使用 `Tab` 切换代理，或向 `bolt run` 传递 `--agent <name>`。
+
+## 交互式提示
+
+在代理的访问级别内，可能具有破坏性的操作仍会提示确认。你可以批准一次、为当前会话批准，或拒绝。被拒绝的调用会向代理返回错误，代理会继续执行。
+
+## 非交互式批准
+
+对于 CI、脚本或受信任的本地工作流，`bolt run` 支持跳过提示的标志：
+
+```bash
+bolt run --auto "tidy up imports"                   # 自动批准任何未明确拒绝的操作
+bolt run --yolo "tidy up imports"                   # --auto 的别名
+bolt run --dangerously-skip-permissions "..."       # 绕过每个提示
+```
+
+<Warning>
+  `--auto`、`--yolo` 和 `--dangerously-skip-permissions` 允许代理在不询问的情况下进行读、写和执行操作。仅在受信任的环境中使用它们。
+</Warning>
+
+## 配置级规则
+
+你可以通过向 `.bolt/bolt.jsonc` 添加 `permission` 块来为整个项目预先拒绝（或预先允许）特定工具。这适用于项目中的每个会话，包括非交互式 `bolt run` 调用。schema 请参见[配置](/concepts/configuration)。
+
+## 相关
+
+- [代理](/concepts/agents) — 哪些代理具有哪些访问级别。
+- [工具](/concepts/tools) — 权限门控的完整工具列表。
+- [配置](/concepts/configuration) — 设置持久权限规则。

@@ -1,0 +1,46 @@
+---
+title: "Projektmemória: tartós kontextus a Bolt-munkamenetek között"
+sidebarTitle: "Projektmemória"
+description: "A Bolt minden forduló végén rögzíti, amit a projektről tanult, és új munkamenetekbe injektálja, így az ügynöknek nem kell újratanulnia a kódbázisod minden alkalommal."
+---
+
+A projektmemória az, ami miatt úgy érzed, a Bolt már ismeri a projektedet. Amikor egy munkamenet befejezi a fordulóját, a Bolt kivonatolja azt, ami hasznos volt, és egy projektenkénti memóriatárolóba írja. Amikor új munkamenetet nyitsz, a Bolt beinjektál egy memóriaindexet és a legutóbbi munkamenet-összefoglalót a rendszerpromptba, így az ügynök valódi kontextussal indul, nem üres lappal.
+
+## Hogyan működik a rögzítés
+
+Minden beszélgetési forduló végén a Bolt megkéri a modellt, hogy foglalja össze azokat a tartós tényeket, amelyek legközelebb hasznosak lesznek: konvenciók, architekturális jegyzetek, fájlelrendezés, build/teszt-parancsok, buktatók és nyitott szálak. Ezeket a lemezre írja a projekt memóriakönyvtára alá, a legutóbbi munkamenet gördülő összefoglalójával együtt.
+
+A memória projektspecifikus. Ugyanazon repó két helyi klónja ugyanazon a gépen ugyanazt a memóriát osztja meg; a nem kapcsolódó projektek soha nem látják egymás memóriáját.
+
+## Explicit eszközök
+
+Az ügynökök közvetlenül is olvashatják és írhatják a memóriát egy munkamenet során:
+
+- `memory_save` — rögzíts egy konkrét tényt, amit az ügynöknek legközelebb emlékeznie kell.
+- `memory_recall` — keress meg valamit, amit az ügynök (vagy te) korábban rögzített.
+
+Megkérheted az ügynököt, hogy „jegyezze meg, hogy pnpm-et használunk, nem npm-et”, és ő meghívja neked a `memory_save` eszközt.
+
+## Munkamenetenkénti vezérlés
+
+A TUI-n belül az aktuális munkamenet memória-viselkedését slash parancsokkal kapcsolhatod:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Ez akkor hasznos, ha egy eldobható, felderítő munkamenetet szeretnél, ami nem szennyezi a memóriádat, vagy egy csak olvasható munkamenetet, ami mégis profitál a korábbi kontextusból.
+
+## Memória vizsgálata és szerkesztése
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+A memória sima fájlként van tárolva a lemezen a projekt Bolt-adatkönyvtára alatt, így közvetlenül grepelheted, szerkesztheted vagy törölheted a bejegyzéseket. A pontos útvonal megkereséséhez a gépeden futtasd a `bolt debug paths` parancsot.
+
+## Kapcsolódó
+
+- [Munkamenetek](/concepts/sessions) — a tartós beszélgetések, amelyek memóriabejegyzéseket hoznak létre.
+- [Konfiguráció](/concepts/configuration) — hová kerül a memória, és hogyan írhatod felül az útvonalat.

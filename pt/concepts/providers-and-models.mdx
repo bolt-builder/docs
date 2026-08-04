@@ -1,0 +1,139 @@
+---
+title: "Fornecedores e Modelos — Autenticação e Seleção de LLM"
+sidebarTitle: "Fornecedores e Modelos"
+description: "O Bolt suporta qualquer fornecedor de LLM através do Vercel AI SDK. Autentique fornecedores, liste modelos, ajuste o esforço de raciocínio e execute comparações best-of-N em paralelo."
+---
+
+O Bolt é, por conceção, agnóstico ao modelo. Nos bastidores, utiliza o **Vercel AI SDK** para comunicar com os fornecedores, o que significa que qualquer fornecedor suportado pelo SDK — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter e outros — funciona logo à partida. O catálogo de fornecedores e modelos provém de [models.dev](https://models.dev), uma base de dados mantida pela comunidade com metadados e preços dos fornecedores.
+
+## Gerir credenciais de fornecedores
+
+Utilize `bolt providers` (com o alias `bolt auth`) para adicionar, listar e remover credenciais de fornecedores.
+
+### Adicionar ou atualizar credenciais
+
+```bash
+bolt providers login
+# ou equivalentemente:
+bolt auth login
+```
+
+Isto abre um prompt interativo para selecionar um fornecedor e introduzir credenciais. Para saltar o fluxo interativo, passe flags diretamente:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Listar fornecedores configurados
+
+```bash
+bolt providers list
+# ou:
+bolt auth list
+```
+
+Apresenta todas as credenciais armazenadas e quaisquer chaves de API de fornecedores detetadas em variáveis de ambiente.
+
+### Remover credenciais
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Autenticação por variáveis de ambiente
+
+Para pipelines de CI ou ambientes headless, defina diretamente a variável de ambiente da chave de API do fornecedor — sem login interativo. Exemplos comuns:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+O Bolt lê estas variáveis automaticamente no arranque. `bolt providers list` indicará quais as variáveis de ambiente detetadas.
+
+## Explorar os modelos disponíveis
+
+`bolt models` lista todos os modelos disponíveis nos fornecedores configurados.
+
+```bash
+# Listar todos os modelos
+bolt models
+
+# Filtrar por um fornecedor
+bolt models anthropic
+
+# Mostrar metadados de custo e capacidades
+bolt models --verbose
+
+# Atualizar o catálogo de modelos a partir do models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Execute `bolt models --verbose` para ver os preços de tokens de entrada/saída de cada modelo. Isto facilita a comparação de compromissos de custo antes de comprometer-se com um modelo para uma tarefa de longa duração.
+</Tip>
+
+### Formato do identificador de modelo
+
+Os modelos são sempre referenciados no formato `provider/model`:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Utilize este formato onde quer que o Bolt aceite um modelo — flags de CLI, ficheiros de configuração e definições de agentes.
+
+## Selecionar um modelo em tempo de execução
+
+### Flag `--model` / `-m`
+
+A flag `--model` está disponível em `bolt run`, `bolt commit` e `bolt review`:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — controlar o esforço de raciocínio
+
+Alguns modelos suportam níveis de esforço de raciocínio configuráveis (por exemplo, o pensamento estendido da Anthropic ou os modelos de raciocínio da OpenAI). Utilize `--variant` para selecionar o nível:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Os valores de variant disponíveis dependem do fornecedor e do modelo. Valores comuns são `minimal`, `low`, `medium`, `high` e `max`, mas o conjunto exato varia. Consulte a documentação do fornecedor ou utilize `bolt models --verbose` para ver as variantes suportadas por um dado modelo.
+</Note>
+
+### `--thinking` — mostrar blocos de raciocínio
+
+Ao utilizar um modelo que suporta pensamento estendido, passe `--thinking` para expor a cadeia de raciocínio do modelo na saída:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Execuções paralelas best-of-N
+
+`--best-of` dispara o mesmo prompt em vários modelos em paralelo e utiliza depois um modelo juiz para classificar as respostas e ficar com a melhor:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+O juiz assume por predefinição o modelo passado através de `--model`, ou a primeira entrada da lista `--best-of` se `--model` não estiver definido. A flag aceita uma lista separada por vírgulas de identificadores `provider/model`.
+
+<Tip>
+  Best-of-N é especialmente útil para problemas algorítmicos complexos ou decisões de arquitetura em que diferentes modelos podem trazer abordagens genuinamente distintas. Deixe o Bolt executá-los em paralelo e escolher o vencedor automaticamente.
+</Tip>

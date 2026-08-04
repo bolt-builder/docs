@@ -1,0 +1,395 @@
+---
+title: "Memecahkan masalah umum Bolt"
+sidebarTitle: "Troubleshooting"
+description: "Solusi untuk masalah Bolt paling umum: kegagalan startup, kesalahan auth provider, konektivitas MCP, masalah sesi, izin, biaya, dan lainnya."
+---
+
+Sebagian besar masalah Bolt jatuh ke dalam sejumlah kecil kategori. Kerjakan accordion yang relevan di bawah ini, dan periksa output log dengan `bolt logs` kapan pun terjadi sesuatu yang tak terduga.
+
+<Note>
+  Untuk pertanyaan yang tidak dijawab di sini, cari atau mulai diskusi di [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Sertakan output dari `bolt debug info` dan `bolt logs --tail 50` dalam postingan kamu agar komunitas dapat membantu lebih cepat.
+</Note>
+
+## Hal pertama yang bisa dicoba
+
+Sebelum menyelam ke bagian tertentu, empat perintah ini menyelesaikan sebagian besar masalah:
+
+| Gejala | Perintah pertama | Alasan |
+| --- | --- | --- |
+| Sesuatu yang aneh | `bolt debug info` | Ringkasan sistem \+ plugin sekali jalan. |
+| Sesuatu bekerja sebelumnya, sekarang tidak | `bolt logs --tail 100` | Kesalahan terbaru, biasanya di dekat atas. |
+| Curiga plugin | `bolt --pure` | Mulai dengan semua plugin dinonaktifkan. |
+| Config tidak diambil | `bolt debug config` | Mencetak config yang terselesaikan penuh. |
+
+<Tip>
+  Keluarga `bolt debug` adalah pemberhentian pertama untuk perilaku misterius apa pun. `bolt debug info` untuk ringkasan sistem, `bolt debug config` untuk config yang terselesaikan, `bolt debug paths` untuk lokasi on-disk, dan `bolt debug snapshot` untuk memeriksa status sesi.
+</Tip>
+
+<Accordion title="Bolt doesn't start / crashes on launch">
+  **Gejala:** Terminal berkedip dan segera keluar, atau kamu melihat stack trace sebelum TUI dirender.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Collect system information">
+      ```bash
+      bolt debug info
+      ```
+
+      Ini mencetak versi Bolt kamu, OS, terminal emulator, dan plugin yang dimuat. Salin output ini saat melaporkan bug.
+    </Step>
+    <Step title="Check recent log output">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Cari baris `ERROR`. Penyebab umum adalah plugin yang gagal dimuat — dalam hal itu kamu akan melihat kesalahan yang menyebutkan nama plugin.
+    </Step>
+    <Step title="Disable plugins to isolate the issue">
+      ```bash
+      bolt --pure
+      ```
+
+      Jika Bolt memulai dengan bersih dengan `--pure`, sebuah plugin menyebabkan crash. Hapus plugin yang bermasalah dari config kamu, atau laporkan ke penulis plugin.
+    </Step>
+    <Step title="Check for corrupted config">
+      ```bash
+      bolt debug config
+      ```
+
+      Jika ini mencetak kesalahan tentang JSON tak valid, buka file config yang disebutkan dan perbaiki sintaksnya. Jalankan `bolt db path` untuk mengonfirmasi bahwa path database dapat diakses.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Provider authentication fails">
+  **Gejala:** Bolt menampilkan "No providers configured", permintaan API gagal dengan kesalahan 401, atau `bolt run` segera keluar tanpa menghasilkan output apa pun.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Re-run the provider login flow">
+      ```bash
+      bolt providers login
+      ```
+
+      Pilih provider kamu dan ikuti prompt. Bolt akan memandumu melalui entri API key atau OAuth.
+    </Step>
+    <Step title="Verify the API key environment variable">
+      Jika kamu menggunakan env var (misal `ANTHROPIC_API_KEY`), konfirmasi variabel benar-benar diatur di shell saat ini:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Jika kosong, tambahkan ke profil shell kamu dan buka ulang terminal kamu.
+    </Step>
+    <Step title="Inspect the resolved config">
+      ```bash
+      bolt debug config
+      ```
+
+      Lihat bagian `provider`. Jika provider kamu muncul dengan `apiKey` kosong, referensi variabel lingkungan di file config kamu tidak diperluas.
+    </Step>
+    <Step title="List stored credentials">
+      ```bash
+      bolt providers list
+      ```
+
+      Ini menampilkan semua kredensial yang disimpan di `auth.json` dan semua variabel lingkungan terkait provider yang terdeteksi Bolt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP server won't connect">
+  **Gejala:** `bolt mcp list` menampilkan server sebagai `failed` atau `needs authentication`, atau agent tidak dapat menggunakan tool apa pun dari server tersebut.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Run the MCP debug probe">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Ini menguji konektivitas HTTP dasar, memeriksa header `WWW-Authenticate`, dan menelusuri alur discovery OAuth jika berlaku. Output akan memberi tahumu apakah server dapat dijangkau dan apakah auth diperlukan.
+    </Step>
+    <Step title="Check the server URL">
+      Verifikasi URL di `.bolt/bolt.jsonc` kamu. Untuk server remote, pastikan URL diakhiri dengan path MCP (misal `/mcp` atau `/tools`), bukan hanya host.
+    </Step>
+    <Step title="Re-authenticate for OAuth servers">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Ikuti alur browser. Jika server memerlukan client ID yang telah didaftarkan sebelumnya, tambahkan ke config:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Check local server command">
+      Untuk server `local`, jalankan perintah secara manual di terminal kamu untuk mengonfirmasi bahwa perintah dimulai tanpa kesalahan:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Session not found">
+  **Gejala:** `bolt run --session <id>` keluar dengan "Session not found", atau sesi yang kamu ingat pernah dikerjakan hilang.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="List all available sessions">
+      ```bash
+      bolt session list
+      ```
+
+      Sesi diurutkan berdasarkan yang paling baru diperbarui terlebih dahulu. Jika sesi kamu dihapus atau database dimigrasikan, tidak akan muncul di sini.
+    </Step>
+    <Step title="Find the database path">
+      ```bash
+      bolt db path
+      ```
+
+      Ini mencetak path lengkap ke file SQLite. Verifikasi bahwa file ada dan tidak kosong.
+    </Step>
+    <Step title="Query the database directly">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Jika sesi kamu muncul di database tetapi tidak di `bolt session list`, mungkin ada ketidakcocokan ID proyek — sesi dilingkupi ke proyek.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Permission errors in the TUI">
+  **Gejala:** Agent meminta izin berulang kali, menolak menulis file, atau kamu melihat banner "Permission denied".
+
+  **Memahami tingkat akses:**
+
+  Setiap agent bawaan memiliki tingkat akses yang dideklarasikan yang mengontrol apa yang dapat dilakukannya tanpa bertanya:
+
+  | Tingkat akses | Yang diizinkan |
+  | --- | --- |
+  | **Full** | Membaca file, menulis file, menjalankan perintah shell |
+  | **Edit** | Membaca dan menulis file, tanpa perintah shell |
+  | **Read** | Membaca file saja, tanpa penulisan atau perintah |
+
+  Agent `code`, `debug`, `refactor`, `migrate`, dan `perf` memiliki akses **Full**. `docs` memiliki akses **Edit**. `plan`, `ask`, `code-review`, dan `security` memiliki akses **Read**.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Switch to an agent with Full access">
+      Jika kamu memerlukan penulisan file, gunakan agent `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Atau tekan `Tab` di TUI untuk menelusuri agent.
+    </Step>
+    <Step title="Use --auto to approve prompts non-interactively">
+      Dalam konteks CI atau skrip, teruskan `--auto` ke `bolt run` untuk auto-approve izin yang tidak secara eksplisit ditolak di config.
+    </Step>
+    <Step title="Configure permissions in the config file">
+      Kamu dapat menolak tool tertentu untuk semua sesi dalam proyek dengan menambahkan blok `permission` ke `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="High token usage or unexpected costs">
+  **Gejala:** `bolt stats` menampilkan jumlah token lebih tinggi dari yang diharapkan, atau tagihan API kamu tumbuh lebih cepat dari yang diantisipasi.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Review your usage statistics">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Output merinci biaya per hari, rata-rata token per sesi, dan penggunaan per model.
+    </Step>
+    <Step title="Lower the reasoning effort">
+      Untuk model yang mendukungnya, kurangi reasoning effort dengan `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Nilai yang didukung spesifik provider (misal `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Switch to a cheaper model">
+      Gunakan `bolt models` untuk menemukan model yang lebih kecil. Model yang lebih kecil (misal `claude-haiku`, `gpt-4o-mini`) berbiaya jauh lebih sedikit per token dan bekerja dengan baik untuk banyak tugas.
+    </Step>
+    <Step title="Use the ask or plan agent for exploration">
+      Agent `ask` dan `plan` memiliki akses **Read** dan tidak memanggil tool penulisan, yang berarti mereka menghindari loop yang berat pada tool yang menghasilkan token output besar.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Plugin conflicts or unexpected behavior">
+  **Gejala:** Sebuah slash command berperilaku tak terduga, TUI dirender secara tidak benar, atau sesuatu berubah setelah menginstal plugin.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Disable all plugins to establish a baseline">
+      ```bash
+      bolt --pure
+      ```
+
+      Jika masalah menghilang, sebuah plugin bertanggung jawab.
+    </Step>
+    <Step title="Identify the offending plugin">
+      ```bash
+      bolt debug info
+      ```
+
+      Output mencantumkan semua plugin yang dimuat. Hapus sementara satu per satu dari config kamu dan restart Bolt sampai masalah hilang.
+    </Step>
+    <Step title="Check for version incompatibility">
+      ```bash
+      bolt upgrade
+      ```
+
+      Plugin mendeklarasikan rentang versi Bolt yang kompatibel. Jika kamu baru saja meng-upgrade Bolt, sebuah plugin mungkin juga perlu diperbarui.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows path issues">
+  **Gejala:** Di Windows dengan WSL, Bolt tidak dapat menemukan `less`, path file mengandung backslash tak terduga, atau pager untuk `bolt session list` tidak diluncurkan.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Set the Git Bash path">
+      Bolt mencari utilitas Unix (termasuk `less`) relatif terhadap instalasi Git untuk Windows. Atur variabel lingkungan ke direktori Git Bash kamu:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Tambahkan ini ke profil PowerShell kamu (`$PROFILE`) untuk mempertahankannya.
+    </Step>
+    <Step title="Verify with debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Mengonfirmasi deteksi OS dan path mana yang digunakan Bolt.
+    </Step>
+    <Step title="Run Bolt inside WSL directly">
+      Untuk pengalaman terbaik di Windows, jalankan `bolt` dari dalam terminal WSL daripada dari PowerShell atau Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Can't upgrade Bolt">
+  **Gejala:** `bolt upgrade` melaporkan kesalahan atau diam-diam tidak melakukan apa-apa, atau nomor versi tidak berubah setelah menjalankannya.
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Specify the installation method explicitly">
+      Bolt mencoba mendeteksi bagaimana ia diinstal. Jika deteksi gagal, override:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Reinstall via the install script">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: run as Administrator for Chocolatey">
+      Jika kamu menginstal via `choco`, upgrade memerlukan terminal yang dielevasi. Buka PowerShell sebagai Administrator sebelum menjalankan `bolt upgrade`.
+    </Step>
+    <Step title="Confirm the new version is active">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agent can't find files (or finds too many)">
+  **Gejala:** Agent mengeluh tidak dapat melihat file yang ada, atau berulang kali mengambil file yang tidak ingin kamu sentuh (seperti `node_modules`, output build, atau secret).
+
+  **Langkah:**
+
+  <Steps>
+    <Step title="Check for a .boltignore">
+      Bolt menghormati file `.boltignore` di root proyek yang mengontrol file mana yang dapat dilihat tool pencarian file agent. Ia menggunakan sintaks yang sama dengan `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Confirm the working directory">
+      ```bash
+      bolt debug info
+      ```
+
+      Verifikasi bahwa `cwd` cocok dengan root proyek. Jika kamu meluncurkan Bolt dari subdirektori, pencarian file agent berakar di sana.
+    </Step>
+    <Step title="Ask the agent to grep, not guess">
+      Jika agent mengklaim sebuah file tidak ada, minta ia menjalankan `grep` atau `glob` secara eksplisit. Ini melewati asumsi internal usang apa pun.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Getting debug info for a bug report">
+  Saat mengajukan issue, informasi berikut paling berguna bagi maintainer:
+
+  <Steps>
+    <Step title="Collect system and plugin info">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Collect recent log output">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Export the relevant session (sanitized)">
+      Jika masalah terjadi selama sesi tertentu, ekspor dengan secret yang diredaksi:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Lampirkan `session-debug.json` ke issue.
+    </Step>
+    <Step title="Open an issue or discussion">
+      Kunjungi [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) dan tempelkan output `bolt debug info` kamu plus deskripsi langkah-langkah untuk mereproduksi.
+    </Step>
+  </Steps>
+</Accordion>

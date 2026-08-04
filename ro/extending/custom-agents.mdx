@@ -1,0 +1,68 @@
+---
+title: "Agenți personalizați în Bolt"
+sidebarTitle: "Agenți personalizați"
+description: "Definește-ți propriii agenți Bolt ca fișiere Markdown — alege un model, setează nivelul de acces, restricționează instrumentele și adaugă instrucțiuni specifice domeniului."
+---
+
+Dincolo de cei zece agenți încorporați, îți poți defini proprii tăi agenți. Agenții personalizați sunt fișiere Markdown cu un bloc de frontmatter care descrie modelul agentului, nivelul de acces și instrumentele disponibile, plus un corp care servește drept prompt de sistem.
+
+## Crearea unui agent
+
+Cea mai rapidă cale este generatorul încorporat, care pune câteva întrebări și scrie fișierul pentru tine:
+
+```bash
+bolt agent create
+```
+
+Agenții trăiesc în `.opencode/agent/` din proiect (sau în directorul tău de configurare globală pentru agenți personali). Fiecare agent este un singur fișier `.md` al cărui nume devine numele agentului.
+
+## Anatomia unui fișier de agent
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Câmpuri obișnuite de frontmatter:
+
+| Câmp | Scop |
+| --- | --- |
+| `name` | Numele agentului folosit cu `--agent`. |
+| `description` | Rezumat pe o linie afișat în listări. |
+| `model` | Modelul implicit în format `provider/model`. |
+| `access` | `full`, `edit` sau `read` (consultă [Permisiuni](/concepts/permissions)). |
+| `tools` | Listă opțională de permisiune care restricționează [instrumentele](/concepts/tools) pe care le poate apela agentul. |
+
+## Folosirea unui agent personalizat
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+În TUI, apasă `Tab` pentru a parcurge agenții; agenții personalizați apar alături de cei încorporați.
+
+## Subagenți
+
+Agenții pot delega către subagenți prin instrumentul `task`. Bolt include `@general` și `@explore`, iar orice agent personalizat al cărui fișier se află în `.opencode/agent/` poate fi invocat și ca subagent după nume.
+
+## Legături conexe
+
+- [Agenți](/concepts/agents) — lista de agenți încorporați.
+- [Instrumente](/concepts/tools) — ce poți adăuga în `tools:`.
+- [Instrumente personalizate](/extending/custom-tools) — construiește instrumentul pe care îl va apela agentul.

@@ -1,0 +1,61 @@
+---
+title: "Bolt ortam değişkenleri referansı"
+sidebarTitle: "Ortam Değişkenleri"
+description: "Günlük kontrolü, sunucu kimlik doğrulaması, yapılandırma geçersiz kılmaları ve sağlayıcı API anahtarı kuralları dahil Bolt tarafından tanınan her ortam değişkeni."
+---
+
+Ortam değişkenleri, herhangi bir yapılandırma dosyasına dokunmadan Bolt'u yapılandırmanıza olanak tanır — CI ardışık düzenlerinde, Docker konteynerlerinde ve kimlik bilgilerini işleyemediğiniz paylaşılan ortamlarda kullanışlıdır. Başlangıçta bir kez okunur ve Bolt çalışırken değiştirilemezler.
+
+## Referans
+
+| Değişken | Açıklama |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Günlük ayrıntı düzeyini ayarla. Kabul edilen değerler: `DEBUG`, `INFO`, `WARN`, `ERROR`. `--log-level` bayrağıyla eşdeğerdir. |
+| `BOLT_PRINT_LOGS` | Günlük çıktısını stderr'e yazdırmak için herhangi boş olmayan bir değere ayarlayın. `--print-logs` ile eşdeğerdir. |
+| `BOLT_PURE` | Tüm harici eklentileri devre dışı bırakmak için herhangi boş olmayan bir değere ayarlayın. `--pure` ile eşdeğerdir. |
+| `BOLT_SERVER_USERNAME` | `bolt serve` ve `bolt web` için temel kimlik doğrulama kullanıcı adı. |
+| `BOLT_SERVER_PASSWORD` | `bolt serve` ve `bolt web` için temel kimlik doğrulama parolası. Tüm bağlanan istemciler bu parolayı sağlamalıdır. |
+| `BOLT_CONFIG` | Bolt'un yüklediği yapılandırma dosyası yolunu geçersiz kılar. Bu ayarlandığında Bolt varsayılan konumları aramaz. |
+| `BOLT_CONFIG_DIR` | Yapılandırma dizinini geçersiz kılar. Bolt, varsayılan OS yapılandırma dizini yerine bu dizinde yapılandırma dosyaları arar. |
+| `BOLT_CONFIG_CONTENT` | Tüm yapılandırmayı satır içi JSON dizesi olarak sağlar. Dosya yazmanın pratik olmadığı CI'de kullanışlıdır. Yapılandırma kaynakları arasında en yüksek önceliği alır. |
+| `BOLT_GIT_BASH_PATH` | Windows'ta Git Bash'in `bin` dizininin yolu, `less` gibi Unix yardımcı programlarını bulmak için kullanılır. |
+
+## Sağlayıcı API anahtarları
+
+Bolt sağlayıcı kimlik bilgilerini otomatik olarak ortam değişkenlerinden keşfeder — `bolt providers login` adımına gerek yoktur. Her sağlayıcı belirli bir ortam değişkeni arar ve değişken ayarlıysa Bolt bunu kullanır, `auth.json` içinde saklanan değerlerden bağımsız olarak.
+
+<Tip>
+  Sağlayıcı API anahtarlarını kabuk profilinizde (örn. `~/.zshrc`, `~/.bashrc`) veya kabuğunuz tarafından yüklenen bir `.env` dosyasında ayarlayın. Bir `provider.*.apiKey` alanında `${VAR_NAME}` söz dizimini kullanarak yapılandırma dosyasından da bunlara başvurabilirsiniz; böylece anahtarlar hiçbir zaman düz metin olarak saklanmaz.
+</Tip>
+
+Yaygın sağlayıcı değişkenleri:
+
+| Değişken | Sağlayıcı |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o serisi) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Her yapılandırılmış sağlayıcının hangi ortam değişkenini beklediğini görmek için `bolt models --verbose` komutunu çalıştırın.
+
+## Kullanım örnekleri
+
+```bash
+# Tek bir çalıştırma için hata ayıklama günlüğünü etkinleştir
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Eklenti müdahalesini elemek için hiç eklenti olmadan çalıştır
+BOLT_PURE=1 bolt
+
+# Temel kimlik doğrulamalı ortak sunucu başlat
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Yapılandırmayı satır içinde sağla (CI'da kullanışlıdır)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

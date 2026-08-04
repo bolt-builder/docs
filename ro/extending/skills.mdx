@@ -1,0 +1,22 @@
+---
+title: "Skill-uri: playbook-uri reutilizabile pentru agenți"
+sidebarTitle: "Skill-uri"
+description: "Skill-urile sunt playbook-uri denumite, reutilizabile, pe care agentul Bolt le invocă prin instrumentul skill — utile pentru fluxuri de lucru pregătite precum lansarea de versiuni sau rularea suitelor de lint."
+---
+
+Skill-urile sunt playbook-uri denumite, reutilizabile, care trăiesc alături de proiectul tău și sunt invocate prin instrumentul `skill`. Acolo unde un instrument personalizat este o singură acțiune executabilă, un skill este un flux de lucru scriptat pe care agentul îl poate urma pas cu pas: adună aceste fișiere, rulează aceste comenzi, decide ce să facă în continuare pe baza rezultatului.
+
+Folosește skill-uri când:
+
+- Ai un flux de lucru pe care îl reexplici mereu în prompturi („mai întâi rulează linterul, apoi …”).
+- Vrei ca agentul să urmeze un arbore de decizie specific.
+- Vrei același flux de lucru disponibil pentru fiecare sesiune și fiecare agent din proiect.
+
+## Unde trăiesc
+
+Skill-urile sunt fișiere din `.opencode/skill/` (sau `.opencode/skills/`) în rădăcina proiectului. Fiecare fișier descrie numele de declanșator, când ar trebui agentul să îl folosească și pașii implicați. [Instrumentul](/concepts/tools) `skill` le expune modelului.
+
+## Legături conexe
+
+- [Instrumente personalizate](/extending/custom-tools) — extensie de nivel mai jos, cu o singură acțiune.
+- [Agenți personalizați](/extending/custom-agents) — încorporează instrucțiunile într-un agent în schimb.

@@ -1,0 +1,61 @@
+---
+title: "Bolt environment variable ma'lumotnomasi"
+sidebarTitle: "Env o'zgaruvchilar"
+description: "Bolt tomonidan tan olingan har bir environment variable, jumladan log boshqaruvi, server auth, konfiguratsiya override'lari va provayder API kalit konvensiyalari."
+---
+
+Environment variable'lar sizga hech qanday konfiguratsiya fayllariga tegmasdan Bolt'ni sozlashga imkon beradi — bu hisob ma'lumotlarini commit qila olmaydigan CI pipelinelari, Docker konteynerlari va bo'lishilgan muhitlarda foydali. Ular ishga tushirishda bir marta o'qiladi va Bolt ishlab turganida o'zgartirilishi mumkin emas.
+
+## Ma'lumotnoma
+
+| O'zgaruvchi | Tavsif |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Log batafsilligini o'rnatish. Qabul qilingan qiymatlar: `DEBUG`, `INFO`, `WARN`, `ERROR`. `--log-level` bayrog'iga teng. |
+| `BOLT_PRINT_LOGS` | Log chiqishni stderr'ga chop etish uchun har qanday bo'sh bo'lmagan qiymatga o'rnating. `--print-logs` ga teng. |
+| `BOLT_PURE` | Barcha tashqi plaginlarni o'chirish uchun har qanday bo'sh bo'lmagan qiymatga o'rnating. `--pure` ga teng. |
+| `BOLT_SERVER_USERNAME` | `bolt serve` va `bolt web` uchun basic auth foydalanuvchi nomi. |
+| `BOLT_SERVER_PASSWORD` | `bolt serve` va `bolt web` uchun basic auth paroli. Barcha ulanuvchi mijozlar bu parolni taqdim etishi kerak. |
+| `BOLT_CONFIG` | Bolt yuklaydigan konfiguratsiya fayl yo'lini override qilish. Bu o'rnatilganda Bolt standart joylarni qidirmaydi. |
+| `BOLT_CONFIG_DIR` | Konfiguratsiya katalogini override qilish. Bolt standart OS konfiguratsiya katalogi o'rniga bu katalogda konfiguratsiya fayllarini izlaydi. |
+| `BOLT_CONFIG_CONTENT` | Butun konfiguratsiyani inline JSON string sifatida bering. Fayllar yozish amaliy bo'lmagan CI da foydali. Konfiguratsiya manbalari orasida eng yuqori ustuvorlikni oladi. |
+| `BOLT_GIT_BASH_PATH` | Windows'da Git Bash'ning `bin` katalogiga yo'l, `less` kabi Unix utilitalarini topish uchun ishlatiladi. |
+
+## Provayder API kalitlari
+
+Bolt provayder hisob ma'lumotlarini environment variable'lardan avtomatik topadi — `bolt providers login` bosqichi talab qilinmaydi. Har bir provayder muayyan environment variable'ni izlaydi va agar o'zgaruvchi o'rnatilgan bo'lsa, `auth.json` da nima saqlanganidan qat'i nazar, Bolt undan foydalanadi.
+
+<Tip>
+  Provayder API kalitlarini shell profilingizda (masalan, `~/.zshrc`, `~/.bashrc`) yoki shell'ingiz yuklaydigan `.env` faylida o'rnating. Shuningdek, kalitlar hech qachon plaintext'da saqlanmasligi uchun `provider.*.apiKey` maydonida `${VAR_NAME}` sintaksisidan foydalanib konfiguratsiya faylidan havola qilishingiz mumkin.
+</Tip>
+
+Umumiy provayder o'zgaruvchilari:
+
+| O'zgaruvchi | Provayder |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Har bir sozlangan provayder qanday environment variable'ni kutayotganini ko'rish uchun `bolt models --verbose` ni ishga tushiring.
+
+## Foydalanish misollari
+
+```bash
+# Bitta ishga tushirish uchun debug loglashni yoqish
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Plagin ta'sirini istisno qilish uchun hech qanday plaginsiz ishga tushirish
+BOLT_PURE=1 bolt
+
+# Basic auth bilan ochiq serverni boshlash
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Konfiguratsiyani inline berish (CI da foydali)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

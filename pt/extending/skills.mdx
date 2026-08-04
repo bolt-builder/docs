@@ -1,0 +1,22 @@
+---
+title: "Skills: Manuais de Utilização Reutilizáveis para Agentes"
+sidebarTitle: "Skills"
+description: "As skills são manuais reutilizáveis com nome que o agente Bolt invoca através da ferramenta skill — úteis para fluxos de trabalho pré-definidos, como lançar versões ou executar suítes de lint."
+---
+
+As skills são manuais reutilizáveis com nome que vivem junto do seu projeto e são invocados através da ferramenta `skill`. Onde uma ferramenta personalizada é uma única ação executável, uma skill é um fluxo de trabalho por script que o agente pode seguir passo a passo: reunir estes ficheiros, executar estes comandos, decidir o que fazer a seguir com base no output.
+
+Use skills quando:
+
+- Tem um fluxo de trabalho que continua a reexplicar em prompts ("primeiro executa o linter, depois…").
+- Quer que o agente siga uma árvore de decisão específica.
+- Quer o mesmo fluxo de trabalho disponível em todas as sessões e para todos os agentes do projeto.
+
+## Onde vivem
+
+As skills são ficheiros em `.opencode/skill/` (ou `.opencode/skills/`) na raiz do projeto. Cada ficheiro descreve o nome de acionamento, quando o agente deve utilizá-la e os passos envolvidos. A [ferramenta](/concepts/tools) `skill` expõe-as ao modelo.
+
+## Relacionado
+
+- [Ferramentas Personalizadas](/extending/custom-tools) — extensão de nível mais baixo, ação única.
+- [Agentes Personalizados](/extending/custom-agents) — incorpore instruções num agente em alternativa.

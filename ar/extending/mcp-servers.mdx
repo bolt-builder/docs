@@ -1,0 +1,215 @@
+---
+title: "أضف أدوات إلى Bolt عبر خوادم MCP"
+sidebarTitle: "خوادم MCP"
+description: "اربط أدوات وموارد خارجية بـ Bolt عبر Model Context Protocol. أضف وصادق وصحّح أخطاء خوادم MCP من CLI."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) هو معيار مفتوح يتيح لوكلاء الذكاء الاصطناعي التواصل مع أدوات ومصادر بيانات خارجية عبر واجهة موحّدة. يستخدم Bolt MCP لتوسيع ما يمكن للوكلاء فعله — يمكن لخادم MCP متصل أن يعرض أي شيء من أداة استعلام قاعدة بيانات إلى API بحث ويب كامل. يدير Bolt دورة الحياة الكاملة: إضافة الخوادم، تشغيل تدفقات OAuth، تحديث الرموز، وفحص الاتصال.
+
+## أنواع الخوادم
+
+يدعم Bolt نوعين من خوادم MCP.
+
+| النوع | النقل | الوصف |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | خادم يعمل على URL يمكنك الوصول إليه عبر الشبكة |
+| `local` | stdio | أمر محلي يُطلقه Bolt كعملية فرعية |
+
+تدعم الخوادم البعيدة مصادقة OAuth جاهزة. يتعامل Bolt مع الحصول على الرموز وتخزينها وتحديثها التلقائي — لا تدير الرموز يدويًا أبدًا.
+
+---
+
+## الأوامر
+
+### `bolt mcp add`
+
+أضف خادم MCP جديد تفاعليًا أو دفعة واحدة.
+
+**تفاعلي** — شغّل `bolt mcp add` بدون وسائط للخطو خلال معالج مدفوع بموجّهات يسأل عن الاسم والنطاق (مشروع أو عام) والنوع وعنوان URL أو الأمر وما إذا كان الخادم يستخدم OAuth.
+
+**غير تفاعلي** — قدّم اسمًا مع إما `--url` لخادم بعيد أو أمرًا بعد `--` لخادم محلي:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**خيارات `bolt mcp add`**
+
+| الخيار | الوصف |
+|------|-------------|
+| `--url <url>` | عنوان URL لخادم MCP بعيد |
+| `--header <KEY=VALUE>` | رأس HTTP يُرسل إلى خادم بعيد (قابل للتكرار) |
+| `--env <KEY=VALUE>` | متغير بيئة لخادم محلي (قابل للتكرار) |
+
+---
+
+### `bolt mcp list`
+
+اسرد كل خادم MCP مضبوط مع حالة اتصاله ومصادقته.
+
+```bash
+bolt mcp list
+```
+
+يعرض كل مدخل أيقونة حالة:
+
+| الأيقونة | المعنى |
+|------|---------|
+| `✓` | متصل (ومصادق عليه إذا كان OAuth قيد الاستخدام) |
+| `⚠` | يحتاج إلى مصادقة أو بيانات الاعتماد منتهية |
+| `✗` | فشل الاتصال أو مطلوب تسجيل عميل |
+| `○` | لم يُهيّأ بعد أو معطّل |
+
+---
+
+### `bolt mcp auth <name>`
+
+صادق على خادم MCP بعيد مفعّل لـ OAuth. إذا حذفت الاسم، يعرض Bolt منتقيًا تفاعليًا يسرد جميع الخوادم القادرة على OAuth مع حالة مصادقتها الحالية (`✓ authenticated` أو `⚠ expired` أو `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+يفتح Bolt متصفّحك على عنوان URL لتفويض المزوّد وينتظر رد الاتصال — تحدث مصافحة OAuth الكاملة، بما في ذلك تسجيل العميل الديناميكي عند الحاجة، تلقائيًا.
+
+<Note>
+  يتعامل Bolt مع تدفق OAuth الكامل، بما في ذلك تخزين الرموز وتحديث الرموز التلقائي. لا تحتاج إلى نسخ الرموز أو إدارة انتهاء الصلاحية يدويًا. إذا كان الخادم يتطلّب معرّف عميل مسجّل مسبقًا، أضف `oauth.clientId` (واختياريًا `oauth.clientSecret`) إلى إدخال إعدادات الخادم في `.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+أزل بيانات اعتماد OAuth المخزّنة لخادم. إذا حذفت الاسم، يطلب Bolt منك الاختيار من قائمة الخوادم التي لديها رموز مخزّنة.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+افحص اتصال خادم بعيد وتحقق من حالة OAuth دون بدء جلسة كاملة. هذه هي الأداة الأولى التي تلجأ إليها عندما يعرض خادم `✗ failed` أو `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+يُبلّغ `debug` عن:
+- عنوان URL للخادم وحالة المصادقة الحالية
+- تفاصيل رمز الوصول (مقنّعة) وطابع انتهاء الصلاحية
+- ما إذا كان رمز التحديث موجودًا
+- رمز استجابة HTTP الخام من الخادم
+- محتويات رأس `WWW-Authenticate`
+- نتيجة فحص اكتشاف OAuth (دون إكمال التدفق)
+
+---
+
+## الإعداد اليدوي
+
+يمكنك إضافة أو تحرير خوادم MCP مباشرة في `.bolt/bolt.jsonc` دون استخدام أوامر CLI. يلتقط Bolt التغييرات في بدء الجلسة التالية.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+خادم stdio محلي يبدو هكذا:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+لتوفير رؤوس HTTP مخصّصة أو تعطيل OAuth على خادم بعيد:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## إضافة خادم MCP بعيد والمصادقة عليه
+
+<Steps>
+  <Step title="أضف الخادم">
+    شغّل `bolt mcp add` واتّبع الموجّهات، أو استخدم النموذج غير التفاعلي:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    يكتب Bolt المدخل إلى `.bolt/bolt.jsonc` (نطاق المشروع) أو إعداداتك العامة.
+  </Step>
+
+  <Step title="تحقق من حالة الاتصال">
+    ```bash
+    bolt mcp list
+    ```
+
+    إذا كان الخادم يتطلّب مصادقة، سترى `⚠ needs authentication` بجانب اسمه.
+  </Step>
+
+  <Step title="صادق بـ OAuth">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    يفتح Bolt متصفّحك. بعد الموافقة على الوصول، تؤكّد الطرفية أن المصادقة تمّت بنجاح وتتغيّر حالة الخادم إلى `✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="تحقّق من توفّر الأدوات">
+    ابدأ جلسة Bolt. الأدوات المكشوفة من الخادم متاحة الآن لجميع الوكلاء. يمكنك فحصها في أي وقت:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

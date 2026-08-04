@@ -1,0 +1,32 @@
+---
+title: "İstatistikler ve Maliyet (bolt stats)"
+sidebarTitle: "İstatistikler ve Maliyet"
+description: "bolt stats, harcamanızın nereye gittiğini görebilmeniz ve modelleri veya ajanları buna göre ayarlayabilmeniz için oturumlarınız arasındaki token kullanımını ve maliyeti toplar."
+---
+
+`bolt stats`, yerel oturum veritabanında token sayılarını ve maliyeti toplar. Her araç çağrısı kaydedildiğinden ([Yerel Veritabanı](/reference/local-database) bölümüne bakın), sayılar Bolt'un yönlendirdiği LLM çağrıları için kesindir.
+
+## Temel kullanım
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Ne gösterir
+
+- Toplam giriş, çıkış ve önbellek tokenları.
+- Sağlayıcı başına tahmini maliyet (çalıştırma zamanında sağlayıcı fiyatlandırma tablolarını kullanarak).
+- Bayraklara bağlı olarak model başına, ajan başına ve gün başına dökümler.
+
+## Maliyeti azaltma
+
+- Muhakeme ağırlıklı modellerde `--variant minimal` veya `--variant low` kullanın. [Sağlayıcılar ve Modeller](/concepts/providers-and-models) bölümüne bakın.
+- Keşif için `ask` veya `plan` ajanını tercih edin; salt okunurdurlar ve araç ağırlıklı döngülerden kaçınırlar.
+- Sınır yeteneği gerektirmeyen görevler için `bolt models` ile daha küçük bir modele geçin.
+
+## İlgili
+
+- [Sağlayıcılar ve Modeller](/concepts/providers-and-models) — `stats`'in ölçtüğü modelleri seçin ve ayarlayın.
+- [Sorun Giderme](/reference/troubleshooting) — sürpriz bir fatura hakkında ne yapılmalı.

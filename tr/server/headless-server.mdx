@@ -1,0 +1,52 @@
+---
+title: "Bolt'u Başsız Sunucu Olarak Çalıştırın"
+sidebarTitle: "Başsız Sunucu"
+description: "bolt serve, herhangi bir TUI, web arayüzü, editör entegrasyonu veya betiğin ona yerel olarak veya ağ üzerinden bağlanabilmesi için tam bir Bolt çalışma zamanını HTTP üzerinden sunar."
+---
+
+`bolt serve`, tam motoru HTTP üzerinden sunan başsız bir Bolt sunucusu çalıştırır: oturumlar, ajanlar, araçlar, sağlayıcı erişimi, MCP ve akış olayları. Bolt'un etkileşimli olarak yapabileceği her şey API üzerinden de yapılabilir.
+
+## Bir sunucu başlatın
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  `0.0.0.0`'a bağlamak Bolt'u ağınıza açar. Bunu yapmadan önce her zaman `BOLT_SERVER_USERNAME` ve `BOLT_SERVER_PASSWORD` ayarlayın.
+</Warning>
+
+## Bir TUI bağlayın
+
+Sunucuya ulaşabilen herhangi bir makineden:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Veya uzak bir sunucuya karşı tek seferlik bir komut çalıştırın:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Temel kimlik doğrulama
+
+Kimlik bilgilerini ortam değişkenleri aracılığıyla ayarlayın ([Ortam Değişkenleri](/reference/environment-variables) bölümüne bakın):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Tüm istemciler eşleşen kimlik bilgilerini göndermelidir.
+
+## İlgili
+
+- [Uzak Oturumlar](/server/remote-sessions) — bağlanma, mDNS keşfi ve paylaşılan sunucular.
+- [Web Arayüzü](/server/web-ui) — tarayıcı ön yüzü.
+- [ACP](/server/acp) — Bolt'u Zed ve diğer editörlerden sürme.

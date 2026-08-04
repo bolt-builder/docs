@@ -1,0 +1,193 @@
+---
+title: "Configuració — Paràmetres de bolt.jsonc i sobreescriptures globals"
+sidebarTitle: "Configuració"
+description: "Bolt llegeix fitxers de configuració JSONC en capes des del teu projecte i els directoris de configuració del sistema operatiu. Estableix proveïdors, servidors MCP, instruccions, plugins i sobreescriptures d'entorn."
+---
+
+Bolt utilitza un sistema de configuració en capes: un fitxer de configuració **global** per als valors predeterminats a nivell d'usuari i un fitxer de configuració **per projecte** per als paràmetres específics del repositori. Tots dos fitxers utilitzen el format JSONC (JSON amb comentaris) i tots dos es creen automàticament amb un punter `$schema` que permet l'autocompletat a l'editor.
+
+## Ubicacions dels fitxers de configuració
+
+### Configuració per projecte
+
+Es crea automàticament a la primera execució dins del teu projecte:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Consigna aquest fitxer per compartir la configuració del proveïdor, els servidors MCP i les instruccions personalitzades amb la resta del teu equip. Les credencials sensibles mai haurien d'anar aquí — utilitza variables d'entorn o la configuració global.
+
+### Configuració global
+
+S'aplica a tots els projectes de la teva màquina. Bolt cerca el primer fitxer coincident al teu directori de configuració del sistema operatiu:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferit)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="On es troba el directori de configuració global?">
+  Bolt segueix l'especificació XDG Base Directory a Linux i macOS (`~/.config/bolt/`) i `%APPDATA%\bolt\` a Windows. Executa `bolt debug config` per imprimir la configuració completa resolta a la teva màquina.
+</Accordion>
+
+## Exemple mínim de configuració
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+El camp `$schema` habilita IntelliSense i validació en editors que suporten JSON Schema. Bolt escriu aquest camp automàticament si falta.
+
+## Referència de configuració
+
+### `provider`
+
+Configura opcions específiques del proveïdor com URL base personalitzades, paràmetres de regió o credencials amb nom:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Registra servidors del [Model Context Protocol](https://modelcontextprotocol.io) que l'agent pot cridar com a eines:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Gestiona servidors MCP interactivament amb `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` i `bolt mcp debug`.
+
+### `instructions`
+
+Afegeix instruccions de sistema personalitzades que s'injecten a cada sessió. Útil per fer complir convencions de codificació, guies d'estil o regles específiques del projecte:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Les instruccions de múltiples fitxers de configuració (global \+ projecte) es combinen i es desdupliquen automàticament.
+
+### `plugin`
+
+Carrega plugins de Bolt. Els plugins poden afegir noves eines, proveïdors, fonts de context i hooks:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Configuració remota via `url`
+
+Recupera la configuració des d'una URL remota a l'inici. Útil per a la configuració centralitzada d'equip:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Substitució de variables
+
+Els valors de configuració poden fer referència a variables d'entorn utilitzant la sintaxi `$VAR_NAME` o `${VAR_NAME}`. La substitució es fa en temps de càrrega, abans que s'analitzi la configuració:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Com utilitzo variables d'entorn a la configuració?">
+  Fes referència a qualsevol variable d'entorn amb `$VAR_NAME` o `${VAR_NAME}` a qualsevol lloc en un valor de configuració de tipus cadena. Bolt substitueix el valor en temps de càrrega. Si la variable no està definida, s'utilitza la cadena literal `$VAR_NAME` — Bolt no falla silenciosament ni llança un error per substitucions que manquin.
+</Accordion>
+
+## Sobreescriptures amb variables d'entorn
+
+Aquestes variables d'entorn et permeten redirigir o sobreescriure la configuració completament, cosa que és útil per a CI, contenidors i proves:
+
+| Variable | Descripció |
+| --- | --- |
+| `BOLT_CONFIG` | Ruta absoluta a un fitxer de configuració a carregar en lloc del local del projecte |
+| `BOLT_CONFIG_DIR` | Sobreescriu el directori on Bolt cerca fitxers de configuració |
+| `BOLT_CONFIG_CONTENT` | Proporciona contingut de configuració JSONC en brut com a cadena — no cal fitxer |
+
+`BOLT_CONFIG_CONTENT` és especialment útil en entorns contenidoritzats on muntar un fitxer és incòmode:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Quina configuració té prioritat quan hi ha diverses fonts actives?">
+  Bolt combina les configuracions en aquest ordre (les entrades posteriors guanyen):
+
+  1. Fitxer de configuració global (`bolt.jsonc` / `bolt.json` al directori de configuració del sistema operatiu)
+  2. Configuracions remotes recuperades des d'entrades `url` a la configuració global
+  3. Fitxers de configuració per projecte (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. Fitxer `BOLT_CONFIG` (si està definit)
+  5. `BOLT_CONFIG_CONTENT` (si està definit)
+
+  Els camps de tipus array com `instructions` es concatenen entre fonts en lloc de reemplaçar-se. Els camps d'objecte es fusionen en profunditat amb els valors posteriors guanyant en cas de conflicte.
+</Accordion>

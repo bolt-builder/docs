@@ -1,0 +1,33 @@
+---
+title: "Bolt web-grensesnitt"
+sidebarTitle: "Web-grensesnitt"
+description: "bolt web serverer et nettleserbasert grensesnitt oppå en kjørende Bolt-server — nyttig for delte teammaskiner, eksterne maskiner og hvor som helst en TUI ikke er praktisk."
+---
+
+`bolt web` starter en Bolt-server og serverer et nettlesergrensesnitt foran den. Det er samme motor som TUI-en, bare gjengitt i en nettleserfane.
+
+## Start det
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Deretter åpne den utskrevne URL-en. Når du eksponerer over et nettverk, sett basic auth først:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Når du bør bruke web-grensesnittet
+
+- Kjører Bolt på en kraftig ekstern maskin, men driver den fra en laptop.
+- Deler en live-økt med en lagkamerat for par-feilsøking.
+- Miljøer der en full TUI er upraktisk (Chromebooks, nettbrett, coworking-maskiner).
+
+## Relatert
+
+- [Headless server](/server/headless-server) — den underliggende API-serveren.
+- [Eksterne økter](/server/remote-sessions) — koble en TUI til samme server som web-grensesnittet betjener.

@@ -1,0 +1,107 @@
+---
+title: "Introducere în Bolt: agentul AI open-source pentru terminal"
+sidebarTitle: "Introducere"
+description: "Fă cunoștință cu Bolt: un agent AI de codare open-source pentru terminal, cu zece agenți, sesiuni durabile, memorie de proiect, MCP, peste 75 de furnizori LLM, TUI și aplicație desktop."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Terminalul tău, acum cu o echipă completă de inginerie AI în interior.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt este un agent AI de codare axat pe terminal, construit pe [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) și [SolidJS](https://www.solidjs.com). Îndreaptă-l către orice proiect și își preia contextul automat: îți explorează codul, îți respectă convențiile, execută comenzi shell, editează fișiere, rulează teste și livrează modificări.
+
+Zece agenți încorporați (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) plus subagenții `@general` și `@explore` acoperă întreaga buclă de inginerie. Sesiunile sunt durabile: te poți detașa, reatasa (chiar și la un server la distanță), ramifica, partaja, exporta și importa oricând. Memoria proiectului persistă ceea ce învață agentul între sesiuni. Extensibil prin servere MCP (cu OAuth), plugin-uri, agenți personalizați și instrumente personalizate.
+
+Bolt este open-source sub licența PolyForm Noncommercial 1.0.0.
+
+## De ce Bolt?
+
+Bolt este proiectat în jurul modului în care dezvoltatorii lucrează efectiv: în terminal, pe mai multe sesiuni, pe baze de cod reale. Iată ce îl face să se remarce:
+
+- **TUI axat pe terminal.** O interfață rapidă, controlată de la tastatură, construită cu [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) și [SolidJS](https://www.solidjs.com). Pare nativă pentru că este.
+- **O echipă întreagă de agenți.** Zece agenți specializați — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` și `perf` — plus subagenți pentru cercetare și delegare în mai mulți pași. Comută între ei cu `Tab`.
+- **Sesiuni pe care le poți părăsi și relua.** Detașează-te de o sesiune și reataca-te mai târziu, chiar și pe un server la distanță. Ramifică, partajează, exportă și importă lucrul oricând. Sesiunile sunt stocate în SQLite și complet inspectabile cu `bolt db`.
+- **Extensibil prin design.** Servere MCP cu suport OAuth complet, un sistem de plugin-uri, integrare GitHub, un server API încorporat și un UI web.
+- **Aplicație desktop.** Același motor învelit într-o experiență desktop multi-fereastră, multi-tab — cu terminal integrat, arbore de fișiere, paletă de comenzi, 28 de limbi de interfață și actualizări automate.
+
+## Agenți încorporați
+
+Bolt este livrat cu zece agenți specializați. Fiecare agent are un nivel definit de acces la sistemul de fișiere pentru a se potrivi cu scopul său.
+
+| Agent | Acces | Descriere |
+| --- | --- | --- |
+| `code` | Full | Implicit: citește, scrie și rulează cod |
+| `plan` | Read | Explorează baza de cod și produce un plan fără a modifica fișierele |
+| `ask` | Read | Întrebări și cercetare — fără editări de fișiere |
+| `code-review` | Read | Revizuiește modificările pentru corectitudine, stil și securitate |
+| `debug` | Full | Depanează teste eșuate, blocări și erori de logică |
+| `refactor` | Full | Refactorizare sigură cu verificare a testelor la fiecare pas |
+| `docs` | Edit | Scrie și actualizează documentația și comentariile |
+| `security` | Read | Audit de securitate: vulnerabilități, secrete, tipare |
+| `migrate` | Full | Actualizări de framework și migrări de dependențe |
+| `perf` | Full | Analiză și optimizare a performanței |
+
+Îți poți defini și proprii agenți ca fișiere Markdown sau poți genera unul cu `bolt agent create`.
+
+## Aplicația desktop
+
+Bolt este livrat și ca aplicație desktop de sine stătătoare, cu gestionare de sesiuni multi-fereastră și multi-tab, un compunător de prompturi cu suport pentru atașamente și lipire de imagini din clipboard, un terminal integrat și un arbore de fișiere, o paletă de comenzi, setări complete pentru combinații de taste, modele, furnizori și servere, notificări native, link-uri profunde, integrare WSL pe Windows și actualizări automate pe canalele dev, beta și de producție.
+
+Descarcă aplicația desktop de pe [pagina de lansări](https://github.com/Bolt-builder/bolt-cli/releases) sau instalează-o într-o singură linie pe macOS fără ocol prin Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Explorează documentația
+
+<CardGroup cols={2}>
+  <Card title="Instalare" icon="download" href="/installation">
+    Instalează Bolt prin curl, npm sau managerul de pachete al sistemului tău pe macOS, Linux și Windows.
+  </Card>
+
+  <Card title="Ghid rapid" icon="rocket" href="/quickstart">
+    Deschide TUI-ul, rulează primul prompt și livrează un commit generat de AI în mai puțin de un minut.
+  </Card>
+
+  <Card title="Agenți" icon="users" href="/concepts/agents">
+    Zece agenți încorporați plus subagenți. Află ce face fiecare și cum să îți scrii proprii agenți.
+  </Card>
+
+  <Card title="Memoria proiectului" icon="brain" href="/concepts/project-memory">
+    Cum își amintește Bolt proiectul tău între sesiuni și cum să controlezi ce este capturat.
+  </Card>
+
+  <Card title="Servere MCP" icon="plug" href="/extending/mcp-servers">
+    Conectează instrumente și surse de date externe la Bolt prin Model Context Protocol.
+  </Card>
+
+  <Card title="Server headless" icon="server" href="/server/headless-server">
+    Rulează `bolt serve`, atașează un TUI de pe orice mașină și controlează Bolt din API.
+  </Card>
+</CardGroup>

@@ -1,0 +1,38 @@
+---
+title: "Combinații de taste Bolt TUI"
+sidebarTitle: "Combinații de taste"
+description: "Scurtăturile esențiale ale Bolt TUI: comutarea agenților cu Tab, modul mini, vocea push-to-talk și tot ce mai poți controla de la tastatură."
+---
+
+Bolt TUI este conceput pentru a fi controlat de la un capăt la altul de la tastatură. Această pagină listează scurtăturile la care vei apela cel mai des. Pentru lista exhaustivă, rulează `bolt` și deschide ajutorul din aplicație.
+
+## Esențiale
+
+| Taste | Acțiune |
+| --- | --- |
+| `Tab` | Comută la agentul următor (`code`, `plan`, `ask`, ...). Agentul curent este afișat în bara de stare. |
+| `Shift+Tab` | Comută la agentul anterior. |
+| `Enter` | Trimite mesajul curent. |
+| `Esc` | Anulează tura în curs. |
+| `Ctrl+C` | Întrerupe apelul de instrument curent. |
+| `Ctrl+D` | Detașează-te de sesiune (o lasă să ruleze pe server). |
+
+## Moduri
+
+### Modul `--mini`
+
+Pornește Bolt cu un aspect compact cu split-footer care ocupă mai puțin spațiu în terminal, grozav pentru panouri divizate:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Voce push-to-talk
+
+Ține apăsată tasta push-to-talk configurată pentru a dicta un prompt folosind speech-to-text, apoi eliberează pentru a-l trimite. Configurează tasta și furnizorul STT în `.bolt/bolt.jsonc`.
+
+## Legături conexe
+
+- [Comenzi slash](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` și celelalte.
+- [Sesiuni](/concepts/sessions) — detașează, reia, ramifică și partajează de la tastatură.

@@ -1,0 +1,33 @@
+---
+title: "Minggu 4 Agustus 2026"
+description: "Changelog mingguan Bolt: 11 bahasa UI baru, tata letak kanan-ke-kiri, terjemahan desktop native, provider Poolside, pemolesan GPT-5, dan perbaikan bug."
+---
+
+## Fitur baru
+
+- **11 bahasa UI baru** — Aplikasi desktop dan TUI kini menyertakan terjemahan untuk Hindi, Belanda, Indonesia, Vietnam, Italia, Urdu, Punjabi, Azerbaijan, Finlandia, Swedia, dan Thailand, membawa total menjadi 28 bahasa yang didukung. Ganti bahasa di **Settings → Appearance → Language**. Lihat [Desktop features](/desktop/features) dan [Install](/desktop/install#28-ui-languages).
+- **Dukungan tata letak kanan-ke-kiri** — Navigasi, editor, dialog, kontrol, dan rendering teks kini dicerminkan dengan benar untuk bahasa kanan-ke-kiri seperti Arab, Ibrani, dan Urdu, sehingga seluruh antarmuka terbaca secara alami dalam lokal tersebut.
+- **Terjemahan desktop native** — Menu tingkat OS, dialog updater, alur pemulihan, onboarding WSL, dan pemilih file native kini dilokalkan bersama dengan UI dalam aplikasi, sehingga seluruh pengalaman desktop mengikuti pengaturan bahasa kamu.
+- **Cakupan lokalisasi yang diperluas** — Menu, dialog, prompt, konten bantuan, pesan kesalahan, dan label aksesibilitas kini diterjemahkan dalam setiap bahasa yang didukung, menutup celah di mana string sebelumnya kembali ke bahasa Inggris.
+- **Provider Poolside** — Bolt kini terhubung ke [Poolside](https://poolside.ai) melalui API yang kompatibel dengan OpenAI. Jalankan `/connect`, pilih **Poolside**, dan tempelkan API key kamu dari [platform.poolside.ai](https://platform.poolside.ai). Deployment Poolside yang di-host sendiri juga dapat dikonfigurasi sebagai provider kustom. Lihat [Providers and models](/concepts/providers-and-models).
+- **Pluralisasi sadar lokal** — Hitungan, status, file, dan item daftar sesi kini dipluralkan dengan benar per bahasa, sehingga teks timeline dan status terbaca secara alami di semua lokal yang didukung.
+- **Rendering Markdown yang lebih kaya** — Pesan asisten mendapatkan pemformatan Markdown yang ditingkatkan, pembaruan streaming yang lebih mulus, penyorotan sintaks yang lebih baik, dan dukungan untuk konten matematis, sehingga balasan bentuk panjang dan teknis lebih mudah dibaca.
+
+## Pembaruan
+
+- **Reasoning effort GPT-5 cocok dengan versi model** — Tingkat reasoning effort (termasuk `none` dan `xhigh`) kini hanya ditawarkan untuk varian GPT-5 yang mendukungnya, sehingga `--variant` tidak lagi menampilkan opsi yang akan ditolak model tertentu. Lihat [Controlling reasoning effort](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Pemolesan anotasi diff** — Tampilan diff pada UI sesi memperketat indikator komentar, perilaku gutter, dan warna sintaks terang/gelap untuk keterbacaan yang lebih baik.
+- **Terjemahan yang ada disempurnakan** — Bahasa yang sudah ada mendapatkan terminologi yang lebih jelas dan label UI yang diperluas untuk pengalaman yang lebih konsisten di seluruh aplikasi.
+
+## Perbaikan bug
+
+- **Waktu aksi sesi** — Aksi sesi kini mencatat dan melaporkan waktunya dengan lebih akurat, sehingga timeline mencerminkan kapan pekerjaan benar-benar dimulai dan selesai.
+- **Kesalahan workspace remote yang lebih jelas** — Kegagalan saat menghubungkan ke atau menjalankan perintah di workspace remote kini menampilkan pesan kesalahan yang lebih deskriptif alih-alih pesan generik.
+- **Proxy workspace tidak lagi membocorkan direktori kerja** — Permintaan yang dirutekan melalui proxy workspace tidak lagi menyertakan detail direktori kerja, sehingga jalur lokal tidak berpindah lewat jaringan.
+- **Peta mengisi wilayah kosong** — Peta aktivitas kini tetap terlihat di wilayah tanpa aktivitas yang tercatat alih-alih mengecil menjadi area kosong.
+- **Deteksi lokal diperbaiki** — Bolt kini mengambil lokal sistem kamu secara andal saat startup, sehingga antarmuka terbuka dalam bahasa yang tepat di lebih banyak platform.
+- **Terjemahan timeline bahasa Jerman diperbaiki** — Entri timeline dalam bahasa Jerman kini dirender dengan string yang benar alih-alih kembali ke bahasa Inggris atau teks yang salah format.
+- **Membatalkan pilihan file** — Mengklik pilihan file untuk kedua kalinya kini menghapusnya, sehingga kamu dapat membatalkan pilihan tanpa harus memilih yang berbeda terlebih dahulu.
+- **Interaksi komentar draf yang lebih bersih** — Memulai atau membatalkan komentar draf kini menghapus pilihan yang mendasarinya secara konsisten dan tidak lagi bersaing dengan status hover.
+- **Header reasoning animasi dipulihkan** — Header reasoning di TUI menampilkan spinner animasi lagi saat berpikir, dan gradiennya meredup saat diperluas sehingga status yang dilipat dan terbuka lebih mudah dibedakan.
+- **Alat proses latar dan pengujian dipulihkan** — `bash_background`, `process_output`, `list_processes`, `kill_process`, dan `test_run` tersedia lagi untuk agent setelah sempat dihapus di merge sebelumnya. Agent dapat memulai perintah yang berjalan lama seperti dev server dan watcher, membaca outputnya, dan menjalankan tes proyek dengan hasil pass/fail terstruktur. Lihat [Built-in tools](/concepts/tools#built-in-tools).

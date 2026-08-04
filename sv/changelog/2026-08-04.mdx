@@ -1,0 +1,33 @@
+---
+title: "Vecka 4 augusti 2026"
+description: "Veckans Bolt-changelog: 11 nya UI-språk, höger-till-vänster-layouter, inbyggda skrivbordsöversättningar, Poolside-leverantör, GPT-5-polering och buggfixar."
+---
+
+## Nya funktioner
+
+- **11 nya UI-språk** — Skrivbordsappen och TUI:n levereras nu med översättningar för hindi, nederländska, indonesiska, vietnamesiska, italienska, urdu, punjabi, azerbajdzjanska, finska, svenska och thai, vilket ger totalt 28 språk som stöds. Byt språk i **Settings → Appearance → Language**. Se [Skrivbordsfunktioner](/desktop/features) och [Installera](/desktop/install#28-ui-languages).
+- **Stöd för höger-till-vänster-layout** — Navigation, redigerare, dialoger, kontroller och textrendering speglas nu korrekt för höger-till-vänster-språk som arabiska, hebreiska och urdu, så att hela gränssnittet läses naturligt i dessa språk.
+- **Inbyggda skrivbordsöversättningar** — Menyer på OS-nivå, uppdaterardialoger, återställningsflödet, WSL-introduktion och inbyggda filväljare är nu lokaliserade tillsammans med UI:et i appen, så att hela skrivbordsupplevelsen följer din språkinställning.
+- **Utökad lokaliseringstäckning** — Menyer, dialoger, prompter, hjälpinnehåll, felmeddelanden och tillgänglighetsetiketter är nu översatta i alla språk som stöds, vilket täpper till luckor där strängar tidigare föll tillbaka till engelska.
+- **Poolside-leverantör** — Bolt ansluter nu till [Poolside](https://poolside.ai) via dess OpenAI-kompatibla API. Kör `/connect`, välj **Poolside** och klistra in din API-nyckel från [platform.poolside.ai](https://platform.poolside.ai). Egenvärdiga Poolside-driftsättningar kan också konfigureras som en anpassad leverantör. Se [Leverantörer och modeller](/concepts/providers-and-models).
+- **Lokalmedveten pluralisering** — Antal, statusar, filer och listobjekt för sessioner pluraliseras nu korrekt per språk, så att tidslinje- och statustext läses naturligt i alla stödda språk.
+- **Rikare Markdown-rendering** — Assistentmeddelanden får förbättrad Markdown-formatering, jämnare strömningsuppdateringar, bättre syntaxmarkering och stöd för matematiskt innehåll, vilket gör långa och tekniska svar lättare att läsa.
+
+## Uppdateringar
+
+- **GPT-5 reasoning-effort matchar modellversion** — Reasoning-effort-nivåer (inklusive `none` och `xhigh`) erbjuds nu endast för de GPT-5-varianter som stöder dem, så `--variant` visar inte längre alternativ som en given modell skulle avvisa. Se [Styra reasoning-effort](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Diff-annoteringspolering** — Diff-vyn i sessions-UI:t stramar upp kommentarsindikatorer, gutter-beteende och ljus/mörk syntaxfärger för bättre läsbarhet.
+- **Förfinade befintliga översättningar** — Befintliga språk får tydligare terminologi och utökade UI-etiketter för en mer konsekvent upplevelse i hela appen.
+
+## Buggfixar
+
+- **Timing för sessionsåtgärder** — Sessionsåtgärder registrerar och rapporterar nu sin timing mer exakt, så tidslinjen speglar när arbetet faktiskt startade och avslutades.
+- **Tydligare fjärrarbetsytefel** — Fel när man ansluter till eller kör kommandon i en fjärrarbetsyta visar nu mer beskrivande felmeddelanden istället för generiska.
+- **Arbetsyteproxyn läcker inte längre arbetskatalog** — Förfrågningar som dirigeras genom arbetsyteproxyn inkluderar inte längre detaljer om arbetskatalog, vilket håller lokala sökvägar borta från nätverket.
+- **Karta fyller i tomma regioner** — Aktivitetskartan förblir nu synlig i regioner utan registrerad aktivitet istället för att kollapsa till ett tomt område.
+- **Lokaldetektering fixad** — Bolt plockar nu upp din systemlokal pålitligt vid start, så att gränssnittet öppnas på rätt språk på fler plattformar.
+- **Tysk tidslinjeöversättning fixad** — Tidslinjeposter på tyska renderas nu med rätt strängar istället för att falla tillbaka till engelska eller felformaterad text.
+- **Växla av filval** — Att klicka på ett filval en andra gång rensar det nu, så att du kan ångra ett val utan att först välja ett annat.
+- **Renare interaktioner med utkastkommentarer** — Att starta eller avvisa en utkastkommentar rensar nu det underliggande valet konsekvent och konkurrerar inte längre med hover-tillstånd.
+- **Animerad reasoning-header återställd** — Reasoning-headern i TUI:n visar en animerad spinner igen medan den tänker, och dess gradient tonas ner när den är expanderad så att kollapsade och öppna lägen är lättare att skilja åt.
+- **Bakgrundsprocess- och testverktyg återställda** — `bash_background`, `process_output`, `list_processes`, `kill_process` och `test_run` är tillgängliga för agenter igen efter att ha försvunnit i en tidigare merge. Agenter kan starta långvariga kommandon som dev-servrar och watchers, läsa deras output och köra projektets tester med strukturerade pass/fail-resultat. Se [Inbyggda verktyg](/concepts/tools#built-in-tools).

@@ -1,0 +1,191 @@
+---
+title: "Sessiyalar — Bolt'da barqaror suhbat tarixi"
+sidebarTitle: "Sessiyalar"
+description: "Sessiyalar Bolt'ning barqaror ish birligi: har biri to'liq suhbatni mahalliy SQLite'da saqlaydi, shuning uchun istalgan vaqtda ajratishingiz, davom ettirishingiz, fork qilishingiz, bo'lishishingiz va eksport qilishingiz mumkin."
+---
+
+**Sessiya** — bu Bolt'ning asosiy ish birligi. Siz yuborgan har bir prompt, agent o'qigan yoki tahrirlagan har bir fayl va model qilgan har bir asbob chaqiruvi shu sessiya tarixida barqaror qayd etiladi. Sessiyalar mahalliy SQLite ma'lumotlar bazasida yashaganligi sababli, ular jarayon qayta ishga tushirilishidan omon qoladi, istalgan vaqtda ro'yxatga olinishi va so'ralishi mumkin va agar siz aniq bo'lishmasangiz yoki eksport qilmasangiz, hech qachon mashinangizni tark etmaydi.
+
+<Note>
+  Barcha sessiya ma'lumotlari o'zingizning mashinangizdagi SQLite ma'lumotlar bazasida mahalliy saqlanadi. Bo'lishishni yoqmaguningizcha hech narsa tashqi serverlarga yuborilmaydi. Aniq ma'lumotlar bazasi faylini topish uchun `bolt db path` dan foydalaning.
+</Note>
+
+## Sessiya hayot davri
+
+Sessiya siz birinchi promptni yuborgan paytda boshlanadi va faqat siz uni o'chirganingizda tugaydi. Bu ikki nuqta o'rtasida siz uni erkin ravishda ajratishingiz, davom ettirishingiz, filiallashtirishingiz yoki topshirishingiz mumkin.
+
+<Steps>
+  <Step title="Sessiyani yaratish yoki davom ettirish">
+    Yangi sessiyani interaktiv ravishda boshlash uchun TUI ni ishga tushiring yoki uni interaktiv bo'lmagan tarzda yaratish uchun `bolt run` ga prompt uzating:
+
+    ```bash
+    # TUI da yangi sessiya
+    bolt
+
+    # Interaktiv bo'lmagan yangi sessiya
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Ajratish va keyinroq qaytish">
+    TUI ni istalgan vaqtda yoping — sessiya avtomatik saqlanadi. `--continue` bilan eng so'nggi sessiyangizni davom ettiring yoki `--session` bilan ID orqali muayyan sessiyani nishonga oling:
+
+    ```bash
+    # Eng so'nggi sessiyani davom ettirish
+    bolt run --continue "now write the tests too"
+
+    # Muayyan sessiyani davom ettirish
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Tajriba qilishdan oldin fork qiling">
+    Xavfli o'zgarishni sinab ko'rishdan oldin joriy sessiya tarixidan filial ochish uchun `--fork` dan foydalaning. Fork asl nusxaga ta'sir qilmaydigan mustaqil sessiya:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Bo'lishish va hamkorlik qilish">
+    `--share` bilan share URL yarating. Havolaga ega bo'lgan har kim brauzerda sessiya transkriptini ko'rishi mumkin:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Sessiyani boshqarish buyruqlari
+
+### Sessiyalarni ro'yxatga olish
+
+```bash
+bolt session list
+```
+
+Barcha sessiyalarning ID, sarlavha va oxirgi yangilangan vaqti bilan formatlangan jadvalini chiqaradi. Mashina uchun o'qiladigan chiqish olish uchun `--format json` qo'shing yoki eng so'nggi N ta sessiyaga cheklash uchun `-n <N>` qo'shing:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Sessiyani o'chirish
+
+```bash
+bolt session delete <sessionID>
+```
+
+Sessiyani va uning barcha xabarlarini mahalliy ma'lumotlar bazasidan doimiy ravishda olib tashlaydi.
+
+## Sessiyani boshqarish uchun run bayroqlari
+
+Bu bayroqlar `bolt run` da mavjud:
+
+| Bayroq | Alias | Tavsif |
+|------|-------|-------------|
+| `--continue` | `-c` | Eng so'nggi sessiyani davom ettirish |
+| `--session <id>` | `-s` | ID bo'yicha muayyan sessiyani davom ettirish |
+| `--fork` | | Davom ettirishdan oldin sessiyani fork qilish (`--continue` yoki `--session` talab qiladi) |
+| `--share` | | Sessiya uchun share URL yaratish |
+| `--title <title>` | | Sessiya sarlavhasini o'rnatish yoki override qilish |
+
+## Sessiyalarni eksport qilish
+
+Sessiyaning to'liq transkriptini JSON sifatida eksport qiling:
+
+```bash
+# Eng so'nggi sessiyani eksport qilish
+bolt export
+
+# Muayyan sessiyani eksport qilish
+bolt export <sessionID>
+
+# Maxfiy ma'lumotlar tuzatilgan holda eksport qilish
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` bayrog'i fayl yo'llari, kod mazmuni, asbob kirishlari va chiqishlari va boshqa potentsial maxfiy maydonlarni `[redacted:kind:id]` placeholder'lar bilan almashtiradi — transkriptlarni jamoadoshlar bilan bo'lishish yoki xatolar haqida hisobot topshirish uchun foydali.
+
+## Sessiyalarni import qilish
+
+Sessiyani mahalliy JSON faylidan yoki to'g'ridan-to'g'ri share URL dan import qiling:
+
+```bash
+# Mahalliy fayldan
+bolt import ./transcript.json
+
+# Share URL dan
+bolt import https://opncd.ai/share/abc123
+```
+
+Import qilingan sessiyalar mahalliy sessiya ro'yxatingizda paydo bo'ladi va to'liq davom ettirilishi mumkin.
+
+## Sessiya ma'lumotlar bazasini so'rash
+
+Bolt asosiy SQLite ma'lumotlar bazasini kuchli foydalanuvchilarga to'g'ridan-to'g'ri ochadi.
+
+```bash
+# Ma'lumotlar bazasi fayl yo'lini chop etish
+bolt db path
+
+# Interaktiv SQLite shell'ni ochish
+bolt db
+
+# Bir martalik so'rovni ishga tushirish
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Chiqish formati standart bo'yicha tab bilan ajratilgan qiymatlarga o'rnatiladi; JSON chiqish uchun `--format json` qo'shing.
+
+## Token foydalanishi va xarajat statistikasi
+
+`bolt stats` barcha sessiyalaringiz bo'ylab token foydalanishi va xarajat ma'lumotlarini yig'adi:
+
+```bash
+# Barcha vaqt statistikasi
+bolt stats
+
+# So'nggi 7 kun
+bolt stats --days 7
+
+# Faqat joriy loyiha
+bolt stats --project ""
+
+# Har bir model bo'yicha taqsimlashni ko'rsatish (top 5 model)
+bolt stats --models 5
+
+# Asbob foydalanishi jadvalini top 10 asbobga cheklash
+bolt stats --tools 10
+```
+
+Chiqish umumiy sessiyalar, xabarlar, input/output/reasoning/cache tokenlari, umumiy xarajat, kunlik o'rtacha xarajat, sessiyaga o'rtacha va median tokenlar va asbob foydalanishi taqsimlanishini o'z ichiga oladi. Har bir model bo'yicha xabarlar, tokenlar va xarajatlarni ham ko'rsatish uchun `--models` ni uzating.
+
+## Fork va bo'lishish workflow'i
+
+Sessiyani fork qilish va natijani bo'lishishning to'liq misoli:
+
+<Steps>
+  <Step title="Yangi sessiyada ishni boshlang">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Xavfli keyingi qadamdan oldin fork qiling">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Fork qilingan sessiya ID konsolga chop etiladi. Asl sessiya tegilmagan.
+  </Step>
+  <Step title="Ko'rib chiqish uchun fork'ni bo'lishing">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Sessiya idle bo'lganda share URL chop etiladi.
+  </Step>
+  <Step title="Boshqa mashinada import qiling">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

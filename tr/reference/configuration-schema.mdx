@@ -1,0 +1,192 @@
+---
+title: "Bolt yapılandırma dosyası referansı"
+sidebarTitle: "Yapılandırma Şeması"
+description: "Bolt yapılandırma dosyası şeması için tam referans — konumlar, tüm üst düzey alanlar, MCP sunucu türleri, sağlayıcı geçersiz kılmaları ve eksiksiz bir örnek."
+---
+
+Bolt, proje ve global yapılandırma için Yorumlu JSON (`.jsonc`) dosyası kullanır. Şema sürümlendirilmiş olup `https://opencode.ai/config.json` adresinde yayınlanır; editörler bunu otomatik tamamlama ve doğrulama sağlamak için kullanabilir.
+
+## Yapılandırma dosyası konumları
+
+Bolt yapılandırmayı iki konumdan birleştirir. Aynı anahtar her ikisinde de göründüğünde proje başına ayarlar global ayarları geçersiz kılar.
+
+| Kapsam | Yol |
+|---|---|
+| **Proje başına** | Proje kökünüzde `.bolt/bolt.jsonc` (veya `.bolt/bolt.json`) |
+| **Global** | OS yapılandırma dizininizde `bolt.jsonc` (veya `bolt.json`) |
+
+OS yapılandırma dizini:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt ayrıca aynı konumlardaki eski `opencode.jsonc` / `opencode.json` dosyalarını da okur. Yeni projeler, eski dosya adlarına göre öncelik alan `bolt.jsonc` adlandırma kuralını kullanmalıdır.
+</Note>
+
+Bolt ilk çalıştırmada `$schema` satırıyla minimal bir global yapılandırma dosyası oluşturur ve o dizinde TUI'yi ilk kez açtığınızda proje kökünüzde `.bolt/bolt.jsonc` oluşturur.
+
+## Şema alanları
+
+<ParamField body="$schema" type="string">
+  Bu yapılandırma dosyası için JSON şemasına işaret eden URL. JSON Şemayı destekleyen editörlerde (VS Code, Zed, JetBrains IDE'leri vb.) otomatik tamamlamayı ve satır içi doğrulamayı etkinleştirir.
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Tüm oturumlar için varsayılan model, `provider/model` olarak ifade edilir. Bu, `bolt run --model` ile veya TUI model seçicisinde oturum başına geçersiz kılınabilir.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Yapılandırılmış sağlayıcılarınız için mevcut tüm `provider/model` dizelerini görmek için `bolt models` komutunu çalıştırın.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Sağlayıcıya özel kimlik bilgisi ve ayar geçersiz kılmaları. Her anahtar bir sağlayıcı kimliğidir (örn. `anthropic`, `openai`, `google`). En yaygın kullanım, anahtarın hiçbir zaman düz metin olarak saklanmaması için bir ortam değişkeni referansı aracılığıyla bir API anahtarı ayarlamaktır.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  `${` ile başlayıp `}` ile biten değerler ortam değişkeni referansları olarak ele alınır ve çalışma zamanında genişletilir.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Seçtiğiniz bir adla anahtarlanmış MCP sunucu yapılandırmaları. Bolt iki sunucu türünü destekler:
+
+  **Uzak sunucu** — isteğe bağlı OAuth ile HTTP/SSE üzerinden bağlanır:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Alan | Tür | Açıklama |
+  |---|---|---|
+  | `type` | `"remote"` | Bunun uzak bir HTTP sunucusu olduğunu belirtir |
+  | `url` | string | MCP uç noktasının tam URL'si |
+  | `oauth` | object \| `false` | OAuth yapılandırma nesnesi (isteğe bağlı `clientId`, `clientSecret`, `scope`, `redirectUri` ile). OAuth otomatik algılamasını devre dışı bırakmak için `false` olarak ayarlayın. |
+  | `headers` | object | Her istekle gönderilecek HTTP başlıkları (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Bu sunucuyu başlangıçta etkinleştir veya devre dışı bırak |
+  | `timeout` | number | Milisaniye cinsinden istek zaman aşımı (varsayılan: 5000) |
+
+  **Yerel sunucu** — stdio üzerinden bir alt süreç başlatır:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Alan | Tür | Açıklama |
+  |---|---|---|
+  | `type` | `"local"` | Bunun yerel bir stdio sunucusu olduğunu belirtir |
+  | `command` | string[] | Başlatılacak komut ve tüm bağımsız değişkenler |
+  | `cwd` | string | Sunucu süreci için çalışma dizini (göreli yollar çalışma alanı dizininden çözülür) |
+  | `environment` | object | Alt sürece geçirilecek ekstra ortam değişkenleri |
+  | `enabled` | boolean | Bu sunucuyu başlangıçta etkinleştir veya devre dışı bırak |
+  | `timeout` | number | Milisaniye cinsinden istek zaman aşımı (varsayılan: 5000) |
+
+  Etkileşimli bir sihirbaz için `bolt mcp add` veya mevcut sunucu durumunu incelemek için `bolt mcp list` komutunu kullanın.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Bu projedeki veya globaldeki her oturuma eklenen ek sistem talimatları. Birden çok yapılandırma dosyasından gelen talimatlar birleştirilir (tekilleştirilir). Projeye özel kuralları, stil kurallarını veya her ajanın izlemesi gereken kısıtlamaları enjekte etmek için bunu kullanın.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Yüklenecek eklenti tanımları. Her giriş bir npm paket adı, yerel bir dosya yolu veya bir URL'dir. Eklentiler TUI'yi genişletebilir, eğik çizgi komutları ekleyebilir veya ek sağlayıcılar kaydedebilir. Bir eklentiyi kurmak ve bu diziye otomatik olarak eklemek için `bolt plugin install <spec>` komutunu kullanın.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Eksiksiz örnek
+
+Aşağıdaki `.bolt/bolt.jsonc` gerçekçi bir proje yapılandırmasını gösterir:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Tüm dosyalar birleştirildikten sonra tam çözümlenmiş yapılandırmayı görmek için `bolt debug config` komutunu çalıştırın. Proje başına ve global yapılandırmalarınızın doğru şekilde birleştiğini doğrulamanın en hızlı yolu budur.
+</Tip>

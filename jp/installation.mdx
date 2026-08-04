@@ -1,0 +1,121 @@
+---
+title: "macOS、Linux、または Windows に Bolt をインストール"
+sidebarTitle: "インストール"
+description: "curl、npm、bun、pnpm、yarn、Homebrew、Chocolatey、Scoop 経由で Bolt CLI をインストールします。アップグレード、アンインストール、デスクトップアプリも扱います。"
+---
+
+Bolt は macOS、Linux、Windows で、ワークフローに合った方法でインストールできます — ワンラインの curl スクリプト、任意の主要 Node.js パッケージマネージャ、Homebrew、Chocolatey、Scoop のようなシステムパッケージマネージャです。
+
+## クイックインストール (macOS / Linux)
+
+始める最速の方法は公式インストールスクリプトです。OS とアーキテクチャを自動検出し、正しいバイナリを `~/.bolt/bin` にダウンロードして、`$PATH` に追加します。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+インストーラはオプションの音声入力依存関係 (オフライン文字起こし用の sox と whisper-cpp) もセットアップします。それをスキップするには `--no-voice` を渡してください。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+特定のバージョンを固定するには:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## パッケージマネージャ
+
+お好みのパッケージマネージャで Bolt をグローバルにインストールします。
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## インストールの検証
+
+<Steps>
+  <Step title="インストールされたバージョンを確認">
+    インストール後、`bolt` が `$PATH` で利用可能であることを確認します。
+
+    ```bash
+    bolt --version
+    ```
+
+    コマンドが見つからない場合、新しいターミナルセッションを開くか (シェル設定を再読み込みして)、更新された `$PATH` を有効にしてください。
+  </Step>
+</Steps>
+
+## アップグレード
+
+最新リリースに更新するには `bolt upgrade` を実行します。
+
+```bash
+bolt upgrade
+```
+
+Bolt は元のインストール方法を自動的に検出します。`--method` フラグでオーバーライドできます。
+
+```bash
+bolt upgrade --method <method>
+```
+
+サポートされている方法は次のとおりです: `curl`、`npm`、`pnpm`、`bun`、`brew`、`choco`、`scoop`。
+
+バージョンを位置引数として渡して、特定のバージョンにアップグレードすることもできます。
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## アンインストール
+
+システムから Bolt を削除するには:
+
+```bash
+bolt uninstall
+```
+
+## 環境変数
+
+| 変数               | 説明                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | ログ詳細度: `DEBUG`、`INFO`、`WARN`、または `ERROR`    |
+| `BOLT_PRINT_LOGS`      | ログを stderr に出力                                  |
+| `BOLT_PURE`            | 外部プラグインをロードせずに実行                  |
+| `BOLT_SERVER_PASSWORD` | ヘッドレス API サーバの Basic 認証パスワード       |
+| `BOLT_SERVER_USERNAME` | ヘッドレス API サーバの Basic 認証ユーザ名       |
+
+<Tip>
+  サードパーティのプラグインなしでクリーンに実行したいときは `BOLT_PURE=1` を設定してください — デバッグや管理された CI 環境に便利です。
+</Tip>
+
+## デスクトップアプリ
+
+<Note>
+  Bolt はマルチウィンドウセッション管理、統合ターミナルとファイルツリー、コマンドパレット、28 の UI 言語、自動更新を備えたネイティブデスクトップアプリとしても提供されます。最新リリースを [リリースページ](https://github.com/Bolt-builder/bolt-cli/releases) からダウンロードしてください。
+
+  macOS では Gatekeeper を回避することなくワンラインでインストールできます。
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

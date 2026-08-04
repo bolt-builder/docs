@@ -1,0 +1,78 @@
+---
+title: "Bolt: KI-Coding-Agent für Ihr Terminal"
+sidebarTitle: "Home"
+description: "Bolt ist ein terminal-first KI-Coding-Agent mit zehn spezialisierten Agents, dauerhaften Sessions, MCP-Unterstützung und einer Desktop-App – angetrieben von jedem LLM-Provider."
+---
+
+Bolt stellt Ihnen ein komplettes KI-Entwicklerteam direkt ins Terminal. Es kommt als schnelles, tastaturgesteuertes TUI und als native Desktop-App, beide von derselben Engine angetrieben: zehn spezialisierte Agents, persistente und dauerhafte Sessions, MCP-Serververwaltung mit OAuth, ein Plugin-System und Unterstützung für jeden großen LLM-Provider.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Installieren Sie Bolt in Sekunden per curl, npm, bun oder Ihrem bevorzugten Paketmanager.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Führen Sie Ihre erste KI-Codingsession in unter einer Minute aus.
+  </Card>
+  <Card title="Agents" icon="robot" href="/concepts/agents">
+    Lernen Sie die zehn integrierten Agents kennen: code, plan, ask, review, debug, refactor, docs, security, migrate und perf.
+  </Card>
+  <Card title="Command Reference" icon="terminal" href="/reference/commands">
+    Jeder CLI-Befehl, Unterbefehl und Flag ausführlich dokumentiert.
+  </Card>
+</CardGroup>
+
+## Was Bolt kann
+
+Bolt liest Ihre Codebasis, versteht, woran Sie arbeiten, und liefert Code mit Ihnen aus – im Terminal oder als Desktop-App. Jede Session ist dauerhaft: trennen, von einem anderen Rechner erneut verbinden, einen Fork des Gesprächs erstellen, einen Link teilen oder ein bereinigtes Transkript exportieren.
+
+<CardGroup cols={3}>
+  <Card title="Sessions" icon="clock-rotate-left" href="/concepts/sessions">
+    Persistente, forkbare Sessions in lokalem SQLite gespeichert.
+  </Card>
+  <Card title="Providers & Models" icon="microchip" href="/concepts/providers-and-models">
+    Bringen Sie Ihren eigenen API-Schlüssel für jeden großen LLM-Provider mit.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/concepts/configuration">
+    Projektspezifische `.bolt/bolt.jsonc` mit vollständiger Schemaunterstützung.
+  </Card>
+  <Card title="MCP Servers" icon="plug" href="/extending/mcp-servers">
+    Fügen Sie Tools über das Model Context Protocol hinzu, einschließlich OAuth-Flows.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Erweitern Sie Bolt mit benutzerdefinierten Providern, Tools und Auth-Methoden.
+  </Card>
+  <Card title="GitHub Integration" icon="github" href="/server/github-actions">
+    KI-gestützte Commit-Nachrichten, Code-Reviews und GitHub Actions.
+  </Card>
+</CardGroup>
+
+## In wenigen Schritten startklar
+
+<Steps>
+  <Step title="Bolt installieren">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Oder per npm installieren: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Projekt öffnen">
+    Navigieren Sie in ein beliebiges Projektverzeichnis und starten Sie das TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Einen Provider konfigurieren">
+    Beim ersten Start fordert Bolt Sie auf, einen LLM-Provider hinzuzufügen. Sie können auch ausführen:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Mit KI zu coden beginnen">
+    Tippen Sie Ihren Prompt in die Fußzeile des TUI, drücken Sie Enter und lassen Sie die Agents von Bolt arbeiten. Wechseln Sie Agents mit `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Verwenden Sie `bolt run "explain this codebase"` für eine schnelle, nicht-interaktive Antwort, ohne das komplette TUI zu öffnen.
+</Tip>

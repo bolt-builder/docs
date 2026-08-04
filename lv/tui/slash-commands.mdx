@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI slīpsvītras komandas"
+sidebarTitle: "Slīpsvītras komandas"
+description: "Slīpsvītras komandas, ko varat palaist Bolt TUI iekšpusē — /memory, /plan, /todos, /btw — un kā tās maina pašreizējās sesijas uzvedību."
+---
+
+Slīpsvītras komandas tiek ierakstītas TUI uzvednē un maina to, kā pašreizējā sesija uzvedas. Tās neko nesūta modelim; tās darbojas lokāli pret pašu Bolt.
+
+## Atsauce
+
+| Komanda | Ko tā dara |
+| --- | --- |
+| `/memory` | Rādīt projekta atmiņas statusu šai sesijai. |
+| \`/memory use on | off\` | Vai šī sesija lasa no [projekta atmiņas](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Vai šī sesija raksta atpakaļ projekta atmiņā, kad kārta beidzas. |
+| `/plan` | Pārslēdz pašreizējo sesiju plānošanas režīmā (tikai lasāms, rada plānu). |
+| `/todos` | Rādīt aģenta pašreizējo strukturēto uzdevumu sarakstu. |
+| `/btw` | Ievadiet ārpus joslas piezīmi ("starp citu..."), ko aģents redzēs savā nākamajā kārtā, neizraisot pilnu atbildi. |
+
+<Tip>
+  Slīpsvītras komandas ir sesijas apjomā. Lai padarītu preferenci noturīgu, iestatiet to failā `.bolt/bolt.jsonc`. Skatiet [Konfigurācija](/concepts/configuration).
+</Tip>
+
+## Pievienojiet savas
+
+Pielāgotas slīpsvītras komandas var piedāvāt [spraudņi](/extending/plugins) un faili mapē `.opencode/command/`. Katra komanda ir Markdown fails, kura priekšstruktūra apraksta trigeri un uzvedību.
+
+## Saistīts
+
+- [Taustiņu piesaistes](/tui/keybinds) — TUI tastatūras īsceļi.
+- [Projekta atmiņa](/concepts/project-memory) — ko `/memory` pārslēdz.

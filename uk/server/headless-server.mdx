@@ -1,0 +1,52 @@
+---
+title: "Запуск Bolt як headless-сервера"
+sidebarTitle: "Headless-сервер"
+description: "bolt serve виставляє повний рантайм Bolt через HTTP, тож будь-який TUI, веб-UI, інтеграція редактора чи скрипт може під'єднатися до нього локально чи через мережу."
+---
+
+`bolt serve` запускає headless-сервер Bolt, що виставляє повний рушій через HTTP: сесії, агенти, інструменти, доступ до провайдерів, MCP та потокові події. Усе, що Bolt може робити інтерактивно, він може робити через API.
+
+## Запуск сервера
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  Прив'язка до `0.0.0.0` виставляє Bolt у вашій мережі. Завжди встановлюйте `BOLT_SERVER_USERNAME` і `BOLT_SERVER_PASSWORD` перед цим.
+</Warning>
+
+## Приєднайте TUI
+
+З будь-якого комп'ютера, що може досягти сервера:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Або запустіть одноразовий промпт проти віддаленого сервера:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Базова автентифікація
+
+Встановіть облікові дані через змінні середовища (див. [Змінні середовища](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Усі клієнти повинні надсилати відповідні облікові дані.
+
+## Пов'язане
+
+- [Віддалені сесії](/server/remote-sessions) — приєднання, виявлення mDNS та спільні сервери.
+- [Веб-UI](/server/web-ui) — фронтенд у браузері.
+- [ACP](/server/acp) — керування Bolt із Zed та інших редакторів.

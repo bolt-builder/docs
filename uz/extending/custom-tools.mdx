@@ -1,0 +1,36 @@
+---
+title: "Bolt'da Custom asboblar"
+sidebarTitle: "Custom asboblar"
+description: ".opencode/tool/ ga bajariladigan fayllarni tashlab, Bolt'ga loyihaga xos asboblarni qo'shing. Har bir fayl agent chaqirishi mumkin bo'lgan asbobga aylanadi."
+---
+
+Custom asboblar sizga skript qilishingiz mumkin bo'lgan har qanday narsani (shell skriptlari, Node/Bun/Python dasturlari, kichik binarylar) agent nom bo'yicha chaqiradigan asbob sifatida ko'rsatishga imkon beradi. Bu Bolt'ga loyihangizning o'z build, deploy yoki ma'lumot workflow'lariga kirish berishning eng oddiy usuli.
+
+## Ular qayerda yashaydi
+
+Fayllarni quyidagilardan biriga tashlang:
+
+- `.opencode/tool/` — loyihaga qamrab olingan, repo bilan check-in qilingan.
+- `.opencode/tools/` — yuqoridagining aliasi sifatida qabul qilinadi.
+
+Har bir fayl fayl nomi bo'yicha (uzaytmasdan) nomlangan asbobga aylanadi. Asboblar Bolt keyingi marta ishga tushganda avtomatik olib olinadi.
+
+## Asbob anatomiyasi
+
+Custom asbob o'z nomini, tavsifini va kirish sxemasini sarlavhada e'lon qiladi, so'ngra xatti-harakatni amalga oshiradi. Aniq shakl siz tanlagan runtime'ga (shell skript, TypeScript va h.k.) bog'liq, lekin har bir asbob quyidagilarni bajarishi kerak:
+
+1. Model uni qanday chaqirishni bilishi uchun o'z kirishlari uchun JSON Schema'ni reklama qilish.
+2. Bolt TUI da render qila oladigan va modelga qaytarib bera oladigan qiymatni (yoki xatolikni) qaytarish.
+
+Yuklangandan so'ng, asbob agentning asboblar ro'yxatida `bash` va `grep` kabi o'rnatilgan asboblar yonida paydo bo'ladi va bir xil [permission](/concepts/permissions) tizimi bilan boshqariladi.
+
+## Custom asbob va MCP server o'rtasidagi tanlov
+
+- **Custom asbob** — kichik, loyihaga xos, loyihalar bo'ylab qayta ishlatilmaydi. Yozish tez.
+- **MCP server** — loyihalar bo'ylab bo'lishilgan yoki auth bilan haqiqiy tashqi xizmatni o'raydi. [MCP Servers](/extending/mcp-servers) ga qarang.
+- **Plagin asbobi** — boshqa kengaytma nuqtalari bilan birga npm paketi sifatida tarqatiladi. [Plugins](/extending/plugins) ga qarang.
+
+## Aloqador
+
+- [Tools](/concepts/tools) — o'rnatilgan asboblar ma'lumotnomasi.
+- [Plugins](/extending/plugins) — asboblar uchun kengaytma yuzasi va boshqalar.

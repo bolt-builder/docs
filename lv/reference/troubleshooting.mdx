@@ -1,0 +1,395 @@
+---
+title: "Novērsiet biežākās Bolt problēmas"
+sidebarTitle: "Problēmu novēršana"
+description: "Risinājumi biežākajām Bolt problēmām: palaišanas neveiksmes, sniedzēju autentifikācijas kļūdas, MCP savienojamība, sesiju problēmas, atļaujas, izmaksas un vairāk."
+---
+
+Lielākā daļa Bolt problēmu iekrīt nelielā skaitā kategoriju. Iziet cauri attiecīgajam akordeonam zemāk un pārbaudiet žurnāla izvadi ar `bolt logs`, kad notiek kaut kas negaidīts.
+
+<Note>
+  Uz jautājumiem, kas šeit netiek atbildēti, meklējiet vai sāciet diskusiju [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Iekļaujiet savā ziņā `bolt debug info` un `bolt logs --tail 50` izvadi, lai kopiena var palīdzēt ātrāk.
+</Note>
+
+## Pirmās lietas, ko izmēģināt
+
+Pirms iedziļināties konkrētā sadaļā, šīs četras komandas atrisina lielāko daļu problēmu:
+
+| Simptoms | Pirmā komanda | Kāpēc |
+| --- | --- | --- |
+| Jebkas dīvains | `bolt debug info` | Vienlaicīgs sistēmas \+ spraudņu kopsavilkums. |
+| Kaut kas iepriekš strādāja, tagad ne | `bolt logs --tail 100` | Nesenas kļūdas, parasti augšpusē. |
+| Ir aizdomas par spraudni | `bolt --pure` | Sākt ar visiem spraudņiem atspējotiem. |
+| Konfigurācija netiek uztverta | `bolt debug config` | Izdrukā pilnīgi atrisināto konfigurāciju. |
+
+<Tip>
+  `bolt debug` saime ir jūsu pirmā apstāšanās vieta jebkurai noslēpumainai uzvedībai. `bolt debug info` sistēmas kopsavilkumam, `bolt debug config` atrisinātai konfigurācijai, `bolt debug paths` atrašanās vietām diskā un `bolt debug snapshot`, lai pārbaudītu sesijas stāvokli.
+</Tip>
+
+<Accordion title="Bolt nesāk / avarē palaišanas laikā">
+  **Simptomi:** Terminālis nomirgo un uzreiz iziet, vai jūs redzat steka izsekojumu, pirms TUI tiek atveidots.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Ievāciet sistēmas informāciju">
+      ```bash
+      bolt debug info
+      ```
+
+      Tas izdrukā jūsu Bolt versiju, OS, termināļa emulatoru un ielādētos spraudņus. Nokopējiet šo izvadi, kad ziņojat par kļūdu.
+    </Step>
+    <Step title="Pārbaudiet neseno žurnāla izvadi">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Meklējiet `ERROR` rindas. Bieži sastopams iemesls ir spraudnis, kas neielādējas — tādā gadījumā redzēsiet kļūdu, kas piemin spraudņa vārdu.
+    </Step>
+    <Step title="Atspējojiet spraudņus, lai izolētu problēmu">
+      ```bash
+      bolt --pure
+      ```
+
+      Ja Bolt tīri sāk darboties ar `--pure`, avāriju izraisa spraudnis. Noņemiet aizvainojošo spraudni no savas konfigurācijas vai ziņojiet par to spraudņa autoram.
+    </Step>
+    <Step title="Pārbaudiet bojātu konfigurāciju">
+      ```bash
+      bolt debug config
+      ```
+
+      Ja tas izdrukā kļūdu par nederīgu JSON, atveriet konfigurācijas failu, ko tas piemin, un labojiet sintaksi. Palaidiet `bolt db path`, lai apstiprinātu, ka datubāzes ceļš ir pieejams.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sniedzēja autentifikācija neizdodas">
+  **Simptomi:** Bolt parāda "No providers configured", API pieprasījumi neizdodas ar 401 kļūdām vai `bolt run` uzreiz iziet, neradot izvadi.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Atkārtoti palaidiet sniedzēja pieteikšanās plūsmu">
+      ```bash
+      bolt providers login
+      ```
+
+      Izvēlieties savu sniedzēju un sekojiet uzvednēm. Bolt jūs izvedīs cauri API atslēgas ievadīšanai vai OAuth.
+    </Step>
+    <Step title="Pārbaudiet API atslēgas vides mainīgo">
+      Ja izmantojat env mainīgo (piem., `ANTHROPIC_API_KEY`), apstipriniet, ka tas patiešām ir iestatīts pašreizējā čaulā:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Ja tas ir tukšs, pievienojiet to savam čaulas profilam un atkārtoti atveriet termināli.
+    </Step>
+    <Step title="Pārbaudiet atrisināto konfigurāciju">
+      ```bash
+      bolt debug config
+      ```
+
+      Aplūkojiet `provider` sadaļu. Ja jūsu sniedzējs parādās ar tukšu `apiKey`, vides mainīgā atsauce jūsu konfigurācijas failā netiek paplašināta.
+    </Step>
+    <Step title="Uzskaitiet saglabātos akreditācijas datus">
+      ```bash
+      bolt providers list
+      ```
+
+      Tas parāda visus `auth.json` saglabātos akreditācijas datus un visus ar sniedzējiem saistītos vides mainīgos, ko Bolt atklāja.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP serveris nesavieno">
+  **Simptomi:** `bolt mcp list` parāda serveri kā `failed` vai `needs authentication`, vai aģents nevar izmantot nevienu rīku no šī servera.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Palaidiet MCP atkļūdošanas pārbaudi">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Tas pārbauda pamata HTTP savienojamību, pārbauda `WWW-Authenticate` galveni un iziet cauri OAuth atklāšanas plūsmai, ja piemērojams. Izvade jums pateiks, vai serveris ir sasniedzams un vai nepieciešama autentifikācija.
+    </Step>
+    <Step title="Pārbaudiet servera URL">
+      Verificējiet URL savā `.bolt/bolt.jsonc`. Attālinātiem serveriem pārliecinieties, ka URL beidzas ar MCP ceļu (piem., `/mcp` vai `/tools`), nevis tikai ar resursdatoru.
+    </Step>
+    <Step title="Atkārtoti autentificējieties OAuth serveriem">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Sekojiet pārlūka plūsmai. Ja serverim nepieciešams iepriekš reģistrēts klienta ID, pievienojiet to konfigurācijā:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Pārbaudiet lokālā servera komandu">
+      `local` serveriem palaidiet komandu manuāli savā terminālī, lai apstiprinātu, ka tā sāk darboties bez kļūdām:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sesija nav atrasta">
+  **Simptomi:** `bolt run --session <id>` iziet ar "Session not found", vai sesija, ko atceraties strādājam, ir pazudusi.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Uzskaitiet visas pieejamās sesijas">
+      ```bash
+      bolt session list
+      ```
+
+      Sesijas tiek sakārtotas pēc pēdējās atjaunināšanas laika. Ja jūsu sesija tika dzēsta vai datubāze tika migrēta, tā šeit neparādīsies.
+    </Step>
+    <Step title="Atrodiet datubāzes ceļu">
+      ```bash
+      bolt db path
+      ```
+
+      Tas izdrukā pilnu ceļu uz SQLite failu. Pārbaudiet, vai fails pastāv un nav tukšs.
+    </Step>
+    <Step title="Vaicājiet datubāzi tieši">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Ja jūsu sesija parādās datubāzē, bet ne `bolt session list`, var būt projekta ID neatbilstība — sesijas ir attiecinātas uz projektiem.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Atļauju kļūdas TUI">
+  **Simptomi:** Aģents atkārtoti lūdz atļauju, atsakās rakstīt failus vai jūs redzat "Permission denied" karogus.
+
+  **Piekļuves līmeņu izpratne:**
+
+  Katram iebūvētajam aģentam ir deklarēts piekļuves līmenis, kas kontrolē to, ko tas var darīt, nejautājot:
+
+  | Piekļuves līmenis | Ko tas atļauj |
+  | --- | --- |
+  | **Full** | Lasīt failus, rakstīt failus, izpildīt čaulas komandas |
+  | **Edit** | Lasīt un rakstīt failus, bez čaulas komandām |
+  | **Read** | Tikai lasīt failus, bez rakstīšanas vai komandām |
+
+  Aģentiem `code`, `debug`, `refactor`, `migrate` un `perf` ir **Full** piekļuve. `docs` ir **Edit** piekļuve. `plan`, `ask`, `code-review` un `security` ir **Read** piekļuve.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Pārslēdzieties uz aģentu ar Full piekļuvi">
+      Ja jums nepieciešamas failu rakstīšanas, izmantojiet `code` aģentu:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Vai nospiediet `Tab` TUI, lai pārvietotos cauri aģentiem.
+    </Step>
+    <Step title="Izmantojiet --auto, lai neinteraktīvi apstiprinātu uzvednes">
+      CI vai skriptētos kontekstos nododiet `--auto` komandai `bolt run`, lai automātiski apstiprinātu atļaujas, kas nav skaidri liegtas konfigurācijā.
+    </Step>
+    <Step title="Konfigurējiet atļaujas konfigurācijas failā">
+      Jūs varat liegt konkrētus rīkus visām sesijām projektā, pievienojot `permission` bloku failam `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Liela žetonu izmantošana vai neparedzētas izmaksas">
+  **Simptomi:** `bolt stats` parāda lielāku žetonu skaitu, nekā gaidīts, vai jūsu API rēķins pieaug ātrāk nekā paredzēts.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Pārskatiet savu lietošanas statistiku">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Izvade sadala izmaksas pa dienām, vidējos žetonus vienā sesijā un lietošanu pa modeļiem.
+    </Step>
+    <Step title="Samaziniet spriešanas piepūli">
+      Modeļiem, kas to atbalsta, samaziniet spriešanas piepūli ar `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Atbalstītās vērtības ir sniedzējam specifiskas (piem., `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Pārslēdzieties uz lētāku modeli">
+      Izmantojiet `bolt models`, lai atrastu mazāku modeli. Mazāki modeļi (piem., `claude-haiku`, `gpt-4o-mini`) izmaksā ievērojami mazāk par žetonu un labi darbojas daudziem uzdevumiem.
+    </Step>
+    <Step title="Izmantojiet ask vai plan aģentu izpētei">
+      `ask` un `plan` aģentiem ir **Read** piekļuve un tie neizsauc rakstīšanas rīkus, kas nozīmē, ka tie izvairās no rīku smagām cilpām, kas rada lielus izvades žetonus.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Spraudņu konflikti vai negaidīta uzvedība">
+  **Simptomi:** Slīpsvītras komanda darbojas negaidīti, TUI tiek atveidots nepareizi vai kaut kas mainījās pēc spraudņa instalēšanas.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Atspējojiet visus spraudņus, lai izveidotu bāzes līniju">
+      ```bash
+      bolt --pure
+      ```
+
+      Ja problēma pazūd, spraudnis ir vainīgais.
+    </Step>
+    <Step title="Identificējiet aizvainojošo spraudni">
+      ```bash
+      bolt debug info
+      ```
+
+      Izvade uzskaita visus ielādētos spraudņus. Īslaicīgi noņemiet tos pa vienam no savas konfigurācijas un restartējiet Bolt, līdz problēma ir pagājusi.
+    </Step>
+    <Step title="Pārbaudiet versiju nesaderību">
+      ```bash
+      bolt upgrade
+      ```
+
+      Spraudņi deklarē saderīgu Bolt versiju diapazonu. Ja nesen jauninājāt Bolt, iespējams, arī spraudnis ir jāatjaunina.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows ceļu problēmas">
+  **Simptomi:** Uz Windows ar WSL Bolt nevar atrast `less`, failu ceļos ir negaidītas atpakaļvērstās slīpsvītras vai neatveras teicējs komandai `bolt session list`.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Iestatiet Git Bash ceļu">
+      Bolt meklē Unix utilītas (ieskaitot `less`) attiecībā pret Git for Windows instalāciju. Iestatiet vides mainīgo uz savu Git Bash direktoriju:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Pievienojiet to savam PowerShell profilam (`$PROFILE`), lai to saglabātu.
+    </Step>
+    <Step title="Pārbaudiet ar atkļūdošanas informāciju">
+      ```bash
+      bolt debug info
+      ```
+
+      Apstiprina OS atklāšanu un kurus ceļus Bolt izmanto.
+    </Step>
+    <Step title="Palaidiet Bolt tieši WSL iekšpusē">
+      Labākajai pieredzei uz Windows palaidiet `bolt` no WSL termināļa iekšpuses, nevis no PowerShell vai Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Nevar jaunināt Bolt">
+  **Simptomi:** `bolt upgrade` ziņo kļūdu vai klusi nedara neko, vai versijas numurs nemainās pēc tā palaišanas.
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Skaidri norādiet instalēšanas metodi">
+      Bolt mēģina atklāt, kā tas tika instalēts. Ja atklāšana neizdodas, ignorējiet to:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Instalējiet no jauna, izmantojot instalēšanas skriptu">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: palaidiet kā administrators Chocolatey">
+      Ja instalējāt caur `choco`, jaunināšanai nepieciešams paaugstinātas privilēģijas terminālis. Atveriet PowerShell kā administrators pirms `bolt upgrade` palaišanas.
+    </Step>
+    <Step title="Apstipriniet, ka jaunā versija ir aktīva">
+      ```bash
+      bolt --version
+      which bolt    # pārbaudiet, vai PATH uztver pareizo bināro failu
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Aģents nevar atrast failus (vai atrod pārāk daudzus)">
+  **Simptomi:** Aģents sūdzas, ka nevar redzēt esošos failus, vai atkārtoti uztver failus, kurus nevēlaties, lai tas aiztiek (piemēram, `node_modules`, būvēšanas izvade vai noslēpumi).
+
+  **Soļi:**
+
+  <Steps>
+    <Step title="Pārbaudiet .boltignore">
+      Bolt ievēro `.boltignore` failu projekta saknē, kas kontrolē, kurus failus aģenta failu meklēšanas rīki var redzēt. Tas izmanto to pašu sintaksi kā `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Apstipriniet darba direktoriju">
+      ```bash
+      bolt debug info
+      ```
+
+      Pārbaudiet, vai `cwd` atbilst projekta saknei. Ja jūs palaidāt Bolt no apakšdirektorijas, aģenta failu meklēšana ir sakņota tur.
+    </Step>
+    <Step title="Palūdziet aģentam grep, nevis minēt">
+      Ja aģents apgalvo, ka fails nepastāv, lūdziet tam skaidri palaist `grep` vai `glob`. Tas apiet jebkuru novecojušu iekšēju pieņēmumu.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Atkļūdošanas informācijas iegūšana kļūdu ziņojumam">
+  Iesniedzot problēmu, uzturētājiem visnoderīgākā ir šāda informācija:
+
+  <Steps>
+    <Step title="Savāciet sistēmas un spraudņu informāciju">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Savāciet neseno žurnāla izvadi">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Eksportējiet attiecīgo sesiju (rediģētu)">
+      Ja problēma notika konkrētas sesijas laikā, eksportējiet to ar rediģētiem noslēpumiem:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Pievienojiet `session-debug.json` problēmai.
+    </Step>
+    <Step title="Atveriet problēmu vai diskusiju">
+      Dodieties uz [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) un ielīmējiet savu `bolt debug info` izvadi kopā ar soļu aprakstu, lai reproducētu.
+    </Step>
+  </Steps>
+</Accordion>

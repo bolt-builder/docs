@@ -1,0 +1,33 @@
+---
+title: "2026. augusztus 4. hete"
+description: "Heti Bolt-változásnapló: 11 új felhasználói felület nyelv, jobbról-balra elrendezés, natív asztali fordítások, Poolside szolgáltató, GPT-5 finomítások és hibajavítások."
+---
+
+## Új funkciók
+
+- **11 új felületnyelv** — Az asztali alkalmazás és a TUI mostantól fordítást tartalmaz hindi, holland, indonéz, vietnami, olasz, urdu, pandzsábi, azeri, finn, svéd és thai nyelvre, így a támogatott nyelvek száma 28-ra nőtt. A **Settings → Appearance → Language** menüben tudsz nyelvet váltani. Lásd: [Asztali funkciók](/desktop/features) és [Telepítés](/desktop/install#28-ui-languages).
+- **Jobbról-balra elrendezés támogatása** — A navigáció, szerkesztők, párbeszédablakok, vezérlők és szövegmegjelenítés mostantól helyesen tükröződik jobbról-balra írt nyelvekhez, mint az arab, héber vagy urdu, így az egész felület természetesen olvasható ezekben a nyelvi környezetekben.
+- **Natív asztali fordítások** — Az operációs rendszer szintű menük, frissítési párbeszédablakok, a helyreállítási folyamat, a WSL beállítási folyamat és a natív fájlválasztók mostantól lokalizálva vannak az alkalmazáson belüli felület mellett, így az egész asztali élmény követi a nyelvi beállításodat.
+- **Bővített lokalizációs lefedettség** — A menük, párbeszédablakok, promptok, súgótartalom, hibaüzenetek és akadálymentességi címkék mostantól minden támogatott nyelven fordítva vannak, kiküszöbölve azokat a helyeket, ahol a szövegek korábban angolra estek vissza.
+- **Poolside szolgáltató** — A Bolt mostantól a [Poolside](https://poolside.ai) szolgáltatóhoz is kapcsolódik az OpenAI-kompatibilis API-ján keresztül. Futtasd a `/connect` parancsot, válaszd a **Poolside** lehetőséget, és illeszd be az API-kulcsod a [platform.poolside.ai](https://platform.poolside.ai) oldalról. A saját üzemeltetésű Poolside-telepítések egyedi szolgáltatóként is beállíthatók. Lásd: [Szolgáltatók és modellek](/concepts/providers-and-models).
+- **Nyelvi környezetnek megfelelő többes szám** — A darabszámok, állapotok, fájlok és munkamenet-listaelemek mostantól helyesen többes számot vesznek fel nyelvenként, így az idővonal és az állapotszöveg természetesen olvasható minden támogatott nyelvi környezetben.
+- **Gazdagabb Markdown-megjelenítés** — Az asszisztens üzenetei jobb Markdown-formázást, simább streaming frissítéseket, jobb szintaxis-kiemelést és matematikai tartalom támogatását kapják, így a hosszabb és technikai válaszok könnyebben olvashatók.
+
+## Frissítések
+
+- **A GPT-5 gondolkodási erőfeszítése illeszkedik a modell verziójához** — A gondolkodási erőfeszítés-szintek (beleértve a `none` és `xhigh` értékeket is) mostantól csak azokhoz a GPT-5 változatokhoz jelennek meg, amelyek támogatják őket, így a `--variant` nem kínál fel olyan opciókat, amelyeket egy adott modell elutasítana. Lásd: [Gondolkodási erőfeszítés vezérlése](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Diff-megjegyzések finomítása** — A munkamenet felületének diff-nézete pontosítja a megjegyzésjelzőket, a margóviselkedést és a világos/sötét szintaxisszíneket a jobb olvashatóság érdekében.
+- **Meglévő fordítások finomítása** — A meglévő nyelvek tisztább terminológiát és bővített felületcímkéket kapnak, hogy egységesebb élményt nyújtsanak az alkalmazásban.
+
+## Hibajavítások
+
+- **Munkamenet-műveletek időzítése** — A munkamenet-műveletek mostantól pontosabban rögzítik és jelentik az időzítésüket, így az idővonal a munka tényleges kezdetét és végét tükrözi.
+- **Egyértelműbb távoli munkaterület-hibák** — A távoli munkaterülethez való csatlakozás vagy parancsok futtatása során fellépő hibák mostantól leíróbb hibaüzeneteket jelenítenek meg a általánosak helyett.
+- **A munkaterület-proxy már nem szivárogtatja a munkakönyvtárat** — A munkaterület-proxyn átirányított kérések már nem tartalmaznak munkakönyvtár-adatokat, így a helyi útvonalak nem kerülnek ki a hálózatra.
+- **A térkép kitölti az üres régiókat** — A tevékenységi térkép mostantól látható marad azokon a régiókon is, ahol nincs rögzített tevékenység, ahelyett hogy üres területté zsugorodna.
+- **Nyelvi környezet észlelésének javítása** — A Bolt mostantól megbízhatóan felismeri a rendszer nyelvi környezetét indításkor, így a felület több platformon is a megfelelő nyelven nyílik meg.
+- **Német idővonal-fordítás javítása** — A német nyelvű idővonal-bejegyzések mostantól a megfelelő szövegekkel jelennek meg, ahelyett hogy angolra vagy hibásan formázott szövegre esnének vissza.
+- **Fájlkiválasztás kikapcsolása** — A fájlkiválasztásra való második kattintás mostantól törli azt, így visszavonhatod a kiválasztást anélkül, hogy előbb egy másikat kellene választanod.
+- **Tisztább vázlatmegjegyzés-interakciók** — Egy vázlatmegjegyzés elindítása vagy elvetése mostantól következetesen törli az alapkiválasztást, és nem versenyez a hover állapottal.
+- **Animált gondolkodási fejléc visszaállítva** — A TUI gondolkodási fejléce ismét animált forgót mutat gondolkodás közben, és a színátmenete elhalványul kibontáskor, így a zárt és nyitott állapot könnyebben megkülönböztethető.
+- **Háttérfolyamat- és teszteszközök visszaállítva** — A `bash_background`, `process_output`, `list_processes`, `kill_process` és `test_run` ismét elérhető az ügynökök számára, miután egy korábbi összefűzésnél kikerültek. Az ügynökök hosszan futó parancsokat, például dev szervereket és watchereket indíthatnak, olvashatják a kimenetüket, és futtathatják a projekt tesztjeit strukturált sikeres/sikertelen eredményekkel. Lásd: [Beépített eszközök](/concepts/tools#built-in-tools).

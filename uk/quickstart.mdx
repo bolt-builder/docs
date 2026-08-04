@@ -1,0 +1,142 @@
+---
+title: "Розпочніть роботу з Bolt менш ніж за хвилину"
+sidebarTitle: "Швидкий старт"
+description: "Встановіть Bolt, відкрийте свій проєкт, під'єднайте провайдера й запустіть свій перший AI-промпт — усе менш ніж за 60 секунд з цим покроковим посібником."
+---
+
+Цей посібник проведе вас через встановлення Bolt, запуск у проєкті, підключення AI-провайдера й запуск першого промпту. Увесь потік займає менше хвилини.
+
+<Steps>
+  <Step title="Встановіть Bolt">
+    Найшвидший шлях — офіційний скрипт встановлення, що працює на macOS і Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Надаєте перевагу менеджеру пакетів? Встановіть глобально за допомогою npm, bun, pnpm або yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Для десктопного застосунку на macOS (без обходу Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Див. [Посібник з встановлення](/installation), щоб дізнатися про всі методи, включно з Homebrew, Chocolatey, Scoop та специфічними примітками для Windows.
+  </Step>
+  <Step title="Відкрийте свій проєкт">
+    Перейдіть у будь-який каталог проєкту й запустіть інтерактивний TUI:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt автоматично захоплює контекст вашого проєкту — читаючи дерево файлів, розуміючи стек і роблячи його доступним кожному агенту з моменту, коли ви його відкриваєте.
+  </Step>
+  <Step title="Налаштуйте AI-провайдера">
+    Під час першого запуску Bolt запропонує налаштувати провайдера, якщо жодного не встановлено. Ви також можете запустити це у будь-який час:
+
+    ```bash
+    bolt providers
+    ```
+
+    Це відкриває потік керування провайдерами, де ви можете додати API-ключі для OpenAI, Anthropic та інших підтримуваних LLM-провайдерів. Конфігурація зберігається в `.bolt/bolt.jsonc` у корені проєкту.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Введіть промпт і досліджуйте агентів">
+    Коли ви в TUI, введіть свій промпт і натисніть Enter. Використовуйте **Tab**, щоб переключатися між десятьма вбудованими агентами Bolt у будь-який момент — поточний агент показано в рядку статусу.
+
+    Ви також можете запускати промпти напряму з командного рядка без відкриття TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Вбудовані агенти
+
+Перемикайте агентів клавішею `Tab` у TUI, або передавайте `--agent <name>` до `bolt run`. Кожен агент має визначений рівень доступу, що відповідає його призначенню.
+
+| Агент | Доступ | Опис |
+| --- | --- | --- |
+| `code` | Full | За замовчуванням: читає, пише та виконує код |
+| `plan` | Read | Досліджує кодову базу та створює план без зміни файлів |
+| `ask` | Read | Питання та дослідження — без редагування файлів |
+| `code-review` | Read | Переглядає зміни на предмет коректності, стилю та безпеки |
+| `debug` | Full | Налагоджує невдалі тести, збої та логічні помилки |
+| `refactor` | Full | Безпечний рефакторинг з перевіркою тестів на кожному кроці |
+| `docs` | Edit | Пише та оновлює документацію та коментарі |
+| `security` | Read | Аудит безпеки: вразливості, секрети, патерни |
+| `migrate` | Full | Оновлення фреймворків і міграції залежностей |
+| `perf` | Full | Аналіз продуктивності та оптимізація |
+
+Також є два вбудовані субагенти для делегування: `@general` для складних багатоетапних завдань і `@explore` для швидкого дослідження кодової бази лише для читання. Ви можете визначати власних агентів як Markdown-файли або згенерувати одного за допомогою `bolt agent create`.
+
+## Поширені команди, які варто спробувати далі
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Передайте `--mini` у `bolt` або `bolt attach` для компактного UI, який займає менше місця в терміналі — чудово для менших вікон або макетів з розділеною панеллю.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` приймає прапорці `--auto`, `--yolo` та `--dangerously-skip-permissions`, які автоматично схвалюють усі запити дозволів без запитання. Використовуйте їх лише у довірених середовищах — вони дозволяють агенту читати, писати й виконувати без підтвердження.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt підтримує shell-автозаповнення для bash, zsh, fish та інших оболонок. Згенеруйте та встановіть автозаповнення за допомогою:
+
+  ```bash
+  bolt completion
+  ```
+
+  Дотримуйтеся надрукованих інструкцій, щоб підключити скрипт автозаповнення у конфігурації вашої оболонки.
+</Note>

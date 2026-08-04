@@ -1,0 +1,22 @@
+---
+title: "Skills: पुनः उपयोगी Agent Playbooks"
+sidebarTitle: "Skills"
+description: "Skills नामित, पुनः उपयोगी playbooks हैं जिन्हें Bolt agent skill tool के माध्यम से इनवोक करता है — releases शिप करने या lint suites चलाने जैसे canned workflows के लिए काम आता है।"
+---
+
+Skills नामित, पुनः उपयोगी playbooks हैं जो आपके प्रोजेक्ट के साथ रहते हैं और `skill` tool के माध्यम से इनवोक किए जाते हैं। जहाँ एक कस्टम tool एक single executable क्रिया है, एक skill एक स्क्रिप्टेड वर्कफ़्लो है जिसे agent चरण-दर-चरण फ़ॉलो कर सकता है: इन फ़ाइलों को इकट्ठा करो, इन कमांड्स को चलाओ, आउटपुट के आधार पर आगे क्या करना है निर्णय करो।
+
+Skills का उपयोग तब करें जब:
+
+- आपके पास एक ऐसा वर्कफ़्लो है जिसे आप prompts में बार-बार समझाते रहते हैं ("पहले linter चलाओ, फिर …")।
+- आप चाहते हैं कि agent किसी विशिष्ट निर्णय tree का पालन करे।
+- आप चाहते हैं कि यही वर्कफ़्लो प्रोजेक्ट में हर सेशन और हर agent के लिए उपलब्ध हो।
+
+## वे कहाँ रहते हैं
+
+Skills प्रोजेक्ट रूट में `.opencode/skill/` (या `.opencode/skills/`) के अंदर फ़ाइलें होती हैं। प्रत्येक फ़ाइल ट्रिगर नाम, agent को इसका उपयोग कब करना चाहिए, और शामिल चरणों का वर्णन करती है। `skill` [tool](/concepts/tools) उन्हें मॉडल के लिए उजागर करता है।
+
+## संबंधित
+
+- [Custom Tools](/extending/custom-tools) — निम्न-स्तरीय, single-action extension।
+- [Custom Agents](/extending/custom-agents) — इसके बजाय निर्देशों को एक agent में bake करें।

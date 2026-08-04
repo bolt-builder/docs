@@ -1,0 +1,33 @@
+---
+title: "UI web Bolt"
+sidebarTitle: "UI web"
+description: "bolt web servește un UI bazat pe browser peste un server Bolt care rulează — util pentru mașinile de echipă partajate, mașinile la distanță și oriunde un TUI nu este practic."
+---
+
+`bolt web` pornește un server Bolt și servește un UI de browser în fața lui. Este același motor ca TUI-ul, doar randat într-un tab de browser.
+
+## Pornește-l
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Apoi deschide URL-ul tipărit. Când îl expui prin rețea, setează mai întâi basic auth:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Când să folosești UI-ul web
+
+- Rulezi Bolt pe o mașină la distanță puternică, dar îl controlezi de pe laptop.
+- Partajezi o sesiune live cu un coleg pentru pair-debugging.
+- Medii în care un TUI complet este incomod (Chromebook-uri, tablete, mașini de coworking).
+
+## Legături conexe
+
+- [Server headless](/server/headless-server) — serverul API subiacent.
+- [Sesiuni la distanță](/server/remote-sessions) — atașează un TUI la același server pe care îl servește UI-ul web.

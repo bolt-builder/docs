@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI-sneltoetsen"
+sidebarTitle: "Sneltoetsen"
+description: "De essentiële Bolt TUI-shortcuts: agents wisselen met Tab, mini-modus, push-to-talk voice en al het andere wat je met het toetsenbord kunt aansturen."
+---
+
+De Bolt TUI is ontworpen om van begin tot eind met het toetsenbord te worden aangestuurd. Deze pagina somt de shortcuts op die je het vaakst zult gebruiken. Voor de volledige lijst, voer `bolt` uit en open de in-app hulp.
+
+## Essentiële
+
+| Toetsen | Actie |
+| --- | --- |
+| `Tab` | Ga naar de volgende agent (`code`, `plan`, `ask`, ...). De huidige agent wordt getoond in de statusbalk. |
+| `Shift+Tab` | Ga naar de vorige agent. |
+| `Enter` | Verstuur het huidige bericht. |
+| `Esc` | Annuleer de lopende beurt. |
+| `Ctrl+C` | Onderbreek de huidige tool-aanroep. |
+| `Ctrl+D` | Koppel los van de sessie (laat hem draaien op de server). |
+
+## Modi
+
+### `--mini` modus
+
+Start Bolt met een compacte split-footer-layout die minder terminalruimte inneemt, ideaal voor split panes:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk voice
+
+Houd de geconfigureerde push-to-talk-toets ingedrukt om een prompt te dicteren met speech-to-text, en laat los om te versturen. Configureer de toets en de STT-provider in `.bolt/bolt.jsonc`.
+
+## Gerelateerd
+
+- [Slash-commando's](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` en vrienden.
+- [Sessies](/concepts/sessions) — loskoppelen, hervatten, forken en delen vanaf het toetsenbord.

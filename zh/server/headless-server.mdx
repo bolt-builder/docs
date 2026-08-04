@@ -1,0 +1,52 @@
+---
+title: "将 Bolt 作为无头服务器运行"
+sidebarTitle: "无头服务器"
+description: "bolt serve 通过 HTTP 公开完整的 Bolt 运行时,以便任何 TUI、Web UI、编辑器集成或脚本都可以在本地或跨网络附加到它。"
+---
+
+`bolt serve` 运行一个无头 Bolt 服务器,通过 HTTP 公开完整的引擎：会话、代理、工具、提供商访问、MCP 和流事件。Bolt 可以交互式完成的任何事情,都可以通过 API 完成。
+
+## 启动服务器
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  绑定到 `0.0.0.0` 会将 Bolt 暴露在你的网络上。这样做之前始终设置 `BOLT_SERVER_USERNAME` 和 `BOLT_SERVER_PASSWORD`。
+</Warning>
+
+## 附加 TUI
+
+从任何可以访问服务器的机器：
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+或对远程服务器运行一次性提示：
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## 基本认证
+
+通过环境变量设置凭证（参见[环境变量](/reference/environment-variables)）：
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+所有客户端必须发送匹配的凭证。
+
+## 相关
+
+- [远程会话](/server/remote-sessions) — 附加、mDNS 发现和共享服务器。
+- [Web UI](/server/web-ui) — 浏览器前端。
+- [ACP](/server/acp) — 从 Zed 和其他编辑器驱动 Bolt。

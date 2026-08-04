@@ -22,86 +22,3172 @@
     }
   },
   "navigation": {
-    "tabs": [
+    "languages": [
       {
-        "tab": "Changelog",
-        "groups": [
+        "language": "en",
+        "default": true,
+        "tabs": [
           {
-            "group": "Changelog",
-            "pages": [
-              "changelog/2026-08-04",
-              "changelog/2026-08-03"
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "changelog/2026-08-04",
+                  "changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "introduction",
+                  "installation",
+                  "quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "concepts/agents",
+                  "concepts/sessions",
+                  "concepts/providers-and-models",
+                  "concepts/configuration",
+                  "concepts/project-memory",
+                  "concepts/tools",
+                  "concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "tui/keybinds",
+                  "tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "extending/mcp-servers",
+                  "extending/plugins",
+                  "extending/custom-agents",
+                  "extending/custom-tools",
+                  "extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "server/headless-server",
+                  "server/web-ui",
+                  "server/remote-sessions",
+                  "server/acp",
+                  "server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "desktop/install",
+                  "desktop/features",
+                  "desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "reference/commands",
+                  "reference/configuration-schema",
+                  "reference/environment-variables",
+                  "reference/local-database",
+                  "reference/stats-and-cost",
+                  "reference/troubleshooting"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "Documentation",
-        "groups": [
+        "language": "ar",
+        "tabs": [
           {
-            "group": "Get Started",
-            "pages": [
-              "introduction",
-              "installation",
-              "quickstart"
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ar/changelog/2026-08-04",
+                  "ar/changelog/2026-08-03"
+                ]
+              }
             ]
           },
           {
-            "group": "Core Concepts",
-            "pages": [
-              "concepts/agents",
-              "concepts/sessions",
-              "concepts/providers-and-models",
-              "concepts/configuration",
-              "concepts/project-memory",
-              "concepts/tools",
-              "concepts/permissions"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ar/introduction",
+                  "ar/installation",
+                  "ar/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ar/concepts/agents",
+                  "ar/concepts/sessions",
+                  "ar/concepts/providers-and-models",
+                  "ar/concepts/configuration",
+                  "ar/concepts/project-memory",
+                  "ar/concepts/tools",
+                  "ar/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ar/tui/keybinds",
+                  "ar/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ar/extending/mcp-servers",
+                  "ar/extending/plugins",
+                  "ar/extending/custom-agents",
+                  "ar/extending/custom-tools",
+                  "ar/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ar/server/headless-server",
+                  "ar/server/web-ui",
+                  "ar/server/remote-sessions",
+                  "ar/server/acp",
+                  "ar/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ar/desktop/install",
+                  "ar/desktop/features",
+                  "ar/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ar/reference/commands",
+                  "ar/reference/configuration-schema",
+                  "ar/reference/environment-variables",
+                  "ar/reference/local-database",
+                  "ar/reference/stats-and-cost",
+                  "ar/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "pt-BR",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "pt-BR/changelog/2026-08-04",
+                  "pt-BR/changelog/2026-08-03"
+                ]
+              }
             ]
           },
           {
-            "group": "TUI",
-            "pages": [
-              "tui/keybinds",
-              "tui/slash-commands"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "pt-BR/introduction",
+                  "pt-BR/installation",
+                  "pt-BR/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "pt-BR/concepts/agents",
+                  "pt-BR/concepts/sessions",
+                  "pt-BR/concepts/providers-and-models",
+                  "pt-BR/concepts/configuration",
+                  "pt-BR/concepts/project-memory",
+                  "pt-BR/concepts/tools",
+                  "pt-BR/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "pt-BR/tui/keybinds",
+                  "pt-BR/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "pt-BR/extending/mcp-servers",
+                  "pt-BR/extending/plugins",
+                  "pt-BR/extending/custom-agents",
+                  "pt-BR/extending/custom-tools",
+                  "pt-BR/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "pt-BR/server/headless-server",
+                  "pt-BR/server/web-ui",
+                  "pt-BR/server/remote-sessions",
+                  "pt-BR/server/acp",
+                  "pt-BR/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "pt-BR/desktop/install",
+                  "pt-BR/desktop/features",
+                  "pt-BR/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "pt-BR/reference/commands",
+                  "pt-BR/reference/configuration-schema",
+                  "pt-BR/reference/environment-variables",
+                  "pt-BR/reference/local-database",
+                  "pt-BR/reference/stats-and-cost",
+                  "pt-BR/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "fr-CA",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "fr-CA/changelog/2026-08-04",
+                  "fr-CA/changelog/2026-08-03"
+                ]
+              }
             ]
           },
           {
-            "group": "Extending Bolt",
-            "pages": [
-              "extending/mcp-servers",
-              "extending/plugins",
-              "extending/custom-agents",
-              "extending/custom-tools",
-              "extending/skills"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "fr-CA/introduction",
+                  "fr-CA/installation",
+                  "fr-CA/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "fr-CA/concepts/agents",
+                  "fr-CA/concepts/sessions",
+                  "fr-CA/concepts/providers-and-models",
+                  "fr-CA/concepts/configuration",
+                  "fr-CA/concepts/project-memory",
+                  "fr-CA/concepts/tools",
+                  "fr-CA/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "fr-CA/tui/keybinds",
+                  "fr-CA/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "fr-CA/extending/mcp-servers",
+                  "fr-CA/extending/plugins",
+                  "fr-CA/extending/custom-agents",
+                  "fr-CA/extending/custom-tools",
+                  "fr-CA/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "fr-CA/server/headless-server",
+                  "fr-CA/server/web-ui",
+                  "fr-CA/server/remote-sessions",
+                  "fr-CA/server/acp",
+                  "fr-CA/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "fr-CA/desktop/install",
+                  "fr-CA/desktop/features",
+                  "fr-CA/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "fr-CA/reference/commands",
+                  "fr-CA/reference/configuration-schema",
+                  "fr-CA/reference/environment-variables",
+                  "fr-CA/reference/local-database",
+                  "fr-CA/reference/stats-and-cost",
+                  "fr-CA/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ca",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ca/changelog/2026-08-04",
+                  "ca/changelog/2026-08-03"
+                ]
+              }
             ]
           },
           {
-            "group": "Server & Automation",
-            "pages": [
-              "server/headless-server",
-              "server/web-ui",
-              "server/remote-sessions",
-              "server/acp",
-              "server/github-actions"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ca/introduction",
+                  "ca/installation",
+                  "ca/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ca/concepts/agents",
+                  "ca/concepts/sessions",
+                  "ca/concepts/providers-and-models",
+                  "ca/concepts/configuration",
+                  "ca/concepts/project-memory",
+                  "ca/concepts/tools",
+                  "ca/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ca/tui/keybinds",
+                  "ca/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ca/extending/mcp-servers",
+                  "ca/extending/plugins",
+                  "ca/extending/custom-agents",
+                  "ca/extending/custom-tools",
+                  "ca/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ca/server/headless-server",
+                  "ca/server/web-ui",
+                  "ca/server/remote-sessions",
+                  "ca/server/acp",
+                  "ca/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ca/desktop/install",
+                  "ca/desktop/features",
+                  "ca/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ca/reference/commands",
+                  "ca/reference/configuration-schema",
+                  "ca/reference/environment-variables",
+                  "ca/reference/local-database",
+                  "ca/reference/stats-and-cost",
+                  "ca/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "cn",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "cn/changelog/2026-08-04",
+                  "cn/changelog/2026-08-03"
+                ]
+              }
             ]
           },
           {
-            "group": "Desktop App",
-            "pages": [
-              "desktop/install",
-              "desktop/features",
-              "desktop/auto-updates"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "cn/introduction",
+                  "cn/installation",
+                  "cn/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "cn/concepts/agents",
+                  "cn/concepts/sessions",
+                  "cn/concepts/providers-and-models",
+                  "cn/concepts/configuration",
+                  "cn/concepts/project-memory",
+                  "cn/concepts/tools",
+                  "cn/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "cn/tui/keybinds",
+                  "cn/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "cn/extending/mcp-servers",
+                  "cn/extending/plugins",
+                  "cn/extending/custom-agents",
+                  "cn/extending/custom-tools",
+                  "cn/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "cn/server/headless-server",
+                  "cn/server/web-ui",
+                  "cn/server/remote-sessions",
+                  "cn/server/acp",
+                  "cn/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "cn/desktop/install",
+                  "cn/desktop/features",
+                  "cn/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "cn/reference/commands",
+                  "cn/reference/configuration-schema",
+                  "cn/reference/environment-variables",
+                  "cn/reference/local-database",
+                  "cn/reference/stats-and-cost",
+                  "cn/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "zh/changelog/2026-08-04",
+                  "zh/changelog/2026-08-03"
+                ]
+              }
             ]
           },
           {
-            "group": "Reference",
-            "pages": [
-              "reference/commands",
-              "reference/configuration-schema",
-              "reference/environment-variables",
-              "reference/local-database",
-              "reference/stats-and-cost",
-              "reference/troubleshooting"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "zh/introduction",
+                  "zh/installation",
+                  "zh/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "zh/concepts/agents",
+                  "zh/concepts/sessions",
+                  "zh/concepts/providers-and-models",
+                  "zh/concepts/configuration",
+                  "zh/concepts/project-memory",
+                  "zh/concepts/tools",
+                  "zh/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "zh/tui/keybinds",
+                  "zh/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "zh/extending/mcp-servers",
+                  "zh/extending/plugins",
+                  "zh/extending/custom-agents",
+                  "zh/extending/custom-tools",
+                  "zh/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "zh/server/headless-server",
+                  "zh/server/web-ui",
+                  "zh/server/remote-sessions",
+                  "zh/server/acp",
+                  "zh/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "zh/desktop/install",
+                  "zh/desktop/features",
+                  "zh/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "zh/reference/commands",
+                  "zh/reference/configuration-schema",
+                  "zh/reference/environment-variables",
+                  "zh/reference/local-database",
+                  "zh/reference/stats-and-cost",
+                  "zh/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "cs",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "cs/changelog/2026-08-04",
+                  "cs/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "cs/introduction",
+                  "cs/installation",
+                  "cs/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "cs/concepts/agents",
+                  "cs/concepts/sessions",
+                  "cs/concepts/providers-and-models",
+                  "cs/concepts/configuration",
+                  "cs/concepts/project-memory",
+                  "cs/concepts/tools",
+                  "cs/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "cs/tui/keybinds",
+                  "cs/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "cs/extending/mcp-servers",
+                  "cs/extending/plugins",
+                  "cs/extending/custom-agents",
+                  "cs/extending/custom-tools",
+                  "cs/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "cs/server/headless-server",
+                  "cs/server/web-ui",
+                  "cs/server/remote-sessions",
+                  "cs/server/acp",
+                  "cs/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "cs/desktop/install",
+                  "cs/desktop/features",
+                  "cs/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "cs/reference/commands",
+                  "cs/reference/configuration-schema",
+                  "cs/reference/environment-variables",
+                  "cs/reference/local-database",
+                  "cs/reference/stats-and-cost",
+                  "cs/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "da",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "da/changelog/2026-08-04",
+                  "da/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "da/introduction",
+                  "da/installation",
+                  "da/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "da/concepts/agents",
+                  "da/concepts/sessions",
+                  "da/concepts/providers-and-models",
+                  "da/concepts/configuration",
+                  "da/concepts/project-memory",
+                  "da/concepts/tools",
+                  "da/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "da/tui/keybinds",
+                  "da/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "da/extending/mcp-servers",
+                  "da/extending/plugins",
+                  "da/extending/custom-agents",
+                  "da/extending/custom-tools",
+                  "da/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "da/server/headless-server",
+                  "da/server/web-ui",
+                  "da/server/remote-sessions",
+                  "da/server/acp",
+                  "da/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "da/desktop/install",
+                  "da/desktop/features",
+                  "da/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "da/reference/commands",
+                  "da/reference/configuration-schema",
+                  "da/reference/environment-variables",
+                  "da/reference/local-database",
+                  "da/reference/stats-and-cost",
+                  "da/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "nl",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "nl/changelog/2026-08-04",
+                  "nl/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "nl/introduction",
+                  "nl/installation",
+                  "nl/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "nl/concepts/agents",
+                  "nl/concepts/sessions",
+                  "nl/concepts/providers-and-models",
+                  "nl/concepts/configuration",
+                  "nl/concepts/project-memory",
+                  "nl/concepts/tools",
+                  "nl/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "nl/tui/keybinds",
+                  "nl/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "nl/extending/mcp-servers",
+                  "nl/extending/plugins",
+                  "nl/extending/custom-agents",
+                  "nl/extending/custom-tools",
+                  "nl/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "nl/server/headless-server",
+                  "nl/server/web-ui",
+                  "nl/server/remote-sessions",
+                  "nl/server/acp",
+                  "nl/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "nl/desktop/install",
+                  "nl/desktop/features",
+                  "nl/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "nl/reference/commands",
+                  "nl/reference/configuration-schema",
+                  "nl/reference/environment-variables",
+                  "nl/reference/local-database",
+                  "nl/reference/stats-and-cost",
+                  "nl/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "fi",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "fi/changelog/2026-08-04",
+                  "fi/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "fi/introduction",
+                  "fi/installation",
+                  "fi/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "fi/concepts/agents",
+                  "fi/concepts/sessions",
+                  "fi/concepts/providers-and-models",
+                  "fi/concepts/configuration",
+                  "fi/concepts/project-memory",
+                  "fi/concepts/tools",
+                  "fi/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "fi/tui/keybinds",
+                  "fi/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "fi/extending/mcp-servers",
+                  "fi/extending/plugins",
+                  "fi/extending/custom-agents",
+                  "fi/extending/custom-tools",
+                  "fi/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "fi/server/headless-server",
+                  "fi/server/web-ui",
+                  "fi/server/remote-sessions",
+                  "fi/server/acp",
+                  "fi/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "fi/desktop/install",
+                  "fi/desktop/features",
+                  "fi/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "fi/reference/commands",
+                  "fi/reference/configuration-schema",
+                  "fi/reference/environment-variables",
+                  "fi/reference/local-database",
+                  "fi/reference/stats-and-cost",
+                  "fi/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "fr",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "fr/changelog/2026-08-04",
+                  "fr/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "fr/introduction",
+                  "fr/installation",
+                  "fr/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "fr/concepts/agents",
+                  "fr/concepts/sessions",
+                  "fr/concepts/providers-and-models",
+                  "fr/concepts/configuration",
+                  "fr/concepts/project-memory",
+                  "fr/concepts/tools",
+                  "fr/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "fr/tui/keybinds",
+                  "fr/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "fr/extending/mcp-servers",
+                  "fr/extending/plugins",
+                  "fr/extending/custom-agents",
+                  "fr/extending/custom-tools",
+                  "fr/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "fr/server/headless-server",
+                  "fr/server/web-ui",
+                  "fr/server/remote-sessions",
+                  "fr/server/acp",
+                  "fr/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "fr/desktop/install",
+                  "fr/desktop/features",
+                  "fr/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "fr/reference/commands",
+                  "fr/reference/configuration-schema",
+                  "fr/reference/environment-variables",
+                  "fr/reference/local-database",
+                  "fr/reference/stats-and-cost",
+                  "fr/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "de",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "de/changelog/2026-08-04",
+                  "de/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "de/introduction",
+                  "de/installation",
+                  "de/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "de/concepts/agents",
+                  "de/concepts/sessions",
+                  "de/concepts/providers-and-models",
+                  "de/concepts/configuration",
+                  "de/concepts/project-memory",
+                  "de/concepts/tools",
+                  "de/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "de/tui/keybinds",
+                  "de/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "de/extending/mcp-servers",
+                  "de/extending/plugins",
+                  "de/extending/custom-agents",
+                  "de/extending/custom-tools",
+                  "de/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "de/server/headless-server",
+                  "de/server/web-ui",
+                  "de/server/remote-sessions",
+                  "de/server/acp",
+                  "de/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "de/desktop/install",
+                  "de/desktop/features",
+                  "de/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "de/reference/commands",
+                  "de/reference/configuration-schema",
+                  "de/reference/environment-variables",
+                  "de/reference/local-database",
+                  "de/reference/stats-and-cost",
+                  "de/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "he",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "he/changelog/2026-08-04",
+                  "he/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "he/introduction",
+                  "he/installation",
+                  "he/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "he/concepts/agents",
+                  "he/concepts/sessions",
+                  "he/concepts/providers-and-models",
+                  "he/concepts/configuration",
+                  "he/concepts/project-memory",
+                  "he/concepts/tools",
+                  "he/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "he/tui/keybinds",
+                  "he/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "he/extending/mcp-servers",
+                  "he/extending/plugins",
+                  "he/extending/custom-agents",
+                  "he/extending/custom-tools",
+                  "he/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "he/server/headless-server",
+                  "he/server/web-ui",
+                  "he/server/remote-sessions",
+                  "he/server/acp",
+                  "he/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "he/desktop/install",
+                  "he/desktop/features",
+                  "he/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "he/reference/commands",
+                  "he/reference/configuration-schema",
+                  "he/reference/environment-variables",
+                  "he/reference/local-database",
+                  "he/reference/stats-and-cost",
+                  "he/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "hi",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "hi/changelog/2026-08-04",
+                  "hi/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "hi/introduction",
+                  "hi/installation",
+                  "hi/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "hi/concepts/agents",
+                  "hi/concepts/sessions",
+                  "hi/concepts/providers-and-models",
+                  "hi/concepts/configuration",
+                  "hi/concepts/project-memory",
+                  "hi/concepts/tools",
+                  "hi/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "hi/tui/keybinds",
+                  "hi/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "hi/extending/mcp-servers",
+                  "hi/extending/plugins",
+                  "hi/extending/custom-agents",
+                  "hi/extending/custom-tools",
+                  "hi/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "hi/server/headless-server",
+                  "hi/server/web-ui",
+                  "hi/server/remote-sessions",
+                  "hi/server/acp",
+                  "hi/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "hi/desktop/install",
+                  "hi/desktop/features",
+                  "hi/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "hi/reference/commands",
+                  "hi/reference/configuration-schema",
+                  "hi/reference/environment-variables",
+                  "hi/reference/local-database",
+                  "hi/reference/stats-and-cost",
+                  "hi/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "hu",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "hu/changelog/2026-08-04",
+                  "hu/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "hu/introduction",
+                  "hu/installation",
+                  "hu/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "hu/concepts/agents",
+                  "hu/concepts/sessions",
+                  "hu/concepts/providers-and-models",
+                  "hu/concepts/configuration",
+                  "hu/concepts/project-memory",
+                  "hu/concepts/tools",
+                  "hu/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "hu/tui/keybinds",
+                  "hu/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "hu/extending/mcp-servers",
+                  "hu/extending/plugins",
+                  "hu/extending/custom-agents",
+                  "hu/extending/custom-tools",
+                  "hu/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "hu/server/headless-server",
+                  "hu/server/web-ui",
+                  "hu/server/remote-sessions",
+                  "hu/server/acp",
+                  "hu/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "hu/desktop/install",
+                  "hu/desktop/features",
+                  "hu/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "hu/reference/commands",
+                  "hu/reference/configuration-schema",
+                  "hu/reference/environment-variables",
+                  "hu/reference/local-database",
+                  "hu/reference/stats-and-cost",
+                  "hu/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "id",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "id/changelog/2026-08-04",
+                  "id/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "id/introduction",
+                  "id/installation",
+                  "id/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "id/concepts/agents",
+                  "id/concepts/sessions",
+                  "id/concepts/providers-and-models",
+                  "id/concepts/configuration",
+                  "id/concepts/project-memory",
+                  "id/concepts/tools",
+                  "id/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "id/tui/keybinds",
+                  "id/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "id/extending/mcp-servers",
+                  "id/extending/plugins",
+                  "id/extending/custom-agents",
+                  "id/extending/custom-tools",
+                  "id/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "id/server/headless-server",
+                  "id/server/web-ui",
+                  "id/server/remote-sessions",
+                  "id/server/acp",
+                  "id/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "id/desktop/install",
+                  "id/desktop/features",
+                  "id/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "id/reference/commands",
+                  "id/reference/configuration-schema",
+                  "id/reference/environment-variables",
+                  "id/reference/local-database",
+                  "id/reference/stats-and-cost",
+                  "id/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "it",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "it/changelog/2026-08-04",
+                  "it/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "it/introduction",
+                  "it/installation",
+                  "it/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "it/concepts/agents",
+                  "it/concepts/sessions",
+                  "it/concepts/providers-and-models",
+                  "it/concepts/configuration",
+                  "it/concepts/project-memory",
+                  "it/concepts/tools",
+                  "it/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "it/tui/keybinds",
+                  "it/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "it/extending/mcp-servers",
+                  "it/extending/plugins",
+                  "it/extending/custom-agents",
+                  "it/extending/custom-tools",
+                  "it/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "it/server/headless-server",
+                  "it/server/web-ui",
+                  "it/server/remote-sessions",
+                  "it/server/acp",
+                  "it/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "it/desktop/install",
+                  "it/desktop/features",
+                  "it/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "it/reference/commands",
+                  "it/reference/configuration-schema",
+                  "it/reference/environment-variables",
+                  "it/reference/local-database",
+                  "it/reference/stats-and-cost",
+                  "it/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ja",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ja/changelog/2026-08-04",
+                  "ja/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ja/introduction",
+                  "ja/installation",
+                  "ja/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ja/concepts/agents",
+                  "ja/concepts/sessions",
+                  "ja/concepts/providers-and-models",
+                  "ja/concepts/configuration",
+                  "ja/concepts/project-memory",
+                  "ja/concepts/tools",
+                  "ja/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ja/tui/keybinds",
+                  "ja/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ja/extending/mcp-servers",
+                  "ja/extending/plugins",
+                  "ja/extending/custom-agents",
+                  "ja/extending/custom-tools",
+                  "ja/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ja/server/headless-server",
+                  "ja/server/web-ui",
+                  "ja/server/remote-sessions",
+                  "ja/server/acp",
+                  "ja/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ja/desktop/install",
+                  "ja/desktop/features",
+                  "ja/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ja/reference/commands",
+                  "ja/reference/configuration-schema",
+                  "ja/reference/environment-variables",
+                  "ja/reference/local-database",
+                  "ja/reference/stats-and-cost",
+                  "ja/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ja-jp",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ja-jp/changelog/2026-08-04",
+                  "ja-jp/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ja-jp/introduction",
+                  "ja-jp/installation",
+                  "ja-jp/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ja-jp/concepts/agents",
+                  "ja-jp/concepts/sessions",
+                  "ja-jp/concepts/providers-and-models",
+                  "ja-jp/concepts/configuration",
+                  "ja-jp/concepts/project-memory",
+                  "ja-jp/concepts/tools",
+                  "ja-jp/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ja-jp/tui/keybinds",
+                  "ja-jp/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ja-jp/extending/mcp-servers",
+                  "ja-jp/extending/plugins",
+                  "ja-jp/extending/custom-agents",
+                  "ja-jp/extending/custom-tools",
+                  "ja-jp/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ja-jp/server/headless-server",
+                  "ja-jp/server/web-ui",
+                  "ja-jp/server/remote-sessions",
+                  "ja-jp/server/acp",
+                  "ja-jp/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ja-jp/desktop/install",
+                  "ja-jp/desktop/features",
+                  "ja-jp/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ja-jp/reference/commands",
+                  "ja-jp/reference/configuration-schema",
+                  "ja-jp/reference/environment-variables",
+                  "ja-jp/reference/local-database",
+                  "ja-jp/reference/stats-and-cost",
+                  "ja-jp/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "jp",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "jp/changelog/2026-08-04",
+                  "jp/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "jp/introduction",
+                  "jp/installation",
+                  "jp/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "jp/concepts/agents",
+                  "jp/concepts/sessions",
+                  "jp/concepts/providers-and-models",
+                  "jp/concepts/configuration",
+                  "jp/concepts/project-memory",
+                  "jp/concepts/tools",
+                  "jp/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "jp/tui/keybinds",
+                  "jp/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "jp/extending/mcp-servers",
+                  "jp/extending/plugins",
+                  "jp/extending/custom-agents",
+                  "jp/extending/custom-tools",
+                  "jp/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "jp/server/headless-server",
+                  "jp/server/web-ui",
+                  "jp/server/remote-sessions",
+                  "jp/server/acp",
+                  "jp/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "jp/desktop/install",
+                  "jp/desktop/features",
+                  "jp/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "jp/reference/commands",
+                  "jp/reference/configuration-schema",
+                  "jp/reference/environment-variables",
+                  "jp/reference/local-database",
+                  "jp/reference/stats-and-cost",
+                  "jp/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ko",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ko/changelog/2026-08-04",
+                  "ko/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ko/introduction",
+                  "ko/installation",
+                  "ko/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ko/concepts/agents",
+                  "ko/concepts/sessions",
+                  "ko/concepts/providers-and-models",
+                  "ko/concepts/configuration",
+                  "ko/concepts/project-memory",
+                  "ko/concepts/tools",
+                  "ko/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ko/tui/keybinds",
+                  "ko/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ko/extending/mcp-servers",
+                  "ko/extending/plugins",
+                  "ko/extending/custom-agents",
+                  "ko/extending/custom-tools",
+                  "ko/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ko/server/headless-server",
+                  "ko/server/web-ui",
+                  "ko/server/remote-sessions",
+                  "ko/server/acp",
+                  "ko/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ko/desktop/install",
+                  "ko/desktop/features",
+                  "ko/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ko/reference/commands",
+                  "ko/reference/configuration-schema",
+                  "ko/reference/environment-variables",
+                  "ko/reference/local-database",
+                  "ko/reference/stats-and-cost",
+                  "ko/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "lv",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "lv/changelog/2026-08-04",
+                  "lv/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "lv/introduction",
+                  "lv/installation",
+                  "lv/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "lv/concepts/agents",
+                  "lv/concepts/sessions",
+                  "lv/concepts/providers-and-models",
+                  "lv/concepts/configuration",
+                  "lv/concepts/project-memory",
+                  "lv/concepts/tools",
+                  "lv/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "lv/tui/keybinds",
+                  "lv/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "lv/extending/mcp-servers",
+                  "lv/extending/plugins",
+                  "lv/extending/custom-agents",
+                  "lv/extending/custom-tools",
+                  "lv/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "lv/server/headless-server",
+                  "lv/server/web-ui",
+                  "lv/server/remote-sessions",
+                  "lv/server/acp",
+                  "lv/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "lv/desktop/install",
+                  "lv/desktop/features",
+                  "lv/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "lv/reference/commands",
+                  "lv/reference/configuration-schema",
+                  "lv/reference/environment-variables",
+                  "lv/reference/local-database",
+                  "lv/reference/stats-and-cost",
+                  "lv/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "no",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "no/changelog/2026-08-04",
+                  "no/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "no/introduction",
+                  "no/installation",
+                  "no/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "no/concepts/agents",
+                  "no/concepts/sessions",
+                  "no/concepts/providers-and-models",
+                  "no/concepts/configuration",
+                  "no/concepts/project-memory",
+                  "no/concepts/tools",
+                  "no/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "no/tui/keybinds",
+                  "no/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "no/extending/mcp-servers",
+                  "no/extending/plugins",
+                  "no/extending/custom-agents",
+                  "no/extending/custom-tools",
+                  "no/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "no/server/headless-server",
+                  "no/server/web-ui",
+                  "no/server/remote-sessions",
+                  "no/server/acp",
+                  "no/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "no/desktop/install",
+                  "no/desktop/features",
+                  "no/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "no/reference/commands",
+                  "no/reference/configuration-schema",
+                  "no/reference/environment-variables",
+                  "no/reference/local-database",
+                  "no/reference/stats-and-cost",
+                  "no/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "pl",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "pl/changelog/2026-08-04",
+                  "pl/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "pl/introduction",
+                  "pl/installation",
+                  "pl/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "pl/concepts/agents",
+                  "pl/concepts/sessions",
+                  "pl/concepts/providers-and-models",
+                  "pl/concepts/configuration",
+                  "pl/concepts/project-memory",
+                  "pl/concepts/tools",
+                  "pl/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "pl/tui/keybinds",
+                  "pl/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "pl/extending/mcp-servers",
+                  "pl/extending/plugins",
+                  "pl/extending/custom-agents",
+                  "pl/extending/custom-tools",
+                  "pl/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "pl/server/headless-server",
+                  "pl/server/web-ui",
+                  "pl/server/remote-sessions",
+                  "pl/server/acp",
+                  "pl/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "pl/desktop/install",
+                  "pl/desktop/features",
+                  "pl/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "pl/reference/commands",
+                  "pl/reference/configuration-schema",
+                  "pl/reference/environment-variables",
+                  "pl/reference/local-database",
+                  "pl/reference/stats-and-cost",
+                  "pl/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "pt",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "pt/changelog/2026-08-04",
+                  "pt/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "pt/introduction",
+                  "pt/installation",
+                  "pt/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "pt/concepts/agents",
+                  "pt/concepts/sessions",
+                  "pt/concepts/providers-and-models",
+                  "pt/concepts/configuration",
+                  "pt/concepts/project-memory",
+                  "pt/concepts/tools",
+                  "pt/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "pt/tui/keybinds",
+                  "pt/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "pt/extending/mcp-servers",
+                  "pt/extending/plugins",
+                  "pt/extending/custom-agents",
+                  "pt/extending/custom-tools",
+                  "pt/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "pt/server/headless-server",
+                  "pt/server/web-ui",
+                  "pt/server/remote-sessions",
+                  "pt/server/acp",
+                  "pt/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "pt/desktop/install",
+                  "pt/desktop/features",
+                  "pt/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "pt/reference/commands",
+                  "pt/reference/configuration-schema",
+                  "pt/reference/environment-variables",
+                  "pt/reference/local-database",
+                  "pt/reference/stats-and-cost",
+                  "pt/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ro",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ro/changelog/2026-08-04",
+                  "ro/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ro/introduction",
+                  "ro/installation",
+                  "ro/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ro/concepts/agents",
+                  "ro/concepts/sessions",
+                  "ro/concepts/providers-and-models",
+                  "ro/concepts/configuration",
+                  "ro/concepts/project-memory",
+                  "ro/concepts/tools",
+                  "ro/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ro/tui/keybinds",
+                  "ro/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ro/extending/mcp-servers",
+                  "ro/extending/plugins",
+                  "ro/extending/custom-agents",
+                  "ro/extending/custom-tools",
+                  "ro/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ro/server/headless-server",
+                  "ro/server/web-ui",
+                  "ro/server/remote-sessions",
+                  "ro/server/acp",
+                  "ro/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ro/desktop/install",
+                  "ro/desktop/features",
+                  "ro/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ro/reference/commands",
+                  "ro/reference/configuration-schema",
+                  "ro/reference/environment-variables",
+                  "ro/reference/local-database",
+                  "ro/reference/stats-and-cost",
+                  "ro/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ru",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "ru/changelog/2026-08-04",
+                  "ru/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "ru/introduction",
+                  "ru/installation",
+                  "ru/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "ru/concepts/agents",
+                  "ru/concepts/sessions",
+                  "ru/concepts/providers-and-models",
+                  "ru/concepts/configuration",
+                  "ru/concepts/project-memory",
+                  "ru/concepts/tools",
+                  "ru/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "ru/tui/keybinds",
+                  "ru/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "ru/extending/mcp-servers",
+                  "ru/extending/plugins",
+                  "ru/extending/custom-agents",
+                  "ru/extending/custom-tools",
+                  "ru/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "ru/server/headless-server",
+                  "ru/server/web-ui",
+                  "ru/server/remote-sessions",
+                  "ru/server/acp",
+                  "ru/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "ru/desktop/install",
+                  "ru/desktop/features",
+                  "ru/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "ru/reference/commands",
+                  "ru/reference/configuration-schema",
+                  "ru/reference/environment-variables",
+                  "ru/reference/local-database",
+                  "ru/reference/stats-and-cost",
+                  "ru/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh-Hans",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "zh-Hans/changelog/2026-08-04",
+                  "zh-Hans/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "zh-Hans/introduction",
+                  "zh-Hans/installation",
+                  "zh-Hans/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "zh-Hans/concepts/agents",
+                  "zh-Hans/concepts/sessions",
+                  "zh-Hans/concepts/providers-and-models",
+                  "zh-Hans/concepts/configuration",
+                  "zh-Hans/concepts/project-memory",
+                  "zh-Hans/concepts/tools",
+                  "zh-Hans/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "zh-Hans/tui/keybinds",
+                  "zh-Hans/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "zh-Hans/extending/mcp-servers",
+                  "zh-Hans/extending/plugins",
+                  "zh-Hans/extending/custom-agents",
+                  "zh-Hans/extending/custom-tools",
+                  "zh-Hans/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "zh-Hans/server/headless-server",
+                  "zh-Hans/server/web-ui",
+                  "zh-Hans/server/remote-sessions",
+                  "zh-Hans/server/acp",
+                  "zh-Hans/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "zh-Hans/desktop/install",
+                  "zh-Hans/desktop/features",
+                  "zh-Hans/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "zh-Hans/reference/commands",
+                  "zh-Hans/reference/configuration-schema",
+                  "zh-Hans/reference/environment-variables",
+                  "zh-Hans/reference/local-database",
+                  "zh-Hans/reference/stats-and-cost",
+                  "zh-Hans/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "es",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "es/changelog/2026-08-04",
+                  "es/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "es/introduction",
+                  "es/installation",
+                  "es/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "es/concepts/agents",
+                  "es/concepts/sessions",
+                  "es/concepts/providers-and-models",
+                  "es/concepts/configuration",
+                  "es/concepts/project-memory",
+                  "es/concepts/tools",
+                  "es/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "es/tui/keybinds",
+                  "es/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "es/extending/mcp-servers",
+                  "es/extending/plugins",
+                  "es/extending/custom-agents",
+                  "es/extending/custom-tools",
+                  "es/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "es/server/headless-server",
+                  "es/server/web-ui",
+                  "es/server/remote-sessions",
+                  "es/server/acp",
+                  "es/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "es/desktop/install",
+                  "es/desktop/features",
+                  "es/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "es/reference/commands",
+                  "es/reference/configuration-schema",
+                  "es/reference/environment-variables",
+                  "es/reference/local-database",
+                  "es/reference/stats-and-cost",
+                  "es/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "sv",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "sv/changelog/2026-08-04",
+                  "sv/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "sv/introduction",
+                  "sv/installation",
+                  "sv/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "sv/concepts/agents",
+                  "sv/concepts/sessions",
+                  "sv/concepts/providers-and-models",
+                  "sv/concepts/configuration",
+                  "sv/concepts/project-memory",
+                  "sv/concepts/tools",
+                  "sv/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "sv/tui/keybinds",
+                  "sv/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "sv/extending/mcp-servers",
+                  "sv/extending/plugins",
+                  "sv/extending/custom-agents",
+                  "sv/extending/custom-tools",
+                  "sv/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "sv/server/headless-server",
+                  "sv/server/web-ui",
+                  "sv/server/remote-sessions",
+                  "sv/server/acp",
+                  "sv/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "sv/desktop/install",
+                  "sv/desktop/features",
+                  "sv/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "sv/reference/commands",
+                  "sv/reference/configuration-schema",
+                  "sv/reference/environment-variables",
+                  "sv/reference/local-database",
+                  "sv/reference/stats-and-cost",
+                  "sv/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh-Hant",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "zh-Hant/changelog/2026-08-04",
+                  "zh-Hant/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "zh-Hant/introduction",
+                  "zh-Hant/installation",
+                  "zh-Hant/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "zh-Hant/concepts/agents",
+                  "zh-Hant/concepts/sessions",
+                  "zh-Hant/concepts/providers-and-models",
+                  "zh-Hant/concepts/configuration",
+                  "zh-Hant/concepts/project-memory",
+                  "zh-Hant/concepts/tools",
+                  "zh-Hant/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "zh-Hant/tui/keybinds",
+                  "zh-Hant/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "zh-Hant/extending/mcp-servers",
+                  "zh-Hant/extending/plugins",
+                  "zh-Hant/extending/custom-agents",
+                  "zh-Hant/extending/custom-tools",
+                  "zh-Hant/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "zh-Hant/server/headless-server",
+                  "zh-Hant/server/web-ui",
+                  "zh-Hant/server/remote-sessions",
+                  "zh-Hant/server/acp",
+                  "zh-Hant/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "zh-Hant/desktop/install",
+                  "zh-Hant/desktop/features",
+                  "zh-Hant/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "zh-Hant/reference/commands",
+                  "zh-Hant/reference/configuration-schema",
+                  "zh-Hant/reference/environment-variables",
+                  "zh-Hant/reference/local-database",
+                  "zh-Hant/reference/stats-and-cost",
+                  "zh-Hant/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "tr",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "tr/changelog/2026-08-04",
+                  "tr/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "tr/introduction",
+                  "tr/installation",
+                  "tr/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "tr/concepts/agents",
+                  "tr/concepts/sessions",
+                  "tr/concepts/providers-and-models",
+                  "tr/concepts/configuration",
+                  "tr/concepts/project-memory",
+                  "tr/concepts/tools",
+                  "tr/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "tr/tui/keybinds",
+                  "tr/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "tr/extending/mcp-servers",
+                  "tr/extending/plugins",
+                  "tr/extending/custom-agents",
+                  "tr/extending/custom-tools",
+                  "tr/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "tr/server/headless-server",
+                  "tr/server/web-ui",
+                  "tr/server/remote-sessions",
+                  "tr/server/acp",
+                  "tr/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "tr/desktop/install",
+                  "tr/desktop/features",
+                  "tr/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "tr/reference/commands",
+                  "tr/reference/configuration-schema",
+                  "tr/reference/environment-variables",
+                  "tr/reference/local-database",
+                  "tr/reference/stats-and-cost",
+                  "tr/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "uk",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "uk/changelog/2026-08-04",
+                  "uk/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "uk/introduction",
+                  "uk/installation",
+                  "uk/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "uk/concepts/agents",
+                  "uk/concepts/sessions",
+                  "uk/concepts/providers-and-models",
+                  "uk/concepts/configuration",
+                  "uk/concepts/project-memory",
+                  "uk/concepts/tools",
+                  "uk/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "uk/tui/keybinds",
+                  "uk/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "uk/extending/mcp-servers",
+                  "uk/extending/plugins",
+                  "uk/extending/custom-agents",
+                  "uk/extending/custom-tools",
+                  "uk/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "uk/server/headless-server",
+                  "uk/server/web-ui",
+                  "uk/server/remote-sessions",
+                  "uk/server/acp",
+                  "uk/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "uk/desktop/install",
+                  "uk/desktop/features",
+                  "uk/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "uk/reference/commands",
+                  "uk/reference/configuration-schema",
+                  "uk/reference/environment-variables",
+                  "uk/reference/local-database",
+                  "uk/reference/stats-and-cost",
+                  "uk/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "uz",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "uz/changelog/2026-08-04",
+                  "uz/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "uz/introduction",
+                  "uz/installation",
+                  "uz/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "uz/concepts/agents",
+                  "uz/concepts/sessions",
+                  "uz/concepts/providers-and-models",
+                  "uz/concepts/configuration",
+                  "uz/concepts/project-memory",
+                  "uz/concepts/tools",
+                  "uz/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "uz/tui/keybinds",
+                  "uz/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "uz/extending/mcp-servers",
+                  "uz/extending/plugins",
+                  "uz/extending/custom-agents",
+                  "uz/extending/custom-tools",
+                  "uz/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "uz/server/headless-server",
+                  "uz/server/web-ui",
+                  "uz/server/remote-sessions",
+                  "uz/server/acp",
+                  "uz/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "uz/desktop/install",
+                  "uz/desktop/features",
+                  "uz/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "uz/reference/commands",
+                  "uz/reference/configuration-schema",
+                  "uz/reference/environment-variables",
+                  "uz/reference/local-database",
+                  "uz/reference/stats-and-cost",
+                  "uz/reference/troubleshooting"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "vi",
+        "tabs": [
+          {
+            "tab": "Changelog",
+            "groups": [
+              {
+                "group": "Changelog",
+                "pages": [
+                  "vi/changelog/2026-08-04",
+                  "vi/changelog/2026-08-03"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "vi/introduction",
+                  "vi/installation",
+                  "vi/quickstart"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "vi/concepts/agents",
+                  "vi/concepts/sessions",
+                  "vi/concepts/providers-and-models",
+                  "vi/concepts/configuration",
+                  "vi/concepts/project-memory",
+                  "vi/concepts/tools",
+                  "vi/concepts/permissions"
+                ]
+              },
+              {
+                "group": "TUI",
+                "pages": [
+                  "vi/tui/keybinds",
+                  "vi/tui/slash-commands"
+                ]
+              },
+              {
+                "group": "Extending Bolt",
+                "pages": [
+                  "vi/extending/mcp-servers",
+                  "vi/extending/plugins",
+                  "vi/extending/custom-agents",
+                  "vi/extending/custom-tools",
+                  "vi/extending/skills"
+                ]
+              },
+              {
+                "group": "Server & Automation",
+                "pages": [
+                  "vi/server/headless-server",
+                  "vi/server/web-ui",
+                  "vi/server/remote-sessions",
+                  "vi/server/acp",
+                  "vi/server/github-actions"
+                ]
+              },
+              {
+                "group": "Desktop App",
+                "pages": [
+                  "vi/desktop/install",
+                  "vi/desktop/features",
+                  "vi/desktop/auto-updates"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "vi/reference/commands",
+                  "vi/reference/configuration-schema",
+                  "vi/reference/environment-variables",
+                  "vi/reference/local-database",
+                  "vi/reference/stats-and-cost",
+                  "vi/reference/troubleshooting"
+                ]
+              }
             ]
           }
         ]

@@ -1,0 +1,192 @@
+---
+title: "مرجع ملف إعدادات Bolt"
+sidebarTitle: "مخطط الإعدادات"
+description: "مرجع كامل لمخطط ملف إعدادات Bolt — المواقع، جميع الحقول الرئيسية، أنواع خوادم MCP، تجاوزات المزوّدين، ومثال كامل."
+---
+
+يستخدم Bolt ملف JSON مع تعليقات (`.jsonc`) لإعدادات المشروع والإعدادات العامة. المخطط مُصدَّر ومنشور على `https://opencode.ai/config.json`، الذي يمكن للمحرّرات استخدامه لتوفير الإكمال التلقائي والتحقق.
+
+## مواقع ملفات الإعدادات
+
+يدمج Bolt الإعدادات من موقعين. تفوز إعدادات المشروع على الإعدادات العامة عندما يظهر نفس المفتاح في كليهما.
+
+| النطاق | المسار |
+|---|---|
+| **لكل مشروع** | `.bolt/bolt.jsonc` (أو `.bolt/bolt.json`) في جذر مشروعك |
+| **عام** | `bolt.jsonc` (أو `bolt.json`) في مجلد إعدادات نظام التشغيل |
+
+مجلد إعدادات نظام التشغيل هو:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+يقرأ Bolt أيضًا ملفات `opencode.jsonc` / `opencode.json` القديمة في نفس المواقع. يجب على المشاريع الجديدة استخدام اصطلاح تسمية `bolt.jsonc`، الذي يأخذ الأولوية على أسماء الملفات القديمة.
+</Note>
+
+ينشئ Bolt ملف إعدادات عام بسيط بسطر `$schema` عند التشغيل الأول، وينشئ `.bolt/bolt.jsonc` في جذر مشروعك في المرة الأولى التي تفتح فيها الـ TUI في ذلك المجلد.
+
+## حقول المخطط
+
+<ParamField body="$schema" type="string">
+  عنوان URL يشير إلى مخطط JSON لملف الإعدادات هذا. يفعّل الإكمال التلقائي والتحقق المضمّن في المحرّرات التي تدعم JSON Schema (VS Code، Zed، JetBrains IDEs، وغيرها).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  النموذج الافتراضي لجميع الجلسات، مُعبَّر عنه بـ `provider/model`. يمكن تجاوز هذا لكل جلسة بـ `bolt run --model` أو في منتقي النموذج بالـ TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  شغّل `bolt models` لرؤية جميع سلاسل `provider/model` المتاحة للمزوّدين المضبوطين.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  تجاوزات بيانات الاعتماد والإعدادات الخاصة بالمزوّد. كل مفتاح هو معرّف مزوّد (مثل `anthropic`، `openai`، `google`). الاستخدام الأكثر شيوعًا هو ضبط مفتاح API عبر مرجع لمتغير بيئة بحيث لا يُخزّن المفتاح أبدًا كنص عادي.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  القيم التي تبدأ بـ `${` وتنتهي بـ `}` تُعامل كمراجع لمتغيرات البيئة وتُوسَّع في وقت التشغيل.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  إعدادات خوادم MCP، مفتاحة باسم تختاره. يدعم Bolt نوعي خوادم:
+
+  **خادم بعيد** — يتصل عبر HTTP/SSE، مع OAuth اختياري:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | الحقل | النوع | الوصف |
+  |---|---|---|
+  | `type` | `"remote"` | يعرّف هذا كخادم HTTP بعيد |
+  | `url` | string | عنوان URL الكامل لنقطة نهاية MCP |
+  | `oauth` | object \| `false` | كائن إعدادات OAuth (مع `clientId` و`clientSecret` و`scope` و`redirectUri` اختيارية). اضبط على `false` لتعطيل الاكتشاف التلقائي لـ OAuth. |
+  | `headers` | object | رؤوس HTTP لإرسالها مع كل طلب (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | تفعيل أو تعطيل هذا الخادم عند بدء التشغيل |
+  | `timeout` | number | مهلة الطلب بالمللي ثانية (الافتراضي: 5000) |
+
+  **خادم محلي** — يطلق عملية فرعية عبر stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | الحقل | النوع | الوصف |
+  |---|---|---|
+  | `type` | `"local"` | يعرّف هذا كخادم stdio محلي |
+  | `command` | string[] | الأمر وجميع الوسائط للإطلاق |
+  | `cwd` | string | مجلد العمل لعملية الخادم (المسارات النسبية تُحل من مجلد مساحة العمل) |
+  | `environment` | object | متغيرات بيئة إضافية لتمريرها إلى العملية الفرعية |
+  | `enabled` | boolean | تفعيل أو تعطيل هذا الخادم عند بدء التشغيل |
+  | `timeout` | number | مهلة الطلب بالمللي ثانية (الافتراضي: 5000) |
+
+  استخدم `bolt mcp add` لمعالج تفاعلي، أو `bolt mcp list` لفحص حالة الخادم الحالية.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  تعليمات نظام إضافية تُضاف إلى كل جلسة في هذا المشروع أو عالميًا. تُدمج التعليمات من ملفات إعدادات متعدّدة (تُزال التكرارات). استخدم هذا لحقن اصطلاحات المشروع أو قواعد الأسلوب أو القيود التي يجب على كل وكيل اتّباعها.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  مواصفات الإضافات للتحميل. كل مدخل هو اسم حزمة npm أو مسار ملف محلي أو URL. يمكن للإضافات توسيع الـ TUI أو إضافة أوامر slash أو تسجيل مزوّدين إضافيين. استخدم `bolt plugin install <spec>` لتثبيت إضافة وإضافتها إلى هذه المصفوفة تلقائيًا.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## مثال كامل
+
+يعرض `.bolt/bolt.jsonc` التالي إعدادات مشروع واقعية:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+شغّل `bolt debug config` لرؤية الإعدادات المحلولة بالكامل بعد دمج جميع الملفات. هذه أسرع طريقة لتأكيد أن إعدادات كل مشروع والإعدادات العامة تُدمج بشكل صحيح.
+</Tip>

@@ -1,0 +1,38 @@
+---
+title: "Cơ sở dữ liệu cục bộ (bolt db)"
+sidebarTitle: "Cơ sở dữ liệu cục bộ"
+description: "Bolt lưu mọi phiên, tin nhắn và lời gọi công cụ trong cơ sở dữ liệu SQLite cục bộ. Kiểm tra nó, sao lưu, hoặc truy vấn trực tiếp với bolt db."
+---
+
+Bolt giữ mọi phiên, tin nhắn và lời gọi công cụ trong cơ sở dữ liệu SQLite cục bộ. Nó hoàn toàn có thể kiểm tra được và hoàn toàn thuộc về bạn — không có gì được tải lên trừ khi bạn chủ động chia sẻ một phiên.
+
+## Các thao tác phổ biến
+
+```bash
+bolt db path                        # in đường dẫn tới tệp SQLite
+bolt db                             # mở shell SQL tương tác
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Sao lưu nó
+
+Vì đó là một tệp SQLite đơn, sao lưu chỉ là sao chép:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Cho lưu trữ dài hạn hoặc vận chuyển, hãy ưu tiên `bolt export` / `bolt import` — chúng tạo ra biểu diễn JSON di động sống sót qua các cuộc di chuyển schema.
+
+## Schema tổng quan
+
+- `sessions` — một hàng mỗi phiên, với tiêu đề, dự án, timestamp và trạng thái.
+- `messages` — nhật ký lượt đầy đủ theo phiên.
+- `tool_calls` — mọi lời gọi với đầu vào, đầu ra và thời lượng.
+
+Các cột chính xác thay đổi; dùng `PRAGMA table_info(<table>)` để xem schema thực.
+
+## Liên quan
+
+- [Phiên](/concepts/sessions) — cơ sở dữ liệu lưu gì.
+- [Stats & Cost](/reference/stats-and-cost) — các view tổng hợp trên cùng dữ liệu.

@@ -1,0 +1,32 @@
+---
+title: "आँकड़े और लागत (bolt stats)"
+sidebarTitle: "Stats & Cost"
+description: "bolt stats आपके sessions में token उपयोग और लागत को समेकित करता है ताकि आप देख सकें कि आपका खर्च कहाँ जा रहा है और उसके अनुसार models या agents को ट्यून कर सकें।"
+---
+
+`bolt stats` स्थानीय session डेटाबेस में token counts और cost को समेकित करता है। क्योंकि हर tool call रिकॉर्ड की जाती है (देखें [Local Database](/reference/local-database)), Bolt द्वारा चलाए गए LLM calls के लिए संख्या सटीक होती है।
+
+## बुनियादी उपयोग
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## यह क्या दिखाता है
+
+- कुल input, output, और cache tokens।
+- प्रति provider अनुमानित लागत (run के समय provider मूल्य निर्धारण तालिकाओं का उपयोग करके)।
+- flags के आधार पर Per-model, per-agent, और per-day ब्रेकडाउन।
+
+## लागत कम करना
+
+- Reasoning-heavy models पर `--variant minimal` या `--variant low` का उपयोग करें। देखें [Providers & Models](/concepts/providers-and-models)।
+- अन्वेषण के लिए `ask` या `plan` agent को प्राथमिकता दें; वे केवल-पढ़ने योग्य हैं और tool-heavy loops से बचते हैं।
+- ऐसे कार्यों के लिए `bolt models` से छोटे मॉडल पर स्विच करें जिन्हें frontier क्षमता की आवश्यकता नहीं है।
+
+## संबंधित
+
+- [Providers & Models](/concepts/providers-and-models) — उन models को चुनें और ट्यून करें जिन्हें `stats` मापता है।
+- [Troubleshooting](/reference/troubleshooting) — surprise बिल के बारे में क्या करना है।

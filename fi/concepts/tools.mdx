@@ -1,0 +1,58 @@
+---
+title: "Työkalut: mitä Bolt-agentit todella osaavat tehdä"
+sidebarTitle: "Työkalut"
+description: "Täydellinen luettelo Bolt-agenteille käytettävissä olevista sisäänrakennetuista työkaluista sekä miten voit lisätä omia työkaluja laajennusten, MCP-palvelimien tai .opencode/tool-hakemiston kautta."
+---
+
+Boltin agentit tekevät työtä kutsumalla työkaluja. Jokainen toiminto, jonka näet TUI:ssa (tiedoston lukeminen, testien suorittaminen, verkkohaku), on mallin työkalun valinta ja Boltin sen suoritus. Jokaisella agentilla on ilmoitettu käyttöoikeustaso, joka määrittää, mitä työkaluja se voi kutsua ilman että se kysyy sinulta ensin (katso [Oikeudet](/concepts/permissions)).
+
+## Sisäänrakennetut työkalut
+
+| Työkalu | Mitä se tekee |
+| --- | --- |
+| `read` | Lue tiedosto levyltä. |
+| `write` | Luo uusi tiedosto tai korvaa olemassa oleva. |
+| `edit` | Ota kohdennettu muokkaus (etsi/korvaa) tiedostoon. |
+| `apply_patch` | Ota unified-diff-tyylinen patch yhteen tai useampaan tiedostoon. |
+| `glob` | Listaa glob-kaavaa vastaavat tiedostot. |
+| `grep` | Etsi tiedoston sisältöä regexillä/tekstillä. |
+| `bash` | Suorita shell-komento. |
+| `task` | Delegoi alitehtävä aliagentille (`@general`, `@explore` tai mukautettu aliagentti). |
+| `todowrite` | Ylläpidä agentin strukturoitua tehtäväluetteloa monivaiheista työtä varten. |
+| `webfetch` | Nouda URL ja palauta sen sisältö. |
+| `websearch` | Hae verkosta. |
+| `skill` | Kutsu nimetty taito (katso [Taidot](/extending/skills)). |
+| `memory_save` | Pysyvästi tallenna fakta [projektimuistiin](/concepts/project-memory). |
+| `memory_recall` | Hae aiemmin tallennettu muisti. |
+| `question` | Kysy sinulta tarkentava kysymys ja odota vastausta. |
+| `bash_background` | Käynnistä shell-komento hallittuna taustaprosessina (kehityspalvelimet, watcherit, pitkät buildit). |
+| `process_output` | Lue taustaprosessin kertynyt tuloste ja tila, valinnaisesti odottaen sen valmistumista. |
+| `list_processes` | Listaa taustaprosessit tunnisteineen, tiloineen ja komentoineen. |
+| `kill_process` | Lopeta taustaprosessi (ja sen prosessipuu) tunnisteen perusteella. |
+| `test_run` | Havaitse ja suorita projektin testit ja palauta strukturoituja pass/fail-tuloksia ja epäonnistumisen yksityiskohtia. |
+
+### Kokeelliset
+
+| Työkalu | Mitä se tekee |
+| --- | --- |
+| `lsp` | Kysele language serveriltä määrityksiä, viittauksia ja diagnostiikkaa. |
+| `execute` | Suorita koodia eristetyssä code-mode-hiekkalaatikossa. |
+| `plan` | Tuota strukturoitu suunnitelma ennen muutosten tekemistä. |
+
+Kokeelliset työkalut voivat muuttua tai niitä voidaan nimetä uudelleen julkaisujen välillä.
+
+## Työkalusarjan laajentaminen
+
+Sisäänrakennettujen työkalujen lisäksi Bolt voi kutsua työkaluja kolmesta lähteestä:
+
+- **Mukautetut työkalut** hakemistossa `.opencode/tool/` (tai `.opencode/tools/`) projektin juuressa. Katso [Mukautetut työkalut](/extending/custom-tools).
+- **Laajennustyökalut**, joita mikä tahansa asennettu [laajennus](/extending/plugins) tarjoaa.
+- **MCP-työkalut** mistä tahansa projektille määritetystä [MCP-palvelimesta](/extending/mcp-servers).
+
+Kaikki kolme tuntuvat identtisiltä agentin näkökulmasta: ne näkyvät työkaluluettelossa, kunnioittavat agentin käyttöoikeustasoa ja näkyvät TUI:n työkalukutsun tulosteessa.
+
+## Liittyvät
+
+- [Agentit](/concepts/agents) — mitkä agentit voivat kutsua mitäkin työkaluja.
+- [Oikeudet](/concepts/permissions) — miten työkalujen käyttö on portitettu agenttikohtaisesti.
+- [MCP-palvelimet](/extending/mcp-servers) — yleisin tapa lisätä todellisen maailman työkaluja.

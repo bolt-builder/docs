@@ -1,0 +1,395 @@
+---
+title: "Řešení běžných problémů s Boltem"
+sidebarTitle: "Řešení problémů"
+description: "Řešení nejběžnějších problémů s Boltem: selhání startu, chyby autentizace providera, konektivita MCP, problémy se sezeními, oprávnění, náklady a další."
+---
+
+Většina problémů s Boltem spadá do malého počtu kategorií. Projdi si relevantní akordeon níže a kdykoli se stane něco neočekávaného, zkontroluj výstup logu pomocí `bolt logs`.
+
+<Note>
+  U otázek, na které tady není odpověď, prohledej nebo zahaj diskuzi v [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Do svého příspěvku přidej výstup `bolt debug info` a `bolt logs --tail 50`, aby ti komunita mohla rychleji pomoci.
+</Note>
+
+## První věci, které vyzkoušet
+
+Než se pustíš do konkrétní sekce, tyto čtyři příkazy řeší většinu problémů:
+
+| Symptom | První příkaz | Proč |
+| --- | --- | --- |
+| Cokoli divného | `bolt debug info` | Jednorázový systémový \+ plugin souhrn. |
+| Něco fungovalo dřív, teď ne | `bolt logs --tail 100` | Nedávné chyby, obvykle blízko horní části. |
+| Podezření na plugin | `bolt --pure` | Spustit se všemi pluginy vypnutými. |
+| Konfigurace se nenačítá | `bolt debug config` | Vytiskne plně vyřešenou konfiguraci. |
+
+<Tip>
+  Skupina `bolt debug` je tvou první zastávkou pro jakékoliv záhadné chování. `bolt debug info` pro systémový souhrn, `bolt debug config` pro vyřešenou konfiguraci, `bolt debug paths` pro umístění na disku a `bolt debug snapshot` pro prohlídnutí stavu sezení.
+</Tip>
+
+<Accordion title="Bolt se nespouští / padá při spuštění">
+  **Symptomy:** Terminál blikne a okamžitě skončí, nebo vidíš stack trace ještě předtím, než se vykreslí TUI.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Sesbírej informace o systému">
+      ```bash
+      bolt debug info
+      ```
+
+      Vytiskne verzi Boltu, OS, terminálový emulátor a načtené pluginy. Zkopíruj tento výstup při reportování bugu.
+    </Step>
+    <Step title="Zkontroluj nedávný výstup logu">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Hledej řádky `ERROR`. Běžnou příčinou je plugin, který se nedaří načíst — v tom případě uvidíš chybu s uvedeným jménem pluginu.
+    </Step>
+    <Step title="Vypni pluginy pro izolaci problému">
+      ```bash
+      bolt --pure
+      ```
+
+      Pokud se Bolt s `--pure` spouští čistě, problém způsobuje plugin. Odstraň problematický plugin z konfigurace nebo ho nahlas autorovi pluginu.
+    </Step>
+    <Step title="Zkontroluj poškozenou konfiguraci">
+      ```bash
+      bolt debug config
+      ```
+
+      Pokud toto vytiskne chybu o nevalidním JSONu, otevři zmíněný konfigurační soubor a oprav syntaxi. Spusť `bolt db path` pro potvrzení, že cesta k databázi je přístupná.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Autentizace providera selhává">
+  **Symptomy:** Bolt zobrazuje „No providers configured“, API požadavky selhávají s chybami 401, nebo `bolt run` okamžitě skončí bez vytvoření výstupu.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Znovu spusť tok přihlášení providera">
+      ```bash
+      bolt providers login
+      ```
+
+      Vyber svého providera a následuj prompty. Bolt tě provede zadáním API klíče nebo OAuth.
+    </Step>
+    <Step title="Ověř proměnnou prostředí s API klíčem">
+      Pokud používáš env var (např. `ANTHROPIC_API_KEY`), potvrď, že je skutečně nastavena v aktuálním shellu:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Pokud je prázdná, přidej ji do svého shell profilu a otevři terminál znovu.
+    </Step>
+    <Step title="Prohlédni vyřešenou konfiguraci">
+      ```bash
+      bolt debug config
+      ```
+
+      Podívej se do sekce `provider`. Pokud se tvůj provider objevuje s prázdným `apiKey`, reference na proměnnou prostředí v tvém konfiguračním souboru se neexpanduje.
+    </Step>
+    <Step title="Vypiš uložené přihlašovací údaje">
+      ```bash
+      bolt providers list
+      ```
+
+      Zobrazí všechny přihlašovací údaje uložené v `auth.json` a všechny provider-relevantní proměnné prostředí, které Bolt detekoval.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP server se nechce připojit">
+  **Symptomy:** `bolt mcp list` ukazuje server jako `failed` nebo `needs authentication`, nebo agent nemůže použít žádné nástroje z tohoto serveru.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Spusť MCP debug sondu">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Otestuje základní HTTP konektivitu, prozkoumá hlavičku `WWW-Authenticate` a projde OAuth discovery tokem, pokud je to relevantní. Výstup ti řekne, zda je server dostupný a zda je vyžadována autentizace.
+    </Step>
+    <Step title="Zkontroluj URL serveru">
+      Ověř URL v `.bolt/bolt.jsonc`. U vzdálených serverů se ujisti, že URL končí MCP cestou (např. `/mcp` nebo `/tools`), ne jen hostitelem.
+    </Step>
+    <Step title="Znovu se autentizuj pro OAuth servery">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Následuj tok v prohlížeči. Pokud server vyžaduje předem registrovaný client ID, přidej ho do konfigurace:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Zkontroluj příkaz lokálního serveru">
+      Pro `local` servery spusť příkaz ručně v terminálu pro potvrzení, že se spouští bez chyb:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sezení nenalezeno">
+  **Symptomy:** `bolt run --session <id>` skončí s „Session not found“, nebo sezení, se kterým si pamatuješ pracovat, zmizelo.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Vypiš všechna dostupná sezení">
+      ```bash
+      bolt session list
+      ```
+
+      Sezení jsou seřazena od nejnovější aktualizace. Pokud bylo tvé sezení smazáno nebo byla databáze migrována, zde se neobjeví.
+    </Step>
+    <Step title="Najdi cestu k databázi">
+      ```bash
+      bolt db path
+      ```
+
+      Vytiskne plnou cestu k SQLite souboru. Ověř, že soubor existuje a není prázdný.
+    </Step>
+    <Step title="Dotaz do databáze přímo">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Pokud se tvé sezení objevuje v databázi, ale ne v `bolt session list`, může jít o neshodu ID projektu — sezení jsou vázána na projekty.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Chyby oprávnění v TUI">
+  **Symptomy:** Agent se opakovaně ptá na oprávnění, odmítá zapisovat soubory nebo vidíš bannery „Permission denied“.
+
+  **Pochopení úrovní přístupu:**
+
+  Každý vestavěný agent má deklarovanou úroveň přístupu, která řídí, co může dělat bez dotazování:
+
+  | Úroveň přístupu | Co povoluje |
+  | --- | --- |
+  | **Full** | Čtení souborů, zápis souborů, spouštění shellových příkazů |
+  | **Edit** | Čtení a zápis souborů, žádné shellové příkazy |
+  | **Read** | Pouze čtení souborů, žádné zápisy ani příkazy |
+
+  Agenti `code`, `debug`, `refactor`, `migrate` a `perf` mají přístup **Full**. `docs` má přístup **Edit**. `plan`, `ask`, `code-review` a `security` mají přístup **Read**.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Přepni na agenta s přístupem Full">
+      Pokud potřebuješ zápisy souborů, použij agenta `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Nebo v TUI stiskni `Tab` pro cyklické procházení agentů.
+    </Step>
+    <Step title="Použij --auto pro neinteraktivní schvalování promptů">
+      V CI nebo skriptovaných kontextech předej `--auto` do `bolt run` pro automatické schvalování oprávnění, která nejsou v konfiguraci explicitně zakázána.
+    </Step>
+    <Step title="Nakonfiguruj oprávnění v konfiguračním souboru">
+      Konkrétní nástroje můžeš zakázat pro všechna sezení v projektu přidáním bloku `permission` do `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Vysoká spotřeba tokenů nebo neočekávané náklady">
+  **Symptomy:** `bolt stats` ukazuje vyšší počty tokenů, než se čekalo, nebo tvá API faktura roste rychleji, než jsi předpokládal(a).
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Zkontroluj statistiky používání">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Výstup rozděluje náklady na den, průměrné tokeny na sezení a využití podle modelu.
+    </Step>
+    <Step title="Sniž míru uvažování">
+      U modelů, které to podporují, sniž reasoning effort pomocí `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Podporované hodnoty jsou provider-specifické (např. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Přepni na levnější model">
+      Použij `bolt models` k nalezení menšího modelu. Menší modely (např. `claude-haiku`, `gpt-4o-mini`) stojí výrazně méně za token a fungují dobře pro mnoho úloh.
+    </Step>
+    <Step title="Použij agenta ask nebo plan pro průzkum">
+      Agenti `ask` a `plan` mají přístup **Read** a nevyvolávají zápisové nástroje, což znamená, že se vyhýbají smyčkám s velkým počtem nástrojů, které generují velké výstupní tokeny.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Konflikty pluginů nebo neočekávané chování">
+  **Symptomy:** Slash-command se chová neočekávaně, TUI se vykresluje nesprávně, nebo se něco změnilo po instalaci pluginu.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Vypni všechny pluginy pro stanovení základní linie">
+      ```bash
+      bolt --pure
+      ```
+
+      Pokud problém zmizí, na vině je plugin.
+    </Step>
+    <Step title="Identifikuj problematický plugin">
+      ```bash
+      bolt debug info
+      ```
+
+      Výstup uvádí všechny načtené pluginy. Dočasně je odstraňuj z konfigurace jeden po druhém a restartuj Bolt, dokud problém nezmizí.
+    </Step>
+    <Step title="Zkontroluj nekompatibilitu verzí">
+      ```bash
+      bolt upgrade
+      ```
+
+      Pluginy deklarují kompatibilní rozsah verzí Boltu. Pokud jsi nedávno upgradoval(a) Bolt, možná je potřeba aktualizovat i plugin.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Problémy s cestami ve WSL / Windows">
+  **Symptomy:** Na Windows s WSL Bolt nemůže najít `less`, cesty k souborům obsahují neočekávané zpětné lomítka nebo se pager pro `bolt session list` nespouští.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Nastav cestu k Git Bashi">
+      Bolt hledá Unixové nástroje (včetně `less`) relativně k instalaci Git for Windows. Nastav proměnnou prostředí na svůj Git Bash adresář:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Přidej to do svého PowerShell profilu (`$PROFILE`), aby přetrvalo.
+    </Step>
+    <Step title="Ověř pomocí debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Potvrdí detekci OS a jaké cesty Bolt používá.
+    </Step>
+    <Step title="Spouštěj Bolt přímo uvnitř WSL">
+      Pro nejlepší zážitek na Windows spouštěj `bolt` z WSL terminálu, ne z PowerShellu nebo Command Promptu.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Nemohu upgradovat Bolt">
+  **Symptomy:** `bolt upgrade` hlásí chybu nebo tiše nic nedělá, nebo se číslo verze po jeho spuštění nemění.
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Uveď instalační metodu explicitně">
+      Bolt se snaží detekovat, jak byl nainstalován. Pokud detekce selže, přepiš ji:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Znovu nainstaluj přes instalační skript">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: spusť jako Administrator pro Chocolatey">
+      Pokud jsi instaloval(a) přes `choco`, upgrady vyžadují terminál se zvýšenými oprávněními. Otevři PowerShell jako Administrator, než spustíš `bolt upgrade`.
+    </Step>
+    <Step title="Potvrď, že nová verze je aktivní">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agent nemůže najít soubory (nebo jich najde příliš mnoho)">
+  **Symptomy:** Agent si stěžuje, že nevidí soubory, které existují, nebo opakovaně vybírá soubory, kterých se nechceš dotýkat (jako `node_modules`, build výstupy nebo tajné klíče).
+
+  **Kroky:**
+
+  <Steps>
+    <Step title="Zkontroluj .boltignore">
+      Bolt respektuje soubor `.boltignore` v kořeni projektu, který řídí, jaké soubory může agent v nástrojích pro hledání souborů vidět. Používá stejnou syntaxi jako `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Potvrď pracovní adresář">
+      ```bash
+      bolt debug info
+      ```
+
+      Ověř, že `cwd` odpovídá kořeni projektu. Pokud jsi spustil(a) Bolt z podadresáře, hledání souborů agenta je zakořeněno tam.
+    </Step>
+    <Step title="Požádej agenta o grep, ne o hádání">
+      Pokud agent tvrdí, že soubor neexistuje, požádej ho, ať spustí `grep` nebo `glob` explicitně. To obejde jakýkoli zastaralý interní předpoklad.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Získání debug informací pro bug report">
+  Při zakládání issue jsou pro maintainery nejužitečnější tyto informace:
+
+  <Steps>
+    <Step title="Sesbírej systémové a plugin informace">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Sesbírej nedávný výstup logu">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Exportuj relevantní sezení (sanitizované)">
+      Pokud se problém stal během konkrétního sezení, exportuj ho s redakcí tajných klíčů:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Přilož `session-debug.json` k issue.
+    </Step>
+    <Step title="Otevři issue nebo diskuzi">
+      Jdi na [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) a vlož svůj výstup `bolt debug info` plus popis kroků k reprodukci.
+    </Step>
+  </Steps>
+</Accordion>

@@ -1,0 +1,107 @@
+---
+title: "Bolt の紹介: オープンソースのターミナル AI エージェント"
+sidebarTitle: "はじめに"
+description: "Bolt に出会いましょう: 10 のエージェント、永続的なセッション、プロジェクトメモリ、MCP、75 以上の LLM プロバイダ、TUI、デスクトップアプリを備えたオープンソースのターミナル AI コーディングエージェント。"
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**ターミナルに、完全な AI エンジニアリングチームを。**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt は [Effect](https://effect.website)、[OpenTUI](https://github.com/opentui/opentui)、[SolidJS](https://www.solidjs.com) 上に構築された、ターミナルファーストの AI コーディングエージェントです。任意のプロジェクトに向けると、コンテキストを自動的にピックアップします。コードを探索し、あなたの慣習に従い、シェルコマンドを実行し、ファイルを編集し、テストを実行し、変更を出荷します。
+
+10 の組み込みエージェント (`code`、`plan`、`ask`、`code-review`、`debug`、`refactor`、`docs`、`security`、`migrate`、`perf`) と `@general`、`@explore` サブエージェントが、エンジニアリングループ全体をカバーします。セッションは耐久性があります。デタッチ、(リモートサーバへも) 再アタッチ、フォーク、共有、エクスポート、インポートがいつでも可能です。プロジェクトメモリは、セッション間でエージェントが学んだことを永続化します。MCP サーバ (OAuth 付き)、プラグイン、カスタムエージェント、カスタムツールを通じて拡張可能です。
+
+Bolt は PolyForm Noncommercial 1.0.0 ライセンスの下でオープンソース化されています。
+
+## Bolt を選ぶ理由
+
+Bolt は開発者が実際に働く方法 — ターミナルで、複数のセッションを横断して、実際のコードベースで — を中心に設計されています。差別化ポイントは次のとおりです。
+
+- **ターミナルファーストの TUI。** [Effect](https://effect.website)、[OpenTUI](https://github.com/opentui/opentui)、[SolidJS](https://www.solidjs.com) で構築された高速でキーボード駆動のインターフェイス。ネイティブに感じられるのは、実際にネイティブだからです。
+- **エージェントのチーム全員。** 10 の専門エージェント — `code`、`plan`、`ask`、`code-review`、`debug`、`refactor`、`docs`、`security`、`migrate`、`perf` — に加え、リサーチと複数ステップ委譲用のサブエージェント。`Tab` で切り替えられます。
+- **離れて再参加できるセッション。** セッションからデタッチし、後で (リモートサーバでも) アタッチできます。作業をいつでもフォーク、共有、エクスポート、インポートできます。セッションは SQLite に保存され、`bolt db` で完全に検査可能です。
+- **拡張性を設計に組み込み。** 完全な OAuth サポート付きの MCP サーバ、プラグインシステム、GitHub 連携、組み込み API サーバ、Web UI。
+- **デスクトップアプリ。** 同じエンジンをマルチウィンドウ・マルチタブのデスクトップ体験でラップ — 統合ターミナル、ファイルツリー、コマンドパレット、28 の UI 言語、自動更新付き。
+
+## 組み込みエージェント
+
+Bolt は 10 の専門エージェントを同梱しています。各エージェントは目的に合わせて定義されたファイルシステムアクセスレベルを持ちます。
+
+| エージェント | アクセス | 説明 |
+| --- | --- | --- |
+| `code` | Full | デフォルト: コードの読み込み、書き込み、実行 |
+| `plan` | Read | ファイルを変更せずにコードベースを探索して計画を作成 |
+| `ask` | Read | 質問とリサーチ — ファイル編集なし |
+| `code-review` | Read | 正確性、スタイル、セキュリティで変更をレビュー |
+| `debug` | Full | 失敗したテスト、クラッシュ、ロジックエラーをデバッグ |
+| `refactor` | Full | 各ステップでテスト検証を伴う安全なリファクタリング |
+| `docs` | Edit | ドキュメントとコメントの記述と更新 |
+| `security` | Read | セキュリティ監査: 脆弱性、シークレット、パターン |
+| `migrate` | Full | フレームワークのアップグレードと依存関係の移行 |
+| `perf` | Full | パフォーマンス分析と最適化 |
+
+Markdown ファイルとして独自のエージェントを定義することも、`bolt agent create` で生成することもできます。
+
+## デスクトップアプリ
+
+Bolt はスタンドアロンのデスクトップアプリとしても提供されており、マルチウィンドウ・マルチタブのセッション管理、添付ファイルとクリップボード画像貼り付けをサポートするプロンプトコンポーザ、統合ターミナルとファイルツリー、コマンドパレット、キーバインド・モデル・プロバイダ・サーバのための完全な設定、ネイティブ通知、ディープリンク、Windows での WSL 統合、そして dev、beta、本番チャネル全体での自動更新を備えています。
+
+デスクトップアプリを [リリースページ](https://github.com/Bolt-builder/bolt-cli/releases) からダウンロードするか、macOS で Gatekeeper を回避しつつワンラインでインストールできます。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## ドキュメントを探索
+
+<CardGroup cols={2}>
+  <Card title="インストール" icon="download" href="/installation">
+    macOS、Linux、Windows で curl、npm、システムパッケージマネージャ経由で Bolt をインストールします。
+  </Card>
+
+  <Card title="クイックスタート" icon="rocket" href="/quickstart">
+    TUI を開き、最初のプロンプトを実行し、1 分以内に AI 生成のコミットを出荷します。
+  </Card>
+
+  <Card title="エージェント" icon="users" href="/concepts/agents">
+    10 の組み込みエージェントとサブエージェント。各エージェントの機能と独自エージェントの作成方法を学びます。
+  </Card>
+
+  <Card title="プロジェクトメモリ" icon="brain" href="/concepts/project-memory">
+    Bolt がセッション間でプロジェクトを記憶する仕組みと、何をキャプチャするかを制御する方法。
+  </Card>
+
+  <Card title="MCP サーバ" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol 経由で外部ツールとデータソースを Bolt に接続します。
+  </Card>
+
+  <Card title="ヘッドレスサーバ" icon="server" href="/server/headless-server">
+    `bolt serve` を実行し、任意のマシンから TUI をアタッチして、API から Bolt を駆動します。
+  </Card>
+</CardGroup>

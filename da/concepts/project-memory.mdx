@@ -1,0 +1,46 @@
+---
+title: "Projekthukommelse: vedvarende kontekst på tværs af Bolt-sessioner"
+sidebarTitle: "Projekthukommelse"
+description: "Bolt fanger det, den lærer om dit projekt ved slutningen af hver tur og injicerer det i nye sessioner, så agenten ikke genindlærer din kodebase hver gang."
+---
+
+Projekthukommelse er det, der får Bolt til at føles, som om den allerede kender dit projekt. Når en session afslutter sin tur, destillerer Bolt det, der var nyttigt, og skriver det til et per-projekt-hukommelseslager. Når du åbner en ny session, injicerer Bolt et hukommelsesindeks plus det seneste sessions-sammendrag i systemprompten, så agenten starter med reel kontekst i stedet for et blankt lærred.
+
+## Hvordan indfangning fungerer
+
+Ved afslutningen af hver samtaletur beder Bolt modellen om at opsummere varige fakta, der vil være nyttige næste gang: konventioner, arkitekturnoter, fil-layout, build/test-kommandoer, faldgruber og åbne tråde. Disse skrives til disken under projektets hukommelsesmappe sammen med et rullende sammendrag af den seneste session.
+
+Hukommelse er per-projekt. To checkouts af samme repo på samme maskine deler hukommelse; urelaterede projekter ser aldrig hinandens hukommelse.
+
+## Eksplicitte værktøjer
+
+Agenter kan også læse og skrive hukommelse direkte under en session:
+
+- `memory_save` — registrér et specifikt faktum, agenten skal huske næste gang.
+- `memory_recall` — slå op på noget, som agenten (eller du) tidligere har fanget.
+
+Du kan bede agenten om at "remember that we use pnpm, not npm", og den vil kalde `memory_save` for dig.
+
+## Per-session-kontroller
+
+Inde i TUI'en kan du skifte hukommelses-adfærd for den aktuelle session med slash-kommandoer:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Dette er nyttigt, når du ønsker en engangs udforskende session, der ikke forurener din hukommelse, eller en read-only-session, der stadig drager fordel af tidligere kontekst.
+
+## Inspicér og redigér hukommelse
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Hukommelse gemmes som almindelige filer på disken under projektets Bolt-datamappe, så du kan grep, redigere eller slette poster direkte. For at finde den nøjagtige sti på din maskine, kør `bolt debug paths`.
+
+## Relateret
+
+- [Sessioner](/concepts/sessions) — de varige samtaler, der producerer hukommelses-poster.
+- [Konfiguration](/concepts/configuration) — hvor hukommelse gemmes, og hvordan stien tilsidesættes.

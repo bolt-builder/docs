@@ -1,0 +1,22 @@
+---
+title: "Taidot: uudelleenkäytettäviä agenttien pelikirjoja"
+sidebarTitle: "Taidot"
+description: "Taidot ovat nimettyjä, uudelleenkäytettäviä pelikirjoja, joita Bolt-agentti kutsuu skill-työkalun kautta — kätevä valmiisiin työnkulkuihin, kuten julkaisujen toimittamiseen tai lint-sarjojen ajamiseen."
+---
+
+Taidot ovat nimettyjä, uudelleenkäytettäviä pelikirjoja, jotka elävät projektisi rinnalla ja joita kutsutaan `skill`-työkalun kautta. Siinä missä mukautettu työkalu on yksi suoritettava toiminto, taito on skriptattu työnkulku, jota agentti voi seurata askel askeleelta: kerää nämä tiedostot, suorita nämä komennot, päätä mitä tehdä seuraavaksi tulosteen perusteella.
+
+Käytä taitoja, kun:
+
+- Sinulla on työnkulku, jota selität yhä uudelleen kehotteissa ("suorita ensin linter, sitten …").
+- Haluat agentin seuraavan tiettyä päätöspuuta.
+- Haluat saman työnkulun käytettävissä jokaisessa projektin istunnossa ja jokaisessa agentissa.
+
+## Missä ne sijaitsevat
+
+Taidot ovat tiedostoja hakemistossa `.opencode/skill/` (tai `.opencode/skills/`) projektin juuressa. Jokainen tiedosto kuvaa laukaisun nimen, milloin agentin tulisi käyttää sitä ja mukana olevat vaiheet. `skill`-[työkalu](/concepts/tools) paljastaa ne mallille.
+
+## Liittyvät
+
+- [Mukautetut työkalut](/extending/custom-tools) — matalamman tason, yhden toiminnon laajennus.
+- [Mukautetut agentit](/extending/custom-agents) — leivo ohjeet agenttiin sen sijaan.

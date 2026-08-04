@@ -1,0 +1,193 @@
+---
+title: "Configuratie — bolt.jsonc instellingen en globale overrides"
+sidebarTitle: "Configuratie"
+description: "Bolt leest gelaagde JSONC-configuratiebestanden uit je project en OS-configuratiemappen. Stel providers, MCP-servers, instructies, plugins en omgevingsoverrides in."
+---
+
+Bolt gebruikt een gelaagd configuratiesysteem: een **globaal** configuratiebestand voor gebruikersbrede standaarden, en een **per-project**-configuratiebestand voor repository-specifieke instellingen. Beide bestanden gebruiken het JSONC-formaat (JSON met commentaar), en beide worden automatisch aangemaakt met een `$schema`-verwijzing die autocompletion in de editor mogelijk maakt.
+
+## Locaties van configuratiebestanden
+
+### Per-project config
+
+Wordt automatisch aangemaakt bij de eerste uitvoering binnen je project:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Commit dit bestand om provider-configuratie, MCP-servers en aangepaste instructies te delen met de rest van je team. Gevoelige credentials horen hier nooit thuis — gebruik in plaats daarvan omgevingsvariabelen of de globale config.
+
+### Globale config
+
+Geldt voor alle projecten op je machine. Bolt zoekt naar het eerste overeenkomende bestand in je OS-configuratiemap:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (voorkeur)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Waar is de globale configuratiemap?">
+  Bolt volgt de XDG Base Directory Specification op Linux en macOS (`~/.config/bolt/`) en `%APPDATA%\bolt\` op Windows. Voer `bolt debug config` uit om de volledig opgeloste configuratie op je machine af te drukken.
+</Accordion>
+
+## Minimaal configuratievoorbeeld
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+Het `$schema`-veld schakelt IntelliSense en validatie in in editors die JSON Schema ondersteunen. Bolt schrijft dit veld automatisch als het ontbreekt.
+
+## Configuratiereferentie
+
+### `provider`
+
+Configureer providerspecifieke opties zoals aangepaste base URL's, regio-instellingen of benoemde credentials:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Registreer [Model Context Protocol](https://modelcontextprotocol.io) servers die de agent als tools kan aanroepen:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Beheer MCP-servers interactief met `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` en `bolt mcp debug`.
+
+### `instructions`
+
+Voeg aangepaste systeeminstructies toe die in elke sessie worden geïnjecteerd. Handig om coderingsconventies, stijlgidsen of projectspecifieke regels af te dwingen:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instructies uit meerdere configuratiebestanden (globaal \+ project) worden automatisch samengevoegd en ontdubbeld.
+
+### `plugin`
+
+Laad Bolt-plugins. Plugins kunnen nieuwe tools, providers, contextbronnen en hooks toevoegen:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Remote config via `url`
+
+Haal config op vanaf een remote URL bij het opstarten. Handig voor gecentraliseerde teamconfiguratie:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Variabele-substitutie
+
+Configuratiewaarden kunnen naar omgevingsvariabelen verwijzen met de syntaxis `$VAR_NAME` of `${VAR_NAME}`. Substitutie gebeurt bij het laden, voordat de config wordt geparsed:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Hoe gebruik ik omgevingsvariabelen in de config?">
+  Verwijs naar elke omgevingsvariabele met `$VAR_NAME` of `${VAR_NAME}` overal in een string-configuratiewaarde. Bolt vervangt de waarde bij het laden. Als de variabele niet is ingesteld, wordt de letterlijke string `$VAR_NAME` gebruikt — Bolt faalt niet stilletjes en gooit geen fout voor ontbrekende substituties.
+</Accordion>
+
+## Omgevingsvariabele-overrides
+
+Met deze omgevingsvariabelen kun je de config volledig omleiden of overschrijven, wat handig is voor CI, containers en testen:
+
+| Variabele | Beschrijving |
+| --- | --- |
+| `BOLT_CONFIG` | Absoluut pad naar een configuratiebestand dat geladen wordt in plaats van het project-lokale |
+| `BOLT_CONFIG_DIR` | Overschrijf de map waarin Bolt naar configuratiebestanden zoekt |
+| `BOLT_CONFIG_CONTENT` | Geef ruwe JSONC-configuratie-inhoud als string — geen bestand nodig |
+
+`BOLT_CONFIG_CONTENT` is bijzonder handig in gecontaineriseerde omgevingen waar het mounten van een bestand onhandig is:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Welke config heeft voorrang wanneer meerdere bronnen actief zijn?">
+  Bolt voegt configs samen in deze volgorde (latere items winnen):
+
+  1. Globaal configuratiebestand (`bolt.jsonc` / `bolt.json` in de OS-configuratiemap)
+  2. Remote configs opgehaald via `url`-items in de globale config
+  3. Per-project configuratiebestanden (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG`-bestand (indien ingesteld)
+  5. `BOLT_CONFIG_CONTENT` (indien ingesteld)
+
+  Arrayvelden zoals `instructions` worden aaneengesloten in plaats van vervangen. Objectvelden worden diep samengevoegd waarbij latere waarden winnen bij conflicten.
+</Accordion>

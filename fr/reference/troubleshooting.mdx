@@ -1,0 +1,395 @@
+---
+title: "Résoudre les problèmes courants de Bolt"
+sidebarTitle: "Dépannage"
+description: "Solutions aux problèmes Bolt les plus courants : échecs de démarrage, erreurs d'authentification fournisseur, connectivité MCP, problèmes de session, permissions, coût et plus encore."
+---
+
+La plupart des problèmes Bolt entrent dans un petit nombre de catégories. Parcourez l'accordéon pertinent ci-dessous, et consultez la sortie du journal avec `bolt logs` chaque fois que quelque chose d'inattendu se produit.
+
+<Note>
+  Pour les questions sans réponse ici, cherchez ou démarrez une discussion dans [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Incluez la sortie de `bolt debug info` et `bolt logs --tail 50` dans votre message pour que la communauté puisse vous aider plus vite.
+</Note>
+
+## Premières choses à essayer
+
+Avant de plonger dans une section précise, ces quatre commandes résolvent la plupart des problèmes :
+
+| Symptôme | Première commande | Pourquoi |
+| --- | --- | --- |
+| Quelque chose d'étrange | `bolt debug info` | Résumé système \+ plugins en une commande. |
+| Ça marchait avant, maintenant non | `bolt logs --tail 100` | Erreurs récentes, généralement en haut. |
+| Suspect un plugin | `bolt --pure` | Démarrer avec tous les plugins désactivés. |
+| La configuration n'est pas prise en compte | `bolt debug config` | Affiche la configuration entièrement résolue. |
+
+<Tip>
+  La famille `bolt debug` est votre premier arrêt pour tout comportement mystérieux. `bolt debug info` pour un résumé système, `bolt debug config` pour la configuration résolue, `bolt debug paths` pour les emplacements sur disque, et `bolt debug snapshot` pour inspecter l'état de session.
+</Tip>
+
+<Accordion title="Bolt ne démarre pas / plante au lancement">
+  **Symptômes :** Le terminal clignote et se ferme immédiatement, ou vous voyez une trace d'exécution avant que le TUI ne s'affiche.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Collecter les informations système">
+      ```bash
+      bolt debug info
+      ```
+
+      Cela affiche votre version de Bolt, l'OS, l'émulateur de terminal et les plugins chargés. Copiez cette sortie lorsque vous signalez un bogue.
+    </Step>
+    <Step title="Consulter la sortie récente du journal">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Cherchez les lignes `ERROR`. Une cause fréquente est un plugin qui n'arrive pas à se charger — dans ce cas, vous verrez une erreur mentionnant le nom du plugin.
+    </Step>
+    <Step title="Désactiver les plugins pour isoler le problème">
+      ```bash
+      bolt --pure
+      ```
+
+      Si Bolt démarre proprement avec `--pure`, un plugin provoque le plantage. Retirez le plugin en cause de votre configuration ou signalez-le à son auteur.
+    </Step>
+    <Step title="Vérifier une configuration corrompue">
+      ```bash
+      bolt debug config
+      ```
+
+      Si cela affiche une erreur relative à un JSON invalide, ouvrez le fichier de configuration mentionné et corrigez la syntaxe. Exécutez `bolt db path` pour vérifier que le chemin de la base de données est accessible.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="L'authentification du fournisseur échoue">
+  **Symptômes :** Bolt affiche « No providers configured », les requêtes API échouent avec des erreurs 401, ou `bolt run` se termine immédiatement sans produire de sortie.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Relancer le flux de connexion au fournisseur">
+      ```bash
+      bolt providers login
+      ```
+
+      Sélectionnez votre fournisseur et suivez les invites. Bolt vous guide dans la saisie de la clé d'API ou OAuth.
+    </Step>
+    <Step title="Vérifier la variable d'environnement de la clé d'API">
+      Si vous utilisez une variable d'env (p. ex. `ANTHROPIC_API_KEY`), vérifiez qu'elle est bien définie dans le shell courant :
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Si elle est vide, ajoutez-la à votre profil de shell et rouvrez votre terminal.
+    </Step>
+    <Step title="Inspecter la configuration résolue">
+      ```bash
+      bolt debug config
+      ```
+
+      Regardez la section `provider`. Si votre fournisseur apparaît avec un `apiKey` vide, la référence à la variable d'environnement dans votre fichier de configuration n'est pas étendue.
+    </Step>
+    <Step title="Lister les informations d'identification stockées">
+      ```bash
+      bolt providers list
+      ```
+
+      Cela affiche toutes les informations d'identification stockées dans `auth.json` et toutes les variables d'environnement liées aux fournisseurs détectées par Bolt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Le serveur MCP ne se connecte pas">
+  **Symptômes :** `bolt mcp list` affiche un serveur en `failed` ou `needs authentication`, ou l'agent ne peut utiliser aucun outil de ce serveur.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Lancer la sonde de débogage MCP">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Cela teste la connectivité HTTP de base, inspecte l'en-tête `WWW-Authenticate` et parcourt le flux de découverte OAuth le cas échéant. La sortie vous indiquera si le serveur est joignable et si une authentification est requise.
+    </Step>
+    <Step title="Vérifier l'URL du serveur">
+      Vérifiez l'URL dans votre `.bolt/bolt.jsonc`. Pour les serveurs distants, assurez-vous que l'URL se termine par le chemin MCP (p. ex. `/mcp` ou `/tools`) et pas seulement par l'hôte.
+    </Step>
+    <Step title="Se réauthentifier pour les serveurs OAuth">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Suivez le flux du navigateur. Si le serveur exige un identifiant client pré-enregistré, ajoutez-le à la configuration :
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Vérifier la commande du serveur local">
+      Pour les serveurs `local`, exécutez la commande manuellement dans votre terminal pour confirmer qu'elle démarre sans erreurs :
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Session introuvable">
+  **Symptômes :** `bolt run --session <id>` se termine avec « Session not found », ou une session dont vous vous souvenez a disparu.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Lister toutes les sessions disponibles">
+      ```bash
+      bolt session list
+      ```
+
+      Les sessions sont triées de la plus récemment mise à jour à la plus ancienne. Si votre session a été supprimée ou si la base de données a été migrée, elle n'apparaîtra pas ici.
+    </Step>
+    <Step title="Trouver le chemin de la base de données">
+      ```bash
+      bolt db path
+      ```
+
+      Cela affiche le chemin complet du fichier SQLite. Vérifiez que le fichier existe et n'est pas vide.
+    </Step>
+    <Step title="Interroger la base de données directement">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Si votre session apparaît dans la base de données mais pas dans `bolt session list`, il peut y avoir une divergence d'ID de projet — les sessions sont délimitées aux projets.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Erreurs de permission dans le TUI">
+  **Symptômes :** L'agent demande des permissions à répétition, refuse d'écrire des fichiers, ou vous voyez des bandeaux « Permission denied ».
+
+  **Comprendre les niveaux d'accès :**
+
+  Chaque agent intégré possède un niveau d'accès déclaré qui contrôle ce qu'il peut faire sans demander :
+
+  | Niveau d'accès | Ce qu'il permet |
+  | --- | --- |
+  | **Complet** | Lire des fichiers, écrire des fichiers, exécuter des commandes shell |
+  | **Édition** | Lire et écrire des fichiers, pas de commandes shell |
+  | **Lecture** | Lire des fichiers uniquement, pas d'écritures ni de commandes |
+
+  Les agents `code`, `debug`, `refactor`, `migrate` et `perf` ont un accès **Complet**. `docs` a un accès **Édition**. `plan`, `ask`, `code-review` et `security` ont un accès **Lecture**.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Passer à un agent en accès Complet">
+      Si vous avez besoin d'écritures de fichiers, utilisez l'agent `code` :
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Ou appuyez sur `Tab` dans le TUI pour parcourir les agents.
+    </Step>
+    <Step title="Utiliser --auto pour approuver les invites en mode non interactif">
+      Dans des contextes CI ou scriptés, passez `--auto` à `bolt run` pour approuver automatiquement les permissions non explicitement refusées dans la configuration.
+    </Step>
+    <Step title="Configurer les permissions dans le fichier de configuration">
+      Vous pouvez refuser des outils précis pour toutes les sessions d'un projet en ajoutant un bloc `permission` à `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Utilisation élevée de jetons ou coûts inattendus">
+  **Symptômes :** `bolt stats` affiche des comptes de jetons plus élevés que prévu, ou votre facture API augmente plus vite qu'anticipé.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Consulter vos statistiques d'utilisation">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      La sortie ventile le coût par jour, la moyenne de jetons par session et l'utilisation par modèle.
+    </Step>
+    <Step title="Baisser l'effort de raisonnement">
+      Pour les modèles qui le prennent en charge, réduisez l'effort de raisonnement avec `--variant` :
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Les valeurs prises en charge sont spécifiques au fournisseur (p. ex. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Passer à un modèle moins cher">
+      Utilisez `bolt models` pour trouver un modèle plus petit. Les modèles plus petits (p. ex. `claude-haiku`, `gpt-4o-mini`) coûtent nettement moins par jeton et fonctionnent bien pour de nombreuses tâches.
+    </Step>
+    <Step title="Utiliser l'agent ask ou plan pour l'exploration">
+      Les agents `ask` et `plan` ont un accès **Lecture** et n'invoquent pas d'outils d'écriture, ce qui leur permet d'éviter les boucles gourmandes en outils qui génèrent de grands jetons de sortie.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Conflits de plugins ou comportement inattendu">
+  **Symptômes :** Une slash command se comporte de manière inattendue, le TUI s'affiche incorrectement, ou quelque chose a changé après l'installation d'un plugin.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Désactiver tous les plugins pour établir une référence">
+      ```bash
+      bolt --pure
+      ```
+
+      Si le problème disparaît, un plugin en est responsable.
+    </Step>
+    <Step title="Identifier le plugin coupable">
+      ```bash
+      bolt debug info
+      ```
+
+      La sortie liste tous les plugins chargés. Retirez-les temporairement un par un de votre configuration et redémarrez Bolt jusqu'à ce que le problème disparaisse.
+    </Step>
+    <Step title="Vérifier l'incompatibilité de version">
+      ```bash
+      bolt upgrade
+      ```
+
+      Les plugins déclarent une plage de versions Bolt compatibles. Si vous avez récemment mis à niveau Bolt, un plugin peut aussi nécessiter une mise à jour.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Problèmes de chemins WSL / Windows">
+  **Symptômes :** Sous Windows avec WSL, Bolt ne trouve pas `less`, les chemins de fichiers contiennent des antislash inattendus, ou le pager pour `bolt session list` ne se lance pas.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Définir le chemin Git Bash">
+      Bolt recherche les utilitaires Unix (y compris `less`) relatifs à l'installation de Git pour Windows. Définissez la variable d'environnement vers votre répertoire Git Bash :
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Ajoutez cela à votre profil PowerShell (`$PROFILE`) pour le rendre persistant.
+    </Step>
+    <Step title="Vérifier avec debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Confirme la détection de l'OS et les chemins que Bolt utilise.
+    </Step>
+    <Step title="Exécuter Bolt directement dans WSL">
+      Pour la meilleure expérience sous Windows, exécutez `bolt` depuis un terminal WSL plutôt que depuis PowerShell ou l'invite de commandes.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Impossible de mettre à niveau Bolt">
+  **Symptômes :** `bolt upgrade` signale une erreur ou ne fait rien silencieusement, ou le numéro de version ne change pas après son exécution.
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Spécifier la méthode d'installation explicitement">
+      Bolt essaie de détecter comment il a été installé. Si la détection échoue, forcez-la :
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Réinstaller via le script d'installation">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows : exécuter en tant qu'administrateur pour Chocolatey">
+      Si vous avez installé via `choco`, les mises à niveau nécessitent un terminal élevé. Ouvrez PowerShell en tant qu'administrateur avant d'exécuter `bolt upgrade`.
+    </Step>
+    <Step title="Confirmer que la nouvelle version est active">
+      ```bash
+      bolt --version
+      which bolt    # vérifie que le PATH pointe vers le bon binaire
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="L'agent ne trouve pas les fichiers (ou en trouve trop)">
+  **Symptômes :** L'agent se plaint de ne pas voir des fichiers qui existent, ou récupère à répétition des fichiers auxquels vous ne voulez pas qu'il touche (comme `node_modules`, la sortie de build ou des secrets).
+
+  **Étapes :**
+
+  <Steps>
+    <Step title="Vérifier la présence d'un .boltignore">
+      Bolt respecte un fichier `.boltignore` à la racine du projet qui contrôle quels fichiers les outils de recherche de fichiers de l'agent peuvent voir. Il utilise la même syntaxe que `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Confirmer le répertoire de travail">
+      ```bash
+      bolt debug info
+      ```
+
+      Vérifiez que le `cwd` correspond à la racine du projet. Si vous avez lancé Bolt depuis un sous-répertoire, la recherche de fichiers de l'agent y est enracinée.
+    </Step>
+    <Step title="Demander à l'agent de grep, pas de deviner">
+      Si l'agent prétend qu'un fichier n'existe pas, demandez-lui d'exécuter `grep` ou `glob` explicitement. Cela contourne toute hypothèse interne périmée.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Obtenir des infos de débogage pour un rapport de bogue">
+  Lors du dépôt d'un ticket, les informations suivantes sont les plus utiles aux mainteneurs :
+
+  <Steps>
+    <Step title="Collecter les infos système et plugins">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Collecter la sortie récente du journal">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Exporter la session concernée (caviardée)">
+      Si le problème s'est produit lors d'une session précise, exportez-la avec les secrets caviardés :
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Joignez `session-debug.json` au ticket.
+    </Step>
+    <Step title="Ouvrir un ticket ou une discussion">
+      Allez sur [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) et collez la sortie de votre `bolt debug info` accompagnée d'une description des étapes pour reproduire.
+    </Step>
+  </Steps>
+</Accordion>

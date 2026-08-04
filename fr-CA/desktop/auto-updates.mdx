@@ -1,0 +1,26 @@
+---
+title: "Mises à jour automatiques du bureau Bolt"
+sidebarTitle: "Mises à jour automatiques"
+description: "Comment l'application de bureau Bolt se met à jour à travers les canaux dev, bêta et production — et comment changer de canal ou revenir à une version antérieure."
+---
+
+L'application de bureau se met à jour automatiquement en arrière-plan sur trois canaux de version :
+
+| Canal | Cadence | À qui ça s'adresse |
+| --- | --- | --- |
+| `prod` | Versions stables seulement. | Tout le monde par défaut. |
+| `beta` | Versions candidates. | Équipes qui veulent un aperçu de la prochaine version stable. |
+| `dev` | Quasi nocturne. | Adopteurs précoces et contributeurs. |
+
+## Changer de canal
+
+Changez de canal depuis le panneau des paramètres de l'application. Au prochain lancement, l'application vérifie le canal sélectionné pour un nouveau build; vous pouvez aussi déclencher une vérification manuellement.
+
+## Sous le capot
+
+Les mises à jour sont téléchargées en arrière-plan et appliquées au prochain lancement. Si une mise à jour échoue à s'appliquer, l'application conserve la version précédente et affiche une erreur — il n'y a pas d'état intermédiaire.
+
+## Voir aussi
+
+- [Installation](/desktop/install) — parcours d'installation initiale.
+- [Fonctionnalités](/desktop/features) — ce que vous obtenez dans l'application de bureau.

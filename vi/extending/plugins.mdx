@@ -1,0 +1,145 @@
+---
+title: "Mở rộng Bolt với plugin"
+sidebarTitle: "Plugin"
+description: "Cài đặt và xây dựng plugin Bolt để thêm nhà cung cấp AI tùy chỉnh, phương thức xác thực, công cụ và bộ chuyển đổi workspace cho mọi dự án hoặc toàn cục."
+url: "extending/plugins"
+---
+
+Plugin cho phép bạn mở rộng Bolt vượt ra khỏi các khả năng tích hợp sẵn. Plugin là một module Node hoặc Bun xuất ra một manifest plugin Bolt; khi được nạp, nó có thể đăng ký nhà cung cấp LLM mới, phương thức xác thực tùy chỉnh, công cụ bổ sung và bộ chuyển đổi workspace. Plugin có thể được cài đặt cho một dự án đơn lẻ hoặc áp dụng toàn cục trên tất cả công việc của bạn.
+
+## Cài đặt plugin
+
+Dùng `bolt plugin install` (bí danh: `bolt plug`) để cài đặt plugin từ npm và tự động đăng ký nó trong cấu hình của bạn:
+
+```bash
+bolt plugin install <module>
+```
+
+### Cờ
+
+| Cờ | Bí danh | Mô tả |
+|------|-------|-------------|
+| `--global` | `-g` | Cài đặt vào cấu hình toàn cục thay vì dự án hiện tại |
+| `--force` | `-f` | Thay thế một mục đã tồn tại cho cùng module |
+
+### Phạm vi: dự án so với toàn cục
+
+Theo mặc định, `bolt plugin install` thêm plugin vào `.bolt/bolt.jsonc` cấp dự án. Truyền `--global` để thêm nó vào cấu hình cấp người dùng để nó nạp trong mọi dự án.
+
+```bash
+# Phạm vi dự án (mặc định)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Toàn cục — nạp trong mọi dự án
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Chạy `bolt --pure` (hoặc đặt `OPENCODE_PURE=1`) để khởi động Bolt với mọi plugin bên ngoài bị vô hiệu hóa. Điều này hữu ích để gỡ lỗi xem liệu một plugin có gây ra hành vi bất ngờ hay không, mà không cần gỡ cài đặt.
+</Note>
+
+---
+
+## Cài đặt một plugin đã xuất bản
+
+<Steps>
+  <Step title="Tìm gói plugin">
+    Tìm kiếm npm với các gói có `bolt-plugin` hoặc `opencode-plugin` trong tên, hoặc theo liên kết từ tài liệu của một provider.
+  </Step>
+
+  <Step title="Cài đặt vào dự án của bạn">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt cài đặt gói, đọc manifest của nó để phát hiện các target server và TUI, sau đó ghi mục vào `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Xác minh cấu hình">
+    Mở `.bolt/bolt.jsonc` và xác nhận mục plugin đã được thêm:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Khởi động một phiên">
+    ```bash
+    bolt
+    ```
+
+    Bolt nạp plugin khi khởi động. Mọi provider hoặc công cụ nó đăng ký đều có sẵn ngay lập tức.
+  </Step>
+</Steps>
+
+---
+
+## Cấu hình plugin thủ công
+
+Bạn có thể đăng ký plugin bằng cách chỉnh sửa `.bolt/bolt.jsonc` trực tiếp. Điều này hữu ích cho các plugin cục bộ đang phát triển:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Đường dẫn tương đối được giải quyết từ gốc dự án. Cả điểm vào TypeScript và JavaScript đều được hỗ trợ.
+
+---
+
+## Xây dựng plugin
+
+Plugin được viết dựa trên gói `@opencode-ai/plugin`, nó cung cấp giao diện `Hooks` mà module của bạn phải thỏa mãn.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Một plugin tối thiểu xuất một hàm nhận đối tượng `PluginInput` và trả về đối tượng `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — đăng ký các phương thức xác thực tùy chỉnh
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... các trường riêng của provider
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Các loại hook có sẵn
+
+| Hook | Mục đích |
+|------|---------|
+| `auth` | Đăng ký các nhà cung cấp xác thực tùy chỉnh với mảng `methods` |
+| `event` | Phản ứng với các sự kiện phiên (tin nhắn, lời gọi công cụ, hoàn thành) |
+| `config` | Phản ứng với các thay đổi cấu hình tại thời điểm chạy |
+| `dispose` | Dọn dẹp tài nguyên khi plugin được gỡ nạp |
+
+Đối tượng `PluginInput` phơi bày `client` (một client API Bolt có kiểu), `project`, `worktree`, `directory` và `serverUrl` để plugin của bạn có thể tương tác với server đang chạy.
+
+---
+
+## Biến môi trường
+
+| Biến | Mô tả |
+|----------|-------------|
+| `OPENCODE_PURE` | Đặt thành `1` để chạy không có bất kỳ plugin bên ngoài nào |

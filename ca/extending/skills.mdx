@@ -1,0 +1,22 @@
+---
+title: "Habilitats: guions d'agent reutilitzables"
+sidebarTitle: "Habilitats"
+description: "Les habilitats són guions reutilitzables amb nom que l'agent de Bolt invoca mitjançant l'eina skill — pràctics per a fluxos de treball enllaunats com llançar versions o executar suites de linting."
+---
+
+Les habilitats són guions reutilitzables amb nom que viuen juntament amb el teu projecte i s'invoquen mitjançant l'eina `skill`. Mentre que una eina personalitzada és una única acció executable, una habilitat és un flux de treball guiat que l'agent pot seguir pas a pas: recull aquests fitxers, executa aquestes ordres, decideix què fer a continuació basant-se en la sortida.
+
+Utilitza habilitats quan:
+
+- Tinguis un flux de treball que continues explicant als prompts ("primer executa el linter, després …").
+- Vulguis que l'agent segueixi un arbre de decisió específic.
+- Vulguis que el mateix flux de treball estigui disponible per a cada sessió i cada agent del projecte.
+
+## On viuen
+
+Les habilitats són fitxers sota `.opencode/skill/` (o `.opencode/skills/`) a l'arrel del projecte. Cada fitxer descriu el nom del disparador, quan l'agent l'hauria d'utilitzar i els passos implicats. L'[eina](/concepts/tools) `skill` les exposa al model.
+
+## Relacionat
+
+- [Eines personalitzades](/extending/custom-tools) — extensió d'una sola acció a nivell més baix.
+- [Agents personalitzats](/extending/custom-agents) — incorpora instruccions a un agent en el seu lloc.

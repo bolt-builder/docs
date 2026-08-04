@@ -1,0 +1,193 @@
+---
+title: "Configurazione — impostazioni di bolt.jsonc e override globali"
+sidebarTitle: "Configurazione"
+description: "Bolt legge file di configurazione JSONC a livelli dal tuo progetto e dalle directory di config del sistema operativo. Imposta provider, server MCP, istruzioni, plugin e override d'ambiente."
+---
+
+Bolt utilizza un sistema di configurazione a livelli: un file di configurazione **globale** per i valori predefiniti a livello utente e un file di configurazione **per progetto** per le impostazioni specifiche del repository. Entrambi i file usano il formato JSONC (JSON con commenti) ed entrambi vengono creati automaticamente con un puntatore `$schema` che abilita l'autocompletamento dell'editor.
+
+## Posizioni dei file di configurazione
+
+### Configurazione per progetto
+
+Creata automaticamente alla prima esecuzione all'interno del tuo progetto:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Committa questo file per condividere la configurazione del provider, i server MCP e le istruzioni personalizzate con il resto del tuo team. Le credenziali sensibili non dovrebbero mai finire qui — usa invece variabili d'ambiente o la configurazione globale.
+
+### Configurazione globale
+
+Si applica a tutti i progetti sulla tua macchina. Bolt cerca il primo file corrispondente nella tua directory di configurazione del sistema operativo:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferito)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Dov'è la directory di configurazione globale?">
+  Bolt segue la XDG Base Directory Specification su Linux e macOS (`~/.config/bolt/`) e `%APPDATA%\bolt\` su Windows. Esegui `bolt debug config` per stampare la configurazione completamente risolta sulla tua macchina.
+</Accordion>
+
+## Esempio di configurazione minima
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+Il campo `$schema` abilita IntelliSense e validazione negli editor che supportano JSON Schema. Bolt scrive questo campo automaticamente se manca.
+
+## Riferimento di configurazione
+
+### `provider`
+
+Configura opzioni specifiche del provider come URL di base personalizzati, impostazioni di regione o credenziali con nome:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Registra i server [Model Context Protocol](https://modelcontextprotocol.io) che l'agente può chiamare come strumenti:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Gestisci i server MCP in modo interattivo con `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` e `bolt mcp debug`.
+
+### `instructions`
+
+Aggiungi istruzioni di sistema personalizzate che vengono iniettate in ogni sessione. Utile per imporre convenzioni di codifica, guide di stile o regole specifiche del progetto:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Le istruzioni provenienti da più file di configurazione (globale \+ progetto) vengono unite e deduplicate automaticamente.
+
+### `plugin`
+
+Carica i plugin Bolt. I plugin possono aggiungere nuovi strumenti, provider, sorgenti di contesto e hook:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Configurazione remota tramite `url`
+
+Recupera la configurazione da un URL remoto all'avvio. Utile per la configurazione centralizzata del team:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Sostituzione di variabili
+
+I valori di configurazione possono fare riferimento a variabili d'ambiente utilizzando la sintassi `$VAR_NAME` o `${VAR_NAME}`. La sostituzione avviene al caricamento, prima che la configurazione venga analizzata:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Come uso variabili d'ambiente nella configurazione?">
+  Fai riferimento a qualsiasi variabile d'ambiente con `$VAR_NAME` o `${VAR_NAME}` ovunque all'interno di un valore di configurazione stringa. Bolt sostituisce il valore al caricamento. Se la variabile non è impostata, viene utilizzata la stringa letterale `$VAR_NAME` — Bolt non fallisce silenziosamente né solleva un errore per le sostituzioni mancanti.
+</Accordion>
+
+## Override tramite variabili d'ambiente
+
+Queste variabili d'ambiente ti permettono di reindirizzare o sovrascrivere completamente la configurazione, cosa utile per CI, container e test:
+
+| Variabile | Descrizione |
+| --- | --- |
+| `BOLT_CONFIG` | Percorso assoluto di un file di configurazione da caricare al posto di quello locale del progetto |
+| `BOLT_CONFIG_DIR` | Sovrascrive la directory in cui Bolt cerca i file di configurazione |
+| `BOLT_CONFIG_CONTENT` | Fornisce il contenuto JSONC grezzo come stringa — non è necessario alcun file |
+
+`BOLT_CONFIG_CONTENT` è particolarmente utile in ambienti containerizzati dove montare un file è scomodo:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Quale configurazione ha precedenza quando sono attive più fonti?">
+  Bolt unisce le configurazioni in questo ordine (le voci successive vincono):
+
+  1. File di configurazione globale (`bolt.jsonc` / `bolt.json` nella directory di configurazione del sistema operativo)
+  2. Configurazioni remote recuperate dalle voci `url` nella configurazione globale
+  3. File di configurazione per progetto (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. File `BOLT_CONFIG` (se impostato)
+  5. `BOLT_CONFIG_CONTENT` (se impostato)
+
+  I campi array come `instructions` vengono concatenati tra le fonti anziché sostituiti. I campi oggetto vengono uniti in profondità, con i valori successivi che vincono in caso di conflitto.
+</Accordion>

@@ -1,0 +1,38 @@
+---
+title: "Paikallinen tietokanta (bolt db)"
+sidebarTitle: "Paikallinen tietokanta"
+description: "Bolt tallentaa jokaisen istunnon, viestin ja työkalukutsun paikalliseen SQLite-tietokantaan. Tarkastele sitä, varmuuskopioi tai kysele sitä suoraan komennolla bolt db."
+---
+
+Bolt säilyttää jokaisen istunnon, viestin ja työkalukutsun paikallisessa SQLite-tietokannassa. Se on täysin tarkastettavissa ja täysin sinun — mitään ei ladata verkkoon, ellet erikseen jaa istuntoa.
+
+## Yleiset toiminnot
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Varmuuskopiointi
+
+Koska se on yksi SQLite-tiedosto, varmuuskopiointi on kopiointia:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Pitkäaikaiseen tallennukseen tai siirtoon suosittele `bolt export` / `bolt import` -komentoja — ne tuottavat siirrettävän JSON-esityksen, joka selviää skeeman migraatioista.
+
+## Skeema silmäyksellä
+
+- `sessions` — yksi rivi per istunto, otsikoineen, projekteineen, aikaleimoineen ja tiloineen.
+- `messages` — täydellinen vuorologi per istunto.
+- `tool_calls` — jokainen kutsu syötteineen, tulosteineen ja kestoineen.
+
+Tarkat sarakkeet kehittyvät; käytä `PRAGMA table_info(<table>)` nähdäksesi elävän skeeman.
+
+## Liittyvät
+
+- [Istunnot](/concepts/sessions) — mitä tietokanta tallentaa.
+- [Tilastot ja kustannukset](/reference/stats-and-cost) — yhteenvedot samasta datasta.

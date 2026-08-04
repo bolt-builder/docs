@@ -1,0 +1,78 @@
+---
+title: "Bolt: 여러분의 터미널을 위한 AI 코딩 에이전트"
+sidebarTitle: "Home"
+description: "Bolt는 10개의 전문 에이전트, 지속적 세션, MCP 지원, 데스크톱 앱을 갖춘 터미널 우선 AI 코딩 에이전트로, 모든 LLM 프로바이더를 지원합니다."
+---
+
+Bolt는 완전한 AI 엔지니어링 팀을 여러분의 터미널에 직접 배치합니다. 빠르고 키보드 중심의 TUI와 네이티브 데스크톱 앱으로 배포되며, 둘 다 동일한 엔진으로 백업됩니다: 10개의 전문 에이전트, 지속적이고 내구성 있는 세션, OAuth를 갖춘 MCP 서버 관리, 플러그인 시스템, 모든 주요 LLM 프로바이더 지원.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    curl, npm, bun 또는 선호하는 패키지 관리자로 Bolt를 몇 초 안에 설치하세요.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    1분 안에 첫 AI 코딩 세션을 실행하세요.
+  </Card>
+  <Card title="Agents" icon="robot" href="/concepts/agents">
+    10개의 내장 에이전트를 만나보세요: code, plan, ask, review, debug, refactor, docs, security, migrate, perf.
+  </Card>
+  <Card title="Command Reference" icon="terminal" href="/reference/commands">
+    모든 CLI 명령, 하위 명령, 플래그가 완전히 문서화되어 있습니다.
+  </Card>
+</CardGroup>
+
+## Bolt가 하는 일
+
+Bolt는 여러분의 코드베이스를 읽고, 여러분이 무엇을 구축하고 있는지 이해하고, 여러분과 함께 코드를 배포합니다 — 터미널이든 데스크톱 앱이든. 각 세션은 내구성이 있습니다: 분리하고, 다른 머신에서 다시 연결하고, 대화 브랜치를 포크하고, 링크를 공유하거나, 마스킹된 기록을 내보낼 수 있습니다.
+
+<CardGroup cols={3}>
+  <Card title="Sessions" icon="clock-rotate-left" href="/concepts/sessions">
+    로컬 SQLite에 저장된 지속적이고 포크 가능한 세션.
+  </Card>
+  <Card title="Providers & Models" icon="microchip" href="/concepts/providers-and-models">
+    모든 주요 LLM 프로바이더에 대해 자신의 API 키를 사용하세요.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/concepts/configuration">
+    완전한 스키마 지원을 갖춘 프로젝트별 `.bolt/bolt.jsonc`.
+  </Card>
+  <Card title="MCP Servers" icon="plug" href="/extending/mcp-servers">
+    OAuth 흐름을 포함해 Model Context Protocol을 통해 도구를 추가하세요.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    커스텀 프로바이더, 도구, 인증 방법으로 Bolt를 확장하세요.
+  </Card>
+  <Card title="GitHub Integration" icon="github" href="/server/github-actions">
+    AI 기반 커밋 메시지, 코드 리뷰, GitHub Actions.
+  </Card>
+</CardGroup>
+
+## 시작하기
+
+<Steps>
+  <Step title="Bolt 설치">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    또는 npm으로 설치: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="프로젝트 열기">
+    아무 프로젝트 디렉터리로 이동해 TUI를 시작하세요:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="프로바이더 구성">
+    첫 실행 시 Bolt는 LLM 프로바이더를 추가하도록 요청합니다. 다음을 실행할 수도 있습니다:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="AI와 코딩 시작">
+    TUI 푸터에 프롬프트를 입력하고 Enter를 누르면 Bolt의 에이전트가 작업을 시작합니다. `Tab`으로 에이전트를 전환하세요.
+  </Step>
+</Steps>
+
+<Tip>
+  전체 TUI를 열지 않고 빠른 비대화형 답변을 얻으려면 `bolt run "explain this codebase"`를 사용하세요.
+</Tip>

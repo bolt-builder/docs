@@ -1,0 +1,116 @@
+---
+title: "Bolt-työpöytäsovellus: moni-ikkunaiset AI-koodausistunnot"
+sidebarTitle: "Asennus"
+description: "Asenna Bolt-työpöytäsovellus moni-ikkunaisia istuntoja, integroitua terminaalia, kuvien liittämisen kehotelaatijaa, automaattisia päivityksiä ja 28 käyttöliittymän kieltä varten."
+url: "desktop/install"
+---
+
+Bolt-työpöytäsovellus kääri saman moottorin kuin CLI täydelliseen Electron-kuoreen. Jokainen terminaalissa käytettävissä oleva ominaisuus — agentit, MCP-palvelimet, laajennukset, etäistunnot, istunnot, joita voit haaroittaa ja jakaa — toimii identtisesti työpöytäsovelluksessa lisäten moni-ikkuna- ja moni-välilehtikokemuksen, graafisen asetusten käyttöliittymän, natiivit ilmoitukset ja automaattiset päivitykset. Jos käytät jo CLI:tä, työpöytäsovellus on suoraan käyttöön otettava täydentäjä, ei korvaaja.
+
+---
+
+## Asennus
+
+### macOS
+
+<Steps>
+  <Step title="Asenna yhden rivin komennolla (suositeltu)">
+    Avaa terminaali ja suorita:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skripti lataa uusimman julkaisun, tarkistaa sen ja sijoittaa sovelluksen kansioon `/Applications`. Ei Gatekeeper-ponnahdusikkunaa.
+  </Step>
+
+  <Step title="Käynnistä sovellus">
+    Avaa **Bolt** kansiosta `/Applications` tai Spotlightista. Ensimmäisellä käynnistyksellä Bolt pyytää sinua valitsemaan oletus-LLM-tarjoajan ja luo globaalin konfigurointitiedoston.
+  </Step>
+</Steps>
+
+<Tip>
+  Yhden rivin komento asentaa sovelluksen tavalla, joka ohittaa macOS-Gatekeeperin "tuntematon kehittäjä" -valintaikkunan, joten pääset suoraan koodaamaan ilman ylimääräisiä turvallisuuskehotteita.
+</Tip>
+
+### Kaikki alustat — lataa julkaisuista
+
+Lataa uusin asennusohjelma alustallesi [Boltin julkaisusivulta](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Alusta | Asennusohjelman tyyppi |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe`-asennusohjelma |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Windowsissa Bolt sisältää WSL (Windows Subsystem for Linux) -integraation. Kun WSL on käytettävissä, Bolt voi avata istuntoja suoraan WSL-jakelusi sisällä — antaen sinulle Linux-natiivin agenttiympäristön natiivilla Windows-käyttöliittymällä ympärillä.
+</Note>
+
+---
+
+## Ominaisuudet
+
+### Moni-ikkuna- ja moni-välilehtiistuntojen hallinta
+
+Avaa niin monta ikkunaa kuin haluat, kussakin omat välilehdet. Välilehdet mäppäytyvät suoraan Bolt-istuntoihin, joten voit ajaa agenttia refaktoroinnissa yhdellä välilehdellä, kysyä kysymystä toisella ja ajaa taustatyötä kolmannella — kaikki samanaikaisesti.
+
+### Kehotelaatija
+
+Kehotelaatija tukee rikasta syötettä: liitä tekstiä, raahaa tiedostoja liitteiksi tai liitä kuva suoraan leikepöydältä. Bolt koodaa kuvan ja lähettää sen automaattisesti mille tahansa vision-kykyiselle mallille.
+
+### Integroitu terminaali ja tiedostopuu
+
+Jaettu paneeliasettelu antaa agenttikeskustelun yhdellä puolella ja live-terminaalin ja projektin tiedostopuun toisella. Voit suorittaa komentoja, tarkastella tulostetta ja syöttää tulokset takaisin agentille ilman sovellusten vaihtoa.
+
+### Komentopaletti
+
+Paina `Cmd/Ctrl+K` avataksesi komentopaletin. Täältä voit vaihtaa istuntoja, muuttaa agentteja, avata asetuksia tai käynnistää minkä tahansa toimenpiteen ilman hiirtä.
+
+### Täysi asetusten käyttöliittymä
+
+Asetuspaneeli kattaa jokaisen tiedostossa `.bolt/bolt.jsonc` olevan vaihtoehdon — näppäinsidokset, mallin valinta, LLM-tarjoajat, MCP-palvelimet ja todennus — pudotusvalikoineen, kytkiminen ja inline-validoinnilla. Konfigurointitiedostoa tarvitsee harvoin muokata käsin.
+
+### Natiivit ilmoitukset
+
+Bolt laukaisee natiivin käyttöjärjestelmän ilmoituksen, kun pitkäkestoinen tehtävä valmistuu. Napsauta ilmoitusta hypätäksesi suoraan istuntoon.
+
+### Syvälinkit
+
+Avaa tietty istunto navigoimalla `bolt://`-URL:iin. Hyödyllinen istuntolinkkien jakamiseen tiimiläisten kanssa tai keskeneräisen työn merkitsemiseen kirjanmerkkeihin.
+
+### Automaattiset päivitykset
+
+Työpöytäsovellus päivittää itsensä kolmen kanavan välillä:
+
+| Kanava | Kuvaus |
+|---------|-------------|
+| `prod` | Vakaat julkaisut, päivitetään jokaisella tuotantotagilla |
+| `beta` | Esijulkaisubuildit varhaista pääsyä uusiin ominaisuuksiin varten |
+| `dev` | Iltabuildit `dev`-haarasta |
+
+Vaihda kanavia asetuksissa **Settings → About**.
+
+### 28 käyttöliittymän kieltä
+
+Boltin käyttöliittymä on lokalisoitu 28 kielelle. Vaihda näyttökieltä asetuksissa **Settings → Appearance → Language**.
+
+---
+
+## Liittyvät dokumentit
+
+<CardGroup cols={2}>
+  <Card title="Etäistunnot" icon="server" href="/server/remote-sessions">
+    Aja päätön palvelin etäkoneella ja liity siihen työpöytäsovelluksesta tai CLI:stä.
+  </Card>
+  <Card title="MCP-palvelimet" icon="plug" href="/extending/mcp-servers">
+    Lisää ulkoisia työkaluja ja API:ja agenteillesi käyttäen Model Context Protocolia.
+  </Card>
+  <Card title="Laajennukset" icon="puzzle-piece" href="/extending/plugins">
+    Laajenna Boltia mukautetuilla tarjoajilla, todennusmenetelmillä ja työtila-adaptereilla.
+  </Card>
+  <Card title="GitHub-integraatio" icon="github" href="/server/github-actions">
+    Automatisoi PR:t, commit-viestit ja koodikatselmointi työpöytäsovelluksesta tai CI:stä.
+  </Card>
+</CardGroup>

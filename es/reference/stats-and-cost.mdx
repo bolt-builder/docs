@@ -1,0 +1,32 @@
+---
+title: "Estadísticas y coste (bolt stats)"
+sidebarTitle: "Estadísticas y coste"
+description: "bolt stats agrega el uso de tokens y el coste entre tus sesiones para que puedas ver a dónde va tu gasto y ajustar modelos o agentes en consecuencia."
+---
+
+`bolt stats` agrega los recuentos de tokens y el coste a través de la base de datos local de sesiones. Como cada llamada a herramienta queda registrada (consulta [Base de datos local](/reference/local-database)), los números son exactos para las llamadas a LLM que orquestó Bolt.
+
+## Uso básico
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Qué muestra
+
+- Tokens totales de entrada, salida y caché.
+- Coste estimado por proveedor (usando las tablas de precios del proveedor en el momento de la ejecución).
+- Desgloses por modelo, por agente y por día en función de los flags.
+
+## Reducir el coste
+
+- Usa `--variant minimal` o `--variant low` en modelos con razonamiento pesado. Consulta [Proveedores y modelos](/concepts/providers-and-models).
+- Prefiere el agente `ask` o `plan` para exploración; son de solo lectura y evitan bucles con muchas herramientas.
+- Cambia a un modelo más pequeño con `bolt models` para tareas que no necesitan capacidad de frontera.
+
+## Relacionado
+
+- [Proveedores y modelos](/concepts/providers-and-models) — elige y ajusta los modelos que `stats` mide.
+- [Resolución de problemas](/reference/troubleshooting) — qué hacer ante una factura sorpresa.

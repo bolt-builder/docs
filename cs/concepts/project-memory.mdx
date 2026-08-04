@@ -1,0 +1,46 @@
+---
+title: "Paměť projektu: trvalý kontext napříč sezeními Boltu"
+sidebarTitle: "Paměť projektu"
+description: "Bolt na konci každého tahu zachytí, co se o tvém projektu naučil, a vloží to do nových sezení, aby se agent nemusel pokaždé učit tvou kódovou základnu od začátku."
+---
+
+Paměť projektu je to, co Boltu dává pocit, že už tvůj projekt zná. Když sezení dokončí tah, Bolt destiluje, co bylo užitečné, a zapíše to do úložiště paměti na úrovni projektu. Když otevřeš nové sezení, Bolt vloží do systémového promptu index paměti spolu s posledním digestem sezení, takže agent začíná se skutečným kontextem místo čisté tabule.
+
+## Jak funguje zachytávání
+
+Na konci každého konverzačního tahu Bolt požádá model, aby shrnul trvalé skutečnosti, které se budou hodit příště: konvence, poznámky k architektuře, uspořádání souborů, build/test příkazy, záludnosti a otevřená vlákna. Ty jsou zapsány na disk pod adresář paměti projektu, spolu s klouzavým digestem nejnovějšího sezení.
+
+Paměť je na úrovni projektu. Dva checkouty téhož repozitáře na stejném stroji sdílejí paměť; nesouvisející projekty do paměti navzájem nikdy nevidí.
+
+## Explicitní nástroje
+
+Agenti mohou také číst a zapisovat do paměti přímo během sezení:
+
+- `memory_save` — zaznamenat konkrétní fakt, který si má agent příště pamatovat.
+- `memory_recall` — vyhledat něco, co agent (nebo ty) předtím zachytil.
+
+Můžeš agentovi říct „remember that we use pnpm, not npm“ a on za tebe zavolá `memory_save`.
+
+## Ovládací prvky na úrovni sezení
+
+Uvnitř TUI můžeš chování paměti pro aktuální sezení přepínat slash příkazy:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+To se hodí, když chceš jednorázové explorativní sezení, které neznečistí tvou paměť, nebo sezení pouze pro čtení, které přesto těží z předchozího kontextu.
+
+## Prohlížení a editace paměti
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Paměť je uložena jako obyčejné soubory na disku pod datovým adresářem Boltu pro daný projekt, takže záznamy můžeš greppovat, editovat nebo mazat přímo. Přesnou cestu na tvém stroji zjistíš spuštěním `bolt debug paths`.
+
+## Související
+
+- [Sezení](/concepts/sessions) — trvalé konverzace, které produkují záznamy paměti.
+- [Konfigurace](/concepts/configuration) — kde je paměť uložena a jak přepsat cestu.

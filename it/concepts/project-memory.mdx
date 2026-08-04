@@ -1,0 +1,46 @@
+---
+title: "Memoria di progetto: contesto persistente tra le sessioni Bolt"
+sidebarTitle: "Memoria di progetto"
+description: "Bolt cattura ciò che apprende sul tuo progetto alla fine di ogni turno e lo inietta nelle nuove sessioni, così l'agente non deve riapprendere il tuo codebase ogni volta."
+---
+
+La memoria di progetto è ciò che fa sembrare che Bolt conosca già il tuo progetto. Quando una sessione conclude il suo turno, Bolt distilla ciò che è stato utile e lo scrive in un archivio di memoria per progetto. Quando apri una nuova sessione, Bolt inietta un indice di memoria più il digest della sessione più recente nel prompt di sistema, in modo che l'agente inizi con un contesto reale invece che da una tabula rasa.
+
+## Come funziona la cattura
+
+Alla chiusura di ogni turno di conversazione, Bolt chiede al modello di riassumere fatti duraturi che saranno utili la prossima volta: convenzioni, note sull'architettura, layout dei file, comandi di build/test, insidie e thread aperti. Questi vengono scritti su disco nella directory di memoria del progetto, insieme a un digest continuo della sessione più recente.
+
+La memoria è per progetto. Due checkout dello stesso repository sulla stessa macchina condividono la memoria; progetti non correlati non vedono mai la memoria l'uno dell'altro.
+
+## Strumenti espliciti
+
+Gli agenti possono anche leggere e scrivere direttamente in memoria durante una sessione:
+
+- `memory_save` — registra un fatto specifico che l'agente dovrebbe ricordare la prossima volta.
+- `memory_recall` — cerca qualcosa che l'agente (o tu) hai catturato in precedenza.
+
+Puoi chiedere all'agente di "ricordare che usiamo pnpm, non npm" e chiamerà `memory_save` per te.
+
+## Controlli per sessione
+
+All'interno del TUI puoi attivare/disattivare il comportamento della memoria per la sessione corrente con i comandi slash:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Utile quando vuoi una sessione esplorativa usa e getta che non inquini la tua memoria, o una sessione in sola lettura che tragga comunque beneficio dal contesto precedente.
+
+## Ispezionare e modificare la memoria
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+La memoria viene memorizzata come file semplici su disco nella directory dati di Bolt del progetto, quindi puoi cercare con grep, modificare o eliminare voci direttamente. Per trovare il percorso esatto sulla tua macchina, esegui `bolt debug paths`.
+
+## Correlati
+
+- [Sessioni](/concepts/sessions) — le conversazioni durature che producono voci di memoria.
+- [Configurazione](/concepts/configuration) — dove viene memorizzata la memoria e come sovrascrivere il percorso.

@@ -1,0 +1,46 @@
+---
+title: "Project Memory: Konteks Persisten Lintas Sesi Bolt"
+sidebarTitle: "Project Memory"
+description: "Bolt menangkap apa yang dipelajarinya tentang proyek kamu di akhir setiap giliran dan menyuntikkannya ke sesi baru sehingga agent tidak perlu mempelajari basis kode kamu dari awal setiap kali."
+---
+
+Project memory adalah yang membuat Bolt terasa seperti sudah mengenal proyek kamu. Ketika sebuah sesi mengakhiri gilirannya, Bolt menyaring apa yang berguna dan menuliskannya ke penyimpanan memory per-proyek. Ketika kamu membuka sesi baru, Bolt menyuntikkan indeks memory ditambah digest sesi terbaru ke dalam system prompt sehingga agent memulai dengan konteks nyata alih-alih papan kosong.
+
+## Cara penangkapan bekerja
+
+Di akhir setiap giliran percakapan, Bolt meminta model untuk merangkum fakta-fakta tahan lama yang akan berguna lain kali: konvensi, catatan arsitektur, tata letak file, perintah build/tes, jebakan, dan thread yang terbuka. Ini ditulis ke disk di bawah direktori memory proyek, bersama dengan digest bergulir dari sesi terbaru.
+
+Memory bersifat per-proyek. Dua checkout dari repo yang sama di mesin yang sama berbagi memory; proyek yang tidak terkait tidak pernah melihat memory satu sama lain.
+
+## Tool eksplisit
+
+Agent juga dapat membaca dan menulis memory secara langsung selama sesi:
+
+- `memory_save` — merekam fakta spesifik yang harus diingat agent lain kali.
+- `memory_recall` — mencari sesuatu yang sebelumnya ditangkap agent (atau kamu).
+
+Kamu dapat meminta agent untuk "ingat bahwa kita menggunakan pnpm, bukan npm" dan agent akan memanggil `memory_save` untuk kamu.
+
+## Kontrol per-sesi
+
+Di dalam TUI kamu dapat mengaktifkan perilaku memory untuk sesi saat ini dengan slash command:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Ini berguna ketika kamu menginginkan sesi eksplorasi sekali pakai yang tidak mencemari memory kamu, atau sesi hanya-baca yang tetap mendapat manfaat dari konteks sebelumnya.
+
+## Memeriksa dan mengedit memory
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Memory disimpan sebagai file biasa di disk di bawah direktori data Bolt proyek, sehingga kamu dapat grep, mengedit, atau menghapus entri secara langsung. Untuk menemukan path yang tepat di mesin kamu, jalankan `bolt debug paths`.
+
+## Terkait
+
+- [Sessions](/concepts/sessions) — percakapan tahan lama yang menghasilkan entri memory.
+- [Configuration](/concepts/configuration) — di mana memory disimpan dan cara meng-override path-nya.

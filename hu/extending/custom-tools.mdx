@@ -1,0 +1,36 @@
+---
+title: "Egyedi eszközök a Bolt-ban"
+sidebarTitle: "Egyedi eszközök"
+description: "Adj hozzá projekt-specifikus eszközöket a Bolt-hoz úgy, hogy futtatható fájlokat teszel a .opencode/tool/ mappába. Minden fájlból egy olyan eszköz lesz, amelyet az ügynök meghívhat."
+---
+
+Az egyedi eszközök lehetővé teszik, hogy bármit, amit szkriptelhetsz (shell szkriptek, Node/Bun/Python programok, kisebb binárisok), olyan eszközként tegyél elérhetővé, amelyet az ügynök név szerint meghívhat. Ez a legegyszerűbb módja annak, hogy hozzáférést adj a Bolt-nak a projekted saját build-, deploy- vagy adat-munkafolyamataihoz.
+
+## Hol élnek
+
+Dobj fájlokat az alábbi mappák egyikébe:
+
+- `.opencode/tool/` — projekt-hatókörű, a repóba commitolva.
+- `.opencode/tools/` — a fenti aliasaként elfogadott.
+
+Minden fájlból egy olyan eszköz lesz, amelynek neve a fájl neve (a kiterjesztés nélkül). Az eszközöket a Bolt automatikusan felveszi a következő indításnál.
+
+## Egy eszköz anatómiája
+
+Egy egyedi eszköz egy fejlécben deklarálja a nevét, leírását és bemeneti sémáját, majd megvalósítja a viselkedést. A pontos alak a választott futtatókörnyezettől függ (shell szkript, TypeScript stb.), de minden eszköznek:
+
+1. Hirdetnie kell egy JSON Schema-t a bemeneteihez, hogy a modell tudja, hogyan hívja meg.
+2. Vissza kell adnia egy értéket (vagy hibát), amelyet a Bolt meg tud jeleníteni a TUI-ban, és vissza tud adni a modellnek.
+
+Betöltés után az eszköz megjelenik az ügynök eszközlistáján a beépített eszközök, például a `bash` és `grep` mellett, és ugyanaz a [jogosultsági](/concepts/permissions) rendszer korlátozza.
+
+## Mikor használj egyedi eszközt MCP-szerver helyett
+
+- **Egyedi eszköz** — kicsi, projekt-specifikus, nincs projektek közötti újrahasználat. Gyors megírni.
+- **MCP-szerver** — projektek között megosztott, vagy egy valódi külső szolgáltatást csomagol hitelesítéssel. Lásd: [MCP-szerverek](/extending/mcp-servers).
+- **Plugin-eszköz** — npm-csomagként terjesztett, más bővítési pontokkal együtt. Lásd: [Pluginek](/extending/plugins).
+
+## Kapcsolódó
+
+- [Eszközök](/concepts/tools) — beépített eszköz-referencia.
+- [Pluginek](/extending/plugins) — az eszközök és több más bővítési felülete.

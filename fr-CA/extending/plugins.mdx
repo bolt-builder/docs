@@ -1,0 +1,145 @@
+---
+title: "Étendre Bolt avec des greffons"
+sidebarTitle: "Greffons"
+description: "Installez et créez des greffons Bolt pour ajouter des fournisseurs IA personnalisés, des méthodes d'authentification, des outils et des adaptateurs d'espace de travail à tout projet ou globalement."
+url: "extending/plugins"
+---
+
+Les greffons vous permettent d'étendre Bolt au-delà de ses capacités intégrées. Un greffon est un module Node ou Bun qui exporte un manifeste de greffon Bolt; une fois chargé, il peut enregistrer de nouveaux fournisseurs LLM, des méthodes d'authentification personnalisées, des outils supplémentaires et des adaptateurs d'espace de travail. Les greffons peuvent être installés pour un projet unique ou appliqués globalement à tout votre travail.
+
+## Installer un greffon
+
+Utilisez `bolt plugin install` (alias : `bolt plug`) pour installer un greffon depuis npm et l'enregistrer automatiquement dans votre configuration :
+
+```bash
+bolt plugin install <module>
+```
+
+### Indicateurs
+
+| Indicateur | Alias | Description |
+|------|-------|-------------|
+| `--global` | `-g` | Installe dans la configuration globale au lieu du projet courant |
+| `--force` | `-f` | Remplace une entrée existante pour le même module |
+
+### Portée : projet ou global
+
+Par défaut, `bolt plugin install` ajoute le greffon au `.bolt/bolt.jsonc` au niveau du projet. Passez `--global` pour l'ajouter à votre configuration à l'échelle de l'utilisateur afin qu'il soit chargé dans chaque projet.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Exécutez `bolt --pure` (ou définissez `OPENCODE_PURE=1`) pour démarrer Bolt avec tous les greffons externes désactivés. C'est utile pour déboguer si un greffon cause un comportement inattendu, sans le désinstaller.
+</Note>
+
+---
+
+## Installer un greffon publié
+
+<Steps>
+  <Step title="Trouver le paquet du greffon">
+    Cherchez dans npm des paquets ayant `bolt-plugin` ou `opencode-plugin` dans leur nom, ou suivez un lien depuis la documentation d'un fournisseur.
+  </Step>
+
+  <Step title="Installer dans votre projet">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt installe le paquet, lit son manifeste pour détecter les cibles serveur et TUI, puis écrit l'entrée dans `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Vérifier la configuration">
+    Ouvrez `.bolt/bolt.jsonc` et confirmez que l'entrée de greffon a été ajoutée :
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Démarrer une session">
+    ```bash
+    bolt
+    ```
+
+    Bolt charge le greffon au démarrage. Tout fournisseur ou outil qu'il enregistre est immédiatement disponible.
+  </Step>
+</Steps>
+
+---
+
+## Configuration manuelle des greffons
+
+Vous pouvez enregistrer des greffons en modifiant directement `.bolt/bolt.jsonc`. C'est utile pour les greffons locaux en cours de développement :
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Les chemins relatifs sont résolus à partir de la racine du projet. Les points d'entrée TypeScript et JavaScript sont tous deux pris en charge.
+
+---
+
+## Construire un greffon
+
+Les greffons sont créés avec le paquet `@opencode-ai/plugin`, qui fournit l'interface `Hooks` que votre module doit satisfaire.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Un greffon minimal exporte une fonction qui reçoit un objet `PluginInput` et retourne un objet `Hooks` :
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Types de hooks disponibles
+
+| Hook | Rôle |
+|------|---------|
+| `auth` | Enregistrer des fournisseurs d'authentification personnalisés avec un tableau `methods` |
+| `event` | Réagir aux événements de session (messages, appels d'outils, achèvements) |
+| `config` | Répondre aux changements de configuration à l'exécution |
+| `dispose` | Nettoyer les ressources quand le greffon est déchargé |
+
+L'objet `PluginInput` expose le `client` (un client d'API Bolt typé), `project`, `worktree`, `directory` et `serverUrl` afin que votre greffon puisse interagir avec le serveur en cours d'exécution.
+
+---
+
+## Variables d'environnement
+
+| Variable | Description |
+|----------|-------------|
+| `OPENCODE_PURE` | Réglez à `1` pour exécuter sans aucun greffon externe |

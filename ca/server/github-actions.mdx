@@ -1,0 +1,179 @@
+---
+title: "Integració amb GitHub: Actions, PRs i revisió d'IA"
+sidebarTitle: "GitHub Actions"
+description: "Executa Bolt dins de GitHub Actions, fes checkout de PRs localment, genera missatges de commit amb IA i controla les fusions amb revisió de codi impulsada per IA i codis de sortida."
+url: "server/github-actions"
+---
+
+Bolt inclou quatre ordres que connecten el teu flux de treball diari de Git amb la IA: un agent de GitHub Actions que pots instal·lar amb una sola ordre, una drecera per fer checkout de pull requests, un generador de missatges de commit d'IA i un revisor de codi d'IA amb codis de sortida llegibles per màquina. Junts, et permeten portar Bolt a cada etapa del desenvolupament — codificació local, revisió de PR i integració contínua.
+
+---
+
+## `bolt github`
+
+Gestiona l'agent de GitHub Actions que executa Bolt en esdeveniments de CI.
+
+### `bolt github install`
+
+Instal·la el workflow de GitHub Actions al repositori actual. Això escriu el YAML del workflow a `.github/workflows/` de manera que Bolt s'inicia automàticament en comentaris d'incidència, nous pull requests o altres esdeveniments que configuris.
+
+```bash
+bolt github install
+```
+
+Executa això des de l'arrel d'un repositori git. Necessitaràs accés d'escriptura a `.github/workflows/`.
+
+### `bolt github run`
+
+Executa l'agent de GitHub localment o dins d'un pas de CI, reproduint una càrrega útil d'esdeveniment de GitHub específica.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flag | Descripció |
+|------|-------------|
+| `--event <event>` | Nom de l'esdeveniment de GitHub o ruta a una càrrega útil d'esdeveniment JSON |
+| `--token <pat>` | Token d'accés personal de GitHub (`github_pat_…`) utilitzat per publicar comentaris i obtenir context |
+
+---
+
+## Configurar l'agent de GitHub Actions
+
+<Steps>
+  <Step title="Instal·la el workflow">
+    Des de l'arrel del teu repositori:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt escriu un fitxer de workflow de GitHub Actions a `.github/workflows/`. Fes commit i push del fitxer.
+  </Step>
+
+  <Step title="Afegeix la teva clau API com a secret">
+    A la configuració del teu repositori, afegeix la clau API per al teu proveïdor LLM preferit com a secret del repositori (per exemple, `ANTHROPIC_API_KEY`). El workflow la recollirà automàticament.
+  </Step>
+
+  <Step title="Activa l'agent">
+    Comenta `/bolt <la teva sol·licitud>` en qualsevol incidència o pull request. El workflow es dispara, Bolt llegeix la càrrega útil de l'esdeveniment i publica una resposta amb el resultat.
+  </Step>
+
+  <Step title="Executa localment per a depuració">
+    Reprodueix una càrrega útil d'esdeveniment en viu d'una execució de workflow anterior:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Fes checkout d'un pull request de GitHub en una branca local i llança Bolt en aquesta branca — llest per revisar, depurar o continuar el treball des d'on l'autor del PR ho va deixar.
+
+```bash
+bolt pr 42
+```
+
+Bolt utilitza la CLI `gh` per obtenir el PR, crea una branca anomenada `pr/<number>` i configura la referència de seguiment ascendent. Per a PRs entre repositoris (fork), afegeix el fork com a remot automàticament. Si la descripció del PR conté una URL de sessió compartida de Bolt (`opncd.ai/s/…`), la sessió s'importa perquè puguis continuar la conversa de l'autor.
+
+> Requereix que la [CLI de GitHub (`gh`)](https://cli.github.com/) estigui instal·lada i autenticada.
+
+---
+
+## `bolt commit`
+
+Genera un missatge de commit a partir dels teus canvis preparats (o de tots els seguits) i fa commit en un sol pas.
+
+```bash
+bolt commit
+```
+
+Bolt fa diff dels teus canvis, alimenta el diff a l'agent `commit` juntament amb els assumptes de commit recents com a referència d'estil, i executa `git commit -m <message>` amb el resultat.
+
+### Flags
+
+| Flag | Àlies | Descripció |
+|------|-------|-------------|
+| `--all` | `-a` | Fa commit de tots els canvis seguits, no només dels preparats (equivalent a `git commit -a`) |
+| `--dry-run` | | Imprimeix el missatge generat sense fer commit |
+| `--model <provider/model>` | `-m` | Sobreescriu el model utilitzat per generar el missatge |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Utilitza `bolt commit --dry-run` per previsualitzar el missatge generat abans que es faci commit. Si vols editar-lo, copia la sortida i executa `git commit -m "…"` amb la teva redacció ajustada.
+</Tip>
+
+---
+
+## `bolt review`
+
+Executa l'agent `code-review` contra un diff i surt amb un veredicte llegible per màquina. La línia final de la revisió sempre és `Verdict: PASS` o `Verdict: FAIL`, fent que `bolt review` sigui llest per a canonades CI.
+
+```bash
+bolt review
+```
+
+Per defecte, `bolt review` fa diff de `HEAD` contra l'arbre de treball. Utilitza els flags a continuació per delimitar el diff.
+
+### Flags
+
+| Flag | Àlies | Descripció |
+|------|-------|-------------|
+| `--staged` | | Revisa només els canvis preparats |
+| `--branch <name>` | | Revisa els canvis des de la base de fusió amb la branca anomenada (per defecte la branca predeterminada del repositori) |
+| `--model <provider/model>` | `-m` | Model a utilitzar per a la revisió |
+
+### Codis de sortida
+
+| Codi | Significat |
+|------|---------|
+| `0` | `Verdict: PASS` — cap problema crític o major |
+| `1` | `Verdict: FAIL` — s'han trobat un o més problemes crítics o majors |
+| `2` | El veredicte no s'ha pogut determinar de la resposta |
+
+### Ús en un workflow de GitHub Actions
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Un codi de sortida no zero fa fallar la comprovació, bloquejant la fusió fins que es resolen els problemes.
+
+<Tip>
+  Executa `bolt review --staged` abans de fer commit per detectar problemes mentre encara són fàcils de canviar — abans que arribin mai a un pull request.
+</Tip>

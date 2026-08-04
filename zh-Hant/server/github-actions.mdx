@@ -1,0 +1,179 @@
+---
+title: "GitHub 整合:Actions、PR 與 AI 審查"
+sidebarTitle: "GitHub Actions"
+description: "在 GitHub Actions 內執行 Bolt、在本機簽出 PR、產生 AI 提交訊息,並使用 AI 驅動的程式碼審查與退出碼把關合併。"
+url: "server/github-actions"
+---
+
+Bolt 提供四個命令,將你每天的 Git 工作流程與 AI 連接起來:一個可用單一命令安裝的 GitHub Actions 代理、簽出 pull request 的捷徑、AI 提交訊息產生器,以及具備機器可讀退出碼的 AI 程式碼審查器。它們一起讓你可以把 Bolt 帶入開發的每個階段 — 本機編程、PR 審查與持續整合。
+
+---
+
+## `bolt github`
+
+管理在 CI 事件上執行 Bolt 的 GitHub Actions 代理。
+
+### `bolt github install`
+
+將 GitHub Actions workflow 安裝到目前儲存庫。這會將 workflow YAML 寫入 `.github/workflows/`,讓 Bolt 在 issue 留言、新的 pull request 或你設定的其他事件上自動啟動。
+
+```bash
+bolt github install
+```
+
+從 git 儲存庫根目錄執行。你會需要 `.github/workflows/` 的寫入權限。
+
+### `bolt github run`
+
+在本機或 CI 步驟內執行 GitHub 代理,重播特定的 GitHub 事件酬載。
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| 旗標 | 描述 |
+|------|-------------|
+| `--event <event>` | GitHub 事件名稱或 JSON 事件酬載的路徑 |
+| `--token <pat>` | 用於發布留言與擷取上下文的 GitHub 個人存取權杖(`github_pat_…`) |
+
+---
+
+## 設定 GitHub Actions 代理
+
+<Steps>
+  <Step title="安裝 workflow">
+    從儲存庫根目錄:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt 會將 GitHub Actions workflow 檔案寫入 `.github/workflows/`。提交並推送該檔案。
+  </Step>
+
+  <Step title="將 API 金鑰新增為 secret">
+    在儲存庫設定中,將你偏好 LLM 供應商的 API 金鑰新增為儲存庫 secret(例如 `ANTHROPIC_API_KEY`)。workflow 會自動接收它。
+  </Step>
+
+  <Step title="觸發代理">
+    在任何 issue 或 pull request 上留言 `/bolt <your request>`。workflow 會啟動,Bolt 讀取事件酬載並回覆結果。
+  </Step>
+
+  <Step title="在本機執行以除錯">
+    重播先前 workflow 執行的即時事件酬載:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+將 GitHub pull request 簽出為本機分支並在該分支中啟動 Bolt — 可以從 PR 作者停下的地方繼續審查、除錯或工作。
+
+```bash
+bolt pr 42
+```
+
+Bolt 使用 `gh` CLI 擷取 PR、建立名為 `pr/<number>` 的分支,並連接上游追蹤 ref。對於跨儲存庫(fork)的 PR,它會自動將 fork 加為 remote。若 PR 描述包含分享的 Bolt 工作階段 URL(`opncd.ai/s/…`),該工作階段會被匯入,讓你可以繼續作者的對話。
+
+> 需要 [GitHub CLI (`gh`)](https://cli.github.com/) 已安裝並已驗證。
+
+---
+
+## `bolt commit`
+
+從你 staged(或所有追蹤中)的變更產生提交訊息,並一步完成提交。
+
+```bash
+bolt commit
+```
+
+Bolt 會 diff 你的變更、將 diff 連同最近的提交主旨作為風格參考一併送到 `commit` 代理,然後使用結果執行 `git commit -m <message>`。
+
+### 旗標
+
+| 旗標 | 別名 | 描述 |
+|------|-------|-------------|
+| `--all` | `-a` | 提交所有追蹤中的變更,而不只是 staged 的(相當於 `git commit -a`) |
+| `--dry-run` | | 列印產生的訊息而不提交 |
+| `--model <provider/model>` | `-m` | 覆寫用於產生訊息的模型 |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  使用 `bolt commit --dry-run` 在提交前預覽產生的訊息。若你想編輯它,複製輸出並以你調整過的文字執行 `git commit -m "…"`。
+</Tip>
+
+---
+
+## `bolt review`
+
+在差異上執行 `code-review` 代理並以機器可讀的判定退出。審查的最後一行永遠是 `Verdict: PASS` 或 `Verdict: FAIL`,讓 `bolt review` 可直接用於 CI pipeline。
+
+```bash
+bolt review
+```
+
+預設情況下,`bolt review` 會 diff `HEAD` 與工作樹。使用下方旗標劃分 diff 範圍。
+
+### 旗標
+
+| 旗標 | 別名 | 描述 |
+|------|-------|-------------|
+| `--staged` | | 只審查 staged 變更 |
+| `--branch <name>` | | 審查自與指定分支合併基底以來的變更(預設為儲存庫的預設分支) |
+| `--model <provider/model>` | `-m` | 用於審查的模型 |
+
+### 退出碼
+
+| 碼 | 意義 |
+|------|---------|
+| `0` | `Verdict: PASS` — 沒有嚴重或重大問題 |
+| `1` | `Verdict: FAIL` — 找到一或多個嚴重或重大問題 |
+| `2` | 無法從回應中決定判定 |
+
+### 在 GitHub Actions workflow 中使用
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+非零退出碼會讓檢查失敗,在問題被解決前阻擋合併。
+
+<Tip>
+  提交前執行 `bolt review --staged` 可在問題還容易修改的階段就抓出來 — 在它們到達 pull request 之前。
+</Tip>

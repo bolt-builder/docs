@@ -1,0 +1,145 @@
+---
+title: "Estenda o Bolt com plugins"
+sidebarTitle: "Plugins"
+description: "Instale e crie plugins do Bolt para adicionar provedores de IA personalizados, métodos de autenticação, ferramentas e adaptadores de workspace a qualquer projeto ou globalmente."
+url: "extending/plugins"
+---
+
+Plugins permitem que você estenda o Bolt além de suas capacidades nativas. Um plugin é um módulo Node ou Bun que exporta um manifesto de plugin do Bolt; quando carregado, ele pode registrar novos provedores de LLM, métodos personalizados de autenticação, ferramentas adicionais e adaptadores de workspace. Plugins podem ser instalados para um único projeto ou aplicados globalmente em todo o seu trabalho.
+
+## Instalando um plugin
+
+Use `bolt plugin install` (alias: `bolt plug`) para instalar um plugin do npm e registrá-lo automaticamente na sua config:
+
+```bash
+bolt plugin install <module>
+```
+
+### Flags
+
+| Flag | Alias | Descrição |
+|------|-------|-------------|
+| `--global` | `-g` | Instalar na config global em vez do projeto atual |
+| `--force` | `-f` | Substituir uma entrada existente para o mesmo módulo |
+
+### Escopo: projeto vs. global
+
+Por padrão, `bolt plugin install` adiciona o plugin ao `.bolt/bolt.jsonc` em nível de projeto. Passe `--global` para adicioná-lo à sua config por usuário para que ele carregue em cada projeto.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Execute `bolt --pure` (ou defina `OPENCODE_PURE=1`) para iniciar o Bolt com todos os plugins externos desabilitados. Isso é útil para depurar se um plugin está causando comportamento inesperado, sem desinstalá-lo.
+</Note>
+
+---
+
+## Instalando um plugin publicado
+
+<Steps>
+  <Step title="Encontre o pacote do plugin">
+    Pesquise no npm por pacotes com `bolt-plugin` ou `opencode-plugin` no nome ou siga um link da documentação de um provedor.
+  </Step>
+
+  <Step title="Instale no seu projeto">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    O Bolt instala o pacote, lê seu manifesto para detectar destinos de servidor e TUI e, em seguida, grava a entrada em `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Verifique a config">
+    Abra `.bolt/bolt.jsonc` e confirme que a entrada do plugin foi adicionada:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Inicie uma sessão">
+    ```bash
+    bolt
+    ```
+
+    O Bolt carrega o plugin na inicialização. Quaisquer provedores ou ferramentas que ele registrar estarão imediatamente disponíveis.
+  </Step>
+</Steps>
+
+---
+
+## Configuração manual de plugin
+
+Você pode registrar plugins editando `.bolt/bolt.jsonc` diretamente. Isso é útil para plugins locais em desenvolvimento:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Caminhos relativos são resolvidos a partir da raiz do projeto. Tanto entry points em TypeScript quanto em JavaScript são suportados.
+
+---
+
+## Construindo um plugin
+
+Plugins são escritos contra o pacote `@opencode-ai/plugin`, que fornece a interface `Hooks` que seu módulo deve satisfazer.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Um plugin mínimo exporta uma função que recebe um objeto `PluginInput` e retorna um objeto `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Tipos de hooks disponíveis
+
+| Hook | Finalidade |
+|------|---------|
+| `auth` | Registrar provedores de autenticação personalizados com um array `methods` |
+| `event` | Reagir a eventos de sessão (mensagens, chamadas de ferramenta, conclusões) |
+| `config` | Responder a mudanças de configuração em tempo de execução |
+| `dispose` | Limpar recursos quando o plugin é descarregado |
+
+O objeto `PluginInput` expõe o `client` (um cliente tipado da API do Bolt), `project`, `worktree`, `directory` e `serverUrl` para que seu plugin possa interagir com o servidor em execução.
+
+---
+
+## Variáveis de ambiente
+
+| Variável | Descrição |
+|----------|-------------|
+| `OPENCODE_PURE` | Defina como `1` para executar sem quaisquer plugins externos |

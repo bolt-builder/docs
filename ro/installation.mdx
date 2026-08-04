@@ -1,0 +1,121 @@
+---
+title: "Instalează Bolt pe macOS, Linux sau Windows"
+sidebarTitle: "Instalare"
+description: "Instalează CLI-ul Bolt prin curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey sau Scoop. Acoperă actualizarea, dezinstalarea și aplicația desktop."
+---
+
+Bolt poate fi instalat pe macOS, Linux și Windows folosind metoda care se potrivește fluxului tău de lucru — un script curl pe o singură linie, orice manager de pachete Node.js major sau un manager de pachete de sistem precum Homebrew, Chocolatey sau Scoop.
+
+## Instalare rapidă (macOS / Linux)
+
+Cea mai rapidă modalitate de a începe este scriptul oficial de instalare. Detectează automat OS-ul și arhitectura, descarcă binarul corect în `~/.bolt/bin` și îl adaugă la `$PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Instalatorul configurează și dependențe opționale de intrare vocală (sox și whisper-cpp pentru transcriere offline). Pentru a sări peste asta, transmite `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Pentru a fixa o versiune specifică:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Manageri de pachete
+
+Instalează Bolt global cu managerul de pachete la alegere:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Verifică instalarea
+
+<Steps>
+  <Step title="Verifică versiunea instalată">
+    După instalare, confirmă că `bolt` este disponibil în `$PATH`:
+
+    ```bash
+    bolt --version
+    ```
+
+    Dacă comanda nu este găsită, deschide o nouă sesiune de terminal (sau reîncarcă configurarea shell-ului) pentru ca `$PATH`-ul actualizat să intre în vigoare.
+  </Step>
+</Steps>
+
+## Actualizarea
+
+Rulează `bolt upgrade` pentru a actualiza la cea mai recentă versiune:
+
+```bash
+bolt upgrade
+```
+
+Bolt detectează automat metoda ta originală de instalare. O poți suprascrie cu opțiunea `--method`:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Metodele acceptate sunt: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+De asemenea, poți actualiza la o versiune specifică transmițând versiunea ca argument pozițional:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Dezinstalarea
+
+Pentru a elimina Bolt de pe sistemul tău:
+
+```bash
+bolt uninstall
+```
+
+## Variabile de mediu
+
+| Variabilă              | Descriere                                                |
+| ---------------------- | -------------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Nivelul de detaliere al log-urilor: `DEBUG`, `INFO`, `WARN` sau `ERROR` |
+| `BOLT_PRINT_LOGS`      | Tipărește log-urile la stderr                            |
+| `BOLT_PURE`            | Rulează fără a încărca plugin-uri externe                |
+| `BOLT_SERVER_PASSWORD` | Parolă basic auth pentru serverul API headless           |
+| `BOLT_SERVER_USERNAME` | Nume de utilizator basic auth pentru serverul API headless |
+
+<Tip>
+  Setează `BOLT_PURE=1` atunci când vrei o rulare curată fără plugin-uri third-party — util pentru depanare sau medii CI controlate.
+</Tip>
+
+## Aplicația desktop
+
+<Note>
+  Bolt este livrat și ca o aplicație desktop nativă, cu gestionarea sesiunilor multi-fereastră, un terminal integrat și un arbore de fișiere, o paletă de comenzi, 28 de limbi de interfață și actualizări automate. Descarcă cea mai recentă versiune de pe [pagina de lansări](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  Pe macOS o poți instala într-o singură linie fără ocol prin Gatekeeper:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

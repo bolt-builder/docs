@@ -1,0 +1,32 @@
+---
+title: "Statistiky a náklady (bolt stats)"
+sidebarTitle: "Statistiky a náklady"
+description: "bolt stats agreguje spotřebu tokenů a náklady napříč tvými sezeními, takže vidíš, kam tvé výdaje jdou, a podle toho můžeš ladit modely nebo agenty."
+---
+
+`bolt stats` agreguje počty tokenů a náklady napříč lokální databází sezení. Protože je zaznamenáno každé volání nástroje (viz [Lokální databáze](/reference/local-database)), čísla jsou přesná pro LLM volání, která Bolt řídil.
+
+## Základní použití
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Co zobrazuje
+
+- Celkové vstupní, výstupní a cache tokeny.
+- Odhadované náklady na providera (podle cenových tabulek providera v době běhu).
+- Rozpisy podle modelu, podle agenta a podle dne v závislosti na přepínačích.
+
+## Snižování nákladů
+
+- Používej `--variant minimal` nebo `--variant low` na modelech s náročným reasoningem. Viz [Provideři a modely](/concepts/providers-and-models).
+- Pro průzkum preferuj agenta `ask` nebo `plan`; jsou pouze pro čtení a vyhýbají se smyčkám s velkým počtem nástrojů.
+- Přepni na menší model pomocí `bolt models` pro úlohy, které nepotřebují frontier schopnosti.
+
+## Související
+
+- [Provideři a modely](/concepts/providers-and-models) — vyber a lať modely, které `stats` měří.
+- [Řešení problémů](/reference/troubleshooting) — co dělat s překvapivou fakturou.

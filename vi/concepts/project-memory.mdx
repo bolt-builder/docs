@@ -1,0 +1,46 @@
+---
+title: "Bộ nhớ dự án: Ngữ cảnh bền vững qua các phiên Bolt"
+sidebarTitle: "Bộ nhớ dự án"
+description: "Bolt ghi lại những gì nó học được về dự án của bạn ở cuối mỗi lượt và đưa nó vào các phiên mới để agent không phải học lại codebase của bạn mỗi lần."
+---
+
+Bộ nhớ dự án là thứ khiến Bolt cảm giác như đã biết dự án của bạn từ trước. Khi một phiên kết thúc lượt của nó, Bolt chưng cất những gì hữu ích và ghi vào kho lưu trữ bộ nhớ theo từng dự án. Khi bạn mở phiên mới, Bolt đưa một chỉ mục bộ nhớ cùng với bản tổng hợp mới nhất của phiên vào system prompt để agent bắt đầu với ngữ cảnh thực thay vì một trang trắng.
+
+## Cách quá trình ghi lại hoạt động
+
+Ở cuối mỗi lượt hội thoại, Bolt yêu cầu mô hình tóm tắt các sự kiện bền vững sẽ hữu ích lần sau: quy ước, ghi chú kiến trúc, bố cục tệp, lệnh build/test, các bẫy và các luồng đang mở. Chúng được ghi vào đĩa dưới thư mục bộ nhớ của dự án, cùng với bản tổng hợp cuộn của phiên gần đây nhất.
+
+Bộ nhớ là theo từng dự án. Hai bản checkout của cùng một repo trên cùng một máy chia sẻ bộ nhớ; các dự án không liên quan không bao giờ thấy bộ nhớ của nhau.
+
+## Công cụ tường minh
+
+Agent cũng có thể đọc và ghi bộ nhớ trực tiếp trong một phiên:
+
+- `memory_save` — ghi lại một sự kiện cụ thể mà agent nên nhớ lần sau.
+- `memory_recall` — tra cứu thứ gì đó mà agent (hoặc bạn) đã ghi lại trước đó.
+
+Bạn có thể yêu cầu agent "hãy nhớ rằng chúng ta dùng pnpm, không phải npm" và nó sẽ gọi `memory_save` cho bạn.
+
+## Kiểm soát theo từng phiên
+
+Bên trong TUI bạn có thể bật/tắt hành vi bộ nhớ cho phiên hiện tại bằng các slash command:
+
+```text
+/memory use on|off         # phiên này có đọc bộ nhớ dự án hay không
+/memory contribute on|off  # phiên này có ghi ngược lại bộ nhớ hay không
+```
+
+Điều này hữu ích khi bạn muốn một phiên khám phá dùng-một-lần không làm ô nhiễm bộ nhớ, hoặc một phiên chỉ-đọc vẫn hưởng lợi từ ngữ cảnh trước đó.
+
+## Kiểm tra và chỉnh sửa bộ nhớ
+
+```bash
+bolt memory           # kiểm tra kho bộ nhớ cho dự án hiện tại
+```
+
+Bộ nhớ được lưu dưới dạng tệp thô trên đĩa dưới thư mục dữ liệu Bolt của dự án, nên bạn có thể grep, chỉnh sửa hoặc xóa các mục trực tiếp. Để tìm đường dẫn chính xác trên máy của bạn, chạy `bolt debug paths`.
+
+## Liên quan
+
+- [Phiên](/concepts/sessions) — các hội thoại bền vững sinh ra các mục bộ nhớ.
+- [Cấu hình](/concepts/configuration) — nơi bộ nhớ được lưu và cách ghi đè đường dẫn.

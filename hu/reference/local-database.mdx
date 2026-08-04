@@ -1,0 +1,38 @@
+---
+title: "Helyi adatbázis (bolt db)"
+sidebarTitle: "Helyi adatbázis"
+description: "A Bolt minden munkamenetet, üzenetet és eszközhívást egy helyi SQLite-adatbázisban tárol. Vizsgáld meg, készíts biztonsági másolatot, vagy kérdezd le közvetlenül a bolt db paranccsal."
+---
+
+A Bolt minden munkamenetet, üzenetet és eszközhívást egy helyi SQLite-adatbázisban tárol. Teljesen megvizsgálható és teljesen a tiéd — semmi nem kerül feltöltésre, hacsak nem osztasz meg kifejezetten egy munkamenetet.
+
+## Gyakori műveletek
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Biztonsági mentés
+
+Mivel egyetlen SQLite-fájl, a biztonsági mentés egy másolat:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Hosszú távú tároláshoz vagy szállításhoz inkább a `bolt export` / `bolt import` parancsokat használd — ezek egy hordozható JSON-reprezentációt hoznak létre, amely túléli a séma-migrációkat.
+
+## Séma áttekintés
+
+- `sessions` — egy sor munkamenetenként címmel, projekttel, időbélyegekkel és állapottal.
+- `messages` — a teljes fordulónapló munkamenetenként.
+- `tool_calls` — minden hívás bemenetekkel, kimenetekkel és időtartammal.
+
+A pontos oszlopok fejlődnek; használd a `PRAGMA table_info(<table>)` parancsot az élő séma megtekintéséhez.
+
+## Kapcsolódó
+
+- [Munkamenetek](/concepts/sessions) — mit tárol az adatbázis.
+- [Statisztikák és költségek](/reference/stats-and-cost) — aggregált nézetek ugyanezekre az adatokra.

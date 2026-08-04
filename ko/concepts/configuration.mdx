@@ -1,0 +1,193 @@
+---
+title: "Configuration — bolt.jsonc 설정 및 전역 재정의"
+sidebarTitle: "Configuration"
+description: "Bolt는 프로젝트와 OS 설정 디렉터리에서 계층화된 JSONC 설정 파일을 읽습니다. 프로바이더, MCP 서버, 지침, 플러그인, 환경 재정의를 설정하세요."
+---
+
+Bolt는 계층화된 구성 시스템을 사용합니다: 사용자 전역 기본값을 위한 **전역** 설정 파일과 저장소별 설정을 위한 **프로젝트별** 설정 파일. 두 파일 모두 JSONC 형식(주석이 있는 JSON)을 사용하며, 편집기 자동 완성을 활성화하는 `$schema` 포인터와 함께 자동으로 생성됩니다.
+
+## 설정 파일 위치
+
+### 프로젝트별 설정
+
+프로젝트 안에서 최초 실행 시 자동으로 생성됩니다:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+이 파일을 커밋하여 팀의 나머지 구성원과 프로바이더 구성, MCP 서버, 커스텀 지침을 공유하세요. 민감한 자격 증명은 여기에 절대 넣지 마세요 — 대신 환경 변수나 전역 설정을 사용하세요.
+
+### 전역 설정
+
+머신의 모든 프로젝트에 적용됩니다. Bolt는 OS 설정 디렉터리에서 일치하는 첫 번째 파일을 찾습니다:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (선호)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="전역 설정 디렉터리는 어디에 있나요?">
+  Bolt는 Linux 및 macOS에서 XDG Base Directory 규격(`~/.config/bolt/`)을, Windows에서는 `%APPDATA%\bolt\`를 따릅니다. 머신에서 완전히 해석된 구성을 출력하려면 `bolt debug config`를 실행하세요.
+</Accordion>
+
+## 최소 설정 예제
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` 필드는 JSON Schema를 지원하는 편집기에서 IntelliSense와 유효성 검사를 활성화합니다. Bolt는 이 필드가 없으면 자동으로 씁니다.
+
+## 구성 레퍼런스
+
+### `provider`
+
+커스텀 base URL, 리전 설정, 이름이 지정된 자격 증명 등 프로바이더별 옵션을 구성합니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+에이전트가 도구로 호출할 수 있는 [Model Context Protocol](https://modelcontextprotocol.io) 서버를 등록합니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+`bolt mcp add`, `bolt mcp list`, `bolt mcp auth`, `bolt mcp debug`로 MCP 서버를 대화형으로 관리하세요.
+
+### `instructions`
+
+모든 세션에 주입되는 커스텀 시스템 지침을 추가합니다. 코딩 규칙, 스타일 가이드, 프로젝트별 규칙을 강제하는 데 유용합니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+여러 설정 파일(전역 \+ 프로젝트)의 지침은 자동으로 병합 및 중복 제거됩니다.
+
+### `plugin`
+
+Bolt 플러그인을 로드합니다. 플러그인은 새로운 도구, 프로바이더, 컨텍스트 소스, 훅을 추가할 수 있습니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### `url`을 통한 원격 설정
+
+시작 시 원격 URL에서 설정을 가져옵니다. 중앙 집중식 팀 구성에 유용합니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## 변수 치환
+
+설정 값은 `$VAR_NAME` 또는 `${VAR_NAME}` 구문을 사용해 환경 변수를 참조할 수 있습니다. 치환은 설정이 파싱되기 전 로드 시점에 발생합니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="설정에서 환경 변수를 어떻게 사용하나요?">
+  문자열 설정 값의 어디에서든 `$VAR_NAME` 또는 `${VAR_NAME}`으로 어떤 환경 변수든 참조할 수 있습니다. Bolt는 로드 시점에 값을 치환합니다. 변수가 설정되어 있지 않으면 리터럴 문자열 `$VAR_NAME`이 사용됩니다 — Bolt는 누락된 치환에 대해 자동으로 실패하거나 오류를 발생시키지 않습니다.
+</Accordion>
+
+## 환경 변수 재정의
+
+다음 환경 변수를 사용하면 설정을 완전히 리디렉션하거나 재정의할 수 있으며, 이는 CI, 컨테이너, 테스트에 유용합니다:
+
+| Variable | Description |
+| --- | --- |
+| `BOLT_CONFIG` | 프로젝트 로컬 파일 대신 로드할 설정 파일의 절대 경로 |
+| `BOLT_CONFIG_DIR` | Bolt가 설정 파일을 검색하는 디렉터리를 재정의 |
+| `BOLT_CONFIG_CONTENT` | 원시 JSONC 설정 콘텐츠를 문자열로 제공 — 파일 불필요 |
+
+`BOLT_CONFIG_CONTENT`는 파일 마운트가 불편한 컨테이너 환경에서 특히 유용합니다:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="여러 소스가 활성화된 경우 어떤 설정이 우선하나요?">
+  Bolt는 다음 순서로 설정을 병합합니다 (뒤의 항목이 우선):
+
+  1. 전역 설정 파일 (OS 설정 디렉터리의 `bolt.jsonc` / `bolt.json`)
+  2. 전역 설정의 `url` 항목에서 가져온 원격 설정
+  3. 프로젝트별 설정 파일 (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` 파일 (설정된 경우)
+  5. `BOLT_CONFIG_CONTENT` (설정된 경우)
+
+  `instructions` 같은 배열 필드는 대체되지 않고 소스 전반에 걸쳐 연결됩니다. 객체 필드는 심층 병합되며, 충돌 시 나중 값이 우선합니다.
+</Accordion>

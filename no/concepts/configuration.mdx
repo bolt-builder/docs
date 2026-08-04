@@ -1,0 +1,193 @@
+---
+title: "Konfigurasjon — bolt.jsonc-innstillinger og globale overstyringer"
+sidebarTitle: "Konfigurasjon"
+description: "Bolt leser lagvise JSONC-konfigurasjonsfiler fra prosjektet ditt og OS-konfigurasjonsmapper. Sett leverandører, MCP-servere, instruksjoner, plugins og miljøoverstyringer."
+---
+
+Bolt bruker et lagvis konfigurasjonssystem: en **global** konfigurasjonsfil for brukerbrede standardverdier, og en **per-prosjekt** konfigurasjonsfil for prosjektspesifikke innstillinger. Begge filene bruker JSONC-format (JSON med kommentarer), og begge opprettes automatisk med en `$schema`-peker som gir autofullføring i editoren.
+
+## Plassering av konfigurasjonsfiler
+
+### Per-prosjekt-konfigurasjon
+
+Opprettes automatisk ved første kjøring i prosjektet ditt:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Legg denne filen til i versjonskontroll for å dele leverandørkonfigurasjon, MCP-servere og egendefinerte instruksjoner med resten av teamet. Sensitive legitimasjoner skal aldri legges her – bruk miljøvariabler eller den globale konfigurasjonen i stedet.
+
+### Global konfigurasjon
+
+Gjelder for alle prosjekter på maskinen din. Bolt ser etter den første samsvarende filen i OS-konfigurasjonsmappen din:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferred)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Hvor er den globale konfigurasjonsmappen?">
+  Bolt følger XDG Base Directory-spesifikasjonen på Linux og macOS (`~/.config/bolt/`) og `%APPDATA%\bolt\` på Windows. Kjør `bolt debug config` for å skrive ut den fullstendig oppløste konfigurasjonen på maskinen din.
+</Accordion>
+
+## Minimalt konfigurasjonseksempel
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema`-feltet aktiverer IntelliSense og validering i editorer som støtter JSON Schema. Bolt skriver dette feltet automatisk hvis det mangler.
+
+## Konfigurasjonsreferanse
+
+### `provider`
+
+Konfigurer leverandørspesifikke alternativer som egendefinerte base-URL-er, regioninnstillinger eller navngitte legitimasjoner:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Registrer [Model Context Protocol](https://modelcontextprotocol.io)-servere som agenten kan kalle som verktøy:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Administrer MCP-servere interaktivt med `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` og `bolt mcp debug`.
+
+### `instructions`
+
+Legg til egendefinerte systeminstruksjoner som injiseres i hver økt. Nyttig for å håndheve kodekonvensjoner, stilguider eller prosjektspesifikke regler:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instruksjoner fra flere konfigurasjonsfiler (global \+ prosjekt) slås sammen og dedupliseres automatisk.
+
+### `plugin`
+
+Last inn Bolt-plugins. Plugins kan legge til nye verktøy, leverandører, kontekstkilder og hooks:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Ekstern konfigurasjon via `url`
+
+Hent konfigurasjon fra en ekstern URL ved oppstart. Nyttig for sentralisert teamkonfigurasjon:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Variabelsubstitusjon
+
+Konfigurasjonsverdier kan referere til miljøvariabler med syntaksen `$VAR_NAME` eller `${VAR_NAME}`. Substitusjon skjer ved lastetid, før konfigurasjonen parses:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Hvordan bruker jeg miljøvariabler i konfigurasjonen?">
+  Referer til en hvilken som helst miljøvariabel med `$VAR_NAME` eller `${VAR_NAME}` hvor som helst i en strengverdi i konfigurasjonen. Bolt substituerer verdien ved lastetid. Hvis variabelen ikke er satt, brukes den bokstavelige strengen `$VAR_NAME` – Bolt feiler ikke stille eller kaster en feil ved manglende substitusjoner.
+</Accordion>
+
+## Miljøvariabeloverstyringer
+
+Disse miljøvariablene lar deg omdirigere eller overstyre konfigurasjonen helt, noe som er nyttig for CI, containere og testing:
+
+| Variabel | Beskrivelse |
+| --- | --- |
+| `BOLT_CONFIG` | Absolutt sti til en konfigurasjonsfil som skal lastes i stedet for den prosjektlokale |
+| `BOLT_CONFIG_DIR` | Overstyr mappen som Bolt søker etter konfigurasjonsfiler i |
+| `BOLT_CONFIG_CONTENT` | Angi rå JSONC-konfigurasjonsinnhold som en streng – ingen fil nødvendig |
+
+`BOLT_CONFIG_CONTENT` er spesielt nyttig i containeriserte miljøer der montering av en fil er upraktisk:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Hvilken konfigurasjon har forrang når flere kilder er aktive?">
+  Bolt slår sammen konfigurasjoner i denne rekkefølgen (senere oppføringer vinner):
+
+  1. Global konfigurasjonsfil (`bolt.jsonc` / `bolt.json` i OS-konfigurasjonsmappen)
+  2. Eksterne konfigurasjoner hentet fra `url`-oppføringer i den globale konfigurasjonen
+  3. Per-prosjekt konfigurasjonsfiler (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG`-fil (hvis satt)
+  5. `BOLT_CONFIG_CONTENT` (hvis satt)
+
+  Array-felt som `instructions` slås sammen på tvers av kilder i stedet for å bli erstattet. Objektfelt fletts dypt sammen, der senere verdier vinner ved konflikter.
+</Accordion>

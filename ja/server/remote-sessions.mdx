@@ -1,0 +1,185 @@
+---
+title: "HTTP 経由でリモート Bolt セッションにアタッチする"
+sidebarTitle: "リモートセッション"
+description: "ヘッドレス Bolt サーバを起動し、任意のマシンから TUI をアタッチし、オプションの Basic 認証で mDNS を使ってローカルネットワーク上でサーバを発見します。"
+url: "server/remote-sessions"
+---
+
+Bolt には組み込みの HTTP サーバがあり、エンジンをインターフェイスから完全に分離できます。強力なリモートマシン (クラウド VM、開発コンテナ、一晩稼働させているデスクトップ) でヘッドレスサーバを起動し、ラップトップ、2 番目のターミナル、あるいはブラウザから TUI をアタッチできます — すべて同じライブセッションを指します。これにより Bolt は、チーム、リモートワークロード、SSH でボックスに入ることなく確認したい長時間実行タスクに適しています。
+
+---
+
+## `bolt serve`
+
+完全な API を HTTP 経由で公開し TUI 接続を受け付けるヘッドレス Bolt サーバを起動します。
+
+```bash
+bolt serve
+```
+
+### フラグ
+
+| フラグ | デフォルト | 説明 |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | バインドするホスト名または IP アドレス |
+| `--port <n>` | `0` (自動) | リッスンするポート。Bolt は起動時に割り当てられたポートを出力 |
+| `--mdns` | `false` | ゼロ設定のローカルネットワーク発見のために mDNS でサーバを広告。ホスト名も `0.0.0.0` に設定 |
+| `--mdns-domain <name>` | `opencode.local` | カスタム mDNS サービスドメイン |
+| `--cors <origin>` | `[]` | CORS で許可する追加のオリジン (繰り返し可) |
+
+<Warning>
+  `OPENCODE_SERVER_PASSWORD` が設定されていない場合、Bolt は警告を出力し、サーバは到達可能な誰にでも完全に開放されます。`127.0.0.1` 以外のインターフェイスにバインドする前に必ずパスワードを設定してください。
+</Warning>
+
+### 認証
+
+環境変数を使用して HTTP Basic 認証でサーバを保護します。
+
+| 変数 | 説明 |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Basic 認証パスワード |
+| `OPENCODE_SERVER_USERNAME` | Basic 認証ユーザ名 (省略時のデフォルトは `opencode`) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+完全な TUI を稼働中の Bolt サーバにアタッチします。HTTP 経由で到達可能な任意のサーバに対して機能します — ローカルまたはリモート。
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### フラグ
+
+| フラグ | エイリアス | 説明 |
+|------|-------|-------------|
+| `--dir <path>` | | リモートサーバで実行するディレクトリ |
+| `--continue` | `-c` | サーバの最後のセッションを継続 |
+| `--session <id>` | `-s` | 継続するセッション ID |
+| `--fork` | | 継続時にセッションをフォーク (`--continue` または `--session` と共に使用) |
+| `--password <pw>` | `-p` | Basic 認証パスワード (`OPENCODE_SERVER_PASSWORD` を上書き) |
+| `--username <user>` | `-u` | Basic 認証ユーザ名 (`OPENCODE_SERVER_USERNAME` を上書き) |
+| `--mini` | | 完全な TUI ではなく最小対話型 UI を使用 |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Bolt サーバを起動し、デフォルトブラウザで Web UI を即座に開きます。ローカルで動作するブラウザベースのインターフェイスを立ち上げる最速の方法です。
+
+```bash
+bolt web
+```
+
+`bolt web` は `bolt serve` と同じネットワークフラグを受け付けます。
+
+---
+
+## mDNS 発見
+
+`bolt serve` に `--mdns` を渡すと、mDNS を使ってサーバのアドレスをローカルネットワークにブロードキャストします。同じネットワーク上の任意のマシンが、IP アドレスやポートを知ることなく mDNS ホスト名を使ってアタッチできます。
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+デフォルトの mDNS ドメインは `opencode.local` です。`--mdns-domain` で上書きします。
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## サーバを起動してリモートからアタッチ
+
+<Steps>
+  <Step title="サーバマシンでパスワードを設定">
+    サーバを起動する前に `OPENCODE_SERVER_PASSWORD` をエクスポートしてください。設定がないと Bolt は警告を出力し、API は認証されません。
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="ヘッドレスサーバを起動">
+    ラップトップから到達できるようすべてのインターフェイスにバインドし、オプションで固定ポートを選びます。
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    このターミナルは開いたままにしてください (または `tmux` / `screen` / systemd ユニットで実行してください)。
+  </Step>
+
+  <Step title="ラップトップからアタッチ">
+    サーバに到達可能な任意のマシンで実行:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    完全な TUI が開き、リモートエンジンに接続します。セッション、履歴、ツール状態はすべてサーバ上に存在します。
+  </Step>
+
+  <Step title="後でセッションを継続">
+    TUI を終了 (`q` または `Ctrl-C`) することでデタッチできます。セッションはサーバ上で実行され続けます。再参加するには:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    または元に影響を与えずに分岐するためにフォーク:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## リモートワークフロー例
+
+一般的なパターンは、高コア数の開発マシンで Bolt サーバを稼働させたまま、シンなラップトップから接続することです。
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+すべてのセッションデータはサーバの SQLite データベースに保存されます。ラップトップは TUI をレンダリングするだけ — いつでも作業を失うことなく切断・再接続できます。

@@ -1,0 +1,179 @@
+---
+title: "GitHub 통합: Actions, PR, AI 리뷰"
+sidebarTitle: "GitHub Actions"
+description: "GitHub Actions 내에서 Bolt를 실행하고, PR을 로컬로 체크아웃하고, AI 커밋 메시지를 생성하고, AI 기반 코드 리뷰와 종료 코드로 병합을 게이트하세요."
+url: "server/github-actions"
+---
+
+Bolt는 일상적인 Git 워크플로를 AI에 연결하는 네 가지 명령을 제공합니다: 단일 명령으로 설치할 수 있는 GitHub Actions 에이전트, 풀 리퀘스트를 체크아웃하는 단축키, AI 커밋 메시지 생성기, 그리고 머신 판독 가능한 종료 코드를 갖춘 AI 코드 리뷰어. 이들을 함께 사용하면 개발의 모든 단계 — 로컬 코딩, PR 리뷰, 지속적 통합 — 에 Bolt를 도입할 수 있습니다.
+
+---
+
+## `bolt github`
+
+CI 이벤트에서 Bolt를 실행하는 GitHub Actions 에이전트를 관리합니다.
+
+### `bolt github install`
+
+현재 저장소에 GitHub Actions 워크플로를 설치합니다. 이는 `.github/workflows/`에 워크플로 YAML을 작성하여 이슈 댓글, 새 풀 리퀘스트 또는 구성한 다른 이벤트에서 Bolt가 자동으로 시작되도록 합니다.
+
+```bash
+bolt github install
+```
+
+git 저장소의 루트에서 이를 실행하세요. `.github/workflows/`에 대한 쓰기 접근이 필요합니다.
+
+### `bolt github run`
+
+로컬 또는 CI 단계 내에서 GitHub 에이전트를 실행하고 특정 GitHub 이벤트 페이로드를 재생합니다.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flag | Description |
+|------|-------------|
+| `--event <event>` | GitHub 이벤트 이름 또는 JSON 이벤트 페이로드 경로 |
+| `--token <pat>` | 댓글을 게시하고 컨텍스트를 가져오는 데 사용되는 GitHub 개인 액세스 토큰 (`github_pat_…`) |
+
+---
+
+## GitHub Actions 에이전트 설정
+
+<Steps>
+  <Step title="워크플로 설치">
+    저장소 루트에서:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt는 `.github/workflows/`에 GitHub Actions 워크플로 파일을 작성합니다. 파일을 커밋하고 푸시하세요.
+  </Step>
+
+  <Step title="API 키를 시크릿으로 추가">
+    저장소 설정에서 선호하는 LLM 프로바이더의 API 키를 저장소 시크릿(예: `ANTHROPIC_API_KEY`)으로 추가하세요. 워크플로가 자동으로 인식합니다.
+  </Step>
+
+  <Step title="에이전트 트리거">
+    이슈나 풀 리퀘스트에 `/bolt <your request>`로 댓글을 다세요. 워크플로가 실행되고, Bolt가 이벤트 페이로드를 읽고, 결과와 함께 회신을 게시합니다.
+  </Step>
+
+  <Step title="디버깅을 위해 로컬 실행">
+    이전 워크플로 실행의 실제 이벤트 페이로드를 재생하세요:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+GitHub 풀 리퀘스트를 로컬 브랜치로 체크아웃하고 해당 브랜치에서 Bolt를 시작합니다 — PR 작성자가 남긴 곳에서 검토, 디버그 또는 작업을 계속할 준비가 됩니다.
+
+```bash
+bolt pr 42
+```
+
+Bolt는 `gh` CLI를 사용해 PR을 가져오고, `pr/<number>`라는 이름의 브랜치를 만들고, 업스트림 추적 참조를 연결합니다. 크로스 저장소(포크) PR의 경우 포크를 자동으로 원격으로 추가합니다. PR 설명에 공유된 Bolt 세션 URL(`opncd.ai/s/…`)이 포함되어 있으면 작성자의 대화를 계속할 수 있도록 세션을 가져옵니다.
+
+> [GitHub CLI (`gh`)](https://cli.github.com/)가 설치되고 인증되어 있어야 합니다.
+
+---
+
+## `bolt commit`
+
+스테이지된(또는 모든 추적된) 변경에서 커밋 메시지를 생성하고 한 단계로 커밋합니다.
+
+```bash
+bolt commit
+```
+
+Bolt는 변경 사항을 diff하고, 스타일 참조를 위해 diff를 최근 커밋 제목과 함께 `commit` 에이전트에 공급한 다음 결과와 함께 `git commit -m <message>`를 실행합니다.
+
+### 플래그
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--all` | `-a` | 스테이지된 것뿐만 아니라 모든 추적된 변경을 커밋 (`git commit -a`와 동등) |
+| `--dry-run` | | 커밋하지 않고 생성된 메시지 인쇄 |
+| `--model <provider/model>` | `-m` | 메시지 생성에 사용되는 모델 재정의 |
+
+```bash
+# 모든 것을 스테이징하고 커밋
+bolt commit --all
+
+# 커밋하지 않고 메시지 미리 보기
+bolt commit --dry-run
+
+# 특정 모델 사용
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  커밋하기 전에 생성된 메시지를 미리 보려면 `bolt commit --dry-run`을 사용하세요. 편집하려면 출력을 복사하고 조정된 문구로 `git commit -m "…"`을 실행하세요.
+</Tip>
+
+---
+
+## `bolt review`
+
+diff에 대해 `code-review` 에이전트를 실행하고 머신 판독 가능한 판정으로 종료합니다. 리뷰의 마지막 줄은 항상 `Verdict: PASS` 또는 `Verdict: FAIL`이므로 `bolt review`를 CI 파이프라인에 즉시 사용할 수 있습니다.
+
+```bash
+bolt review
+```
+
+기본적으로 `bolt review`는 `HEAD`를 작업 트리와 비교합니다. diff 범위를 지정하려면 아래 플래그를 사용하세요.
+
+### 플래그
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--staged` | | 스테이지된 변경만 검토 |
+| `--branch <name>` | | 지정된 브랜치(저장소의 기본 브랜치가 기본값)와의 머지 베이스 이후 변경 검토 |
+| `--model <provider/model>` | `-m` | 리뷰에 사용할 모델 |
+
+### 종료 코드
+
+| Code | Meaning |
+|------|---------|
+| `0` | `Verdict: PASS` — 심각하거나 주요한 문제 없음 |
+| `1` | `Verdict: FAIL` — 심각하거나 주요한 문제 하나 이상 발견 |
+| `2` | 응답에서 판정을 확인할 수 없음 |
+
+### GitHub Actions 워크플로에서 사용
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+0이 아닌 종료 코드는 검사를 실패시켜 문제가 해결될 때까지 병합을 차단합니다.
+
+<Tip>
+  풀 리퀘스트에 도달하기 전에 아직 쉽게 변경할 수 있을 때 문제를 잡으려면 커밋하기 전에 `bolt review --staged`를 실행하세요.
+</Tip>

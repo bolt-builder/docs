@@ -1,0 +1,139 @@
+---
+title: "Provider & Mô hình — Xác thực và chọn LLM"
+sidebarTitle: "Provider & Mô hình"
+description: "Bolt hỗ trợ bất kỳ nhà cung cấp LLM nào qua Vercel AI SDK. Xác thực nhà cung cấp, liệt kê mô hình, điều chỉnh mức suy luận và chạy so sánh song song best-of-N."
+---
+
+Bolt được thiết kế trung lập về mô hình. Bên dưới, nó sử dụng **Vercel AI SDK** để giao tiếp với các nhà cung cấp, nghĩa là bất kỳ nhà cung cấp nào mà SDK hỗ trợ — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter và nhiều nữa — đều hoạt động ngay lập tức. Danh mục nhà cung cấp và mô hình được lấy từ [models.dev](https://models.dev), một cơ sở dữ liệu do cộng đồng duy trì chứa metadata và giá của các nhà cung cấp.
+
+## Quản lý thông tin xác thực nhà cung cấp
+
+Sử dụng `bolt providers` (bí danh là `bolt auth`) để thêm, liệt kê và xóa thông tin xác thực của nhà cung cấp.
+
+### Thêm hoặc cập nhật thông tin xác thực
+
+```bash
+bolt providers login
+# hoặc tương đương:
+bolt auth login
+```
+
+Lệnh này khởi chạy lời nhắc tương tác để chọn nhà cung cấp và nhập thông tin xác thực. Để bỏ qua luồng tương tác, truyền cờ trực tiếp:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Liệt kê các nhà cung cấp đã cấu hình
+
+```bash
+bolt providers list
+# hoặc:
+bolt auth list
+```
+
+Hiển thị mọi thông tin xác thực đã lưu và bất kỳ API key nhà cung cấp nào được phát hiện từ biến môi trường.
+
+### Xóa thông tin xác thực
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Xác thực qua biến môi trường
+
+Với pipeline CI hoặc môi trường headless, đặt biến môi trường API key của nhà cung cấp trực tiếp — không cần đăng nhập tương tác. Ví dụ phổ biến:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt đọc các biến này tự động khi khởi động. `bolt providers list` sẽ hiển thị các biến môi trường mà nó đã phát hiện.
+
+## Duyệt các mô hình có sẵn
+
+`bolt models` liệt kê mọi mô hình có sẵn trên các nhà cung cấp đã cấu hình của bạn.
+
+```bash
+# Liệt kê tất cả mô hình
+bolt models
+
+# Lọc theo một nhà cung cấp
+bolt models anthropic
+
+# Hiển thị metadata chi phí và khả năng
+bolt models --verbose
+
+# Làm mới danh mục mô hình từ models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Chạy `bolt models --verbose` để xem giá token đầu vào/đầu ra cho mọi mô hình. Điều này giúp dễ dàng so sánh sự đánh đổi chi phí trước khi cam kết với một mô hình cho một tác vụ chạy lâu.
+</Tip>
+
+### Định dạng định danh mô hình
+
+Mô hình luôn được tham chiếu theo định dạng `provider/model`:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Sử dụng định dạng này ở bất kỳ đâu Bolt chấp nhận một mô hình — cờ CLI, tệp cấu hình và định nghĩa agent.
+
+## Chọn mô hình tại thời điểm chạy
+
+### Cờ `--model` / `-m`
+
+Cờ `--model` có sẵn trên `bolt run`, `bolt commit` và `bolt review`:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor mô-đun thanh toán"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — điều khiển mức suy luận
+
+Một số mô hình hỗ trợ các mức nỗ lực suy luận có thể cấu hình (ví dụ: extended thinking của Anthropic, các mô hình suy luận của OpenAI). Sử dụng `--variant` để chọn bậc effort:
+
+```bash
+bolt run --variant high "thiết kế một rate limiter phân tán"
+bolt run --variant minimal "đổi tên biến này"
+```
+
+<Note>
+  Các giá trị variant có sẵn phụ thuộc vào nhà cung cấp và mô hình. Các giá trị phổ biến là `minimal`, `low`, `medium`, `high` và `max`, nhưng tập chính xác thay đổi. Xem tài liệu của nhà cung cấp hoặc dùng `bolt models --verbose` để xem các variant được hỗ trợ cho một mô hình nhất định.
+</Note>
+
+### `--thinking` — hiển thị các khối suy luận
+
+Khi sử dụng một mô hình hỗ trợ extended thinking, truyền `--thinking` để hiển thị chuỗi tư duy của mô hình trong đầu ra:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "tại sao logic refresh token bị race trong auth service?"
+```
+
+## Chạy song song best-of-N
+
+`--best-of` gửi cùng một prompt tới nhiều mô hình song song, sau đó dùng một mô hình judge để xếp hạng các phản hồi và giữ lại cái tốt nhất:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "cài đặt một cây tìm kiếm nhị phân với độ phủ test đầy đủ"
+```
+
+Judge mặc định là mô hình được truyền qua `--model`, hoặc mục đầu tiên trong danh sách `--best-of` nếu `--model` không được đặt. Cờ chấp nhận danh sách phân cách bằng dấu phẩy của các định danh `provider/model`.
+
+<Tip>
+  Best-of-N đặc biệt hữu ích cho các bài toán thuật toán phức tạp hoặc quyết định kiến trúc nơi các mô hình khác nhau có thể mang lại các cách tiếp cận thực sự khác nhau. Hãy để Bolt chạy chúng song song và tự động chọn ra người chiến thắng.
+</Tip>

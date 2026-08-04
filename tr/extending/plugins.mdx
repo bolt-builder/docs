@@ -1,0 +1,145 @@
+---
+title: "Bolt'u eklentilerle genişletin"
+sidebarTitle: "Eklentiler"
+description: "Herhangi bir projeye veya globala özel AI sağlayıcıları, kimlik doğrulama yöntemleri, araçlar ve çalışma alanı bağdaştırıcıları eklemek için Bolt eklentilerini kurun ve oluşturun."
+url: "extending/plugins"
+---
+
+Eklentiler, Bolt'u yerleşik yeteneklerinin ötesine genişletmenize olanak tanır. Bir eklenti, bir Bolt eklenti bildirimini dışa aktaran bir Node veya Bun modülüdür; yüklendiğinde yeni LLM sağlayıcıları, özel kimlik doğrulama yöntemleri, ek araçlar ve çalışma alanı bağdaştırıcıları kaydedebilir. Eklentiler tek bir proje için kurulabilir veya çalışmalarınızın tümüne global olarak uygulanabilir.
+
+## Bir eklenti kurma
+
+npm'den bir eklenti kurmak ve yapılandırmanızda otomatik olarak kaydetmek için `bolt plugin install` komutunu (takma ad: `bolt plug`) kullanın:
+
+```bash
+bolt plugin install <module>
+```
+
+### Bayraklar
+
+| Bayrak | Takma ad | Açıklama |
+|------|-------|-------------|
+| `--global` | `-g` | Mevcut proje yerine global yapılandırmaya kur |
+| `--force` | `-f` | Aynı modül için mevcut bir girişi değiştir |
+
+### Kapsam: proje ve global
+
+Varsayılan olarak `bolt plugin install`, eklentiyi proje düzeyindeki `.bolt/bolt.jsonc` dosyasına ekler. Her projeye yüklenmesi için kullanıcı genelindeki yapılandırmanıza eklemek için `--global` geçirin.
+
+```bash
+# Proje kapsamlı (varsayılan)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — her projeye yüklenir
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Bolt'u tüm harici eklentiler devre dışı olarak başlatmak için `bolt --pure` çalıştırın (veya `OPENCODE_PURE=1` ayarlayın). Bu, bir eklentinin beklenmedik davranışa neden olup olmadığını, eklentiyi kaldırmadan hata ayıklamak için kullanışlıdır.
+</Note>
+
+---
+
+## Yayınlanmış bir eklentiyi kurma
+
+<Steps>
+  <Step title="Eklenti paketini bulun">
+    npm'de adında `bolt-plugin` veya `opencode-plugin` içeren paketleri arayın veya bir sağlayıcının belgelerinden bir bağlantıyı takip edin.
+  </Step>
+
+  <Step title="Projenize kurun">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt paketi kurar, sunucu ve TUI hedeflerini algılamak için bildirimini okur, ardından girişi `.bolt/bolt.jsonc` içine yazar.
+  </Step>
+
+  <Step title="Yapılandırmayı doğrulayın">
+    `.bolt/bolt.jsonc` dosyasını açın ve eklenti girişinin eklendiğini doğrulayın:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Bir oturum başlatın">
+    ```bash
+    bolt
+    ```
+
+    Bolt eklentiyi başlangıçta yükler. Kaydettiği sağlayıcılar veya araçlar hemen kullanılabilir.
+  </Step>
+</Steps>
+
+---
+
+## Manuel eklenti yapılandırması
+
+Eklentileri doğrudan `.bolt/bolt.jsonc` düzenleyerek kaydedebilirsiniz. Bu, geliştirme aşamasındaki yerel eklentiler için kullanışlıdır:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Göreli yollar proje kökünden çözülür. Hem TypeScript hem JavaScript giriş noktaları desteklenir.
+
+---
+
+## Bir eklenti oluşturma
+
+Eklentiler, modülünüzün karşılaması gereken `Hooks` arabirimini sağlayan `@opencode-ai/plugin` paketine karşı yazılır.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Minimal bir eklenti, `PluginInput` nesnesi alan ve `Hooks` nesnesi döndüren bir fonksiyonu dışa aktarır:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Kullanılabilir kanca türleri
+
+| Kanca | Amaç |
+|------|---------|
+| `auth` | Bir `methods` dizisiyle özel kimlik doğrulama sağlayıcılarını kaydeder |
+| `event` | Oturum olaylarına tepki verir (mesajlar, araç çağrıları, tamamlamalar) |
+| `config` | Çalışma zamanında yapılandırma değişikliklerine yanıt verir |
+| `dispose` | Eklenti kaldırıldığında kaynakları temizler |
+
+`PluginInput` nesnesi, eklentinizin çalışan sunucuyla etkileşime girebilmesi için `client` (yazılmış bir Bolt API istemcisi), `project`, `worktree`, `directory` ve `serverUrl` alanlarını sunar.
+
+---
+
+## Ortam değişkenleri
+
+| Değişken | Açıklama |
+|----------|-------------|
+| `OPENCODE_PURE` | Harici eklentiler olmadan çalışmak için `1` olarak ayarlayın |

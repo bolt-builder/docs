@@ -1,0 +1,46 @@
+---
+title: "Memória do Projeto: Contexto Persistente Entre Sessões do Bolt"
+sidebarTitle: "Memória do Projeto"
+description: "O Bolt captura o que aprende sobre o seu projeto no fim de cada turno e injeta-o em novas sessões, para que o agente não reaprenda o seu código-fonte de cada vez."
+---
+
+A memória do projeto é o que faz com que o Bolt pareça já conhecer o seu projeto. Quando uma sessão termina o seu turno, o Bolt destila o que foi útil e escreve-o num armazenamento de memória por projeto. Quando abre uma nova sessão, o Bolt injeta um índice de memória e o resumo mais recente da sessão no prompt de sistema, para que o agente comece com contexto real em vez de uma folha em branco.
+
+## Como funciona a captura
+
+No fim de cada turno conversacional, o Bolt pede ao modelo para resumir factos duradouros que serão úteis da próxima vez: convenções, notas de arquitetura, organização de ficheiros, comandos de build/testes, situações a ter em conta e temas em aberto. Estes são gravados em disco no diretório de memória do projeto, juntamente com um resumo rolante da sessão mais recente.
+
+A memória é por projeto. Duas checkouts do mesmo repositório na mesma máquina partilham memória; projetos não relacionados nunca veem a memória uns dos outros.
+
+## Ferramentas explícitas
+
+Os agentes também podem ler e escrever na memória diretamente durante uma sessão:
+
+- `memory_save` — regista um facto específico que o agente deve recordar da próxima vez.
+- `memory_recall` — consulta algo que o agente (ou o utilizador) captou anteriormente.
+
+Pode pedir ao agente para "recordar que usamos pnpm, não npm" e este chamará `memory_save` por si.
+
+## Controlos por sessão
+
+Dentro do TUI pode alternar o comportamento da memória para a sessão atual com slash commands:
+
+```text
+/memory use on|off         # se esta sessão lê a memória do projeto
+/memory contribute on|off  # se esta sessão escreve de volta na memória
+```
+
+Isto é útil quando pretende uma sessão exploratória descartável que não polua a sua memória, ou uma sessão apenas de leitura que continue a beneficiar do contexto anterior.
+
+## Inspecionar e editar a memória
+
+```bash
+bolt memory           # inspeciona o armazenamento de memória do projeto atual
+```
+
+A memória é guardada como ficheiros de texto simples em disco no diretório de dados do Bolt do projeto, para que possa fazer grep, editar ou apagar entradas diretamente. Para encontrar o caminho exato na sua máquina, execute `bolt debug paths`.
+
+## Relacionado
+
+- [Sessões](/concepts/sessions) — as conversas duradouras que produzem entradas de memória.
+- [Configuração](/concepts/configuration) — onde a memória é armazenada e como substituir o caminho.

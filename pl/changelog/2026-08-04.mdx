@@ -1,0 +1,33 @@
+---
+title: "Tydzień 4 sierpnia 2026"
+description: "Cotygodniowy changelog Bolta: 11 nowych języków interfejsu, układy od prawej do lewej, natywne tłumaczenia desktopowe, dostawca Poolside, dopracowanie GPT-5 i poprawki błędów."
+---
+
+## Nowe funkcje
+
+- **11 nowych języków interfejsu** — Aplikacja desktopowa i TUI dostępne są teraz z tłumaczeniami na hindi, niderlandzki, indonezyjski, wietnamski, włoski, urdu, pendżabski, azerski, fiński, szwedzki i tajski, co daje łącznie 28 obsługiwanych języków. Zmieniaj język w **Ustawienia → Wygląd → Język**. Zobacz [Funkcje desktopowe](/desktop/features) i [Instalacja](/desktop/install#28-ui-languages).
+- **Obsługa układu od prawej do lewej** — Nawigacja, edytory, okna dialogowe, kontrolki i renderowanie tekstu poprawnie się teraz odbijają w językach zapisywanych od prawej do lewej, takich jak arabski, hebrajski czy urdu, więc cały interfejs czyta się w tych lokalizacjach naturalnie.
+- **Natywne tłumaczenia desktopowe** — Menu systemowe, okna dialogowe updatera, proces odzyskiwania, onboarding WSL i natywne selektory plików są teraz zlokalizowane obok interfejsu w aplikacji, więc całe środowisko desktopowe podąża za Twoim ustawieniem języka.
+- **Rozszerzone pokrycie lokalizacyjne** — Menu, okna dialogowe, prompty, treść pomocy, komunikaty błędów i etykiety ułatwień dostępu są teraz przetłumaczone w każdym obsługiwanym języku, zamykając luki, w których stringi wcześniej wracały do angielskiego.
+- **Dostawca Poolside** — Bolt łączy się teraz z [Poolside](https://poolside.ai) przez jego API zgodne z OpenAI. Uruchom `/connect`, wybierz **Poolside** i wklej swój klucz API z [platform.poolside.ai](https://platform.poolside.ai). Wdrożenia Poolside self-hosted można również skonfigurować jako niestandardowego dostawcę. Zobacz [Dostawcy i modele](/concepts/providers-and-models).
+- **Odmiana liczby mnogiej uwzględniająca język** — Liczby, statusy, pliki i pozycje list sesji odmieniają się teraz poprawnie w każdym języku, więc oś czasu i tekst statusu czyta się naturalnie we wszystkich obsługiwanych lokalizacjach.
+- **Bogatsze renderowanie Markdown** — Wiadomości asystenta zyskują ulepszone formatowanie Markdown, płynniejsze aktualizacje strumieniowe, lepsze podświetlanie składni oraz obsługę treści matematycznych, co ułatwia czytanie długich i technicznych odpowiedzi.
+
+## Aktualizacje
+
+- **Poziom wysiłku rozumowania GPT-5 dopasowany do wersji modelu** — Poziomy wysiłku rozumowania (w tym `none` i `xhigh`) są teraz oferowane tylko dla wariantów GPT-5, które je obsługują, więc `--variant` nie pokazuje już opcji, które dany model by odrzucił. Zobacz [Sterowanie wysiłkiem rozumowania](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Dopracowanie adnotacji diff** — Widok diff w interfejsie sesji dopracowuje wskaźniki komentarzy, zachowanie kolumny numerów i kolory składni dla trybów jasnego i ciemnego, poprawiając czytelność.
+- **Dopracowane istniejące tłumaczenia** — Istniejące języki otrzymują jaśniejszą terminologię i rozszerzone etykiety UI dla bardziej spójnego doświadczenia w całej aplikacji.
+
+## Poprawki błędów
+
+- **Czas trwania akcji sesji** — Akcje sesji rejestrują i raportują teraz swój czas trwania dokładniej, więc oś czasu odzwierciedla, kiedy praca faktycznie się zaczęła i skończyła.
+- **Bardziej zrozumiałe błędy zdalnej przestrzeni roboczej** — Niepowodzenia podczas łączenia z zdalną przestrzenią roboczą lub uruchamiania w niej komend pokazują teraz bardziej opisowe komunikaty błędów zamiast ogólnych.
+- **Proxy przestrzeni roboczej nie wycieka już katalogu roboczego** — Żądania kierowane przez proxy przestrzeni roboczej nie zawierają już szczegółów katalogu roboczego, utrzymując lokalne ścieżki z dala od sieci.
+- **Mapa wypełnia puste obszary** — Mapa aktywności pozostaje teraz widoczna w obszarach bez zarejestrowanej aktywności zamiast zwijać się do pustego obszaru.
+- **Naprawione wykrywanie języka** — Bolt niezawodnie odczytuje teraz Twoje ustawienia lokalizacji systemowej przy uruchamianiu, więc interfejs otwiera się w odpowiednim języku na większej liczbie platform.
+- **Naprawione tłumaczenie osi czasu w języku niemieckim** — Wpisy osi czasu w języku niemieckim renderują się teraz z poprawnymi stringami zamiast wracać do angielskiego lub źle sformatowanego tekstu.
+- **Wyłączanie zaznaczeń plików** — Kliknięcie zaznaczenia pliku po raz drugi teraz je czyści, więc możesz cofnąć zaznaczenie bez uprzedniego wybierania innego.
+- **Czystsze interakcje z komentarzami roboczymi** — Rozpoczęcie lub odrzucenie komentarza roboczego czyści teraz konsekwentnie zaznaczenie i nie konkuruje już ze stanem najechania.
+- **Przywrócony animowany nagłówek rozumowania** — Nagłówek rozumowania w TUI ponownie pokazuje animowany spinner podczas myślenia, a jego gradient przygasa po rozwinięciu, więc łatwiej odróżnić stan zwinięty od otwartego.
+- **Przywrócone narzędzia procesów w tle i testów** — `bash_background`, `process_output`, `list_processes`, `kill_process` i `test_run` są ponownie dostępne dla agentów po utracie w wcześniejszym scaleniu. Agenci mogą uruchamiać długo działające komendy jak serwery dev i watchery, odczytywać ich wynik oraz uruchamiać testy projektu z ustrukturyzowanymi wynikami pass/fail. Zobacz [Wbudowane narzędzia](/concepts/tools#built-in-tools).

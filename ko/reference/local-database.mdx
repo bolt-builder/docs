@@ -1,0 +1,38 @@
+---
+title: "로컬 데이터베이스 (bolt db)"
+sidebarTitle: "Local Database"
+description: "Bolt는 모든 세션, 메시지, 도구 호출을 로컬 SQLite 데이터베이스에 저장합니다. bolt db로 검사, 백업 또는 직접 쿼리하세요."
+---
+
+Bolt는 모든 세션, 메시지, 도구 호출을 로컬 SQLite 데이터베이스에 보관합니다. 완전히 검사할 수 있고 완전히 여러분의 것입니다 — 명시적으로 세션을 공유하지 않는 한 아무것도 업로드되지 않습니다.
+
+## 일반적인 작업
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## 백업하기
+
+단일 SQLite 파일이므로 백업은 복사입니다:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+장기 저장이나 전송에는 스키마 마이그레이션을 견디는 이식 가능한 JSON 표현을 생성하는 `bolt export` / `bolt import`를 선호하세요.
+
+## 스키마 개요
+
+- `sessions` — 세션당 하나의 행, 제목, 프로젝트, 타임스탬프, 상태 포함.
+- `messages` — 세션별 전체 턴 로그.
+- `tool_calls` — 입력, 출력, 지속 시간을 포함한 모든 호출.
+
+정확한 열은 진화합니다. 라이브 스키마를 보려면 `PRAGMA table_info(<table>)`을 사용하세요.
+
+## 관련 항목
+
+- [Sessions](/concepts/sessions) — 데이터베이스가 저장하는 것.
+- [Stats & Cost](/reference/stats-and-cost) — 동일한 데이터에 대한 집계 뷰.

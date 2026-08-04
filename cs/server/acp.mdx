@@ -1,0 +1,28 @@
+---
+title: "ACP: řízení Boltu ze Zedu a dalších editorů"
+sidebarTitle: "ACP (editory)"
+description: "Bolt mluví Agent Client Protocolem (ACP), takže editory jako Zed ho mohou vložit jako nativní AI kódovací backend bez spouštění samostatné aplikace nebo TUI."
+---
+
+Bolt implementuje Agent Client Protocol (ACP), kterým editory jako Zed komunikují s AI agenty. Po nakonfigurování editor spustí `bolt acp` jako podproces a řídí ho přímo — dostaneš agenty, nástroje, sezení a stack providerů Boltu, aniž bys musel(a) opustit editor.
+
+## Zapnutí ACP
+
+V AI nastavení svého editoru přidej Bolt jako ACP kompatibilního agenta a nasměruj ho na:
+
+```bash
+bolt acp
+```
+
+Editor bude spravovat životní cyklus procesu. Nakonfiguruj providery, modely a MCP servery jako normálně v `.bolt/bolt.jsonc` — platí i zde.
+
+## Co získáš
+
+- Každého agenta Boltu, volatelného z AI panelu editoru.
+- Sdílená sezení s TUI a webovým UI (přes lokální databázi).
+- Stejnou sadu nástrojů, model oprávnění a paměť projektu jako u jakéhokoli jiného vstupního bodu Boltu.
+
+## Související
+
+- [Bezhlavý server](/server/headless-server) — paralelní HTTP rozhraní.
+- [Konfigurace](/concepts/configuration) — konfigurační soubor, který ACP dědí.

@@ -1,0 +1,145 @@
+---
+title: "Bolt uitbreiden met plugins"
+sidebarTitle: "Plugins"
+description: "Installeer en bouw Bolt-plugins om aangepaste AI-providers, authenticatiemethoden, tools en workspace-adapters toe te voegen aan een enkel project of globaal."
+url: "extending/plugins"
+---
+
+Plugins laten je Bolt uitbreiden voorbij zijn ingebouwde mogelijkheden. Een plugin is een Node- of Bun-module die een Bolt plugin-manifest exporteert; eenmaal geladen kan hij nieuwe LLM-providers, aangepaste authenticatiemethoden, extra tools en workspace-adapters registreren. Plugins kunnen worden geïnstalleerd voor een enkel project of globaal worden toegepast op al je werk.
+
+## Een plugin installeren
+
+Gebruik `bolt plugin install` (alias: `bolt plug`) om een plugin vanaf npm te installeren en automatisch in je config te registreren:
+
+```bash
+bolt plugin install <module>
+```
+
+### Flags
+
+| Flag | Alias | Beschrijving |
+|------|-------|-------------|
+| `--global` | `-g` | Installeer in de globale config in plaats van het huidige project |
+| `--force` | `-f` | Vervang een bestaande entry voor dezelfde module |
+
+### Scope: project vs. globaal
+
+Standaard voegt `bolt plugin install` de plugin toe aan de project-niveau `.bolt/bolt.jsonc`. Geef `--global` mee om hem toe te voegen aan je gebruikersbrede config zodat hij in elk project laadt.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Voer `bolt --pure` uit (of stel `OPENCODE_PURE=1` in) om Bolt te starten met alle externe plugins uitgeschakeld. Dit is handig om te debuggen of een plugin onverwacht gedrag veroorzaakt, zonder hem te de-installeren.
+</Note>
+
+---
+
+## Een gepubliceerde plugin installeren
+
+<Steps>
+  <Step title="Vind het plugin-pakket">
+    Zoek op npm naar pakketten met `bolt-plugin` of `opencode-plugin` in de naam, of volg een link uit de documentatie van een provider.
+  </Step>
+
+  <Step title="Installeer in je project">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt installeert het pakket, leest het manifest om server- en TUI-targets te detecteren en schrijft de entry vervolgens naar `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Verifieer de config">
+    Open `.bolt/bolt.jsonc` en bevestig dat de plugin-entry is toegevoegd:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Start een sessie">
+    ```bash
+    bolt
+    ```
+
+    Bolt laadt de plugin bij het opstarten. Providers of tools die hij registreert zijn direct beschikbaar.
+  </Step>
+</Steps>
+
+---
+
+## Handmatige plugin-configuratie
+
+Je kunt plugins registreren door `.bolt/bolt.jsonc` direct te bewerken. Dit is handig voor lokale plugins in ontwikkeling:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Relatieve paden worden opgelost vanaf de projectroot. Zowel TypeScript- als JavaScript-entrypoints worden ondersteund.
+
+---
+
+## Een plugin bouwen
+
+Plugins worden geschreven tegen het `@opencode-ai/plugin`-pakket, dat de `Hooks`-interface levert waaraan je module moet voldoen.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Een minimale plugin exporteert een functie die een `PluginInput`-object ontvangt en een `Hooks`-object teruggeeft:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Beschikbare hook-types
+
+| Hook | Doel |
+|------|---------|
+| `auth` | Registreer aangepaste authenticatieproviders met een `methods`-array |
+| `event` | Reageer op sessie-events (berichten, tool-aanroepen, voltooiingen) |
+| `config` | Reageer op configuratiewijzigingen tijdens runtime |
+| `dispose` | Ruim resources op wanneer de plugin wordt ontladen |
+
+Het `PluginInput`-object stelt de `client` (een typed Bolt API-client), `project`, `worktree`, `directory` en `serverUrl` beschikbaar zodat je plugin met de draaiende server kan interageren.
+
+---
+
+## Omgevingsvariabelen
+
+| Variabele | Beschrijving |
+|----------|-------------|
+| `OPENCODE_PURE` | Zet op `1` om te draaien zonder externe plugins |

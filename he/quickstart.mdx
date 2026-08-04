@@ -1,0 +1,142 @@
+---
+title: "התחל עם Bolt תוך פחות מדקה"
+sidebarTitle: "התחלה מהירה"
+description: "התקן את Bolt, פתח את הפרויקט שלך, חבר ספק, והרץ את הנחיית ה-AI הראשונה שלך — הכל תוך פחות מ-60 שניות עם המדריך הזה שלב אחר שלב."
+---
+
+מדריך זה מלווה אותך בהתקנת Bolt, השקתו בפרויקט, חיבור ספק AI והרצת ההנחיה הראשונה שלך. הזרימה המלאה לוקחת פחות מדקה.
+
+<Steps>
+  <Step title="התקן את Bolt">
+    הנתיב המהיר ביותר הוא סקריפט ההתקנה הרשמי, שעובד ב-macOS וב-Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    מעדיף מנהל חבילות? התקן גלובלית עם npm, bun, pnpm או yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    עבור יישום שולחן העבודה ב-macOS (ללא מעקף Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    ראה את [מדריך ההתקנה](/installation) לכל השיטות, כולל Homebrew, Chocolatey, Scoop והערות ספציפיות ל-Windows.
+  </Step>
+  <Step title="פתח את הפרויקט שלך">
+    נווט לכל ספריית פרויקט והשק את ה-TUI האינטראקטיבי:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt קולט את הקשר הפרויקט שלך אוטומטית — קורא את עץ הקבצים שלך, מבין את ה-stack, וזמין לכל סוכן מהרגע שאתה פותח אותו.
+  </Step>
+  <Step title="הגדר ספק AI">
+    בהשקה הראשונה, Bolt יבקש ממך להגדיר ספק אם לא הוגדר. תוכל גם להריץ זאת בכל עת:
+
+    ```bash
+    bolt providers
+    ```
+
+    זה פותח את זרימת ניהול הספקים שבה תוכל להוסיף מפתחות API עבור OpenAI, Anthropic וספקי LLM נתמכים אחרים. התצורה נשמרת ב-`.bolt/bolt.jsonc` בשורש הפרויקט שלך.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="הקלד הנחיה וחקור סוכנים">
+    ברגע שאתה בתוך ה-TUI, הקלד את ההנחיה שלך ולחץ Enter. השתמש ב-**Tab** כדי להחליף בין עשרת הסוכנים המובנים של Bolt בכל עת — הסוכן הנוכחי מוצג בשורת הסטטוס.
+
+    תוכל גם להריץ הנחיות ישירות משורת הפקודה מבלי לפתוח את ה-TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## סוכנים מובנים
+
+החלף סוכנים עם `Tab` ב-TUI, או העבר `--agent <name>` ל-`bolt run`. לכל סוכן יש רמת גישה מוגדרת שמתאימה למטרתו.
+
+| סוכן | גישה | תיאור |
+| --- | --- | --- |
+| `code` | Full | ברירת מחדל: קורא, כותב ומריץ קוד |
+| `plan` | Read | חוקר את בסיס הקוד ומייצר תוכנית מבלי לשנות קבצים |
+| `ask` | Read | שאלות ומחקר — ללא עריכות קבצים |
+| `code-review` | Read | סוקר שינויים לנכונות, סגנון ואבטחה |
+| `debug` | Full | מנפה בדיקות כושלות, קריסות ושגיאות לוגיקה |
+| `refactor` | Full | ריפקטורינג בטוח עם אימות בדיקות בכל שלב |
+| `docs` | Edit | כותב ומעדכן תיעוד והערות |
+| `security` | Read | ביקורת אבטחה: פגיעויות, סודות, דפוסים |
+| `migrate` | Full | שדרוגי פריימוורק ומיגרציות תלויות |
+| `perf` | Full | ניתוח ביצועים ואופטימיזציה |
+
+יש גם שני תת-סוכנים מובנים להאצלה: `@general` למשימות רב-שלביות מורכבות ו-`@explore` למחקר מהיר של בסיס קוד לקריאה בלבד. תוכל להגדיר סוכנים משלך כקבצי Markdown או ליצור אחד עם `bolt agent create`.
+
+## פקודות נפוצות לנסות בהמשך
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  העבר `--mini` ל-`bolt` או `bolt attach` עבור ממשק קומפקטי שתופס פחות מקום במסוף — נהדר לחלונות קטנים יותר או לפריסות חלוניות מפוצלות.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` מקבל דגלים `--auto`, `--yolo` ו-`--dangerously-skip-permissions` שמאשרים אוטומטית את כל הנחיות ההרשאה מבלי לשאול. השתמש בהם רק בסביבות מהימנות — הם מאפשרים לסוכן לקרוא, לכתוב ולהריץ ללא אישור.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt תומך בהשלמות מעטפת עבור bash, zsh, fish ומעטפות אחרות. צור והתקן השלמות עם:
+
+  ```bash
+  bolt completion
+  ```
+
+  עקוב אחר ההוראות המודפסות כדי לטעון את סקריפט ההשלמה בתצורת המעטפת שלך.
+</Note>

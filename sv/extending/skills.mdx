@@ -1,0 +1,22 @@
+---
+title: "Skills: Återanvändbara agent-playbooks"
+sidebarTitle: "Skills"
+description: "Skills är namngivna, återanvändbara playbooks som Bolt-agenten anropar via skill-verktyget — praktiska för fördefinierade arbetsflöden som releaser eller lint-suites."
+---
+
+Skills är namngivna, återanvändbara playbooks som lever tillsammans med ditt projekt och anropas via verktyget `skill`. Där ett anpassat verktyg är en enskild körbar åtgärd är en skill ett skriptat arbetsflöde agenten kan följa steg för steg: samla ihop dessa filer, kör dessa kommandon, avgör vad som ska göras härnäst baserat på utdata.
+
+Använd skills när:
+
+- Du har ett arbetsflöde du fortsätter att förklara i prompter ("kör först lintern, sedan ...").
+- Du vill att agenten ska följa ett specifikt beslutsträd.
+- Du vill att samma arbetsflöde ska finnas tillgängligt för varje session och varje agent i projektet.
+
+## Var de bor
+
+Skills är filer under `.opencode/skill/` (eller `.opencode/skills/`) i projektroten. Varje fil beskriver triggernamnet, när agenten ska använda den och de involverade stegen. [Verktyget](/concepts/tools) `skill` exponerar dem för modellen.
+
+## Relaterat
+
+- [Anpassade verktyg](/extending/custom-tools) — lägre nivå, utökning i en enskild åtgärd.
+- [Anpassade agenter](/extending/custom-agents) — baka in instruktioner i en agent istället.

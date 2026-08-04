@@ -1,0 +1,107 @@
+---
+title: "Úvod do Boltu: open-source terminálový AI agent"
+sidebarTitle: "Úvod"
+description: "Seznam se s Boltem: open-source terminálový AI kódovací agent s deseti agenty, trvalými sezeními, pamětí projektu, MCP, 75+ LLM providery, TUI a desktopovou aplikací."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Tvůj terminál, teď s celým AI engineering týmem uvnitř.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Web</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt je AI kódovací agent primárně pro terminál, postavený na [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) a [SolidJS](https://www.solidjs.com). Namiř ho na libovolný projekt a automaticky si vezme kontext: prozkoumá tvůj kód, dodržuje tvé konvence, spouští shellové příkazy, edituje soubory, spouští testy a dodává změny.
+
+Deset vestavěných agentů (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) plus subagenti `@general` a `@explore` pokryjí celou engineering smyčku. Sezení jsou trvalá: můžeš se odpojit, znovu připojit (i ke vzdálenému serveru), rozvětvit, sdílet, exportovat a importovat kdykoli. Paměť projektu uchovává, co se agent naučí mezi sezeními. Rozšiřitelné přes MCP servery (s OAuth), pluginy, vlastní agenty a vlastní nástroje.
+
+Bolt je open source pod licencí PolyForm Noncommercial 1.0.0.
+
+## Proč Bolt?
+
+Bolt je navržený kolem toho, jak vývojáři skutečně pracují: v terminálu, napříč více sezeními, na skutečných kódových základnách. Zde je, co ho odlišuje:
+
+- **TUI primárně pro terminál.** Rychlé, klávesnicí ovládané rozhraní postavené na [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) a [SolidJS](https://www.solidjs.com). Působí nativně, protože nativní je.
+- **Celý tým agentů.** Deset specializovaných agentů — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` a `perf` — plus subagenti pro výzkum a vícekrokové delegování. Mezi nimi přepínej pomocí `Tab`.
+- **Sezení, která můžeš opustit a znovu se přihlásit.** Odpoj se od sezení a připoj se později, i na vzdáleném serveru. Rozvětvi, sdílej, exportuj a importuj práci kdykoli. Sezení jsou uložena v SQLite a plně prohledávatelná pomocí `bolt db`.
+- **Rozšiřitelnost jako filozofie.** MCP servery s plnou podporou OAuth, systém pluginů, integrace s GitHubem, vestavěný API server a webové UI.
+- **Desktopová aplikace.** Stejný engine zabalený do zážitku ve více oknech a záložkách — s integrovaným terminálem, stromem souborů, paletou příkazů, 28 jazyky UI a automatickými aktualizacemi.
+
+## Vestavění agenti
+
+Bolt se dodává s deseti specializovanými agenty. Každý agent má definovanou úroveň přístupu k souborovému systému odpovídající jeho účelu.
+
+| Agent | Přístup | Popis |
+| --- | --- | --- |
+| `code` | Full | Výchozí: čte, píše a spouští kód |
+| `plan` | Read | Prozkoumává kódovou základnu a vytváří plán bez změn souborů |
+| `ask` | Read | Otázky a výzkum — žádné úpravy souborů |
+| `code-review` | Read | Reviewuje změny na správnost, styl a bezpečnost |
+| `debug` | Full | Ladí padající testy, pády a logické chyby |
+| `refactor` | Full | Bezpečný refaktoring s ověřením testy v každém kroku |
+| `docs` | Edit | Píše a aktualizuje dokumentaci a komentáře |
+| `security` | Read | Bezpečnostní audit: zranitelnosti, tajné klíče, vzory |
+| `migrate` | Full | Upgrady frameworků a migrace závislostí |
+| `perf` | Full | Analýza výkonu a optimalizace |
+
+Vlastní agenty si můžeš také definovat jako Markdown soubory nebo vygenerovat pomocí `bolt agent create`.
+
+## Desktopová aplikace
+
+Bolt se dodává i jako samostatná desktopová aplikace se správou sezení ve více oknech a záložkách, prompt composerem s podporou příloh a vkládání obrázků ze schránky, integrovaným terminálem a stromem souborů, paletou příkazů, plným nastavením pro klávesové zkratky, modely, providery a servery, nativními notifikacemi, deep linky, integrací s WSL na Windows a automatickými aktualizacemi napříč kanály dev, beta a produkce.
+
+Stáhni desktopovou aplikaci ze [stránky releases](https://github.com/Bolt-builder/bolt-cli/releases), nebo ji nainstaluj jedním řádkem na macOS bez zajížďky přes Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Prozkoumej dokumentaci
+
+<CardGroup cols={2}>
+  <Card title="Instalace" icon="download" href="/installation">
+    Nainstaluj Bolt přes curl, npm nebo svého systémového správce balíčků na macOS, Linuxu a Windows.
+  </Card>
+
+  <Card title="Rychlý start" icon="rocket" href="/quickstart">
+    Otevři TUI, spusť svůj první prompt a odešli AI-generovaný commit do jedné minuty.
+  </Card>
+
+  <Card title="Agenti" icon="users" href="/concepts/agents">
+    Deset vestavěných agentů plus subagenti. Zjisti, co každý dělá a jak napsat vlastního.
+  </Card>
+
+  <Card title="Paměť projektu" icon="brain" href="/concepts/project-memory">
+    Jak si Bolt pamatuje tvůj projekt napříč sezeními a jak řídit, co se zachytává.
+  </Card>
+
+  <Card title="MCP servery" icon="plug" href="/extending/mcp-servers">
+    Připoj externí nástroje a datové zdroje k Boltu přes Model Context Protocol.
+  </Card>
+
+  <Card title="Bezhlavý server" icon="server" href="/server/headless-server">
+    Spusť `bolt serve`, připoj TUI z libovolného stroje a řiď Bolt přes API.
+  </Card>
+</CardGroup>

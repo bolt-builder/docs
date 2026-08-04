@@ -1,0 +1,191 @@
+---
+title: "Phiên — Lịch sử hội thoại bền vững trong Bolt"
+sidebarTitle: "Phiên"
+description: "Phiên là đơn vị công việc bền vững của Bolt: mỗi phiên lưu toàn bộ hội thoại trong SQLite cục bộ để bạn có thể tách, tiếp tục, fork, chia sẻ và xuất bất kỳ lúc nào."
+---
+
+**Phiên** là đơn vị công việc chính của Bolt. Mọi prompt bạn gửi, mọi tệp agent đọc hoặc chỉnh sửa, và mọi lời gọi công cụ mà mô hình thực hiện đều được ghi lại bền vững trong lịch sử của phiên đó. Vì các phiên nằm trong cơ sở dữ liệu SQLite cục bộ, chúng tồn tại qua khi khởi động lại tiến trình, có thể được liệt kê và truy vấn bất kỳ lúc nào, và không bao giờ rời khỏi máy của bạn trừ khi bạn tường minh chia sẻ hoặc xuất chúng.
+
+<Note>
+  Tất cả dữ liệu phiên được lưu cục bộ trong cơ sở dữ liệu SQLite trên máy của bạn. Không có gì được gửi tới máy chủ bên ngoài trừ khi bạn bật chia sẻ. Dùng `bolt db path` để tìm tệp cơ sở dữ liệu chính xác.
+</Note>
+
+## Vòng đời của phiên
+
+Một phiên bắt đầu ngay khi bạn gửi prompt đầu tiên và chỉ kết thúc khi bạn xóa nó. Giữa hai điểm đó bạn có thể tự do tách, tiếp tục, phân nhánh hoặc bàn giao nó.
+
+<Steps>
+  <Step title="Tạo hoặc tiếp tục một phiên">
+    Khởi chạy TUI để bắt đầu phiên mới tương tác, hoặc truyền prompt cho `bolt run` để tạo phiên không tương tác:
+
+    ```bash
+    # Phiên mới trong TUI
+    bolt
+
+    # Phiên mới không tương tác
+    bolt run "thêm xử lý lỗi vào payment service"
+    ```
+  </Step>
+  <Step title="Tách ra và quay lại sau">
+    Đóng TUI bất kỳ lúc nào — phiên được lưu tự động. Tiếp tục phiên gần đây nhất với `--continue`, hoặc nhắm tới một phiên cụ thể theo ID với `--session`:
+
+    ```bash
+    # Tiếp tục phiên gần đây nhất
+    bolt run --continue "giờ viết các test luôn"
+
+    # Tiếp tục một phiên cụ thể
+    bolt run --session ses_abc123 "tiếp tục từ nơi ta đã dừng"
+    ```
+  </Step>
+  <Step title="Fork trước khi thử nghiệm">
+    Dùng `--fork` để phân nhánh từ lịch sử phiên hiện tại trước khi thử một thay đổi rủi ro. Bản fork là một phiên độc lập không ảnh hưởng đến phiên gốc:
+
+    ```bash
+    bolt run --continue --fork "thử viết lại phần này theo cách functional"
+    ```
+  </Step>
+  <Step title="Chia sẻ và cộng tác">
+    Tạo URL chia sẻ với `--share`. Bất kỳ ai có liên kết đều có thể xem transcript phiên trong trình duyệt:
+
+    ```bash
+    bolt run --share --continue "lượt cuối — dọn dẹp diff"
+    ```
+  </Step>
+</Steps>
+
+## Các lệnh quản lý phiên
+
+### Liệt kê các phiên
+
+```bash
+bolt session list
+```
+
+Xuất ra bảng đã định dạng của mọi phiên với ID, tiêu đề và thời gian cập nhật gần nhất. Thêm `--format json` để có đầu ra dạng máy đọc được, hoặc `-n <N>` để giới hạn ở N phiên gần nhất:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Xóa một phiên
+
+```bash
+bolt session delete <sessionID>
+```
+
+Xóa vĩnh viễn phiên và tất cả tin nhắn của nó khỏi cơ sở dữ liệu cục bộ.
+
+## Cờ run để điều khiển phiên
+
+Các cờ này có sẵn trên `bolt run`:
+
+| Cờ | Bí danh | Mô tả |
+|------|-------|-------------|
+| `--continue` | `-c` | Tiếp tục phiên gần đây nhất |
+| `--session <id>` | `-s` | Tiếp tục một phiên cụ thể theo ID |
+| `--fork` | | Fork phiên trước khi tiếp tục (yêu cầu `--continue` hoặc `--session`) |
+| `--share` | | Tạo URL chia sẻ cho phiên |
+| `--title <title>` | | Đặt hoặc ghi đè tiêu đề phiên |
+
+## Xuất phiên
+
+Xuất toàn bộ transcript của phiên dưới dạng JSON:
+
+```bash
+# Xuất phiên gần đây nhất
+bolt export
+
+# Xuất một phiên cụ thể
+bolt export <sessionID>
+
+# Xuất với dữ liệu nhạy cảm được ẩn
+bolt export --sanitize > transcript.json
+```
+
+Cờ `--sanitize` thay thế các đường dẫn tệp, nội dung code, đầu vào và đầu ra công cụ và các trường có khả năng nhạy cảm khác bằng các placeholder `[redacted:kind:id]` — hữu ích để chia sẻ transcript với đồng nghiệp hoặc gửi báo cáo lỗi.
+
+## Nhập phiên
+
+Nhập một phiên từ tệp JSON cục bộ hoặc trực tiếp từ URL chia sẻ:
+
+```bash
+# Từ tệp cục bộ
+bolt import ./transcript.json
+
+# Từ URL chia sẻ
+bolt import https://opncd.ai/share/abc123
+```
+
+Các phiên đã nhập xuất hiện trong danh sách phiên cục bộ của bạn và có thể tiếp tục hoàn toàn.
+
+## Truy vấn cơ sở dữ liệu phiên
+
+Bolt phơi bày cơ sở dữ liệu SQLite bên dưới trực tiếp cho người dùng chuyên sâu.
+
+```bash
+# In đường dẫn tệp cơ sở dữ liệu
+bolt db path
+
+# Mở shell SQLite tương tác
+bolt db
+
+# Chạy truy vấn tùy chỉnh
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Định dạng đầu ra mặc định là giá trị phân cách bằng tab; thêm `--format json` để có đầu ra JSON.
+
+## Thống kê sử dụng token và chi phí
+
+`bolt stats` tổng hợp dữ liệu sử dụng token và chi phí trên tất cả phiên của bạn:
+
+```bash
+# Thống kê mọi thời gian
+bolt stats
+
+# 7 ngày gần nhất
+bolt stats --days 7
+
+# Chỉ dự án hiện tại
+bolt stats --project ""
+
+# Hiển thị chi tiết theo mô hình (top 5 mô hình)
+bolt stats --models 5
+
+# Giới hạn bảng sử dụng công cụ ở top 10
+bolt stats --tools 10
+```
+
+Đầu ra bao gồm tổng số phiên, tin nhắn, token đầu vào/đầu ra/suy luận/cache, tổng chi phí, chi phí trung bình mỗi ngày, token trung bình và trung vị mỗi phiên, và chi tiết sử dụng công cụ. Truyền `--models` để hiển thị thêm chi tiết theo mô hình về tin nhắn, token và chi phí.
+
+## Workflow fork và chia sẻ
+
+Đây là một ví dụ đầy đủ về việc fork một phiên và chia sẻ kết quả:
+
+<Steps>
+  <Step title="Bắt đầu công việc trong một phiên mới">
+    ```bash
+    bolt run "refactor UserService để dùng dependency injection"
+    ```
+  </Step>
+  <Step title="Fork trước bước tiếp theo có rủi ro">
+    ```bash
+    bolt run --continue --fork "cũng di chuyển nó sang mẫu Repository mới"
+    ```
+
+    ID của phiên đã fork được in ra console. Phiên gốc không bị đụng tới.
+  </Step>
+  <Step title="Chia sẻ bản fork để review">
+    ```bash
+    bolt run --session <forked-id> --share "dọn dẹp cuối và bình luận"
+    ```
+
+    URL chia sẻ được in khi phiên trở về trạng thái nhàn rỗi.
+  </Step>
+  <Step title="Nhập trên máy khác">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

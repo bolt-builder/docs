@@ -1,0 +1,53 @@
+---
+title: "Permisos: controlar què poden fer els agents de Bolt"
+sidebarTitle: "Permisos"
+description: "Com els nivells d'accés per agent, els avisos de permís i les regles d'autorització/denegació de Bolt eviten que l'agent faci coses que no has aprovat."
+---
+
+Els agents de Bolt poden llegir fitxers, escriure fitxers i executar ordres de shell. Aquest poder està delimitat mitjançant dues capes: un nivell d'accés per agent i avisos de permís interactius que pots aprovar, denegar o configurar per avançat.
+
+## Nivells d'accés d'agent
+
+Cada agent integrat té un nivell d'accés declarat:
+
+| Nivell d'accés | Llegir fitxers | Escriure fitxers | Executar ordres de shell |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Mapes integrats:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Canvia d'agent amb `Tab` al TUI, o passa `--agent <name>` a `bolt run`.
+
+## Avisos interactius
+
+Dins del nivell d'accés d'un agent, les accions potencialment destructives encara demanen confirmació. Pots aprovar-les una vegada, aprovar-les per a la sessió o denegar-les. Les crides denegades retornen un error a l'agent i aquest continua.
+
+## Aprovació no interactiva
+
+Per a CI, scripts o fluxos de treball locals de confiança, `bolt run` suporta flags que ometen els avisos:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` i `--dangerously-skip-permissions` permeten a l'agent llegir, escriure i executar sense preguntar. Utilitza'ls només en entorns de confiança.
+</Warning>
+
+## Regles a nivell de configuració
+
+Pots pre-denegar (o pre-autoritzar) eines específiques per a tot el projecte afegint un bloc `permission` a `.bolt/bolt.jsonc`. Això s'aplica a cada sessió del projecte, incloses les crides no interactives de `bolt run`. Consulta [Configuració](/concepts/configuration) per a l'esquema.
+
+## Relacionat
+
+- [Agents](/concepts/agents) — quins agents tenen quins nivells d'accés.
+- [Eines](/concepts/tools) — la llista completa d'eines que els permisos controlen.
+- [Configuració](/concepts/configuration) — establir regles de permís duradores.

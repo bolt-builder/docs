@@ -1,0 +1,61 @@
+---
+title: "Bolt vides mainīgo atsauce"
+sidebarTitle: "Vides mainīgie"
+description: "Katrs vides mainīgais, ko Bolt atpazīst, ieskaitot žurnāla kontroli, servera autentifikāciju, konfigurācijas ignorējumus un sniedzēju API atslēgu konvencijas."
+---
+
+Vides mainīgie ļauj jums konfigurēt Bolt, nepieskaroties konfigurācijas failiem — noderīgi CI konveijeros, Docker konteineros un koplietotās vidēs, kur nevarat commit akreditācijas datus. Tie tiek nolasīti reizi palaišanas laikā un tos nevar mainīt, kamēr Bolt darbojas.
+
+## Atsauce
+
+| Mainīgais | Apraksts |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Iestata žurnāla detalizāciju. Pieņemtās vērtības: `DEBUG`, `INFO`, `WARN`, `ERROR`. Līdzvērtīgs karogam `--log-level`. |
+| `BOLT_PRINT_LOGS` | Iestatiet uz jebkuru netukšu vērtību, lai drukātu žurnāla izvadi uz stderr. Līdzvērtīgs `--print-logs`. |
+| `BOLT_PURE` | Iestatiet uz jebkuru netukšu vērtību, lai atspējotu visus ārējos spraudņus. Līdzvērtīgs `--pure`. |
+| `BOLT_SERVER_USERNAME` | Basic auth lietotājvārds komandām `bolt serve` un `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Basic auth parole komandām `bolt serve` un `bolt web`. Visiem savienojošajiem klientiem jānodrošina šī parole. |
+| `BOLT_CONFIG` | Ignorē ceļu uz konfigurācijas failu, ko Bolt ielādē. Bolt nemeklēs noklusējuma atrašanās vietās, ja tas ir iestatīts. |
+| `BOLT_CONFIG_DIR` | Ignorē konfigurācijas direktoriju. Bolt meklēs konfigurācijas failus šajā direktorijā, nevis noklusējuma OS konfigurācijas direktorijā. |
+| `BOLT_CONFIG_CONTENT` | Nodrošina visu konfigurāciju kā iekļautu JSON virkni. Noderīgi CI, kur failu rakstīšana nav praktiska. Ieņem augstāko prioritāti starp konfigurācijas avotiem. |
+| `BOLT_GIT_BASH_PATH` | Ceļš uz Git Bash `bin` direktoriju uz Windows, ko izmanto, lai atrastu Unix utilītas, piemēram, `less`. |
+
+## Sniedzēju API atslēgas
+
+Bolt automātiski atklāj sniedzēju akreditācijas datus no vides mainīgajiem — `bolt providers login` solis nav nepieciešams. Katrs sniedzējs meklē konkrētu vides mainīgo, un Bolt to izmantos, ja mainīgais ir iestatīts, neatkarīgi no tā, kas ir saglabāts failā `auth.json`.
+
+<Tip>
+  Iestatiet sniedzēju API atslēgas savā čaulas profilā (piem., `~/.zshrc`, `~/.bashrc`) vai `.env` failā, ko ielādē jūsu čaula. Jūs varat arī atsaukties uz tām no konfigurācijas faila, izmantojot `${VAR_NAME}` sintaksi `provider.*.apiKey` laukā, lai atslēgas nekad netiktu glabātas vienkāršā tekstā.
+</Tip>
+
+Bieži sastopamie sniedzēju mainīgie:
+
+| Mainīgais | Sniedzējs |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-sērija) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Palaidiet `bolt models --verbose`, lai redzētu, kuru vides mainīgo katrs konfigurētais sniedzējs sagaida.
+
+## Lietošanas piemēri
+
+```bash
+# Iespējojiet atkļūdošanas žurnalēšanu vienai palaišanai
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Palaidiet bez jebkādiem spraudņiem, lai izslēgtu spraudņu iejaukšanos
+BOLT_PURE=1 bolt
+
+# Palaidiet publisku serveri ar basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Nodrošiniet konfigurāciju iekļautu (noderīgi CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

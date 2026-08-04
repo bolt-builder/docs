@@ -1,0 +1,68 @@
+---
+title: "Bolt のカスタムエージェント"
+sidebarTitle: "カスタムエージェント"
+description: "独自の Bolt エージェントを Markdown ファイルとして定義します — モデルを選び、アクセスレベルを設定し、ツールを制限し、ドメイン固有の指示を追加します。"
+---
+
+10 の組み込みエージェントに加えて、独自のエージェントを定義できます。カスタムエージェントは、エージェントのモデル、アクセスレベル、利用可能なツールを記述するフロントマターブロックと、そのシステムプロンプトとして機能する本文を持つ Markdown ファイルです。
+
+## エージェントの作成
+
+最速の方法は、いくつかの質問を尋ねてファイルを書いてくれる組み込みジェネレータです。
+
+```bash
+bolt agent create
+```
+
+エージェントはプロジェクトの `.opencode/agent/` (または個人用エージェントの場合はグローバル設定ディレクトリ) 内に配置されます。各エージェントは単一の `.md` ファイルで、ファイル名がエージェントの名前になります。
+
+## エージェントファイルの構造
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+一般的なフロントマターフィールド:
+
+| フィールド | 目的 |
+| --- | --- |
+| `name` | `--agent` で使うエージェント名。 |
+| `description` | リストに表示される 1 行の要約。 |
+| `model` | `provider/model` 形式のデフォルトモデル。 |
+| `access` | `full`、`edit`、または `read` ([権限](/concepts/permissions) を参照)。 |
+| `tools` | エージェントが呼び出せる [ツール](/concepts/tools) を制限するオプションの許可リスト。 |
+
+## カスタムエージェントの使用
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+TUI では `Tab` を押してエージェントを循環します。カスタムエージェントは組み込みと並んで表示されます。
+
+## サブエージェント
+
+エージェントは `task` ツールを通じてサブエージェントに委譲できます。Bolt には `@general` と `@explore` が同梱されており、`.opencode/agent/` の下にあるファイルを持つカスタムエージェントも名前でサブエージェントとして呼び出せます。
+
+## 関連
+
+- [エージェント](/concepts/agents) — 組み込みエージェントのラインアップ。
+- [ツール](/concepts/tools) — `tools:` に追加できるもの。
+- [カスタムツール](/extending/custom-tools) — エージェントが呼び出すツールを構築します。

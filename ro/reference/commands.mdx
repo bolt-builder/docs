@@ -1,0 +1,475 @@
+---
+title: "Referință de comenzi Bolt CLI"
+sidebarTitle: "Comenzi"
+description: "Referință completă pentru fiecare comandă Bolt CLI, incluzând opțiuni, argumente și exemple de utilizare pentru TUI, run, serve, session, agent și altele."
+---
+
+Bolt expune un singur binar `bolt` cu un set bogat de subcomenzi. Rularea `bolt` fără argumente deschide UI-ul complet de terminal. Toate celelalte subcomenzi sunt listate mai jos. Folosește `bolt <command> --help` oricând pentru ajutor inline.
+
+<Accordion title="bolt (implicit — lansează TUI)">
+  Deschide UI-ul de terminal interactiv în directorul curent. Bolt descoperă automat contextul proiectului tău, încarcă configurația și se conectează la orice furnizori configurați.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Opțiuni globale** — disponibile pe fiecare comandă:
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Tipărește ieșirea de log la stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Setează nivelul de detaliere al log-urilor |
+  | `--pure` | boolean | Rulează fără a încărca plugin-uri externe |
+  | `--help`, `-h` | boolean | Afișează textul de ajutor |
+  | `--version`, `-v` | boolean | Tipărește numărul versiunii instalate |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Rulează Bolt cu un singur prompt în mod neinteractiv. Bolt pornește un server in-process, trimite promptul către sesiunea activă, transmite răspunsul la stdout, apoi iese. Redirecționează stdin sau transmite `--file` pentru a atașa context.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Comanda slash de executat; transmite argumente ca mesaj |
+  | `--continue` | `-c` | boolean | Continuă cea mai recentă sesiune |
+  | `--session` | `-s` | string | ID-ul sesiunii de continuat |
+  | `--fork` |  | boolean | Ramifică sesiunea înainte de a continua (necesită `--continue` sau `--session`) |
+  | `--share` |  | boolean | Partajează sesiunea după ce se finalizează |
+  | `--model` | `-m` | string | Modelul de utilizat în format `provider/model` |
+  | `--best-of` |  | string | Listă `provider/model` separată prin virgulă; rulează sarcina în paralel, clasifică rezultatele, păstrează câștigătorul |
+  | `--agent` |  | string | Agent de folosit (de ex. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Format de ieșire; `json` transmite evenimente JSON brute separate prin newline |
+  | `--file` | `-f` | string\[\] | Fișier(e) de atașat ca context |
+  | `--title` |  | string | Titlu pentru sesiune |
+  | `--attach` |  | string | Rulează pe un server Bolt la distanță (de ex. `http://localhost:4096`) |
+  | `--password` | `-p` | string | Parolă basic auth pentru serverul la distanță |
+  | `--username` | `-u` | string | Nume de utilizator basic auth pentru serverul la distanță |
+  | `--dir` |  | string | Directorul de lucru; dacă `--attach` este setat, acesta este directorul de pe serverul la distanță |
+  | `--port` |  | number | Port pentru serverul local in-process (aleator dacă este omis) |
+  | `--variant` |  | string | Nivelul efortului de raționament, specific furnizorului (de ex. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Afișează blocurile de raționament/gândire în ieșire |
+  | `--mini` |  | boolean | Pornește UI-ul interactiv minim cu split-footer (ascuns) |
+  | `--interactive` | `-i` | boolean | Forțează modul interactiv direct cu split-footer |
+  | `--auto` |  | boolean | Auto-aprobă permisiunile care nu sunt refuzate explicit |
+  | `--yolo` |  | boolean | Omite toate solicitările de permisiune (alias pentru `--auto`, ascuns) |
+  | `--dangerously-skip-permissions` |  | boolean | Omite toate verificările de permisiune (ascuns) |
+  | `--demo` |  | boolean | Activează comenzile slash de demonstrație interactive directe (ascuns) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Atașează TUI-ul complet la un server Bolt care rulează. Serverul poate fi local sau la distanță. Transmite `--mini` pentru a folosi UI-ul minim cu split-footer în locul TUI-ului complet.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Director pe serverul la distanță |
+  | `--continue` | `-c` | boolean | Continuă cea mai recentă sesiune de pe serverul la distanță |
+  | `--session` | `-s` | string | ID-ul sesiunii de continuat |
+  | `--fork` |  | boolean | Ramifică sesiunea la continuare |
+  | `--password` | `-p` | string | Parolă basic auth |
+  | `--username` | `-u` | string | Nume de utilizator basic auth |
+  | `--mini` |  | boolean | Folosește UI-ul interactiv minim |
+  | `--no-replay` |  | boolean | Dezactivează redarea istoricului sesiunii la reluare și după redimensionare (necesită `--mini`) |
+  | `--replay-limit` |  | number | Limitează redarea vizibilă la cele mai noi N mesaje (necesită `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Pornește un server API Bolt headless. Serverul expune un API REST\+SSE la care TUI-ul, `bolt run --attach` și `bolt attach` se pot conecta. Leagă pe `0.0.0.0` pentru a-l face accesibil de pe alte mașini — setează întotdeauna `BOLT_SERVER_PASSWORD` când faci asta.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--hostname` | string | Adresa la care se leagă (implicit: `127.0.0.1`) |
+  | `--port` | number | Portul pe care ascultă (aleator dacă este omis) |
+  | `--mdns` | boolean | Activează descoperirea serviciilor mDNS (implicit hostname devine `0.0.0.0`) |
+  | `--mdns-domain` | string | Numele de domeniu personalizat pentru serviciul mDNS (implicit: `opencode.local`) |
+  | `--cors` | string\[\] | Domenii suplimentare de permis pentru CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` nu este setat în mod implicit. Serverul va înregistra un avertisment și va accepta toate conexiunile până când îl setezi.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Pornește serverul Bolt și deschide imediat UI-ul web în browserul tău implicit. Acceptă aceleași opțiuni de rețea ca `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--hostname` | string | Adresa la care se leagă (implicit: `127.0.0.1`) |
+  | `--port` | number | Portul pe care ascultă (aleator dacă este omis) |
+  | `--mdns` | boolean | Activează descoperirea serviciilor mDNS (implicit hostname devine `0.0.0.0`) |
+  | `--mdns-domain` | string | Numele de domeniu personalizat pentru serviciul mDNS (implicit: `opencode.local`) |
+  | `--cors` | string\[\] | Domenii suplimentare de permis pentru CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Gestionează sesiunile Bolt stocate în baza de date SQLite locală.
+
+  **Subcomenzi**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **Opțiuni `bolt session list`**
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Limitează ieșirea la cele mai recente N sesiuni |
+  | `--format` |  | `table`\|`json` | Format de ieșire (implicit: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Listează și creează agenți personalizați. Agenții sunt fișiere Markdown cu frontmatter YAML care definesc un prompt de sistem, permisiuni și un mod.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **Opțiuni `bolt agent create`**
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Cale de director în care se scrie fișierul agentului |
+  | `--description` |  | string | Descriere în limbaj natural a ceea ce ar trebui să facă agentul |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Dacă agentul acționează ca agent primar, subagent sau ambele |
+  | `--permissions` | `--tools` | string | Listă separată prin virgulă de permisiuni permise (implicit: toate) |
+  | `--model` | `-m` | string | Modelul de utilizat în format `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  Gestionează interactiv credențialele furnizorilor AI. Credențialele sunt stocate în directorul de date al sistemului tău de operare (`~/.local/share/bolt/auth.json` pe Linux, `~/Library/Application Support/bolt/auth.json` pe macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Listează toate modelele disponibile de la furnizorii configurați.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Include metadate JSON de cost pentru fiecare model |
+  | `--refresh` | boolean | Reîmprospătează cache-ul de modele de la models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Gestionează serverele Model Context Protocol (MCP). Bolt acceptă atât servere la distanță (HTTP/SSE) cu OAuth, cât și servere locale (stdio).
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **Opțiuni `bolt mcp add`**
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--url` | string | URL pentru un server MCP la distanță |
+  | `--env` | string\[\] | Variabilă de mediu pentru un server local (`KEY=VALUE`) |
+  | `--header` | string\[\] | Antet HTTP pentru un server la distanță (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Instalează un plugin Bolt de pe npm și actualizează fișierul de configurare relevant. Plugin-urile pot extinde TUI-ul, adăuga comenzi slash noi sau înregistra furnizori noi.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Adaugă plugin-ul la configurația globală în loc de configurația proiectului |
+  | `--force` | `-f` | boolean | Înlocuiește o versiune de plugin deja configurată |
+</Accordion>
+
+<Accordion title="bolt github">
+  Gestionează integrarea Bolt GitHub Actions, care permite Bolt să răspundă la pull request-uri, issue-uri și alte evenimente GitHub.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **Opțiuni `bolt github run`**
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--event` | string | Numele evenimentului GitHub de simulat (de ex. `pull_request`) |
+  | `--token` | string | Token GitHub cu acces personal |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Face checkout unui pull request GitHub ca ramură locală folosind CLI-ul `gh`, apoi lansează Bolt în directorul făcut checkout. Dacă descrierea PR-ului conține un link de partajare de sesiune, Bolt importă automat acea sesiune.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Această comandă necesită ca [GitHub CLI (`gh`)](https://cli.github.com/) să fie instalat și autentificat.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Generează un mesaj de commit pentru modificările staged (sau toate cele urmărite) folosind un model AI, apoi face commit. Modelul inspectează istoricul recent de commit-uri pentru context stilistic.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Face commit tuturor modificărilor urmărite, nu doar celor staged |
+  | `--dry-run` |  | boolean | Tipărește mesajul generat fără a face commit |
+  | `--model` | `-m` | string | Modelul de utilizat în format `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Rulează o revizuire de cod AI pe un diff și iese cu codul `0` (pass) sau `1` (fail). Agentul `code-review` examinează diff-ul pentru corectitudine, stil și probleme de securitate, apoi emite o linie `Verdict: PASS` sau `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Revizuiește doar modificările staged |
+  | `--branch` |  | string | Revizuiește modificările de la merge base cu această ramură |
+  | `--model` | `-m` | string | Modelul de utilizat în format `provider/model` |
+
+  <Note>
+    Coduri de ieșire: `0` = PASS, `1` = FAIL, `2` = verdictul nu a putut fi determinat.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Exportă o sesiune ca JSON la stdout. Util pentru arhivare, partajare sau introducere în alte instrumente. Transmite `--sanitize` înainte de partajarea publică pentru a redacta căile de fișiere, prompturile și alt conținut sensibil al transcrierii.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Redactează datele sensibile (căi de fișier, text de prompt, I/O de instrumente) înainte de exportare |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Importă o sesiune exportată anterior în baza de date locală. Acceptă fie un fișier JSON local, fie un URL de partajare a sesiunii.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Afișează statistici agregate de utilizare a token-urilor și cost pentru toate sesiunile. Ieșirea include un tabel de prezentare generală, o defalcare de cost și de token-uri, utilizarea modelului și o diagramă cu bare a utilizării instrumentelor.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--days` | number | Limitează la ultimele N zile (implicit: tot timpul) |
+  | `--tools` | number | Numărul de instrumente de afișat în graficul de utilizare a instrumentelor |
+  | `--models` | boolean\|number | Afișează statisticile pe model; transmite un număr pentru a limita lista |
+  | `--project` | string | Filtrează după ID de proiect; șirul gol înseamnă proiectul curent |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Tipărește log-ul aplicației Bolt. Log-ul este stocat în directorul de log-uri al sistemului de operare (de ex. `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Numărul de linii de la sfârșit de tipărit (implicit: 1000) |
+  | `--follow` | `-f` | boolean | Transmite noile linii de log în timp real |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Interoghează sau inspectează direct baza de date SQLite locală a sesiunilor.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Format de ieșire pentru rezultatele interogării (implicit: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Actualizează Bolt la cea mai recentă versiune sau la o versiune specifică. Bolt detectează metoda de instalare automat și folosește managerul de pachete adecvat.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Opțiune | Alias | Tip | Descriere |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Metoda de instalare de utilizat |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Elimină binarul Bolt și toate datele asociate.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Generează un script de completare shell pentru `bash`, `zsh` sau `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  O colecție de subcomenzi de depanare și introspecție. Utilă la depunerea rapoartelor de bug sau la diagnosticarea comportamentului neașteptat.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Pornește un server ACP (Agent Client Protocol). ACP este protocolul folosit de integrările de editor precum [Zed](https://zed.dev) pentru a comunica cu Bolt prin stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Opțiune | Tip | Descriere |
+  | --- | --- | --- |
+  | `--cwd` | string | Director de lucru pentru server (implicit: `process.cwd()`) |
+  | `--hostname` | string | Hostname de legat (implicit: `127.0.0.1`) |
+  | `--port` | number | Port de legat |
+  | `--mdns` | boolean | Activează descoperirea serviciilor mDNS |
+  | `--mdns-domain` | string | Nume de domeniu personalizat pentru serviciul mDNS (implicit: `opencode.local`) |
+  | `--cors` | string\[\] | Domenii suplimentare de permis pentru CORS |
+</Accordion>

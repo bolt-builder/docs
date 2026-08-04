@@ -1,0 +1,33 @@
+---
+title: "Bolt Web Arayüzü"
+sidebarTitle: "Web Arayüzü"
+description: "bolt web, çalışan bir Bolt sunucusunun üzerinde tarayıcı tabanlı bir arayüz sunar — paylaşılan takım kutuları, uzak makineler ve TUI'nin pratik olmadığı her yer için kullanışlıdır."
+---
+
+`bolt web`, bir Bolt sunucusu başlatır ve önünde bir tarayıcı arayüzü sunar. TUI ile aynı motordur, sadece bir tarayıcı sekmesinde işlenir.
+
+## Başlatın
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Ardından yazdırılan URL'yi açın. Bir ağa açarken önce temel kimlik doğrulama ayarlayın:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Web arayüzü ne zaman kullanılmalı
+
+- Bolt'u güçlü bir uzak makinede çalıştırmak ancak dizüstünüzden sürmek.
+- Eşli hata ayıklama için bir takım arkadaşıyla canlı oturum paylaşmak.
+- Tam bir TUI'nin garip olduğu ortamlar (Chromebook'lar, tabletler, ortak çalışma makineleri).
+
+## İlgili
+
+- [Başsız Sunucu](/server/headless-server) — temel API sunucusu.
+- [Uzak Oturumlar](/server/remote-sessions) — web arayüzünün sunduğu aynı sunucuya bir TUI bağlayın.

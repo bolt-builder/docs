@@ -1,0 +1,61 @@
+---
+title: "Referensi variabel lingkungan Bolt"
+sidebarTitle: "Env Variables"
+description: "Setiap variabel lingkungan yang dikenali Bolt, termasuk kontrol log, autentikasi server, override config, dan konvensi API key provider."
+---
+
+Variabel lingkungan memungkinkan kamu mengonfigurasi Bolt tanpa menyentuh file config apa pun — berguna di pipeline CI, container Docker, dan lingkungan bersama di mana kamu tidak dapat meng-commit kredensial. Variabel dibaca sekali saat startup dan tidak dapat diubah saat Bolt sedang berjalan.
+
+## Referensi
+
+| Variabel | Deskripsi |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Atur verbositas log. Nilai yang diterima: `DEBUG`, `INFO`, `WARN`, `ERROR`. Setara dengan flag `--log-level`. |
+| `BOLT_PRINT_LOGS` | Atur ke nilai tak-kosong apa pun untuk mencetak output log ke stderr. Setara dengan `--print-logs`. |
+| `BOLT_PURE` | Atur ke nilai tak-kosong apa pun untuk menonaktifkan semua plugin eksternal. Setara dengan `--pure`. |
+| `BOLT_SERVER_USERNAME` | Username basic auth untuk `bolt serve` dan `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Password basic auth untuk `bolt serve` dan `bolt web`. Semua klien yang terhubung harus menyediakan password ini. |
+| `BOLT_CONFIG` | Override path ke file config yang dimuat Bolt. Bolt tidak akan mencari lokasi default ketika ini diatur. |
+| `BOLT_CONFIG_DIR` | Override direktori config. Bolt akan mencari file config di direktori ini alih-alih direktori config OS default. |
+| `BOLT_CONFIG_CONTENT` | Sediakan seluruh config sebagai string JSON inline. Berguna di CI di mana penulisan file tidak praktis. Mengambil prioritas tertinggi di antara sumber config. |
+| `BOLT_GIT_BASH_PATH` | Path ke direktori `bin` Git Bash di Windows, digunakan untuk menemukan utilitas Unix seperti `less`. |
+
+## API key provider
+
+Bolt menemukan kredensial provider dari variabel lingkungan secara otomatis — tidak perlu langkah `bolt providers login`. Setiap provider mencari variabel lingkungan tertentu, dan Bolt akan menggunakannya jika variabel diatur, terlepas dari apa yang tersimpan di `auth.json`.
+
+<Tip>
+  Atur API key provider di profil shell kamu (misal `~/.zshrc`, `~/.bashrc`) atau di file `.env` yang dimuat oleh shell kamu. Kamu juga dapat mereferensikannya dari file config menggunakan sintaks `${VAR_NAME}` di field `provider.*.apiKey` sehingga kunci tidak pernah disimpan dalam plaintext.
+</Tip>
+
+Variabel provider umum:
+
+| Variabel | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, seri o) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Jalankan `bolt models --verbose` untuk melihat variabel lingkungan mana yang diharapkan setiap provider yang dikonfigurasi.
+
+## Contoh penggunaan
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

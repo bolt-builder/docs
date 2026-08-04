@@ -1,0 +1,107 @@
+---
+title: "Bevezető a Bolt-ba: a nyílt forráskódú terminál MI-ügynök"
+sidebarTitle: "Bevezető"
+description: "Ismerd meg a Bolt-ot: egy nyílt forráskódú terminál MI-alapú kódolóügynök tíz ügynökkel, tartós munkamenetekkel, projektmemóriával, MCP-vel, 75+ LLM-szolgáltatóval, TUI-val és asztali alkalmazással."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**A terminálod, most egy teljes MI-mérnökcsapattal benne.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Weboldal</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+A Bolt egy terminál-központú MI-alapú kódolóügynök, amely az [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) és [SolidJS](https://www.solidjs.com) alapokra épül. Irányítsd rá bármely projektre, és automatikusan felveszi a kontextust: feltárja a kódodat, követi a konvencióidat, végrehajt shell parancsokat, szerkeszt fájlokat, futtat teszteket és szállítja a változtatásokat.
+
+Tíz beépített ügynök (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) plusz `@general` és `@explore` al-ügynökök lefedik az egész mérnöki hurkot. A munkamenetek tartósak: leválaszthatod, újracsatolhatod (akár egy távoli szerverhez is), elágaztathatod, megoszthatod, exportálhatod és importálhatod bármikor. A projektmemória megőrzi, amit az ügynök tanul a munkamenetek között. Bővíthető MCP-szervereken (OAuth-tal), pluginekkel, egyedi ügynökökkel és egyedi eszközökkel.
+
+A Bolt nyílt forráskódú a PolyForm Noncommercial 1.0.0 licenc alatt.
+
+## Miért a Bolt?
+
+A Bolt úgy van tervezve, ahogyan a fejlesztők ténylegesen dolgoznak: a terminálban, több munkameneten keresztül, valós kódbázisokon. Íme, ami megkülönbözteti:
+
+- **Terminál-központú TUI.** Egy gyors, billentyűzet-vezérelt felület, amely [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) és [SolidJS](https://www.solidjs.com) segítségével készült. Azért érzed natívnak, mert az.
+- **Egy egész ügynökcsapat.** Tíz szakosított ügynök — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` és `perf` — plusz al-ügynökök kutatáshoz és több lépéses delegáláshoz. Váltogass közöttük a `Tab` billentyűvel.
+- **Munkamenetek, amelyekbe visszatérhetsz.** Válassz le egy munkamenetről és csatlakozz később, akár egy távoli szerveren is. Ágaztass el, ossz meg, exportálj és importálj munkát bármikor. A munkamenetek SQLite-ban vannak tárolva, és teljes mértékben megvizsgálhatók a `bolt db` paranccsal.
+- **Tervezésénél fogva bővíthető.** MCP-szerverek teljes OAuth-támogatással, plugin-rendszer, GitHub-integráció, beépített API-szerver és webes felület.
+- **Asztali alkalmazás.** Ugyanaz a motor egy több ablakos, több lapos asztali élményben — integrált terminállal, fájlfával, parancspalettával, 28 felületnyelvvel és automatikus frissítésekkel.
+
+## Beépített ügynökök
+
+A Bolt tíz szakosított ügynökkel érkezik. Minden ügynöknek van egy definiált fájlrendszer-hozzáférési szintje, amely illeszkedik a céljához.
+
+| Ügynök | Hozzáférés | Leírás |
+| --- | --- | --- |
+| `code` | Full | Alapértelmezett: olvas, ír és futtat kódot |
+| `plan` | Read | Feltárja a kódbázist, és tervet készít fájlok módosítása nélkül |
+| `ask` | Read | Kérdések és kutatás — nincs fájlszerkesztés |
+| `code-review` | Read | Változtatásokat vizsgál helyesség, stílus és biztonság szempontjából |
+| `debug` | Full | Bukó teszteket, összeomlásokat és logikai hibákat javít |
+| `refactor` | Full | Biztonságos refaktorálás minden lépésnél teszt-ellenőrzéssel |
+| `docs` | Edit | Dokumentációt és megjegyzéseket ír és frissít |
+| `security` | Read | Biztonsági audit: sebezhetőségek, titkok, minták |
+| `migrate` | Full | Keretrendszer-frissítések és függőségi migrációk |
+| `perf` | Full | Teljesítményelemzés és optimalizálás |
+
+Saját ügynököket is definiálhatsz Markdown-fájlokként, vagy generálhatsz egyet a `bolt agent create` paranccsal.
+
+## Asztali alkalmazás
+
+A Bolt önálló asztali alkalmazásként is érkezik több ablakos és több lapos munkamenet-kezeléssel, prompt-szerkesztővel melléklet- és vágólapról-képbeillesztés támogatással, integrált terminállal és fájlfával, parancspalettával, teljes körű beállításokkal a billentyűkombinációkhoz, modellekhez, szolgáltatókhoz és szerverekhez, natív értesítésekkel, deep linkekkel, WSL-integrációval Windowson, és automatikus frissítésekkel a dev, beta és produkciós csatornákon.
+
+Töltsd le az asztali alkalmazást a [kiadási oldalról](https://github.com/Bolt-builder/bolt-cli/releases), vagy telepítsd egy sorban macOS-en Gatekeeper-kerülőút nélkül:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Fedezd fel a dokumentációt
+
+<CardGroup cols={2}>
+  <Card title="Telepítés" icon="download" href="/installation">
+    Telepítsd a Bolt-ot curl-lel, npm-mel vagy a rendszer csomagkezelőjével macOS-en, Linuxon és Windowson.
+  </Card>
+
+  <Card title="Gyors indítás" icon="rocket" href="/quickstart">
+    Nyisd meg a TUI-t, futtasd az első promptodat, és szállíts egy MI által generált commitot kevesebb mint egy perc alatt.
+  </Card>
+
+  <Card title="Ügynökök" icon="users" href="/concepts/agents">
+    Tíz beépített ügynök plusz al-ügynökök. Ismerd meg, mit csinálnak, és hogyan írhatsz sajátokat.
+  </Card>
+
+  <Card title="Projektmemória" icon="brain" href="/concepts/project-memory">
+    Hogyan emlékezik a Bolt a projektedre a munkamenetek között, és hogyan vezérelheted, mi rögzül.
+  </Card>
+
+  <Card title="MCP-szerverek" icon="plug" href="/extending/mcp-servers">
+    Csatlakoztass külső eszközöket és adatforrásokat a Bolt-hoz a Model Context Protocol segítségével.
+  </Card>
+
+  <Card title="Fej nélküli szerver" icon="server" href="/server/headless-server">
+    Futtasd a `bolt serve` parancsot, csatlakoztass egy TUI-t bármely gépről, és vezéreld a Bolt-ot az API-n keresztül.
+  </Card>
+</CardGroup>

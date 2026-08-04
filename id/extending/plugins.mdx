@@ -1,0 +1,145 @@
+---
+title: "Perluas Bolt dengan plugin"
+sidebarTitle: "Plugins"
+description: "Instal dan bangun plugin Bolt untuk menambahkan provider AI kustom, metode autentikasi, tool, dan workspace adapter ke proyek mana pun atau secara global."
+url: "extending/plugins"
+---
+
+Plugin memungkinkan kamu memperluas Bolt melampaui kemampuan bawaannya. Plugin adalah modul Node atau Bun yang mengekspor manifest plugin Bolt; ketika dimuat, plugin dapat mendaftarkan provider LLM baru, metode autentikasi kustom, tool tambahan, dan workspace adapter. Plugin dapat dipasang untuk satu proyek atau diterapkan secara global di seluruh pekerjaanmu.
+
+## Menginstal plugin
+
+Gunakan `bolt plugin install` (alias: `bolt plug`) untuk menginstal plugin dari npm dan secara otomatis mendaftarkannya di config kamu:
+
+```bash
+bolt plugin install <module>
+```
+
+### Flag
+
+| Flag | Alias | Deskripsi |
+|------|-------|-------------|
+| `--global` | `-g` | Instal ke config global alih-alih proyek saat ini |
+| `--force` | `-f` | Ganti entri yang sudah ada untuk modul yang sama |
+
+### Scope: proyek vs. global
+
+Secara default, `bolt plugin install` menambahkan plugin ke `.bolt/bolt.jsonc` tingkat proyek. Teruskan `--global` untuk menambahkannya ke config seluruh pengguna sehingga dimuat di setiap proyek.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Jalankan `bolt --pure` (atau atur `OPENCODE_PURE=1`) untuk memulai Bolt dengan semua plugin eksternal dinonaktifkan. Ini berguna untuk men-debug apakah sebuah plugin menyebabkan perilaku tak terduga, tanpa uninstall.
+</Note>
+
+---
+
+## Menginstal plugin yang dipublikasikan
+
+<Steps>
+  <Step title="Find the plugin package">
+    Cari npm untuk paket dengan `bolt-plugin` atau `opencode-plugin` di namanya, atau ikuti tautan dari dokumentasi provider.
+  </Step>
+
+  <Step title="Install into your project">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt menginstal paket, membaca manifestnya untuk mendeteksi target server dan TUI, lalu menulis entri ke `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Verify the config">
+    Buka `.bolt/bolt.jsonc` dan konfirmasi entri plugin telah ditambahkan:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Start a session">
+    ```bash
+    bolt
+    ```
+
+    Bolt memuat plugin saat startup. Provider atau tool apa pun yang didaftarkannya langsung tersedia.
+  </Step>
+</Steps>
+
+---
+
+## Konfigurasi plugin manual
+
+Kamu dapat mendaftarkan plugin dengan mengedit `.bolt/bolt.jsonc` secara langsung. Ini berguna untuk plugin lokal yang sedang dikembangkan:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Path relatif diselesaikan dari root proyek. Baik entry point TypeScript maupun JavaScript didukung.
+
+---
+
+## Membangun plugin
+
+Plugin ditulis terhadap paket `@opencode-ai/plugin`, yang menyediakan interface `Hooks` yang harus dipenuhi modul kamu.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Plugin minimal mengekspor fungsi yang menerima objek `PluginInput` dan mengembalikan objek `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Tipe hook yang tersedia
+
+| Hook | Tujuan |
+|------|---------|
+| `auth` | Mendaftarkan provider autentikasi kustom dengan array `methods` |
+| `event` | Bereaksi terhadap event sesi (pesan, panggilan tool, penyelesaian) |
+| `config` | Merespons perubahan konfigurasi saat runtime |
+| `dispose` | Membersihkan resource ketika plugin di-unload |
+
+Objek `PluginInput` mengekspos `client` (klien API Bolt yang bertipe), `project`, `worktree`, `directory`, dan `serverUrl` sehingga plugin kamu dapat berinteraksi dengan server yang sedang berjalan.
+
+---
+
+## Variabel lingkungan
+
+| Variabel | Deskripsi |
+|----------|-------------|
+| `OPENCODE_PURE` | Atur ke `1` untuk berjalan tanpa plugin eksternal apa pun |

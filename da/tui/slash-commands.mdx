@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI slash-kommandoer"
+sidebarTitle: "Slash-kommandoer"
+description: "Slash-kommandoerne du kan køre inde i Bolt TUI'en — /memory, /plan, /todos, /btw — og hvordan de ændrer den aktuelle sessions adfærd."
+---
+
+Slash-kommandoer skrives ind i TUI-prompten og ændrer hvordan den aktuelle session opfører sig. De sender ikke noget til modellen; de kører lokalt mod Bolt selv.
+
+## Reference
+
+| Kommando | Hvad den gør |
+| --- | --- |
+| `/memory` | Vis projekthukommelsesstatus for denne session. |
+| \`/memory use on | off\` | Om denne session læser fra [projekthukommelse](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Om denne session skriver tilbage til projekthukommelse, når turen lukker. |
+| `/plan` | Skift den aktuelle session til planlægningstilstand (read-only, producerer en plan). |
+| `/todos` | Vis agentens aktuelle strukturerede opgaveliste. |
+| `/btw` | Indsprøjt en out-of-band-note ("by the way..."), som agenten vil se på sin næste tur uden at udløse et fuldt svar. |
+
+<Tip>
+  Slash-kommandoer er sessions-scopede. For at gøre en præference vedvarende skal du sætte den i `.bolt/bolt.jsonc` i stedet. Se [Konfiguration](/concepts/configuration).
+</Tip>
+
+## Tilføj dine egne
+
+Brugerdefinerede slash-kommandoer kan bidrages af [plugins](/extending/plugins) og af filer i `.opencode/command/`. Hver kommando er en Markdown-fil, hvis frontmatter beskriver triggeren og adfærden.
+
+## Relateret
+
+- [Tastebindinger](/tui/keybinds) — tastaturgenveje til TUI'en.
+- [Projekthukommelse](/concepts/project-memory) — hvad `/memory` skifter.

@@ -1,0 +1,395 @@
+---
+title: "排查常见的 Bolt 问题"
+sidebarTitle: "故障排除"
+description: "最常见 Bolt 问题的解决方案：启动失败、提供商认证错误、MCP 连接、会话问题、权限、成本等等。"
+---
+
+大多数 Bolt 问题都属于少数几个类别。查阅下面相关的手风琴条目,当发生意外情况时,使用 `bolt logs` 检查日志输出。
+
+<Note>
+  对于此处未解答的问题,请在 [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) 中搜索或发起讨论。在你的帖子中包含 `bolt debug info` 和 `bolt logs --tail 50` 的输出,以便社区更快地帮助你。
+</Note>
+
+## 首先尝试的事情
+
+在深入到特定部分之前,这四个命令解决了大多数问题：
+
+| 症状 | 首个命令 | 原因 |
+| --- | --- | --- |
+| 任何奇怪的情况 | `bolt debug info` | 一次性系统 \+ 插件摘要。 |
+| 之前有效,现在无效 | `bolt logs --tail 100` | 最近的错误,通常在顶部附近。 |
+| 怀疑插件 | `bolt --pure` | 禁用所有插件启动。 |
+| 配置未被识别 | `bolt debug config` | 打印完全解析的配置。 |
+
+<Tip>
+  `bolt debug` 家族是任何神秘行为的首选。`bolt debug info` 获取系统摘要,`bolt debug config` 获取解析后的配置,`bolt debug paths` 获取磁盘位置,`bolt debug snapshot` 检查会话状态。
+</Tip>
+
+<Accordion title="Bolt 无法启动 / 启动时崩溃">
+  **症状：** 终端闪烁并立即退出,或在 TUI 渲染之前看到堆栈跟踪。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="收集系统信息">
+      ```bash
+      bolt debug info
+      ```
+
+      这会打印你的 Bolt 版本、操作系统、终端模拟器和已加载的插件。报告 bug 时复制此输出。
+    </Step>
+    <Step title="检查最近的日志输出">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      查找 `ERROR` 行。常见原因是插件加载失败 — 在这种情况下,你会看到提到插件名称的错误。
+    </Step>
+    <Step title="禁用插件以隔离问题">
+      ```bash
+      bolt --pure
+      ```
+
+      如果 Bolt 使用 `--pure` 干净地启动,则插件是导致崩溃的原因。从你的配置中删除有问题的插件,或向插件作者报告。
+    </Step>
+    <Step title="检查损坏的配置">
+      ```bash
+      bolt debug config
+      ```
+
+      如果这打印出关于无效 JSON 的错误,请打开它提到的配置文件并修复语法。运行 `bolt db path` 以确认数据库路径可访问。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="提供商认证失败">
+  **症状：** Bolt 显示"No providers configured",API 请求以 401 错误失败,或 `bolt run` 立即退出而不产生任何输出。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="重新运行提供商登录流程">
+      ```bash
+      bolt providers login
+      ```
+
+      选择你的提供商并按照提示操作。Bolt 将引导你完成 API 密钥输入或 OAuth。
+    </Step>
+    <Step title="验证 API 密钥环境变量">
+      如果你使用 env var（例如 `ANTHROPIC_API_KEY`）,请确认它实际上是在当前 shell 中设置的：
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      如果为空,请将其添加到你的 shell 配置文件并重新打开终端。
+    </Step>
+    <Step title="检查解析后的配置">
+      ```bash
+      bolt debug config
+      ```
+
+      查看 `provider` 部分。如果你的提供商出现空白 `apiKey`,则配置文件中的环境变量引用未被展开。
+    </Step>
+    <Step title="列出存储的凭证">
+      ```bash
+      bolt providers list
+      ```
+
+      这会显示 `auth.json` 中存储的所有凭证以及 Bolt 检测到的所有与提供商相关的环境变量。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP 服务器无法连接">
+  **症状：** `bolt mcp list` 显示服务器为 `failed` 或 `needs authentication`,或代理无法使用该服务器的任何工具。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="运行 MCP 调试探测">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      这将测试基本的 HTTP 连接性,检查 `WWW-Authenticate` 头,并在适用时遍历 OAuth 发现流程。输出将告诉你服务器是否可达以及是否需要认证。
+    </Step>
+    <Step title="检查服务器 URL">
+      验证 `.bolt/bolt.jsonc` 中的 URL。对于远程服务器,请确保 URL 以 MCP 路径结尾（例如 `/mcp` 或 `/tools`）,而不仅仅是主机。
+    </Step>
+    <Step title="重新认证 OAuth 服务器">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      按照浏览器流程操作。如果服务器需要预注册的客户端 ID,请将其添加到配置中：
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="检查本地服务器命令">
+      对于 `local` 服务器,在终端中手动运行该命令以确认它可以无错误地启动：
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="未找到会话">
+  **症状：** `bolt run --session <id>` 以"Session not found"退出,或你记得处理过的会话消失了。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="列出所有可用会话">
+      ```bash
+      bolt session list
+      ```
+
+      会话按最近更新排序。如果你的会话被删除或数据库被迁移,它不会出现在这里。
+    </Step>
+    <Step title="查找数据库路径">
+      ```bash
+      bolt db path
+      ```
+
+      这会打印 SQLite 文件的完整路径。验证文件存在且不为空。
+    </Step>
+    <Step title="直接查询数据库">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      如果你的会话出现在数据库中,但没有出现在 `bolt session list` 中,则可能存在项目 ID 不匹配 — 会话的作用域限定于项目。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="TUI 中的权限错误">
+  **症状：** 代理反复请求权限、拒绝写入文件,或者你看到"Permission denied"横幅。
+
+  **理解访问级别：**
+
+  每个内置代理都有一个已声明的访问级别,控制它在不询问的情况下可以做什么：
+
+  | 访问级别 | 它允许什么 |
+  | --- | --- |
+  | **Full** | 读取文件、写入文件、运行 shell 命令 |
+  | **Edit** | 读取和写入文件,无 shell 命令 |
+  | **Read** | 仅读取文件,无写入或命令 |
+
+  `code`、`debug`、`refactor`、`migrate` 和 `perf` 代理具有 **Full** 访问权限。`docs` 具有 **Edit** 访问权限。`plan`、`ask`、`code-review` 和 `security` 具有 **Read** 访问权限。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="切换到具有 Full 访问权限的代理">
+      如果你需要文件写入,请使用 `code` 代理：
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      或在 TUI 中按 `Tab` 在代理之间循环。
+    </Step>
+    <Step title="使用 --auto 以非交互方式批准提示">
+      在 CI 或脚本化的上下文中,将 `--auto` 传递给 `bolt run` 以自动批准未在配置中显式拒绝的权限。
+    </Step>
+    <Step title="在配置文件中配置权限">
+      你可以通过向 `.bolt/bolt.jsonc` 添加 `permission` 块来为项目中的所有会话拒绝特定工具。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="高 token 使用或意外成本">
+  **症状：** `bolt stats` 显示的 token 计数高于预期,或你的 API 账单增长速度快于预期。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="查看你的使用统计信息">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      输出按天细分成本、每个会话的平均 tokens 以及按模型的使用情况。
+    </Step>
+    <Step title="降低推理强度">
+      对于支持它的模型,使用 `--variant` 降低推理强度：
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      支持的值是提供商特定的（例如 `minimal`、`low`、`high`、`max`）。
+    </Step>
+    <Step title="切换到更便宜的模型">
+      使用 `bolt models` 找到较小的模型。较小的模型（例如 `claude-haiku`、`gpt-4o-mini`）每个 token 的成本显著更低,并且在许多任务中表现良好。
+    </Step>
+    <Step title="使用 ask 或 plan 代理进行探索">
+      `ask` 和 `plan` 代理具有 **Read** 访问权限,不会调用写入工具,这意味着它们避免了生成大量输出 tokens 的工具密集型循环。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="插件冲突或意外行为">
+  **症状：** 斜杠命令的行为不符合预期,TUI 渲染不正确,或安装插件后发生了某些变化。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="禁用所有插件以建立基线">
+      ```bash
+      bolt --pure
+      ```
+
+      如果问题消失,则插件负有责任。
+    </Step>
+    <Step title="识别有问题的插件">
+      ```bash
+      bolt debug info
+      ```
+
+      输出列出所有已加载的插件。从配置中一次临时删除一个,并重新启动 Bolt,直到问题消失。
+    </Step>
+    <Step title="检查版本不兼容性">
+      ```bash
+      bolt upgrade
+      ```
+
+      插件声明兼容的 Bolt 版本范围。如果你最近升级了 Bolt,插件可能也需要更新。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows 路径问题">
+  **症状：** 在带 WSL 的 Windows 上,Bolt 找不到 `less`、文件路径包含意外的反斜杠,或 `bolt session list` 的分页器不会启动。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="设置 Git Bash 路径">
+      Bolt 相对于 Git for Windows 安装查找 Unix 实用程序（包括 `less`）。将环境变量设置为你的 Git Bash 目录：
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      将此添加到你的 PowerShell 配置文件（`$PROFILE`）以持久化它。
+    </Step>
+    <Step title="使用 debug info 验证">
+      ```bash
+      bolt debug info
+      ```
+
+      确认操作系统检测以及 Bolt 使用的路径。
+    </Step>
+    <Step title="直接在 WSL 中运行 Bolt">
+      为了在 Windows 上获得最佳体验,请从 WSL 终端而不是从 PowerShell 或命令提示符运行 `bolt`。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="无法升级 Bolt">
+  **症状：** `bolt upgrade` 报告错误或静默不做任何事情,或者运行后版本号没有更改。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="显式指定安装方法">
+      Bolt 尝试检测它是如何安装的。如果检测失败,请覆盖它：
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="通过安装脚本重新安装">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows：以管理员身份运行 Chocolatey">
+      如果你通过 `choco` 安装,升级需要提升的终端。在运行 `bolt upgrade` 之前以管理员身份打开 PowerShell。
+    </Step>
+    <Step title="确认新版本已激活">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="代理找不到文件（或找到太多）">
+  **症状：** 代理抱怨它看不到存在的文件,或反复选取你不希望它触及的文件（如 `node_modules`、构建输出或机密）。
+
+  **步骤：**
+
+  <Steps>
+    <Step title="检查 .boltignore">
+      Bolt 遵循项目根目录中的 `.boltignore` 文件,该文件控制代理的文件搜索工具可以看到哪些文件。它使用与 `.gitignore` 相同的语法。
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="确认工作目录">
+      ```bash
+      bolt debug info
+      ```
+
+      验证 `cwd` 是否与项目根匹配。如果你从子目录启动 Bolt,则代理的文件搜索根在那里。
+    </Step>
+    <Step title="让代理 grep,而不是猜测">
+      如果代理声称文件不存在,请让它显式运行 `grep` 或 `glob`。这会绕过任何过时的内部假设。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="为 bug 报告获取调试信息">
+  提交问题时,以下信息对维护者最有用：
+
+  <Steps>
+    <Step title="收集系统和插件信息">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="收集最近的日志输出">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="导出相关会话（脱敏）">
+      如果问题发生在特定会话期间,请对机密进行脱敏后导出：
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      将 `session-debug.json` 附加到问题。
+    </Step>
+    <Step title="打开 issue 或 discussion">
+      前往 [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions),粘贴你的 `bolt debug info` 输出以及复现步骤的描述。
+    </Step>
+  </Steps>
+</Accordion>

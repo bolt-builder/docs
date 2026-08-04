@@ -1,0 +1,32 @@
+---
+title: "统计与费用 (bolt stats)"
+sidebarTitle: "统计与费用"
+description: "bolt stats 聚合所有会话的 token 用量和费用，让你看清支出流向，从而据此调整模型或代理。"
+---
+
+`bolt stats` 汇总本地会话数据库中的 token 计数和费用。由于每次工具调用都会被记录（参见 [Local Database](/reference/local-database)），因此对 Bolt 驱动的 LLM 调用而言，这些数字是准确的。
+
+## 基本用法
+
+```bash
+bolt stats                       # 当前项目的摘要
+bolt stats --days 7              # 最近 7 天
+bolt stats --days 7 --models     # 按模型细分
+```
+
+## 显示的内容
+
+- 输入、输出和缓存 token 总数。
+- 每个提供商的估算费用（使用当次运行时的提供商定价表）。
+- 依据标志显示的按模型、按代理、按日期细分。
+
+## 降低费用
+
+- 对推理密集的模型使用 `--variant minimal` 或 `--variant low`。参见 [Providers & Models](/concepts/providers-and-models)。
+- 对探索性任务优先选择 `ask` 或 `plan` 代理；它们是只读的，可避免大量工具循环。
+- 对无需前沿能力的任务，通过 `bolt models` 切换到更小的模型。
+
+## 相关内容
+
+- [Providers & Models](/concepts/providers-and-models) — 选择并调整 `stats` 所测量的模型。
+- [Troubleshooting](/reference/troubleshooting) — 突发账单时应如何处理。

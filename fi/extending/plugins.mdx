@@ -1,0 +1,145 @@
+---
+title: "Laajenna Boltia laajennuksilla"
+sidebarTitle: "Laajennukset"
+description: "Asenna ja rakenna Bolt-laajennuksia lisätäksesi mukautettuja AI-tarjoajia, todennusmenetelmiä, työkaluja ja työtila-adaptereita mihin tahansa projektiin tai globaalisti."
+url: "extending/plugins"
+---
+
+Laajennukset antavat sinun laajentaa Boltia sen sisäänrakennettujen kyvykkyyksien ulkopuolelle. Laajennus on Node- tai Bun-moduuli, joka vie Bolt-laajennusmanifestin; ladattuna se voi rekisteröidä uusia LLM-tarjoajia, mukautettuja todennusmenetelmiä, lisätyökaluja ja työtila-adaptereita. Laajennuksia voi asentaa yhdelle projektille tai käyttää globaalisti kaikessa työssäsi.
+
+## Laajennuksen asentaminen
+
+Käytä komentoa `bolt plugin install` (alias: `bolt plug`) asentaaksesi laajennuksen npm:stä ja rekisteröidäksesi sen automaattisesti konfiguraatioosi:
+
+```bash
+bolt plugin install <module>
+```
+
+### Liput
+
+| Lippu | Alias | Kuvaus |
+|------|-------|-------------|
+| `--global` | `-g` | Asenna globaaliin konfiguraatioon nykyisen projektin sijaan |
+| `--force` | `-f` | Korvaa saman moduulin olemassa oleva merkintä |
+
+### Laajuus: projekti vs. globaali
+
+Oletuksena `bolt plugin install` lisää laajennuksen projektitason `.bolt/bolt.jsonc`-tiedostoon. Anna `--global` lisätäksesi sen käyttäjän laajuiseen konfiguraatioon, jotta se latautuu jokaisessa projektissa.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Suorita `bolt --pure` (tai aseta `OPENCODE_PURE=1`) käynnistääksesi Boltin, jossa kaikki ulkoiset laajennukset on poistettu käytöstä. Tämä on hyödyllistä debuggaukseen, aiheuttaako laajennus odottamatonta käyttäytymistä, sen asennuksen poistamatta.
+</Note>
+
+---
+
+## Julkaistun laajennuksen asentaminen
+
+<Steps>
+  <Step title="Löydä laajennuspaketti">
+    Etsi npm:stä paketteja, joiden nimessä on `bolt-plugin` tai `opencode-plugin`, tai seuraa linkkiä tarjoajan dokumentaatiosta.
+  </Step>
+
+  <Step title="Asenna projektiisi">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt asentaa paketin, lukee sen manifestin havaitakseen palvelin- ja TUI-kohteet ja kirjoittaa sitten merkinnän tiedostoon `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Tarkista konfiguraatio">
+    Avaa `.bolt/bolt.jsonc` ja vahvista, että laajennusmerkintä lisättiin:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Käynnistä istunto">
+    ```bash
+    bolt
+    ```
+
+    Bolt lataa laajennuksen käynnistyksessä. Kaikki sen rekisteröimät tarjoajat tai työkalut ovat välittömästi käytettävissä.
+  </Step>
+</Steps>
+
+---
+
+## Manuaalinen laajennuksen konfigurointi
+
+Voit rekisteröidä laajennuksia muokkaamalla tiedostoa `.bolt/bolt.jsonc` suoraan. Tämä on hyödyllistä kehitteillä oleville paikallisille laajennuksille:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Suhteelliset polut ratkaistaan projektin juuresta. Sekä TypeScript- että JavaScript-syöttöpisteet ovat tuettuja.
+
+---
+
+## Laajennuksen rakentaminen
+
+Laajennukset kirjoitetaan `@opencode-ai/plugin`-pakettia vasten, joka tarjoaa `Hooks`-rajapinnan, jota moduulisi on toteutettava.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Minimaalinen laajennus vie funktion, joka vastaanottaa `PluginInput`-objektin ja palauttaa `Hooks`-objektin:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Käytettävissä olevat hook-tyypit
+
+| Hook | Tarkoitus |
+|------|---------|
+| `auth` | Rekisteröi mukautetut todennustarjoajat `methods`-taulukolla |
+| `event` | Reagoi istuntotapahtumiin (viestit, työkalukutsut, valmistumiset) |
+| `config` | Reagoi konfigurointimuutoksiin ajoaikaisesti |
+| `dispose` | Siivoa resurssit, kun laajennus puretaan |
+
+`PluginInput`-objekti paljastaa `client`in (tyypitetyn Bolt-API-asiakkaan), `project`in, `worktree`n, `directory`n ja `serverUrl`n, jotta laajennuksesi voi olla vuorovaikutuksessa käynnissä olevan palvelimen kanssa.
+
+---
+
+## Ympäristömuuttujat
+
+| Muuttuja | Kuvaus |
+|----------|-------------|
+| `OPENCODE_PURE` | Aseta arvoon `1` ajaaksesi ilman ulkoisia laajennuksia |

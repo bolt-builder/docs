@@ -1,0 +1,107 @@
+---
+title: "Знайомство з Bolt: AI-агент термінала з відкритим кодом"
+sidebarTitle: "Знайомство"
+description: "Знайомтесь із Bolt: AI-агент програмування у терміналі з відкритим кодом з десятьма агентами, стійкими сесіями, пам'яттю проєкту, MCP, 75+ LLM-провайдерами, TUI та десктопним застосунком."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Ваш термінал, тепер із повноцінною AI-командою інженерів усередині.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt — це terminal-first AI-агент програмування, побудований на [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) та [SolidJS](https://www.solidjs.com). Наведіть його на будь-який проєкт, і він автоматично захоплює контекст: досліджує ваш код, дотримується ваших угод, виконує shell-команди, редагує файли, запускає тести та поставляє зміни.
+
+Десять вбудованих агентів (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) плюс субагенти `@general` та `@explore` охоплюють весь інженерний цикл. Сесії стійкі: від'єднуйтесь, під'єднуйтесь знову (навіть до віддаленого сервера), розгалужуйте, діліться, експортуйте та імпортуйте будь-коли. Пам'ять проєкту зберігає те, що агент вивчає між сесіями. Розширюється через MCP-сервери (з OAuth), плагіни, власних агентів та власні інструменти.
+
+Bolt має відкритий код за ліцензією PolyForm Noncommercial 1.0.0.
+
+## Чому Bolt?
+
+Bolt розроблено навколо того, як розробники насправді працюють: у терміналі, між кількома сесіями, у справжніх кодових базах. Ось що вирізняє його:
+
+- **Terminal-first TUI.** Швидкий, керований з клавіатури інтерфейс, побудований з [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) та [SolidJS](https://www.solidjs.com). Він відчувається нативним, бо є таким.
+- **Ціла команда агентів.** Десять спеціалізованих агентів — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` та `perf` — плюс субагенти для дослідження та багатоетапного делегування. Перемикайтеся між ними за допомогою `Tab`.
+- **Сесії, які можна залишити й повернутися.** Від'єднуйтесь від сесії та під'єднуйтесь пізніше, навіть на віддаленому сервері. Розгалужуйте, діліться, експортуйте та імпортуйте роботу будь-коли. Сесії зберігаються в SQLite і повністю переглядаються за допомогою `bolt db`.
+- **Розширюваний за задумом.** MCP-сервери з повною підтримкою OAuth, система плагінів, інтеграція з GitHub, вбудований API-сервер та веб-UI.
+- **Десктопний застосунок.** Той самий рушій, обгорнутий у багатовіконний, багатовкладковий десктопний досвід — з інтегрованим терміналом, деревом файлів, палітрою команд, 28 мовами інтерфейсу та автооновленнями.
+
+## Вбудовані агенти
+
+Bolt постачається з десятьма спеціалізованими агентами. Кожен агент має визначений рівень доступу до файлової системи, що відповідає його призначенню.
+
+| Агент | Доступ | Опис |
+| --- | --- | --- |
+| `code` | Full | За замовчуванням: читає, пише та виконує код |
+| `plan` | Read | Досліджує кодову базу та створює план без зміни файлів |
+| `ask` | Read | Питання та дослідження — без редагування файлів |
+| `code-review` | Read | Переглядає зміни на предмет коректності, стилю та безпеки |
+| `debug` | Full | Налагоджує невдалі тести, збої та логічні помилки |
+| `refactor` | Full | Безпечний рефакторинг з перевіркою тестів на кожному кроці |
+| `docs` | Edit | Пише та оновлює документацію та коментарі |
+| `security` | Read | Аудит безпеки: вразливості, секрети, патерни |
+| `migrate` | Full | Оновлення фреймворків і міграції залежностей |
+| `perf` | Full | Аналіз продуктивності та оптимізація |
+
+Ви також можете визначати власних агентів як Markdown-файли або згенерувати одного за допомогою `bolt agent create`.
+
+## Десктопний застосунок
+
+Bolt також постачається як окремий десктопний застосунок з багатовіконним і багатовкладковим керуванням сесіями, композитором промптів з підтримкою вкладень і вставленням зображень із буфера обміну, інтегрованим терміналом і деревом файлів, палітрою команд, повними налаштуваннями комбінацій клавіш, моделей, провайдерів і серверів, нативними сповіщеннями, глибокими посиланнями, інтеграцією WSL на Windows та автооновленнями у каналах dev, beta та production.
+
+Завантажте десктопний застосунок зі [сторінки релізів](https://github.com/Bolt-builder/bolt-cli/releases) або встановіть його одним рядком на macOS без обходу Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Дослідіть документацію
+
+<CardGroup cols={2}>
+  <Card title="Встановлення" icon="download" href="/installation">
+    Встановлюйте Bolt через curl, npm або системний менеджер пакетів на macOS, Linux та Windows.
+  </Card>
+
+  <Card title="Швидкий старт" icon="rocket" href="/quickstart">
+    Відкрийте TUI, запустіть свій перший промпт і поставте AI-згенерований коміт менш ніж за хвилину.
+  </Card>
+
+  <Card title="Агенти" icon="users" href="/concepts/agents">
+    Десять вбудованих агентів плюс субагенти. Дізнайтеся, що робить кожен, і як написати власного.
+  </Card>
+
+  <Card title="Пам'ять проєкту" icon="brain" href="/concepts/project-memory">
+    Як Bolt пам'ятає ваш проєкт між сесіями та як контролювати, що фіксується.
+  </Card>
+
+  <Card title="MCP-сервери" icon="plug" href="/extending/mcp-servers">
+    Під'єднуйте зовнішні інструменти та джерела даних до Bolt через Model Context Protocol.
+  </Card>
+
+  <Card title="Headless-сервер" icon="server" href="/server/headless-server">
+    Запустіть `bolt serve`, під'єднайте TUI з будь-якого комп'ютера й керуйте Bolt через API.
+  </Card>
+</CardGroup>

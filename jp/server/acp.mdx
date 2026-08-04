@@ -1,0 +1,28 @@
+---
+title: "ACP: Zed やその他のエディタから Bolt を操作する"
+sidebarTitle: "ACP (エディタ)"
+description: "Bolt は Agent Client Protocol (ACP) を話すため、Zed のようなエディタが別のアプリや TUI を実行することなく、ネイティブの AI コーディングバックエンドとして Bolt を組み込めます。"
+---
+
+Bolt は、Zed のようなエディタが AI エージェントと通信する方法である Agent Client Protocol (ACP) を実装しています。設定すると、エディタが `bolt acp` をサブプロセスとして起動し、直接操作します — エディタを離れることなく、Bolt のエージェント、ツール、セッション、プロバイダスタックを利用できます。
+
+## ACP を有効にする
+
+エディタの AI 設定で、Bolt を ACP 互換エージェントとして追加し、次のコマンドを指定します。
+
+```bash
+bolt acp
+```
+
+エディタがプロセスのライフサイクルを管理します。通常どおり `.bolt/bolt.jsonc` でプロバイダ、モデル、MCP サーバを設定してください — ここでも同じように適用されます。
+
+## 得られるもの
+
+- すべての Bolt エージェントを、エディタの AI パネルから呼び出せます。
+- TUI や Web UI とセッションを共有します (ローカルデータベース経由)。
+- 他の Bolt エントリポイントと同じツールセット、パーミッションモデル、プロジェクトメモリを利用できます。
+
+## 関連項目
+
+- [Headless Server](/server/headless-server) — 並列の HTTP インタフェース。
+- [Configuration](/concepts/configuration) — ACP が継承する設定ファイル。

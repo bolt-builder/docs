@@ -1,0 +1,58 @@
+---
+title: "Narzędzia: co agenci Bolta faktycznie mogą robić"
+sidebarTitle: "Narzędzia"
+description: "Kompletna lista wbudowanych narzędzi dostępnych dla agentów Bolta oraz sposoby dodawania własnych narzędzi przez wtyczki, serwery MCP lub katalog .opencode/tool."
+---
+
+Agenci w Bolcie wykonują pracę, wywołując narzędzia. Każda akcja, którą widzisz w TUI (odczyt pliku, uruchomienie testów, wyszukiwanie w sieci), to model wybierający narzędzie, które Bolt wykonuje. Każdy agent ma zadeklarowany poziom dostępu, który określa, jakie narzędzia może wywoływać bez pytania Cię o pozwolenie (zobacz [Uprawnienia](/concepts/permissions)).
+
+## Wbudowane narzędzia
+
+| Narzędzie | Co robi |
+| --- | --- |
+| `read` | Odczyt pliku z dysku. |
+| `write` | Tworzy nowy plik lub nadpisuje istniejący. |
+| `edit` | Stosuje ukierunkowaną edycję (znajdź/zamień) w pliku. |
+| `apply_patch` | Nakłada patch w stylu unified diff na jeden lub więcej plików. |
+| `glob` | Listuje pliki pasujące do wzorca glob. |
+| `grep` | Wyszukuje w zawartości plików przez regex/tekst. |
+| `bash` | Uruchamia komendę powłoki. |
+| `task` | Deleguje podzadanie do subagenta (`@general`, `@explore` lub niestandardowego subagenta). |
+| `todowrite` | Utrzymuje ustrukturyzowaną listę zadań agenta do pracy wieloetapowej. |
+| `webfetch` | Pobiera URL i zwraca jego zawartość. |
+| `websearch` | Wyszukuje w sieci. |
+| `skill` | Wywołuje nazwany skill (zobacz [Skille](/extending/skills)). |
+| `memory_save` | Zapisuje fakt do [pamięci projektu](/concepts/project-memory). |
+| `memory_recall` | Sprawdza wcześniej zapisaną pamięć. |
+| `question` | Zadaje Ci pytanie doprecyzowujące i czeka na odpowiedź. |
+| `bash_background` | Uruchamia komendę powłoki jako zarządzany proces w tle (serwery dev, watchery, długie buildy). |
+| `process_output` | Odczytuje nagromadzone wyjście i status procesu w tle, opcjonalnie czekając na jego zakończenie. |
+| `list_processes` | Listuje procesy w tle z ich id, statusem i komendą. |
+| `kill_process` | Terminuje proces w tle (i jego drzewo procesów) po id. |
+| `test_run` | Wykrywa i uruchamia testy projektu, zwracając ustrukturyzowane wyniki pass/fail oraz szczegóły niepowodzeń. |
+
+### Eksperymentalne
+
+| Narzędzie | Co robi |
+| --- | --- |
+| `lsp` | Odpytuje serwer języka o definicje, referencje i diagnostykę. |
+| `execute` | Uruchamia kod w izolowanej piaskownicy trybu code-mode. |
+| `plan` | Produkuje ustrukturyzowany plan przed wprowadzeniem zmian. |
+
+Narzędzia eksperymentalne mogą się zmieniać lub być przemianowywane między wydaniami.
+
+## Rozszerzanie zestawu narzędzi
+
+Poza wbudowanymi Bolt może wywoływać narzędzia z trzech źródeł:
+
+- **Narzędzia niestandardowe** w `.opencode/tool/` (lub `.opencode/tools/`) w katalogu głównym projektu. Zobacz [Niestandardowe narzędzia](/extending/custom-tools).
+- **Narzędzia wtyczek** wnoszone przez dowolną zainstalowaną [wtyczkę](/extending/plugins).
+- **Narzędzia MCP** z dowolnego [serwera MCP](/extending/mcp-servers) skonfigurowanego dla projektu.
+
+Wszystkie trzy z punktu widzenia agenta wyglądają identycznie: pojawiają się na liście narzędzi, honorują poziom dostępu agenta i wyświetlają się w wyjściu wywołania narzędzia w TUI.
+
+## Powiązane
+
+- [Agenci](/concepts/agents) — którzy agenci mogą wywoływać jakie narzędzia.
+- [Uprawnienia](/concepts/permissions) — jak dostęp do narzędzi jest ograniczany dla każdego agenta.
+- [Serwery MCP](/extending/mcp-servers) — najczęstszy sposób dodawania narzędzi z prawdziwego świata.

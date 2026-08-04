@@ -1,0 +1,185 @@
+---
+title: "Liity Bolt-etäistuntoihin HTTP:n yli"
+sidebarTitle: "Etäistunnot"
+description: "Käynnistä päätön Bolt-palvelin, liitä TUI mistä tahansa koneesta ja havaitse palvelimia paikallisessa verkossasi mDNS:llä — valinnaisella perustodennuksella."
+url: "server/remote-sessions"
+---
+
+Boltissa on sisäänrakennettu HTTP-palvelin, joka irrottaa moottorin täysin käyttöliittymästä. Voit käynnistää päättömän palvelimen tehokkaalla etäkoneella (pilvi-VM, kehityskontti, työpöytä, joka jätetty yöksi käyntiin) ja liittää TUI:n läppäriltäsi, toisesta terminaalista tai jopa selaimesta — kaikki osoittaen samaan live-istuntoon. Tämä tekee Boltista sopivan tiimeille, etäkuormille ja pitkäkestoisille tehtäville, joita haluat tarkistaa ilman koneelle SSH-yhteyttä.
+
+---
+
+## `bolt serve`
+
+Käynnistä päätön Bolt-palvelin, joka paljastaa täyden API:n HTTP:n yli ja hyväksyy TUI-yhteyksiä.
+
+```bash
+bolt serve
+```
+
+### Liput
+
+| Lippu | Oletus | Kuvaus |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Hostname tai IP-osoite, johon sidotaan |
+| `--port <n>` | `0` (auto) | Portti, jota kuunnellaan; Bolt tulostaa määrätyn portin käynnistyksessä |
+| `--mdns` | `false` | Mainosta palvelinta mDNS:n kautta zero-config-paikallisverkon havaitsemista varten; asettaa myös hostnamen `0.0.0.0`:aan |
+| `--mdns-domain <name>` | `opencode.local` | Mukautettu mDNS-palvelun domain |
+| `--cors <origin>` | `[]` | Lisäalkuperät CORSin kautta sallittavaksi (toistettavissa) |
+
+<Warning>
+  Jos `OPENCODE_SERVER_PASSWORD`ia ei ole asetettu, Bolt tulostaa varoituksen ja palvelin on täysin avoin kaikille, jotka voivat tavoittaa sen. Aseta aina salasana ennen sitomista mihin tahansa muuhun rajapintaan kuin `127.0.0.1`iin.
+</Warning>
+
+### Todennus
+
+Turvaa palvelin HTTP Basic Authilla käyttäen ympäristömuuttujia:
+
+| Muuttuja | Kuvaus |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Perustodennuksen salasana |
+| `OPENCODE_SERVER_USERNAME` | Perustodennuksen käyttäjänimi (oletus `opencode`, jos jätetty pois) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Liitä täysi TUI käynnissä olevaan Bolt-palvelimeen. Tämä toimii mitä tahansa HTTP:n yli tavoitettavissa olevaa palvelinta vasten — paikallista tai etä.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Liput
+
+| Lippu | Alias | Kuvaus |
+|------|-------|-------------|
+| `--dir <path>` | | Hakemisto, jossa etäpalvelimella ajetaan |
+| `--continue` | `-c` | Jatka viimeistä istuntoa palvelimella |
+| `--session <id>` | `-s` | Jatkettavan istunnon ID |
+| `--fork` | | Haaraudu istunnosta jatkettaessa (käytä `--continue`n tai `--session`in kanssa) |
+| `--password <pw>` | `-p` | Perustodennuksen salasana (ohittaa `OPENCODE_SERVER_PASSWORD`n) |
+| `--username <user>` | `-u` | Perustodennuksen käyttäjänimi (ohittaa `OPENCODE_SERVER_USERNAME`n) |
+| `--mini` | | Käytä minimaalista interaktiivista käyttöliittymää täyden TUI:n sijaan |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Käynnistä Bolt-palvelin ja avaa web-käyttöliittymä välittömästi oletusselaimessasi. Tämä on nopein tapa saada selainpohjainen käyttöliittymä toimimaan paikallisesti.
+
+```bash
+bolt web
+```
+
+`bolt web` hyväksyy samat verkkoliput kuin `bolt serve`.
+
+---
+
+## mDNS-havaitseminen
+
+Anna `--mdns` `bolt serve`lle lähettääksesi palvelimen osoitteen paikallisessa verkossasi mDNS:llä. Mikä tahansa samassa verkossa oleva kone voi silloin liittyä käyttäen mDNS-hostnamea tietämättä IP-osoitetta tai porttia.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+Oletus-mDNS-domain on `opencode.local`. Ohita se `--mdns-domain`in avulla:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Käynnistä palvelin ja liity etäältä
+
+<Steps>
+  <Step title="Aseta salasana palvelinkoneella">
+    Vie `OPENCODE_SERVER_PASSWORD` ennen palvelimen käynnistämistä. Ilman sitä Bolt tulostaa varoituksen ja API on todentamaton.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Käynnistä päätön palvelin">
+    Sido kaikkiin rajapintoihin, jotta läppärisi voi tavoittaa sen, ja valitse valinnaisesti kiinteä portti:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Jätä tämä terminaali auki (tai suorita se `tmux`issa / `screen`issä / systemd-yksikössä).
+  </Step>
+
+  <Step title="Liity läppäriltäsi">
+    Millä tahansa koneella, joka voi tavoittaa palvelimen, suorita:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    Täysi TUI avautuu ja yhdistyy etämoottoriin. Istunnot, historia ja työkalutila elävät kaikki palvelimella.
+  </Step>
+
+  <Step title="Jatka istuntoa myöhemmin">
+    Irrottaudu sulkemalla TUI (`q` tai `Ctrl-C`). Istunto pysyy käynnissä palvelimella. Liity uudelleen:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Tai haaraudu haarautuaksesi ilman että se vaikuttaa alkuperäiseen:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Etätyönkulun esimerkki
+
+Yleinen kaava on jättää Bolt-palvelin käyntiin korkean ydinmäärän kehityskoneella ja yhdistää ohuelta läppäriltä.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Kaikki istuntotiedot tallennetaan palvelimen SQLite-tietokantaan. Läppäri vain renderöi TUI:n — se voi katkaista yhteyden ja yhdistää uudelleen milloin tahansa menettämättä työtä.

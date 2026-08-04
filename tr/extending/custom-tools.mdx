@@ -1,0 +1,36 @@
+---
+title: "Bolt'ta Özel Araçlar"
+sidebarTitle: "Özel Araçlar"
+description: "Yürütülebilir dosyaları .opencode/tool/ içine bırakarak Bolt'a projeye özel araçlar ekleyin. Her dosya ajanın çağırabileceği bir araç olur."
+---
+
+Özel araçlar, betikleyebildiğiniz her şeyi (kabuk betikleri, Node/Bun/Python programları, küçük ikili dosyalar) ajanın adla çağırabileceği bir araç olarak sunmanızı sağlar. Bolt'a projenizin kendi derleme, dağıtım veya veri iş akışlarına erişim vermenin en basit yoludur.
+
+## Nerede yaşarlar
+
+Dosyaları şunlardan birine bırakın:
+
+- `.opencode/tool/` — proje kapsamlı, depoyla birlikte teslim edilir.
+- `.opencode/tools/` — yukarıdakinin takma adı olarak kabul edilir.
+
+Her dosya, dosyanın adıyla (uzantısı hariç) adlandırılmış bir araç olur. Araçlar Bolt bir sonraki başlatıldığında otomatik olarak alınır.
+
+## Bir aracın anatomisi
+
+Özel bir araç, adını, açıklamasını ve giriş şemasını bir başlıkta bildirir, ardından davranışı uygular. Kesin şekil, seçtiğiniz çalışma zamanına bağlıdır (kabuk betiği, TypeScript vb.), ancak her araç şunları yapmalıdır:
+
+1. Modelin nasıl çağıracağını bilmesi için girişleri için bir JSON Şeması yayınlamak.
+2. Bolt'un TUI'de görüntüleyebileceği ve modele geri besleyebileceği bir değer (veya hata) döndürmek.
+
+Yüklendikten sonra araç, ajanın araç listesinde `bash` ve `grep` gibi yerleşik araçların yanında görünür ve aynı [izin](/concepts/permissions) sistemi tarafından kapılanır.
+
+## Özel bir araç mı, yoksa MCP sunucusu mu kullanmalı
+
+- **Özel araç** — küçük, projeye özel, projeler arasında yeniden kullanılmıyor. Yazması hızlı.
+- **MCP sunucusu** — projeler arasında paylaşılıyor veya kimlik doğrulamalı gerçek bir dış hizmeti sarıyor. [MCP Sunucuları](/extending/mcp-servers) bölümüne bakın.
+- **Eklenti aracı** — diğer uzantı noktalarıyla birlikte bir npm paketi olarak dağıtılıyor. [Eklentiler](/extending/plugins) bölümüne bakın.
+
+## İlgili
+
+- [Araçlar](/concepts/tools) — yerleşik araç referansı.
+- [Eklentiler](/extending/plugins) — araçlar ve daha fazlası için uzantı yüzeyi.

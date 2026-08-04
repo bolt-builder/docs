@@ -1,0 +1,31 @@
+---
+title: "Slash commands du TUI Bolt"
+sidebarTitle: "Slash commands"
+description: "Les slash commands que vous pouvez exécuter dans le TUI Bolt — /memory, /plan, /todos, /btw — et comment elles modifient le comportement de la session courante."
+---
+
+Les slash commands se saisissent dans l'invite du TUI et modifient le comportement de la session courante. Elles n'envoient rien au modèle ; elles s'exécutent localement sur Bolt lui-même.
+
+## Référence
+
+| Commande | Ce qu'elle fait |
+| --- | --- |
+| `/memory` | Afficher l'état de la mémoire de projet pour cette session. |
+| \`/memory use on | off\` | Si cette session lit depuis la [mémoire de projet](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Si cette session réécrit dans la mémoire de projet à la fin du tour. |
+| `/plan` | Basculer la session courante en mode planification (lecture seule, produit un plan). |
+| `/todos` | Afficher la liste de tâches structurée actuelle de l'agent. |
+| `/btw` | Injecter une note hors bande (« au fait... ») que l'agent verra à son prochain tour sans déclencher de réponse complète. |
+
+<Tip>
+  Les slash commands ont une portée session. Pour qu'une préférence soit durable, définissez-la plutôt dans `.bolt/bolt.jsonc`. Voir [Configuration](/concepts/configuration).
+</Tip>
+
+## Ajouter les vôtres
+
+Des slash commands personnalisées peuvent être fournies par des [plugins](/extending/plugins) et par des fichiers dans `.opencode/command/`. Chaque commande est un fichier Markdown dont le frontmatter décrit le déclencheur et le comportement.
+
+## Voir aussi
+
+- [Raccourcis clavier](/tui/keybinds) — raccourcis clavier du TUI.
+- [Mémoire de projet](/concepts/project-memory) — ce que `/memory` bascule.

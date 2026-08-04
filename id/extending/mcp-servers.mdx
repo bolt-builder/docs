@@ -1,0 +1,215 @@
+---
+title: "Tambahkan tool ke Bolt dengan MCP server"
+sidebarTitle: "MCP Servers"
+description: "Hubungkan tool dan resource eksternal ke Bolt menggunakan Model Context Protocol. Tambah, autentikasi, dan debug MCP server dari CLI."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) adalah standar terbuka yang memungkinkan agent AI berkomunikasi dengan tool eksternal dan sumber data melalui antarmuka umum. Bolt menggunakan MCP untuk memperluas apa yang dapat dilakukan agent — MCP server yang terhubung dapat mengekspos apa saja mulai dari tool kueri database hingga API pencarian web lengkap. Bolt mengelola siklus hidup lengkap: menambahkan server, menjalankan alur OAuth, memperbarui token, dan memeriksa konektivitas.
+
+## Tipe server
+
+Bolt mendukung dua jenis MCP server.
+
+| Tipe | Transport | Deskripsi |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Server yang berjalan di URL yang dapat kamu jangkau melalui jaringan |
+| `local` | stdio | Perintah lokal yang di-spawn Bolt sebagai proses anak |
+
+Server remote mendukung autentikasi OAuth langsung dari awal. Bolt menangani perolehan token, penyimpanan, dan refresh otomatis — kamu tidak pernah mengelola token dengan tangan.
+
+---
+
+## Perintah
+
+### `bolt mcp add`
+
+Tambahkan MCP server baru secara interaktif atau sekali jalan.
+
+**Interaktif** — jalankan `bolt mcp add` tanpa argumen untuk menelusuri wizard berbasis prompt yang menanyakan nama, scope (proyek atau global), tipe, URL atau perintah, dan apakah server menggunakan OAuth.
+
+**Non-interaktif** — sediakan nama plus `--url` untuk server remote atau perintah setelah `--` untuk server lokal:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**Flag untuk `bolt mcp add`**
+
+| Flag | Deskripsi |
+|------|-------------|
+| `--url <url>` | URL server MCP remote |
+| `--header <KEY=VALUE>` | Header HTTP untuk dikirim ke server remote (dapat diulang) |
+| `--env <KEY=VALUE>` | Variabel lingkungan untuk server lokal (dapat diulang) |
+
+---
+
+### `bolt mcp list`
+
+Daftar setiap MCP server yang dikonfigurasi beserta status koneksi dan autentikasinya.
+
+```bash
+bolt mcp list
+```
+
+Setiap entri menampilkan ikon status:
+
+| Ikon | Arti |
+|------|---------|
+| `✓` | Terhubung (dan terautentikasi jika OAuth digunakan) |
+| `⚠` | Perlu autentikasi atau kredensial telah kedaluwarsa |
+| `✗` | Gagal terhubung atau registrasi klien diperlukan |
+| `○` | Belum diinisialisasi atau dinonaktifkan |
+
+---
+
+### `bolt mcp auth <name>`
+
+Autentikasi dengan MCP server remote yang mendukung OAuth. Jika kamu menghilangkan namanya, Bolt menampilkan pemilih interaktif yang mendaftar semua server yang mendukung OAuth bersama dengan status auth mereka saat ini (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+Bolt membuka browser kamu di URL otorisasi provider dan menunggu callback — handshake OAuth lengkap, termasuk registrasi klien dinamis ketika diperlukan, terjadi secara otomatis.
+
+<Note>
+  Bolt menangani alur OAuth penuh, termasuk penyimpanan token dan refresh token otomatis. Kamu tidak perlu menyalin token atau mengelola kedaluwarsa secara manual. Jika server memerlukan client ID yang sudah didaftarkan sebelumnya, tambahkan `oauth.clientId` (dan opsional `oauth.clientSecret`) ke entri config server di `.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Hapus kredensial OAuth yang tersimpan untuk sebuah server. Jika kamu menghilangkan namanya, Bolt memintamu memilih dari daftar server yang memiliki token tersimpan.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Periksa konektivitas server remote dan inspeksi status OAuth-nya tanpa memulai sesi penuh. Ini adalah tool pertama yang perlu dijangkau ketika sebuah server menampilkan `✗ failed` atau `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` melaporkan:
+- URL server dan status auth saat ini
+- Detail access-token (di-mask) dan stempel waktu kedaluwarsa
+- Apakah refresh token ada
+- Kode respons HTTP mentah dari server
+- Konten header `WWW-Authenticate`
+- Hasil probe discovery OAuth (tanpa menyelesaikan alur)
+
+---
+
+## Konfigurasi manual
+
+Kamu dapat menambah atau mengedit MCP server secara langsung di `.bolt/bolt.jsonc` tanpa menggunakan perintah CLI. Bolt mengambil perubahan pada awal sesi berikutnya.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Server stdio lokal terlihat seperti ini:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Untuk menyediakan header HTTP kustom atau menonaktifkan OAuth pada server remote:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Tambah dan autentikasi MCP server remote
+
+<Steps>
+  <Step title="Add the server">
+    Jalankan `bolt mcp add` dan ikuti prompt-nya, atau gunakan bentuk non-interaktif:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt menulis entri ke `.bolt/bolt.jsonc` (scope proyek) atau ke config global kamu.
+  </Step>
+
+  <Step title="Check the connection status">
+    ```bash
+    bolt mcp list
+    ```
+
+    Jika server memerlukan autentikasi, kamu akan melihat `⚠ needs authentication` di samping namanya.
+  </Step>
+
+  <Step title="Authenticate with OAuth">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt membuka browser kamu. Setelah kamu menyetujui akses, terminal mengkonfirmasi autentikasi berhasil dan status server berubah menjadi `✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="Verify tools are available">
+    Mulai sesi Bolt. Tool yang diekspos oleh server sekarang tersedia untuk semua agent. Kamu dapat memeriksanya kapan saja:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

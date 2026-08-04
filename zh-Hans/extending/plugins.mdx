@@ -1,0 +1,145 @@
+---
+title: "使用插件扩展 Bolt"
+sidebarTitle: "插件"
+description: "安装和构建 Bolt 插件,为任何项目或全局添加自定义 AI 提供商、认证方法、工具和工作区适配器。"
+url: "extending/plugins"
+---
+
+插件允许你扩展 Bolt,超越其内置功能。插件是导出 Bolt 插件清单的 Node 或 Bun 模块；加载时,它可以注册新的 LLM 提供商、自定义认证方法、其他工具和工作区适配器。插件可以为单个项目安装,也可以全局应用于你所有的工作。
+
+## 安装插件
+
+使用 `bolt plugin install`（别名：`bolt plug`）从 npm 安装插件并在你的配置中自动注册：
+
+```bash
+bolt plugin install <module>
+```
+
+### 标志
+
+| 标志 | 别名 | 描述 |
+|------|-------|-------------|
+| `--global` | `-g` | 安装到全局配置而不是当前项目 |
+| `--force` | `-f` | 替换同一模块的现有条目 |
+
+### 范围：项目 vs 全局
+
+默认情况下,`bolt plugin install` 将插件添加到项目级 `.bolt/bolt.jsonc`。传递 `--global` 将其添加到用户级配置,以便它在每个项目中加载。
+
+```bash
+# 项目范围（默认）
+bolt plugin install @acme/bolt-plugin-jira
+
+# 全局 — 在每个项目中加载
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  运行 `bolt --pure`（或设置 `OPENCODE_PURE=1`）以在禁用所有外部插件的情况下启动 Bolt。这对于调试插件是否导致意外行为很有用,而无需卸载它。
+</Note>
+
+---
+
+## 安装已发布的插件
+
+<Steps>
+  <Step title="查找插件包">
+    在 npm 上搜索名称中含有 `bolt-plugin` 或 `opencode-plugin` 的包,或者跟随提供商文档中的链接。
+  </Step>
+
+  <Step title="安装到项目中">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt 安装包、读取其清单以检测服务器和 TUI 目标,然后将条目写入 `.bolt/bolt.jsonc`。
+  </Step>
+
+  <Step title="验证配置">
+    打开 `.bolt/bolt.jsonc` 并确认插件条目已添加：
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="开始会话">
+    ```bash
+    bolt
+    ```
+
+    Bolt 在启动时加载插件。它注册的任何提供商或工具都立即可用。
+  </Step>
+</Steps>
+
+---
+
+## 手动插件配置
+
+你可以通过直接编辑 `.bolt/bolt.jsonc` 来注册插件。这对于开发中的本地插件很有用：
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+相对路径从项目根目录解析。TypeScript 和 JavaScript 入口点都受支持。
+
+---
+
+## 构建插件
+
+插件针对 `@opencode-ai/plugin` 包编写,该包提供你的模块必须满足的 `Hooks` 接口。
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+最小插件导出一个接收 `PluginInput` 对象并返回 `Hooks` 对象的函数：
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### 可用的 hook 类型
+
+| Hook | 用途 |
+|------|---------|
+| `auth` | 使用 `methods` 数组注册自定义认证提供商 |
+| `event` | 响应会话事件（消息、工具调用、完成） |
+| `config` | 在运行时响应配置更改 |
+| `dispose` | 卸载插件时清理资源 |
+
+`PluginInput` 对象公开 `client`（类型化的 Bolt API 客户端）、`project`、`worktree`、`directory` 和 `serverUrl`,以便你的插件可以与正在运行的服务器交互。
+
+---
+
+## 环境变量
+
+| 变量 | 描述 |
+|----------|-------------|
+| `OPENCODE_PURE` | 设置为 `1` 以在没有任何外部插件的情况下运行 |

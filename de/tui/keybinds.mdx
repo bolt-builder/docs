@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI-Tastenkürzel"
+sidebarTitle: "Keybinds"
+description: "Die wichtigsten Bolt TUI-Shortcuts: Agents mit Tab wechseln, Mini-Modus, Push-to-Talk-Sprache und alles Weitere, was Sie per Tastatur steuern können."
+---
+
+Das Bolt-TUI ist so gebaut, dass es von Anfang bis Ende über die Tastatur bedient werden kann. Diese Seite listet die Shortcuts auf, nach denen Sie am häufigsten greifen. Für die vollständige Liste führen Sie `bolt` aus und öffnen die In-App-Hilfe.
+
+## Grundlagen
+
+| Tasten | Aktion |
+| --- | --- |
+| `Tab` | Zum nächsten Agent wechseln (`code`, `plan`, `ask`, ...). Der aktuelle Agent wird in der Statusleiste angezeigt. |
+| `Shift+Tab` | Zum vorherigen Agent wechseln. |
+| `Enter` | Aktuelle Nachricht senden. |
+| `Esc` | Laufende Runde abbrechen. |
+| `Ctrl+C` | Aktuellen Tool-Aufruf unterbrechen. |
+| `Ctrl+D` | Von der Session trennen (sie läuft auf dem Server weiter). |
+
+## Modi
+
+### `--mini`-Modus
+
+Starten Sie Bolt mit einem kompakten Split-Footer-Layout, das weniger Terminalplatz beansprucht, ideal für Split-Panes:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-Talk-Sprache
+
+Halten Sie die konfigurierte Push-to-Talk-Taste, um einen Prompt per Spracherkennung zu diktieren, und lassen Sie sie los, um ihn zu senden. Konfigurieren Sie die Taste und den STT-Provider in `.bolt/bolt.jsonc`.
+
+## Verwandt
+
+- [Slash commands](/tui/slash-commands) – `/memory`, `/plan`, `/todos`, `/btw` und Freunde.
+- [Sessions](/concepts/sessions) – trennen, fortsetzen, forken und teilen per Tastatur.

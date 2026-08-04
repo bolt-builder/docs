@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI slash-commando's"
+sidebarTitle: "Slash-commando's"
+description: "De slash-commando's die je binnen de Bolt TUI kunt uitvoeren — /memory, /plan, /todos, /btw — en hoe ze het gedrag van de huidige sessie veranderen."
+---
+
+Slash-commando's worden in de TUI-prompt getypt en veranderen hoe de huidige sessie zich gedraagt. Ze sturen niets naar het model; ze draaien lokaal tegen Bolt zelf.
+
+## Referentie
+
+| Commando | Wat het doet |
+| --- | --- |
+| `/memory` | Toon de status van het projectgeheugen voor deze sessie. |
+| \`/memory use on | off\` | Of deze sessie leest uit [projectgeheugen](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Of deze sessie terugschrijft naar projectgeheugen wanneer de beurt sluit. |
+| `/plan` | Zet de huidige sessie in planning-modus (alleen-lezen, produceert een plan). |
+| `/todos` | Toon de huidige gestructureerde takenlijst van de agent. |
+| `/btw` | Injecteer een out-of-band-notitie ("by the way...") die de agent in zijn volgende beurt zal zien zonder een volledige reactie te triggeren. |
+
+<Tip>
+  Slash-commando's zijn sessie-scoped. Om een voorkeur duurzaam te maken, stel hem in `.bolt/bolt.jsonc` in. Zie [Configuratie](/concepts/configuration).
+</Tip>
+
+## Je eigen toevoegen
+
+Aangepaste slash-commando's kunnen worden bijgedragen door [plugins](/extending/plugins) en door bestanden in `.opencode/command/`. Elk commando is een Markdown-bestand waarvan de frontmatter de trigger en het gedrag beschrijft.
+
+## Gerelateerd
+
+- [Sneltoetsen](/tui/keybinds) — sneltoetsen voor de TUI.
+- [Projectgeheugen](/concepts/project-memory) — wat `/memory` omschakelt.

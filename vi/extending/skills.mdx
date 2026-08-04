@@ -1,0 +1,22 @@
+---
+title: "Skill: Playbook có thể tái sử dụng cho agent"
+sidebarTitle: "Skill"
+description: "Skill là các playbook có tên, có thể tái sử dụng mà agent Bolt gọi qua công cụ skill — tiện lợi cho các workflow đóng gói như phát hành hoặc chạy bộ lint."
+---
+
+Skill là các playbook có tên, có thể tái sử dụng, nằm cùng với dự án của bạn và được gọi qua công cụ `skill`. Trong khi công cụ tùy chỉnh là một hành động thực thi đơn, skill là một workflow được script để agent có thể theo từng bước: thu thập các tệp này, chạy các lệnh này, quyết định làm gì tiếp dựa trên đầu ra.
+
+Dùng skill khi:
+
+- Bạn có một workflow mà bạn cứ giải thích đi giải thích lại trong prompt ("đầu tiên chạy linter, rồi …").
+- Bạn muốn agent theo một cây quyết định cụ thể.
+- Bạn muốn cùng một workflow có sẵn cho mọi phiên và mọi agent trong dự án.
+
+## Chúng nằm ở đâu
+
+Skill là các tệp dưới `.opencode/skill/` (hoặc `.opencode/skills/`) trong gốc dự án. Mỗi tệp mô tả tên trigger, khi nào agent nên dùng nó và các bước liên quan. [Công cụ](/concepts/tools) `skill` phơi bày chúng cho mô hình.
+
+## Liên quan
+
+- [Công cụ tùy chỉnh](/extending/custom-tools) — mở rộng đơn hành động, cấp thấp hơn.
+- [Agent tùy chỉnh](/extending/custom-agents) — nướng các hướng dẫn vào một agent thay vì vậy.

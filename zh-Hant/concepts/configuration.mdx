@@ -1,0 +1,193 @@
+---
+title: "設定 — bolt.jsonc 設定與全域覆寫"
+sidebarTitle: "設定"
+description: "Bolt 從你的專案與 OS 設定目錄讀取分層 JSONC 設定檔。設定供應商、MCP 伺服器、指示、外掛與環境覆寫。"
+---
+
+Bolt 使用分層設定系統:一個 **全域** 設定檔用於使用者範圍的預設值,以及一個 **每專案** 設定檔用於儲存庫特定設定。這兩個檔案都使用 JSONC 格式(帶註解的 JSON),並且都會自動建立包含 `$schema` 指標的內容,以啟用編輯器自動完成。
+
+## 設定檔位置
+
+### 每專案設定
+
+首次執行時會在你的專案中自動建立:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+將此檔案提交到版本控制,以便與團隊其他成員共用供應商設定、MCP 伺服器與自訂指示。敏感的憑證絕對不應放在此處 — 請改用環境變數或全域設定。
+
+### 全域設定
+
+適用於機器上的所有專案。Bolt 會在你的 OS 設定目錄中尋找第一個符合的檔案:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferred)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="全域設定目錄在哪裡?">
+  Bolt 在 Linux 與 macOS 上遵循 XDG Base Directory Specification (`~/.config/bolt/`),在 Windows 上則使用 `%APPDATA%\bolt\`。執行 `bolt debug config` 可列印你機器上完整解析後的設定。
+</Accordion>
+
+## 最小設定範例
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` 欄位可為支援 JSON Schema 的編輯器啟用 IntelliSense 與驗證。若缺少此欄位,Bolt 會自動寫入。
+
+## 設定參考
+
+### `provider`
+
+設定供應商特定的選項,例如自訂基礎 URL、區域設定或具名憑證:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+註冊代理可作為工具呼叫的 [Model Context Protocol](https://modelcontextprotocol.io) 伺服器:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+使用 `bolt mcp add`、`bolt mcp list`、`bolt mcp auth` 與 `bolt mcp debug` 以互動方式管理 MCP 伺服器。
+
+### `instructions`
+
+附加會注入到每個工作階段的自訂系統指示。適合用來強制編碼慣例、風格指南或專案特定規則:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+來自多個設定檔(全域 \+ 專案)的指示會自動合併並去重。
+
+### `plugin`
+
+載入 Bolt 外掛。外掛可以新增工具、供應商、內容來源與 hook:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### 透過 `url` 使用遠端設定
+
+在啟動時從遠端 URL 擷取設定。適用於集中化的團隊設定:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## 變數替換
+
+設定值可以使用 `$VAR_NAME` 或 `${VAR_NAME}` 語法參考環境變數。替換發生在載入時,在設定被解析之前:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="如何在設定中使用環境變數?">
+  在字串設定值中任意位置以 `$VAR_NAME` 或 `${VAR_NAME}` 參考任何環境變數。Bolt 會在載入時替換該值。若變數未設定,則使用字面字串 `$VAR_NAME` — Bolt 不會在缺少替換時靜默失敗或拋出錯誤。
+</Accordion>
+
+## 環境變數覆寫
+
+這些環境變數可讓你重新導向或完全覆寫設定,適用於 CI、容器與測試:
+
+| 變數 | 描述 |
+| --- | --- |
+| `BOLT_CONFIG` | 要載入的設定檔絕對路徑,取代專案本機的設定檔 |
+| `BOLT_CONFIG_DIR` | 覆寫 Bolt 搜尋設定檔的目錄 |
+| `BOLT_CONFIG_CONTENT` | 以字串方式提供原始 JSONC 設定內容 — 不需要檔案 |
+
+`BOLT_CONFIG_CONTENT` 在不便掛載檔案的容器化環境中特別方便:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="當多個來源同時作用時,哪個設定優先?">
+  Bolt 依此順序合併設定(較後的項目勝出):
+
+  1. 全域設定檔(OS 設定目錄中的 `bolt.jsonc` / `bolt.json`)
+  2. 從全域設定中的 `url` 條目擷取的遠端設定
+  3. 每專案設定檔(`.bolt/bolt.jsonc`、`.bolt/bolt.json`)
+  4. `BOLT_CONFIG` 檔案(若已設定)
+  5. `BOLT_CONFIG_CONTENT`(若已設定)
+
+  像 `instructions` 這種陣列欄位會跨來源串接,而不是被取代。物件欄位會深度合併,衝突時較後的值勝出。
+</Accordion>

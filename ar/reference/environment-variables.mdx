@@ -1,0 +1,61 @@
+---
+title: "مرجع متغيرات بيئة Bolt"
+sidebarTitle: "متغيرات البيئة"
+description: "كل متغير بيئة يتعرّف عليه Bolt، بما في ذلك التحكم في السجلات، ومصادقة الخادم، وتجاوزات الإعدادات، واصطلاحات مفاتيح API للمزوّدين."
+---
+
+تتيح لك متغيرات البيئة ضبط Bolt دون لمس أي ملفات إعدادات — مفيد في أنابيب CI وحاويات Docker والبيئات المشتركة حيث لا يمكنك إيداع بيانات الاعتماد. تُقرأ مرة واحدة عند بدء التشغيل ولا يمكن تغييرها أثناء تشغيل Bolt.
+
+## المرجع
+
+| المتغير | الوصف |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | ضبط تفصيل السجلات. القيم المقبولة: `DEBUG` و`INFO` و`WARN` و`ERROR`. مكافئ لخيار `--log-level`. |
+| `BOLT_PRINT_LOGS` | اضبط على أي قيمة غير فارغة لطباعة إخراج السجلات إلى stderr. مكافئ لـ `--print-logs`. |
+| `BOLT_PURE` | اضبط على أي قيمة غير فارغة لتعطيل جميع الإضافات الخارجية. مكافئ لـ `--pure`. |
+| `BOLT_SERVER_USERNAME` | اسم مستخدم المصادقة الأساسية لـ `bolt serve` و`bolt web`. |
+| `BOLT_SERVER_PASSWORD` | كلمة مرور المصادقة الأساسية لـ `bolt serve` و`bolt web`. يجب على جميع العملاء المتصلين تقديم كلمة المرور هذه. |
+| `BOLT_CONFIG` | تجاوز مسار ملف الإعدادات الذي يحمّله Bolt. لن يبحث Bolt في المواقع الافتراضية عندما يكون هذا مضبوطًا. |
+| `BOLT_CONFIG_DIR` | تجاوز مجلد الإعدادات. سيبحث Bolt عن ملفات الإعدادات في هذا المجلد بدلًا من مجلد إعدادات نظام التشغيل الافتراضي. |
+| `BOLT_CONFIG_CONTENT` | تقديم الإعدادات كاملة كسلسلة JSON مضمّنة. مفيد في CI حيث تكون كتابة الملفات غير عملية. يأخذ أعلى أولوية بين مصادر الإعدادات. |
+| `BOLT_GIT_BASH_PATH` | مسار مجلد `bin` الخاص بـ Git Bash على Windows، يُستخدم لتحديد موقع أدوات Unix مثل `less`. |
+
+## مفاتيح API للمزوّدين
+
+يكتشف Bolt بيانات اعتماد المزوّدين من متغيرات البيئة تلقائيًا — لا يلزم خطوة `bolt providers login`. يبحث كل مزوّد عن متغير بيئة محدّد، وسيستخدم Bolt القيمة إذا كان المتغير مضبوطًا، بغض النظر عمّا هو مخزّن في `auth.json`.
+
+<Tip>
+  اضبط مفاتيح API للمزوّدين في ملف تعريف الصدفة (مثل `~/.zshrc`، `~/.bashrc`) أو في ملف `.env` تحمّله صدفتك. يمكنك أيضًا الإشارة إليها من ملف الإعدادات باستخدام صياغة `${VAR_NAME}` في حقل `provider.*.apiKey` بحيث لا تُخزّن المفاتيح أبدًا كنص عادي.
+</Tip>
+
+متغيرات المزوّدين الشائعة:
+
+| المتغير | المزوّد |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+شغّل `bolt models --verbose` لرؤية متغير البيئة الذي يتوقّعه كل مزوّد مضبوط.
+
+## أمثلة الاستخدام
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

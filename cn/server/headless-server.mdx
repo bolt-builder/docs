@@ -1,0 +1,52 @@
+---
+title: "以 Headless 服务器方式运行 Bolt"
+sidebarTitle: "Headless 服务器"
+description: "bolt serve 通过 HTTP 暴露完整的 Bolt 运行时，让任意 TUI、Web UI、编辑器集成或脚本都能在本地或跨网络连接。"
+---
+
+`bolt serve` 运行一个 headless 的 Bolt 服务器，通过 HTTP 暴露完整引擎：会话、代理、工具、提供商访问、MCP 以及流式事件。凡是 Bolt 能交互式做的事，都可以通过 API 完成。
+
+## 启动服务器
+
+```bash
+bolt serve                              # 仅 localhost，随机端口
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # 在本地网络中广播
+```
+
+<Warning>
+  绑定到 `0.0.0.0` 会将 Bolt 暴露在网络上。请在此之前始终设置 `BOLT_SERVER_USERNAME` 和 `BOLT_SERVER_PASSWORD`。
+</Warning>
+
+## 连接 TUI
+
+从任何能访问该服务器的机器：
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+或对远程服务器运行一次性提示：
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## 基本认证
+
+通过环境变量设置凭据（参见 [Env Variables](/reference/environment-variables)）：
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+所有客户端必须发送匹配的凭据。
+
+## 相关内容
+
+- [Remote Sessions](/server/remote-sessions) — 连接、mDNS 发现和共享服务器。
+- [Web UI](/server/web-ui) — 浏览器前端。
+- [ACP](/server/acp) — 从 Zed 及其他编辑器驱动 Bolt。

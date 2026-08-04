@@ -1,0 +1,58 @@
+---
+title: "Tools: Apa yang Sebenarnya Dapat Dilakukan Agent Bolt"
+sidebarTitle: "Tools"
+description: "Daftar lengkap tool bawaan yang tersedia untuk agent Bolt, ditambah cara menambahkan tool kamu sendiri melalui plugin, MCP server, atau direktori .opencode/tool."
+---
+
+Agent di Bolt melakukan pekerjaan dengan memanggil tool. Setiap tindakan yang kamu lihat di TUI (membaca file, menjalankan tes, mencari web) adalah model yang memilih tool dan Bolt yang mengeksekusinya. Setiap agent memiliki tingkat akses yang dideklarasikan yang menentukan tool mana yang dapat dipanggilnya tanpa bertanya kepadamu terlebih dahulu (lihat [Permissions](/concepts/permissions)).
+
+## Tool bawaan
+
+| Tool | Fungsinya |
+| --- | --- |
+| `read` | Membaca file dari disk. |
+| `write` | Membuat file baru atau menimpa yang sudah ada. |
+| `edit` | Menerapkan edit tertarget (find/replace) pada file. |
+| `apply_patch` | Menerapkan patch bergaya unified-diff pada satu atau lebih file. |
+| `glob` | Mendaftar file yang cocok dengan pola glob. |
+| `grep` | Mencari konten file berdasarkan regex/teks. |
+| `bash` | Menjalankan perintah shell. |
+| `task` | Mendelegasikan subtask ke subagent (`@general`, `@explore`, atau subagent kustom). |
+| `todowrite` | Memelihara daftar tugas terstruktur agent untuk pekerjaan multi-langkah. |
+| `webfetch` | Mengambil URL dan mengembalikan kontennya. |
+| `websearch` | Mencari web. |
+| `skill` | Memanggil skill bernama (lihat [Skills](/extending/skills)). |
+| `memory_save` | Menyimpan fakta ke [project memory](/concepts/project-memory). |
+| `memory_recall` | Mencari memory yang sebelumnya disimpan. |
+| `question` | Menanyakan pertanyaan klarifikasi kepadamu dan menunggu balasan. |
+| `bash_background` | Memulai perintah shell sebagai proses latar yang dikelola (dev server, watcher, build panjang). |
+| `process_output` | Membaca output terakumulasi dan status untuk proses latar, opsional menunggu hingga selesai. |
+| `list_processes` | Mendaftar proses latar dengan id, status, dan perintahnya. |
+| `kill_process` | Menghentikan proses latar (dan pohon prosesnya) berdasarkan id. |
+| `test_run` | Mendeteksi dan menjalankan tes proyek, mengembalikan hasil pass/fail terstruktur dan detail kegagalan. |
+
+### Eksperimental
+
+| Tool | Fungsinya |
+| --- | --- |
+| `lsp` | Mengueri language server untuk definisi, referensi, dan diagnostik. |
+| `execute` | Menjalankan kode dalam sandbox code-mode yang terisolasi. |
+| `plan` | Menghasilkan rencana terstruktur sebelum melakukan perubahan. |
+
+Tool eksperimental dapat berubah atau diganti nama antar rilis.
+
+## Memperluas set tool
+
+Selain bawaan, Bolt dapat memanggil tool dari tiga sumber:
+
+- **Custom tools** di `.opencode/tool/` (atau `.opencode/tools/`) di root proyek. Lihat [Custom Tools](/extending/custom-tools).
+- **Plugin tools** yang disumbangkan oleh [plugin](/extending/plugins) yang terpasang.
+- **MCP tools** dari [MCP server](/extending/mcp-servers) mana pun yang dikonfigurasi untuk proyek.
+
+Ketiganya terasa identik dari sudut pandang agent: mereka muncul di daftar tool, menghormati tingkat akses agent, dan muncul di output panggilan tool TUI.
+
+## Terkait
+
+- [Agents](/concepts/agents) — agent mana yang dapat memanggil tool mana.
+- [Permissions](/concepts/permissions) — bagaimana akses tool dijaga per agent.
+- [MCP Servers](/extending/mcp-servers) — cara paling umum untuk menambahkan tool dunia nyata.

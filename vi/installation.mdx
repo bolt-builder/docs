@@ -1,0 +1,121 @@
+---
+title: "Cài đặt Bolt trên macOS, Linux hoặc Windows"
+sidebarTitle: "Cài đặt"
+description: "Cài đặt Bolt CLI qua curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey hoặc Scoop. Bao gồm nâng cấp, gỡ cài đặt và ứng dụng desktop."
+---
+
+Bolt có thể được cài đặt trên macOS, Linux và Windows bằng phương pháp phù hợp với workflow của bạn — script curl một dòng, bất kỳ trình quản lý gói Node.js lớn nào, hoặc trình quản lý gói hệ thống như Homebrew, Chocolatey hoặc Scoop.
+
+## Cài đặt nhanh (macOS / Linux)
+
+Cách nhanh nhất để bắt đầu là script cài đặt chính thức. Nó tự động phát hiện OS và kiến trúc của bạn, tải binary đúng vào `~/.bolt/bin` và thêm nó vào `$PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Trình cài đặt cũng thiết lập các dependency đầu vào giọng nói tùy chọn (sox và whisper-cpp cho phiên âm ngoại tuyến). Để bỏ qua, hãy truyền `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Để cố định phiên bản cụ thể:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Trình quản lý gói
+
+Cài Bolt toàn cục với trình quản lý gói bạn chọn:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Xác minh cài đặt
+
+<Steps>
+  <Step title="Kiểm tra phiên bản đã cài">
+    Sau khi cài đặt, xác nhận rằng `bolt` có sẵn trên `$PATH` của bạn:
+
+    ```bash
+    bolt --version
+    ```
+
+    Nếu lệnh không được tìm thấy, mở phiên terminal mới (hoặc re-source cấu hình shell của bạn) để `$PATH` mới có hiệu lực.
+  </Step>
+</Steps>
+
+## Nâng cấp
+
+Chạy `bolt upgrade` để cập nhật lên bản phát hành mới nhất:
+
+```bash
+bolt upgrade
+```
+
+Bolt tự động phát hiện phương thức cài đặt gốc của bạn. Bạn có thể ghi đè nó với cờ `--method`:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Các phương thức được hỗ trợ là: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Bạn cũng có thể nâng cấp lên phiên bản cụ thể bằng cách truyền phiên bản dưới dạng đối số vị trí:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Gỡ cài đặt
+
+Để xóa Bolt khỏi hệ thống của bạn:
+
+```bash
+bolt uninstall
+```
+
+## Biến môi trường
+
+| Biến               | Mô tả                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Mức độ chi tiết của log: `DEBUG`, `INFO`, `WARN`, hoặc `ERROR`    |
+| `BOLT_PRINT_LOGS`      | In log ra stderr                                  |
+| `BOLT_PURE`            | Chạy mà không nạp plugin bên ngoài                  |
+| `BOLT_SERVER_PASSWORD` | Mật khẩu basic auth cho server API headless       |
+| `BOLT_SERVER_USERNAME` | Tên người dùng basic auth cho server API headless       |
+
+<Tip>
+  Đặt `BOLT_PURE=1` khi bạn muốn một lần chạy sạch mà không có plugin bên thứ ba nào — hữu ích để gỡ lỗi hoặc trong các môi trường CI được kiểm soát.
+</Tip>
+
+## Ứng dụng desktop
+
+<Note>
+  Bolt cũng có sẵn dưới dạng ứng dụng desktop gốc với quản lý phiên đa cửa sổ, terminal tích hợp và cây tệp, command palette, 28 ngôn ngữ giao diện và tự động cập nhật. Tải bản phát hành mới nhất từ [trang releases](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  Trên macOS bạn có thể cài đặt nó bằng một dòng lệnh mà không cần đi vòng qua Gatekeeper:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

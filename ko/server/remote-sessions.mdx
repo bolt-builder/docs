@@ -1,0 +1,185 @@
+---
+title: "HTTP를 통해 원격 Bolt 세션에 연결하기"
+sidebarTitle: "Remote Sessions"
+description: "헤드리스 Bolt 서버를 시작하고, 어느 머신에서든 TUI를 연결하고, 선택적 basic auth와 함께 mDNS로 로컬 네트워크에서 서버를 발견하세요."
+url: "server/remote-sessions"
+---
+
+Bolt는 엔진과 인터페이스를 완전히 분리하는 내장 HTTP 서버가 있습니다. 강력한 원격 머신(클라우드 VM, 개발 컨테이너, 밤새 켜둔 데스크톱)에서 헤드리스 서버를 시작하고 노트북, 두 번째 터미널 또는 심지어 브라우저에서 TUI를 연결할 수 있습니다 — 모두 동일한 라이브 세션을 가리킵니다. 이는 Bolt를 팀, 원격 워크로드, 그리고 박스에 SSH할 필요 없이 확인하고 싶은 장기 실행 작업에 적합하게 만듭니다.
+
+---
+
+## `bolt serve`
+
+전체 API를 HTTP로 노출하고 TUI 연결을 수락하는 헤드리스 Bolt 서버를 시작합니다.
+
+```bash
+bolt serve
+```
+
+### 플래그
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | 바인딩할 호스트명 또는 IP 주소 |
+| `--port <n>` | `0` (auto) | 수신할 포트; Bolt는 시작 시 할당된 포트를 인쇄 |
+| `--mdns` | `false` | 로컬 네트워크에서 제로 구성 검색을 위해 mDNS로 서버 광고; 호스트명을 `0.0.0.0`으로도 설정 |
+| `--mdns-domain <name>` | `opencode.local` | 커스텀 mDNS 서비스 도메인 |
+| `--cors <origin>` | `[]` | CORS로 허용할 추가 오리진 (반복 가능) |
+
+<Warning>
+  `OPENCODE_SERVER_PASSWORD`가 설정되어 있지 않으면 Bolt는 경고를 인쇄하고 서버는 도달할 수 있는 누구에게나 완전히 열려 있습니다. `127.0.0.1` 이외의 인터페이스에 바인딩하기 전에 항상 비밀번호를 설정하세요.
+</Warning>
+
+### 인증
+
+환경 변수를 사용해 HTTP Basic Auth로 서버를 보호하세요:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Basic auth 비밀번호 |
+| `OPENCODE_SERVER_USERNAME` | Basic auth 사용자 이름 (생략 시 기본값 `opencode`) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+실행 중인 Bolt 서버에 완전한 TUI를 연결합니다. 이는 HTTP로 도달할 수 있는 모든 서버 — 로컬 또는 원격 — 에 대해 작동합니다.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### 플래그
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--dir <path>` | | 원격 서버에서 실행할 디렉터리 |
+| `--continue` | `-c` | 서버의 마지막 세션 계속 |
+| `--session <id>` | `-s` | 계속할 세션 ID |
+| `--fork` | | 계속할 때 세션 포크 (`--continue` 또는 `--session`과 함께 사용) |
+| `--password <pw>` | `-p` | Basic auth 비밀번호 (`OPENCODE_SERVER_PASSWORD` 재정의) |
+| `--username <user>` | `-u` | Basic auth 사용자 이름 (`OPENCODE_SERVER_USERNAME` 재정의) |
+| `--mini` | | 완전한 TUI 대신 미니멀 대화형 UI 사용 |
+
+```bash
+# 원격 서버의 마지막 세션 계속
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# 특정 세션 포크
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# 미니멀 UI — 제한된 터미널에서 유용
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Bolt 서버를 시작하고 즉시 기본 브라우저에서 웹 UI를 엽니다. 이는 로컬에서 브라우저 기반 인터페이스를 실행하는 가장 빠른 방법입니다.
+
+```bash
+bolt web
+```
+
+`bolt web`은 `bolt serve`와 동일한 네트워크 플래그를 받습니다.
+
+---
+
+## mDNS 검색
+
+`bolt serve`에 `--mdns`를 전달하여 mDNS를 사용해 로컬 네트워크에서 서버 주소를 브로드캐스트하세요. 그러면 동일한 네트워크의 어떤 머신이든 IP 주소나 포트를 모른 채 mDNS 호스트명을 사용해 연결할 수 있습니다.
+
+```bash
+# 서버 머신에서
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# 동일한 LAN의 다른 머신에서
+bolt attach http://opencode.local --password my-secret
+```
+
+기본 mDNS 도메인은 `opencode.local`입니다. `--mdns-domain`으로 재정의하세요:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## 서버 시작 및 원격 연결
+
+<Steps>
+  <Step title="서버 머신에 비밀번호 설정">
+    서버를 시작하기 전에 `OPENCODE_SERVER_PASSWORD`를 내보내세요. 이것이 없으면 Bolt는 경고를 인쇄하고 API는 인증되지 않습니다.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="헤드리스 서버 시작">
+    노트북이 도달할 수 있도록 모든 인터페이스에 바인딩하고, 선택적으로 고정 포트를 선택하세요:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    이 터미널을 열어 두거나 (또는 `tmux` / `screen` / systemd 유닛에서 실행하세요).
+  </Step>
+
+  <Step title="노트북에서 연결">
+    서버에 도달할 수 있는 아무 머신에서 실행:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    완전한 TUI가 열리고 원격 엔진에 연결됩니다. 세션, 히스토리, 도구 상태는 모두 서버에 있습니다.
+  </Step>
+
+  <Step title="나중에 세션 계속">
+    TUI를 종료하여 분리하세요 (`q` 또는 `Ctrl-C`). 세션은 서버에서 계속 실행됩니다. 다시 참여하려면:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    또는 원본에 영향을 주지 않고 브랜치를 만들려면 포크하세요:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## 원격 워크플로 예제
+
+일반적인 패턴은 고코어 개발 머신에서 Bolt 서버를 실행하고 얇은 노트북에서 연결하는 것입니다.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+모든 세션 데이터는 서버의 SQLite 데이터베이스에 저장됩니다. 노트북은 TUI만 렌더링합니다 — 작업을 잃지 않고 언제든지 연결을 끊고 다시 연결할 수 있습니다.

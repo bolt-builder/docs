@@ -1,0 +1,192 @@
+---
+title: "Bolt 설정 파일 레퍼런스"
+sidebarTitle: "Config Schema"
+description: "Bolt 설정 파일 스키마의 완전한 레퍼런스 — 위치, 모든 최상위 필드, MCP 서버 유형, 프로바이더 재정의, 완전한 예제."
+---
+
+Bolt는 프로젝트 및 전역 구성을 위해 주석이 있는 JSON(`.jsonc`) 파일을 사용합니다. 스키마는 버전이 지정되어 있으며 `https://opencode.ai/config.json`에 게시되어 있으며, 편집기가 자동 완성과 유효성 검사를 제공하는 데 사용할 수 있습니다.
+
+## 설정 파일 위치
+
+Bolt는 두 위치에서 설정을 병합합니다. 동일한 키가 둘 다에 나타나면 프로젝트별 설정이 전역 설정보다 우선합니다.
+
+| Scope | Path |
+|---|---|
+| **프로젝트별** | 프로젝트 루트의 `.bolt/bolt.jsonc` (또는 `.bolt/bolt.json`) |
+| **전역** | OS 설정 디렉터리의 `bolt.jsonc` (또는 `bolt.json`) |
+
+OS 설정 디렉터리는:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt는 동일한 위치의 레거시 `opencode.jsonc` / `opencode.json` 파일도 읽습니다. 새 프로젝트는 레거시 파일 이름보다 우선하는 `bolt.jsonc` 명명 규칙을 사용해야 합니다.
+</Note>
+
+Bolt는 첫 실행 시 `$schema` 라인이 있는 최소한의 전역 설정 파일을 생성하며, 해당 디렉터리에서 TUI를 처음 열 때 프로젝트 루트에 `.bolt/bolt.jsonc`를 생성합니다.
+
+## 스키마 필드
+
+<ParamField body="$schema" type="string">
+  이 설정 파일의 JSON 스키마를 가리키는 URL. JSON Schema를 지원하는 편집기(VS Code, Zed, JetBrains IDE 등)에서 자동 완성과 인라인 유효성 검사를 활성화합니다.
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  모든 세션의 기본 모델, `provider/model`로 표현됩니다. `bolt run --model`이나 TUI 모델 선택기로 세션마다 재정의할 수 있습니다.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  구성된 프로바이더에 사용 가능한 모든 `provider/model` 문자열을 보려면 `bolt models`를 실행하세요.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  프로바이더별 자격 증명 및 설정 재정의. 각 키는 프로바이더 ID(예: `anthropic`, `openai`, `google`)입니다. 가장 일반적인 용도는 키가 절대 평문으로 저장되지 않도록 환경 변수 참조를 통해 API 키를 설정하는 것입니다.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  `${`로 시작하고 `}`로 끝나는 값은 환경 변수 참조로 취급되어 런타임에 확장됩니다.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  선택한 이름을 키로 하는 MCP 서버 구성. Bolt는 두 가지 서버 유형을 지원합니다:
+
+  **원격 서버** — 선택적 OAuth와 함께 HTTP/SSE를 통해 연결:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Field | Type | Description |
+  |---|---|---|
+  | `type` | `"remote"` | 이것이 원격 HTTP 서버임을 식별 |
+  | `url` | string | MCP 엔드포인트의 전체 URL |
+  | `oauth` | object \| `false` | OAuth 구성 객체 (선택적 `clientId`, `clientSecret`, `scope`, `redirectUri` 포함). OAuth 자동 감지를 비활성화하려면 `false`로 설정. |
+  | `headers` | object | 모든 요청과 함께 보낼 HTTP 헤더 (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | 시작 시 이 서버 활성화 또는 비활성화 |
+  | `timeout` | number | 밀리초 단위의 요청 타임아웃 (기본값: 5000) |
+
+  **로컬 서버** — stdio를 통해 서브프로세스 스폰:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Field | Type | Description |
+  |---|---|---|
+  | `type` | `"local"` | 이것이 로컬 stdio 서버임을 식별 |
+  | `command` | string[] | 스폰할 명령과 모든 인수 |
+  | `cwd` | string | 서버 프로세스의 작업 디렉터리 (상대 경로는 워크스페이스 디렉터리에서 해석됨) |
+  | `environment` | object | 서브프로세스에 전달할 추가 환경 변수 |
+  | `enabled` | boolean | 시작 시 이 서버 활성화 또는 비활성화 |
+  | `timeout` | number | 밀리초 단위의 요청 타임아웃 (기본값: 5000) |
+
+  대화형 마법사를 원하면 `bolt mcp add`를, 현재 서버 상태를 검사하려면 `bolt mcp list`를 사용하세요.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  이 프로젝트 또는 전역의 모든 세션에 추가되는 추가 시스템 지침. 여러 설정 파일의 지침이 병합됩니다(중복 제거됨). 모든 에이전트가 따라야 하는 프로젝트별 규칙, 스타일 규칙 또는 제약을 주입하려면 이것을 사용하세요.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  로드할 플러그인 스펙. 각 항목은 npm 패키지 이름, 로컬 파일 경로 또는 URL입니다. 플러그인은 TUI를 확장하거나, 슬래시 명령을 추가하거나, 추가 프로바이더를 등록할 수 있습니다. 플러그인을 설치하고 이 배열에 자동으로 추가하려면 `bolt plugin install <spec>`을 사용하세요.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## 완전한 예제
+
+다음 `.bolt/bolt.jsonc`는 현실적인 프로젝트 구성을 보여줍니다:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+모든 파일이 병합된 후 완전히 해석된 구성을 보려면 `bolt debug config`를 실행하세요. 이는 프로젝트별 및 전역 구성이 올바르게 결합되고 있는지 확인하는 가장 빠른 방법입니다.
+</Tip>

@@ -1,0 +1,52 @@
+---
+title: "A Bolt futtatása fej nélküli szerverként"
+sidebarTitle: "Fej nélküli szerver"
+description: "A bolt serve HTTP-n keresztül teszi elérhetővé a teljes Bolt-futtatókörnyezetet, így bármely TUI, webes felület, szerkesztő-integráció vagy szkript csatlakozhat helyben vagy a hálózaton keresztül."
+---
+
+A `bolt serve` egy fej nélküli Bolt-szervert futtat, amely a teljes motort elérhetővé teszi HTTP-n: munkamenetek, ügynökök, eszközök, szolgáltatói hozzáférés, MCP és streaming események. Bármit, amit a Bolt interaktívan tud, azt az API-n keresztül is tudja.
+
+## Szerver indítása
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  A `0.0.0.0`-hoz kötés kiteszi a Bolt-ot a hálózatodon. Mindig állítsd be a `BOLT_SERVER_USERNAME` és `BOLT_SERVER_PASSWORD` értékeket, mielőtt ezt tennéd.
+</Warning>
+
+## TUI csatlakoztatása
+
+Bármely gépről, amely elérheti a szervert:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Vagy futtass egy egyszeri promptot egy távoli szerveren:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+Állíts be hitelesítő adatokat környezeti változókon keresztül (lásd: [Környezeti változók](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Minden kliensnek egyező hitelesítő adatokat kell küldenie.
+
+## Kapcsolódó
+
+- [Távoli munkamenetek](/server/remote-sessions) — csatlakozás, mDNS-felfedezés és megosztott szerverek.
+- [Webes felület](/server/web-ui) — a böngésző front-end.
+- [ACP](/server/acp) — a Bolt vezérlése Zedből és más szerkesztőkből.

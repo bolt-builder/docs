@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI parancs-referencia"
+sidebarTitle: "Parancsok"
+description: "Teljes referencia minden Bolt CLI-parancshoz, beleértve a kapcsolókat, argumentumokat és használati példákat a TUI, run, serve, session, agent és további parancsokhoz."
+---
+
+A Bolt egy `bolt` bináris fájlt tesz elérhetővé egy gazdag alparancs-készlettel. A `bolt` argumentumok nélküli futtatása megnyitja a teljes terminál felhasználói felületet. Az összes többi alparancs az alábbiakban van felsorolva. Használd a `bolt <command> --help` parancsot bármikor a soron belüli súgóért.
+
+<Accordion title="bolt (alapértelmezett — TUI indítása)">
+  Megnyitja az interaktív terminál-felületet az aktuális könyvtárban. A Bolt automatikusan felfedezi a projekted kontextusát, betölti a konfigurációt, és csatlakozik a beállított szolgáltatókhoz.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Globális kapcsolók** — minden parancson elérhetők:
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Naplók kiírása a stderr-re |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Naplózási részletesség beállítása |
+  | `--pure` | boolean | Futtatás külső pluginek betöltése nélkül |
+  | `--help`, `-h` | boolean | Súgószöveg megjelenítése |
+  | `--version`, `-v` | boolean | A telepített verziószám kiírása |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Futtasd a Bolt-ot egyetlen prompttal nem interaktív módban. A Bolt egy folyamaton belüli szervert indít, elküldi a promptot az aktív munkamenetnek, streameli a választ az stdout-ra, majd kilép. Csatlakoztass stdin-t vagy add át a `--file` kapcsolót kontextus hozzáfűzéséhez.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Végrehajtandó slash-parancs; adj át argumentumokat üzenetként |
+  | `--continue` | `-c` | boolean | A legutóbbi munkamenet folytatása |
+  | `--session` | `-s` | string | Folytatandó munkamenet-azonosító |
+  | `--fork` |  | boolean | Munkamenet elágaztatása folytatás előtt (`--continue` vagy `--session` szükséges) |
+  | `--share` |  | boolean | Munkamenet megosztása a befejezés után |
+  | `--model` | `-m` | string | Használandó modell `provider/model` formátumban |
+  | `--best-of` |  | string | Vesszővel elválasztott `provider/model` lista; párhuzamosan futtatja a feladatot, rangsorolja az eredményeket, megtartja a győztest |
+  | `--agent` |  | string | Használandó ügynök (pl. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Kimeneti formátum; `json` nyers, sortöréssel elválasztott JSON-eseményeket streamel |
+  | `--file` | `-f` | string\[\] | Kontextusként csatolandó fájl(ok) |
+  | `--title` |  | string | A munkamenet címe |
+  | `--attach` |  | string | Futtatás egy távoli Bolt-szerveren (pl. `http://localhost:4096`) |
+  | `--password` | `-p` | string | Basic auth jelszó a távoli szerverhez |
+  | `--username` | `-u` | string | Basic auth felhasználónév a távoli szerverhez |
+  | `--dir` |  | string | Munkakönyvtár; ha `--attach` be van állítva, ez a könyvtár a távoli szerveren |
+  | `--port` |  | number | A helyi folyamaton belüli szerver portja (véletlenszerű, ha kihagyva) |
+  | `--variant` |  | string | Gondolkodási erőfeszítés szintje, szolgáltató-specifikus (pl. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Gondolkodási/reasoning blokkok megjelenítése a kimenetben |
+  | `--mini` |  | boolean | A minimális split-footer interaktív felület indítása (rejtett) |
+  | `--interactive` | `-i` | boolean | Kényszerítés közvetlen interaktív split-footer módra |
+  | `--auto` |  | boolean | Automatikus jóváhagyás olyan jogosultságokhoz, amelyek nincsenek kifejezetten letiltva |
+  | `--yolo` |  | boolean | Minden jogosultsági prompt átugrása (az `--auto` aliasa, rejtett) |
+  | `--dangerously-skip-permissions` |  | boolean | Minden jogosultsági ellenőrzés átugrása (rejtett) |
+  | `--demo` |  | boolean | Közvetlen interaktív demó slash-parancsok engedélyezése (rejtett) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Csatlakoztasd a teljes TUI-t egy futó Bolt-szerverhez. A szerver lehet helyi vagy távoli. Add át a `--mini` kapcsolót a minimális split-footer felület használatához a teljes TUI helyett.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Könyvtár a távoli szerveren |
+  | `--continue` | `-c` | boolean | A legutóbbi munkamenet folytatása a távoli szerveren |
+  | `--session` | `-s` | string | Folytatandó munkamenet-azonosító |
+  | `--fork` |  | boolean | Munkamenet elágaztatása folytatáskor |
+  | `--password` | `-p` | string | Basic auth jelszó |
+  | `--username` | `-u` | string | Basic auth felhasználónév |
+  | `--mini` |  | boolean | A minimális interaktív felület használata |
+  | `--no-replay` |  | boolean | Munkamenet-előzmények visszajátszásának letiltása folytatáskor és átméretezés után (`--mini` szükséges) |
+  | `--replay-limit` |  | number | A látható visszajátszás korlátozása a legújabb N üzenetre (`--mini` szükséges) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Fej nélküli Bolt API-szerver indítása. A szerver egy REST\+SSE API-t tesz elérhetővé, amelyhez a TUI, a `bolt run --attach` és a `bolt attach` csatlakozhat. Kösd össze a `0.0.0.0`-val, hogy más gépekről elérhető legyen — mindig állítsd be a `BOLT_SERVER_PASSWORD`-öt, amikor ezt teszed.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--hostname` | string | Kötendő cím (alapértelmezett: `127.0.0.1`) |
+  | `--port` | number | Figyelendő port (véletlenszerű, ha kihagyva) |
+  | `--mdns` | boolean | mDNS szolgáltatásfelfedezés engedélyezése (a hostname alapértelmezése `0.0.0.0`) |
+  | `--mdns-domain` | string | Egyedi domainnév az mDNS-szolgáltatáshoz (alapértelmezett: `opencode.local`) |
+  | `--cors` | string\[\] | További domainek engedélyezése CORS-hoz |
+
+  <Warning>
+    A `BOLT_SERVER_PASSWORD` alapértelmezésben nincs beállítva. A szerver figyelmeztetést naplóz, és minden kapcsolatot elfogad, amíg be nem állítod.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Indítsd el a Bolt-szervert, és azonnal nyisd meg a webes felületet az alapértelmezett böngésződben. Ugyanazokat a hálózati kapcsolókat fogadja el, mint a `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--hostname` | string | Kötendő cím (alapértelmezett: `127.0.0.1`) |
+  | `--port` | number | Figyelendő port (véletlenszerű, ha kihagyva) |
+  | `--mdns` | boolean | mDNS szolgáltatásfelfedezés engedélyezése (a hostname alapértelmezése `0.0.0.0`) |
+  | `--mdns-domain` | string | Egyedi domainnév az mDNS-szolgáltatáshoz (alapértelmezett: `opencode.local`) |
+  | `--cors` | string\[\] | További domainek engedélyezése CORS-hoz |
+</Accordion>
+
+<Accordion title="bolt session">
+  Helyi SQLite-adatbázisban tárolt Bolt-munkamenetek kezelése.
+
+  **Alparancsok**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **A `bolt session list` kapcsolói**
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Kimenet korlátozása az N legutóbbi munkamenetre |
+  | `--format` |  | `table`\|`json` | Kimeneti formátum (alapértelmezett: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Egyedi ügynökök listázása és létrehozása. Az ügynökök YAML frontmatterrel rendelkező Markdown-fájlok, amelyek definiálnak egy rendszerpromptot, jogosultságokat és módot.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **A `bolt agent create` kapcsolói**
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Könyvtár, ahová az ügynökfájl íródik |
+  | `--description` |  | string | Természetes nyelvű leírás arról, mit tegyen az ügynök |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Az ügynök elsődleges ügynökként, al-ügynökként vagy mindkettőként működik |
+  | `--permissions` | `--tools` | string | Engedélyezett jogosultságok vesszővel elválasztott listája (alapértelmezett: mind) |
+  | `--model` | `-m` | string | Használandó modell `provider/model` formátumban |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  MI-szolgáltatói hitelesítő adatok interaktív kezelése. A hitelesítő adatok az operációs rendszer adatkönyvtárában tárolódnak (`~/.local/share/bolt/auth.json` Linuxon, `~/Library/Application Support/bolt/auth.json` macOS-en).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  A beállított szolgáltatóidból elérhető összes modell listázása.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--verbose` | boolean | JSON költség-metaadatok minden modellhez |
+  | `--refresh` | boolean | Modell-gyorsítótár frissítése a models.dev-ről |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Model Context Protocol (MCP) szerverek kezelése. A Bolt támogatja mind a távoli (HTTP/SSE) szervereket OAuth-tal, mind a helyi (stdio) szervereket.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **A `bolt mcp add` kapcsolói**
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--url` | string | Egy távoli MCP-szerver URL-je |
+  | `--env` | string\[\] | Környezeti változó helyi szerverhez (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP-fejléc távoli szerverhez (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Bolt-plugin telepítése az npm-ről és a megfelelő konfigurációs fájl frissítése. A pluginek bővíthetik a TUI-t, új slash-parancsokat adhatnak hozzá vagy új szolgáltatókat regisztrálhatnak.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Plugin hozzáadása a globális konfigurációhoz a projekt-konfiguráció helyett |
+  | `--force` | `-f` | boolean | Már beállított plugin-verzió cseréje |
+</Accordion>
+
+<Accordion title="bolt github">
+  A Bolt GitHub Actions integrációjának kezelése, amely lehetővé teszi a Bolt számára, hogy reagáljon pull requestekre, issue-kra és más GitHub-eseményekre.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **A `bolt github run` kapcsolói**
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--event` | string | Szimulálandó GitHub esemény neve (pl. `pull_request`) |
+  | `--token` | string | GitHub személyes hozzáférési token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Ellenőrizd ki egy GitHub pull requestet helyi ágként a `gh` CLI használatával, majd indítsd el a Bolt-ot a kicheckoltatott könyvtárban. Ha a PR leírása munkamenet-megosztási linket tartalmaz, a Bolt automatikusan importálja azt a munkamenetet.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Ehhez a parancshoz telepítve és hitelesítve kell lennie a [GitHub CLI-nek (`gh`)](https://cli.github.com/).
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Commit-üzenet generálása a staged (vagy minden követett) változtatásokhoz egy MI-modell használatával, majd commitolás. A modell megvizsgálja a legutóbbi commit-előzményeket stíluskontextusért.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Minden követett változtatás commitolása, nem csak a staged-ek |
+  | `--dry-run` |  | boolean | A generált üzenet kiírása commitolás nélkül |
+  | `--model` | `-m` | string | Használandó modell `provider/model` formátumban |
+</Accordion>
+
+<Accordion title="bolt review">
+  MI-alapú kódellenőrzés futtatása egy diffen, és kilépés `0` (sikeres) vagy `1` (sikertelen) kóddal. A `code-review` ügynök megvizsgálja a diffet helyesség, stílus és biztonsági problémák szempontjából, majd egy `Verdict: PASS` vagy `Verdict: FAIL` sort ad ki.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Csak a staged változtatások ellenőrzése |
+  | `--branch` |  | string | Az adott ággal való merge base óta történt változtatások ellenőrzése |
+  | `--model` | `-m` | string | Használandó modell `provider/model` formátumban |
+
+  <Note>
+    Kilépési kódok: `0` = PASS, `1` = FAIL, `2` = az ítélet nem volt meghatározható.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Munkamenet exportálása JSON-ként a stdout-ra. Hasznos archiváláshoz, megosztáshoz vagy más eszközökbe való betápláláshoz. Add át a `--sanitize` kapcsolót nyilvános megosztás előtt, hogy szerkeszd ki a fájlutakat, promptokat és más érzékeny átirat-tartalmat.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Érzékeny adatok szerkesztése (fájlutak, prompt-szöveg, eszköz I/O) exportálás előtt |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Korábban exportált munkamenet importálása a helyi adatbázisba. Elfogad helyi JSON-fájlt vagy munkamenet-megosztási URL-t.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Aggregált token-használati és költségstatisztikák megjelenítése az összes munkamenet között. A kimenet tartalmaz egy áttekintő táblázatot, költség- és token-bontást, modellhasználatot és egy eszközhasználati oszlopdiagramot.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--days` | number | Az utolsó N napra korlátozás (alapértelmezett: teljes időszak) |
+  | `--tools` | number | Az eszközhasználati diagramon megjelenítendő eszközök száma |
+  | `--models` | boolean\|number | Modellstatisztikák megjelenítése; adj át egy számot a lista korlátozásához |
+  | `--project` | string | Szűrés projekt-azonosító szerint; az üres karakterlánc az aktuális projektet jelenti |
+</Accordion>
+
+<Accordion title="bolt logs">
+  A Bolt alkalmazásnapló kiírása. A napló az OS naplókönyvtárában van tárolva (pl. `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Kiírandó záró sorok száma (alapértelmezett: 1000) |
+  | `--follow` | `-f` | boolean | Új naplósorok streamelése valós időben |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  A helyi SQLite munkamenet-adatbázis közvetlen lekérdezése vagy vizsgálata.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Lekérdezési eredmények kimeneti formátuma (alapértelmezett: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  A Bolt frissítése a legújabb kiadásra vagy egy konkrét verzióra. A Bolt automatikusan felismeri a telepítési módszert, és a megfelelő csomagkezelőt használja.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Kapcsoló | Alias | Típus | Leírás |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Használandó telepítési módszer |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  A Bolt bináris és az összes kapcsolódó adat eltávolítása.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Shell kiegészítési szkript generálása `bash`, `zsh` vagy `fish` shellhez.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Hibaelhárítási és önvizsgálati alparancsok gyűjteménye. Hasznos hibajelentések benyújtásához vagy váratlan viselkedés diagnosztizálásához.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  ACP (Agent Client Protocol) szerver indítása. Az ACP az a protokoll, amelyet a szerkesztő-integrációk, például a [Zed](https://zed.dev) használnak a Bolt-tal való kommunikációhoz stdin/stdout-on keresztül.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Kapcsoló | Típus | Leírás |
+  | --- | --- | --- |
+  | `--cwd` | string | A szerver munkakönyvtára (alapértelmezett: `process.cwd()`) |
+  | `--hostname` | string | Kötési hostname (alapértelmezett: `127.0.0.1`) |
+  | `--port` | number | Kötési port |
+  | `--mdns` | boolean | mDNS szolgáltatásfelfedezés engedélyezése |
+  | `--mdns-domain` | string | Egyedi domainnév az mDNS-szolgáltatáshoz (alapértelmezett: `opencode.local`) |
+  | `--cors` | string\[\] | További domainek engedélyezése CORS-hoz |
+</Accordion>

@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI Kısayol Tuşları"
+sidebarTitle: "Kısayol Tuşları"
+description: "Temel Bolt TUI kısayolları: Tab ile ajan değiştirme, mini mod, bas-konuş sesli giriş ve klavyeden sürebileceğiniz her şey."
+---
+
+Bolt TUI, uçtan uca klavyeden sürülecek şekilde tasarlanmıştır. Bu sayfa en sık başvuracağınız kısayolları listeler. Kapsamlı liste için `bolt` çalıştırın ve uygulama içi yardımı açın.
+
+## Temeller
+
+| Tuşlar | Eylem |
+| --- | --- |
+| `Tab` | Sonraki ajana geçiş yap (`code`, `plan`, `ask`, ...). Mevcut ajan durum çubuğunda gösterilir. |
+| `Shift+Tab` | Önceki ajana geçiş yap. |
+| `Enter` | Mevcut mesajı gönder. |
+| `Esc` | Uçuşta olan turu iptal et. |
+| `Ctrl+C` | Mevcut araç çağrısını kesintiye uğrat. |
+| `Ctrl+D` | Oturumdan ayrıl (sunucuda çalışmaya devam eder). |
+
+## Modlar
+
+### `--mini` modu
+
+Bolt'u daha az terminal alanı kaplayan kompakt bir split-footer düzeniyle başlatın; bölünmüş paneller için harikadır:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Bas-konuş sesli giriş
+
+Konuşmadan metne kullanarak bir komut dikte etmek için yapılandırılmış bas-konuş tuşunu basılı tutun, sonra göndermek için bırakın. Tuşu ve STT sağlayıcısını `.bolt/bolt.jsonc` içinde yapılandırın.
+
+## İlgili
+
+- [Eğik çizgi komutları](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` ve arkadaşları.
+- [Oturumlar](/concepts/sessions) — klavyeden ayrıl, devam et, çatalla ve paylaş.

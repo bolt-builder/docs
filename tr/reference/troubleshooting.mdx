@@ -1,0 +1,395 @@
+---
+title: "Yaygın Bolt sorunlarını giderme"
+sidebarTitle: "Sorun Giderme"
+description: "En yaygın Bolt sorunları için çözümler: başlatma hataları, sağlayıcı kimlik doğrulama hataları, MCP bağlantısı, oturum sorunları, izinler, maliyet ve daha fazlası."
+---
+
+Çoğu Bolt sorunu az sayıda kategoriye girer. Aşağıda ilgili açılır menüden geçin ve beklenmedik bir şey olduğunda `bolt logs` ile günlük çıktısını kontrol edin.
+
+<Note>
+  Burada yanıtlanmamış sorular için [Bolt GitHub Tartışmaları](https://github.com/bolt-builder/bolt-cli/discussions) bölümünde arama yapın veya bir tartışma başlatın. Topluluğun daha hızlı yardımcı olabilmesi için gönderinize `bolt debug info` ve `bolt logs --tail 50` çıktısını dahil edin.
+</Note>
+
+## İlk olarak denenecek şeyler
+
+Belirli bir bölüme dalmadan önce, bu dört komut çoğu sorunu çözer:
+
+| Belirti | İlk komut | Neden |
+| --- | --- | --- |
+| Herhangi bir gariplik | `bolt debug info` | Tek seferde sistem \+ eklenti özeti. |
+| Önce çalışıyordu, şimdi çalışmıyor | `bolt logs --tail 100` | Son hatalar, genellikle üstte. |
+| Bir eklentiden şüpheleniyorsun | `bolt --pure` | Tüm eklentiler devre dışı olarak başlat. |
+| Yapılandırma alınmıyor | `bolt debug config` | Tam çözümlenmiş yapılandırmayı yazdırır. |
+
+<Tip>
+  `bolt debug` ailesi herhangi bir gizemli davranış için ilk durağınızdır. Sistem özeti için `bolt debug info`, çözümlenmiş yapılandırma için `bolt debug config`, diskteki konumlar için `bolt debug paths` ve oturum durumunu incelemek için `bolt debug snapshot`.
+</Tip>
+
+<Accordion title="Bolt başlamıyor / başlatmada çöküyor">
+  **Belirtiler:** Terminal yanıp söner ve hemen çıkar veya TUI oluşturulmadan önce bir yığın izlemesi görürsünüz.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Sistem bilgilerini toplayın">
+      ```bash
+      bolt debug info
+      ```
+
+      Bu Bolt sürümünüzü, işletim sisteminizi, terminal emülatörünüzü ve yüklü eklentilerinizi yazdırır. Bir hata bildirirken bu çıktıyı kopyalayın.
+    </Step>
+    <Step title="Son günlük çıktısını kontrol edin">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      `ERROR` satırlarını arayın. Yaygın bir neden yüklenemeyen bir eklentidir — bu durumda eklenti adını içeren bir hata görürsünüz.
+    </Step>
+    <Step title="Sorunu izole etmek için eklentileri devre dışı bırakın">
+      ```bash
+      bolt --pure
+      ```
+
+      Bolt `--pure` ile temiz başlıyorsa, bir eklenti çökmeye neden oluyor. Yapılandırmanızdan sorunlu eklentiyi kaldırın veya eklenti yazarına bildirin.
+    </Step>
+    <Step title="Bozuk yapılandırmayı kontrol edin">
+      ```bash
+      bolt debug config
+      ```
+
+      Bu geçersiz JSON hakkında bir hata yazdırıyorsa, bahsettiği yapılandırma dosyasını açın ve söz dizimini düzeltin. Veritabanı yolunun erişilebilir olduğunu doğrulamak için `bolt db path` komutunu çalıştırın.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sağlayıcı kimlik doğrulaması başarısız">
+  **Belirtiler:** Bolt "Yapılandırılmış sağlayıcı yok" gösterir, API istekleri 401 hatalarıyla başarısız olur veya `bolt run` çıktı üretmeden hemen çıkar.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Sağlayıcı oturum açma akışını yeniden çalıştırın">
+      ```bash
+      bolt providers login
+      ```
+
+      Sağlayıcınızı seçin ve komutları izleyin. Bolt sizi API anahtarı girişi veya OAuth'tan geçirecektir.
+    </Step>
+    <Step title="API anahtarı ortam değişkenini doğrulayın">
+      Bir ortam değişkeni kullanıyorsanız (örn. `ANTHROPIC_API_KEY`), gerçekten mevcut kabukta ayarlı olduğunu onaylayın:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Boşsa, kabuk profilinize ekleyin ve terminalinizi yeniden açın.
+    </Step>
+    <Step title="Çözümlenmiş yapılandırmayı inceleyin">
+      ```bash
+      bolt debug config
+      ```
+
+      `provider` bölümüne bakın. Sağlayıcınız boş bir `apiKey` ile görünüyorsa, yapılandırma dosyanızdaki ortam değişkeni referansı genişletilmiyor demektir.
+    </Step>
+    <Step title="Depolanan kimlik bilgilerini listeleyin">
+      ```bash
+      bolt providers list
+      ```
+
+      Bu, `auth.json` içinde depolanan tüm kimlik bilgilerini ve Bolt'un algıladığı sağlayıcıyla ilgili tüm ortam değişkenlerini gösterir.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP sunucusu bağlanmıyor">
+  **Belirtiler:** `bolt mcp list`, bir sunucuyu `failed` veya `needs authentication` olarak gösteriyor veya ajan bu sunucudan hiçbir aracı kullanamıyor.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="MCP hata ayıklama probunu çalıştırın">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Bu, temel HTTP bağlantısını test eder, `WWW-Authenticate` başlığını inceler ve varsa OAuth keşif akışında yürür. Çıktı, sunucunun ulaşılabilir olup olmadığını ve kimlik doğrulamanın gerekli olup olmadığını söyleyecektir.
+    </Step>
+    <Step title="Sunucu URL'sini kontrol edin">
+      `.bolt/bolt.jsonc` dosyanızdaki URL'yi doğrulayın. Uzak sunucular için URL'nin yalnızca ana bilgisayarla değil, MCP yolu (örn. `/mcp` veya `/tools`) ile bittiğinden emin olun.
+    </Step>
+    <Step title="OAuth sunucuları için yeniden kimlik doğrulayın">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Tarayıcı akışını izleyin. Sunucu önceden kaydedilmiş bir istemci kimliği gerektiriyorsa, yapılandırmaya ekleyin:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Yerel sunucu komutunu kontrol edin">
+      `local` sunucular için, hatasız başladığını doğrulamak için komutu manuel olarak terminalinizde çalıştırın:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Oturum bulunamadı">
+  **Belirtiler:** `bolt run --session <id>` "Oturum bulunamadı" ile çıkıyor veya çalıştığınızı hatırladığınız bir oturum kaybolmuş.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Tüm mevcut oturumları listeleyin">
+      ```bash
+      bolt session list
+      ```
+
+      Oturumlar en son güncellenmişten öne doğru sıralanır. Oturumunuz silindiyse veya veritabanı taşındıysa burada görünmez.
+    </Step>
+    <Step title="Veritabanı yolunu bulun">
+      ```bash
+      bolt db path
+      ```
+
+      Bu SQLite dosyasının tam yolunu yazdırır. Dosyanın var olduğunu ve boş olmadığını doğrulayın.
+    </Step>
+    <Step title="Veritabanını doğrudan sorgulayın">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Oturumunuz veritabanında görünüyor ancak `bolt session list` içinde görünmüyorsa, proje kimliği uyuşmazlığı olabilir — oturumlar projelere kapsamlıdır.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="TUI'de izin hataları">
+  **Belirtiler:** Ajan sürekli izin ister, dosya yazmayı reddeder veya "İzin reddedildi" başlıkları görürsünüz.
+
+  **Erişim düzeylerini anlama:**
+
+  Her yerleşik ajan, sormadan neler yapabileceğini kontrol eden bildirilmiş bir erişim düzeyine sahiptir:
+
+  | Erişim düzeyi | Neye izin verir |
+  | --- | --- |
+  | **Full** | Dosyaları okuma, dosyaları yazma, kabuk komutları çalıştırma |
+  | **Edit** | Dosyaları okuma ve yazma, kabuk komutları yok |
+  | **Read** | Yalnızca dosyaları okuma, yazma veya komut yok |
+
+  `code`, `debug`, `refactor`, `migrate` ve `perf` ajanları **Full** erişime sahiptir. `docs`, **Edit** erişimine sahiptir. `plan`, `ask`, `code-review` ve `security`, **Read** erişimine sahiptir.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Full erişimli bir ajana geçin">
+      Dosya yazmaya ihtiyacınız varsa `code` ajanını kullanın:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Veya TUI'de ajanlar arasında geçiş yapmak için `Tab` tuşuna basın.
+    </Step>
+    <Step title="İzinleri etkileşimsiz onaylamak için --auto kullanın">
+      CI veya betiklenmiş bağlamlarda, yapılandırmada açıkça reddedilmemiş izinleri otomatik onaylamak için `bolt run` komutuna `--auto` geçirin.
+    </Step>
+    <Step title="Yapılandırma dosyasında izinleri yapılandırın">
+      `.bolt/bolt.jsonc` dosyasına bir `permission` bloğu ekleyerek bir projedeki tüm oturumlar için belirli araçları reddedebilirsiniz.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Yüksek token kullanımı veya beklenmeyen maliyetler">
+  **Belirtiler:** `bolt stats` beklenenden yüksek token sayıları gösteriyor veya API faturanız beklenenden hızlı büyüyor.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Kullanım istatistiklerinizi inceleyin">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Çıktı; gün başına maliyeti, oturum başına ortalama tokenları ve modele göre kullanımı ayırır.
+    </Step>
+    <Step title="Muhakeme çabasını düşürün">
+      Destekleyen modeller için muhakeme çabasını `--variant` ile azaltın:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Desteklenen değerler sağlayıcıya özeldir (örn. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Daha ucuz bir modele geçin">
+      Daha küçük bir model bulmak için `bolt models` kullanın. Daha küçük modeller (örn. `claude-haiku`, `gpt-4o-mini`) token başına önemli ölçüde daha az maliyetlidir ve birçok görevde iyi çalışır.
+    </Step>
+    <Step title="Keşif için ask veya plan ajanını kullanın">
+      `ask` ve `plan` ajanları **Read** erişimine sahiptir ve yazma araçlarını çağırmazlar; bu da büyük çıktı tokenları üreten araç ağırlıklı döngülerden kaçındıkları anlamına gelir.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Eklenti çakışmaları veya beklenmedik davranış">
+  **Belirtiler:** Bir eğik çizgi komutu beklenmedik şekilde davranıyor, TUI yanlış oluşturuyor veya bir eklenti kurduktan sonra bir şey değişti.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Bir taban çizgisi oluşturmak için tüm eklentileri devre dışı bırakın">
+      ```bash
+      bolt --pure
+      ```
+
+      Sorun ortadan kalkarsa, sorumlu bir eklentidir.
+    </Step>
+    <Step title="Sorunlu eklentiyi tanımlayın">
+      ```bash
+      bolt debug info
+      ```
+
+      Çıktı, yüklü tüm eklentileri listeler. Sorun ortadan kalkana kadar bunları yapılandırmanızdan birer birer geçici olarak kaldırın ve Bolt'u yeniden başlatın.
+    </Step>
+    <Step title="Sürüm uyumsuzluğunu kontrol edin">
+      ```bash
+      bolt upgrade
+      ```
+
+      Eklentiler uyumlu bir Bolt sürüm aralığı bildirir. Yakın zamanda Bolt'u yükselttiyseniz, bir eklentinin de güncellenmesi gerekebilir.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows yol sorunları">
+  **Belirtiler:** WSL'li Windows'ta Bolt `less`'i bulamıyor, dosya yolları beklenmeyen ters eğik çizgiler içeriyor veya `bolt session list` için sayfalayıcı başlamıyor.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Git Bash yolunu ayarlayın">
+      Bolt Unix yardımcı programlarını (`less` dahil) Git for Windows kurulumuna göre arar. Ortam değişkenini Git Bash dizininize ayarlayın:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Kalıcı hale getirmek için bunu PowerShell profilinize (`$PROFILE`) ekleyin.
+    </Step>
+    <Step title="Hata ayıklama bilgileriyle doğrulayın">
+      ```bash
+      bolt debug info
+      ```
+
+      OS algılamasını ve Bolt'un kullandığı yolları onaylar.
+    </Step>
+    <Step title="Bolt'u doğrudan WSL içinde çalıştırın">
+      Windows'ta en iyi deneyim için `bolt`'u PowerShell veya Komut İstemi yerine bir WSL terminalinden çalıştırın.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Bolt yükseltilemiyor">
+  **Belirtiler:** `bolt upgrade` bir hata bildiriyor veya sessizce hiçbir şey yapmıyor ya da çalıştırıldıktan sonra sürüm numarası değişmiyor.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title="Kurulum yöntemini açıkça belirtin">
+      Bolt nasıl kurulduğunu algılamaya çalışır. Algılama başarısız olursa geçersiz kılın:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Kurulum betiği ile yeniden kurun">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: Chocolatey için Yönetici olarak çalıştırın">
+      `choco` ile kurduysanız, yükseltmeler yükseltilmiş bir terminal gerektirir. `bolt upgrade` çalıştırmadan önce PowerShell'i Yönetici olarak açın.
+    </Step>
+    <Step title="Yeni sürümün aktif olduğunu onaylayın">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Ajan dosyaları bulamıyor (veya çok fazla buluyor)">
+  **Belirtiler:** Ajan var olan dosyaları göremediğinden şikayet ediyor veya dokunmamanız gereken dosyaları (örn. `node_modules`, derleme çıktısı veya sırlar) sürekli alıyor.
+
+  **Adımlar:**
+
+  <Steps>
+    <Step title=".boltignore dosyasını kontrol edin">
+      Bolt, ajanın dosya arama araçlarının hangi dosyaları görebileceğini kontrol eden bir proje kökündeki `.boltignore` dosyasını dikkate alır. `.gitignore` ile aynı söz dizimini kullanır.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Çalışma dizinini onaylayın">
+      ```bash
+      bolt debug info
+      ```
+
+      `cwd`'nin proje köküyle eşleştiğini doğrulayın. Bolt'u bir alt dizinden başlattıysanız, ajanın dosya araması burada köklendirilir.
+    </Step>
+    <Step title="Ajandan tahmin etmek yerine grep yapmasını isteyin">
+      Ajan bir dosyanın var olmadığını iddia ederse, ondan açıkça `grep` veya `glob` çalıştırmasını isteyin. Bu, tüm bayat iç varsayımları atlar.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Hata raporu için hata ayıklama bilgisi alma">
+  Bir sorun dosyaladığınızda, aşağıdaki bilgiler bakımcılar için en yararlı olanıdır:
+
+  <Steps>
+    <Step title="Sistem ve eklenti bilgilerini toplayın">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Son günlük çıktısını toplayın">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="İlgili oturumu dışa aktarın (sanitize edilmiş)">
+      Sorun belirli bir oturumda oluştuysa, sırları gizleyerek dışa aktarın:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Sorununuza `session-debug.json` ekleyin.
+    </Step>
+    <Step title="Bir sorun veya tartışma açın">
+      [GitHub Tartışmaları](https://github.com/bolt-builder/bolt-cli/discussions) sayfasına gidin ve `bolt debug info` çıktınızı artı çoğaltma adımlarının bir açıklamasını yapıştırın.
+    </Step>
+  </Steps>
+</Accordion>

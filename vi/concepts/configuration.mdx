@@ -1,0 +1,193 @@
+---
+title: "Cấu hình — Cài đặt bolt.jsonc và ghi đè toàn cục"
+sidebarTitle: "Cấu hình"
+description: "Bolt đọc các tệp cấu hình JSONC theo tầng từ dự án và thư mục cấu hình OS của bạn. Đặt provider, MCP server, hướng dẫn, plugin và ghi đè môi trường."
+---
+
+Bolt sử dụng hệ thống cấu hình phân tầng: một tệp cấu hình **toàn cục** cho mặc định trên phạm vi người dùng, và một tệp cấu hình **theo dự án** cho các thiết lập riêng cho repository. Cả hai tệp đều sử dụng định dạng JSONC (JSON có bình luận), và cả hai đều được tạo tự động với con trỏ `$schema` cho phép tự động hoàn thành trong trình soạn thảo.
+
+## Vị trí tệp cấu hình
+
+### Cấu hình theo dự án
+
+Được tạo tự động ở lần chạy đầu tiên bên trong dự án của bạn:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Commit tệp này để chia sẻ cấu hình provider, MCP server và hướng dẫn tùy chỉnh với phần còn lại của nhóm bạn. Thông tin xác thực nhạy cảm không bao giờ nên đưa vào đây — thay vào đó hãy dùng biến môi trường hoặc cấu hình toàn cục.
+
+### Cấu hình toàn cục
+
+Áp dụng cho tất cả dự án trên máy của bạn. Bolt tìm tệp khớp đầu tiên trong thư mục cấu hình OS của bạn:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (ưu tiên)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Thư mục cấu hình toàn cục ở đâu?">
+  Bolt tuân theo XDG Base Directory Specification trên Linux và macOS (`~/.config/bolt/`) và `%APPDATA%\bolt\` trên Windows. Chạy `bolt debug config` để in ra cấu hình đã được giải quyết đầy đủ trên máy của bạn.
+</Accordion>
+
+## Ví dụ cấu hình tối thiểu
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Cấu hình provider đặt ở đây
+  }
+}
+```
+
+Trường `$schema` bật IntelliSense và xác thực trong các trình soạn thảo hỗ trợ JSON Schema. Bolt tự động ghi trường này nếu nó bị thiếu.
+
+## Tham chiếu cấu hình
+
+### `provider`
+
+Cấu hình các tùy chọn riêng cho provider như base URL tùy chỉnh, cài đặt vùng hoặc thông tin xác thực có tên:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Đăng ký các server [Model Context Protocol](https://modelcontextprotocol.io) mà agent có thể gọi như công cụ:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Quản lý các MCP server một cách tương tác với `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` và `bolt mcp debug`.
+
+### `instructions`
+
+Thêm các hướng dẫn hệ thống tùy chỉnh được đưa vào mỗi phiên. Hữu ích để thực thi các quy ước code, style guide, hoặc quy tắc riêng cho dự án:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Luôn viết test song song với code mới.",
+    "Tuân theo Google TypeScript Style Guide.",
+    "Không bao giờ giới thiệu dependency mới mà không giải thích sự đánh đổi."
+  ]
+}
+```
+
+Các hướng dẫn từ nhiều tệp cấu hình (toàn cục \+ dự án) được gộp và loại trùng tự động.
+
+### `plugin`
+
+Nạp các plugin Bolt. Plugin có thể thêm công cụ, provider, nguồn ngữ cảnh và hook mới:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Cấu hình từ xa qua `url`
+
+Lấy cấu hình từ một URL từ xa khi khởi động. Hữu ích cho cấu hình nhóm tập trung:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Thay thế biến
+
+Giá trị cấu hình có thể tham chiếu biến môi trường bằng cú pháp `$VAR_NAME` hoặc `${VAR_NAME}`. Việc thay thế xảy ra ở thời điểm nạp, trước khi cấu hình được phân tích:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Làm sao dùng biến môi trường trong cấu hình?">
+  Tham chiếu bất kỳ biến môi trường nào bằng `$VAR_NAME` hoặc `${VAR_NAME}` ở bất kỳ đâu trong giá trị cấu hình dạng chuỗi. Bolt thay thế giá trị ở thời điểm nạp. Nếu biến không được đặt, chuỗi ký tự `$VAR_NAME` sẽ được sử dụng — Bolt không âm thầm thất bại hay ném lỗi cho các thay thế bị thiếu.
+</Accordion>
+
+## Ghi đè bằng biến môi trường
+
+Các biến môi trường này cho phép bạn chuyển hướng hoặc ghi đè cấu hình hoàn toàn, hữu ích cho CI, container và test:
+
+| Biến | Mô tả |
+| --- | --- |
+| `BOLT_CONFIG` | Đường dẫn tuyệt đối tới tệp cấu hình để nạp thay vì tệp theo dự án |
+| `BOLT_CONFIG_DIR` | Ghi đè thư mục mà Bolt tìm kiếm các tệp cấu hình |
+| `BOLT_CONFIG_CONTENT` | Cung cấp nội dung cấu hình JSONC thô dưới dạng chuỗi — không cần tệp |
+
+`BOLT_CONFIG_CONTENT` đặc biệt tiện lợi trong môi trường container nơi mount tệp không thuận tiện:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "tóm tắt codebase"
+```
+
+<Accordion title="Cấu hình nào có ưu tiên khi nhiều nguồn cùng hoạt động?">
+  Bolt gộp các cấu hình theo thứ tự này (mục sau thắng):
+
+  1. Tệp cấu hình toàn cục (`bolt.jsonc` / `bolt.json` trong thư mục cấu hình OS)
+  2. Cấu hình từ xa được lấy từ các mục `url` trong cấu hình toàn cục
+  3. Tệp cấu hình theo dự án (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. Tệp `BOLT_CONFIG` (nếu được đặt)
+  5. `BOLT_CONFIG_CONTENT` (nếu được đặt)
+
+  Các trường mảng như `instructions` được nối lại qua các nguồn thay vì bị thay thế. Các trường object được gộp sâu với giá trị sau thắng khi xung đột.
+</Accordion>

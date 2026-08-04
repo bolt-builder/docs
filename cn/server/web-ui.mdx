@@ -1,0 +1,33 @@
+---
+title: "Bolt Web UI"
+sidebarTitle: "Web UI"
+description: "bolt web 在运行中的 Bolt 服务器之上提供一个基于浏览器的 UI——适用于团队共享机器、远程机器以及不便使用 TUI 的场景。"
+---
+
+`bolt web` 启动 Bolt 服务器，并在其前面提供一个浏览器 UI。它是与 TUI 相同的引擎，只是在浏览器标签中渲染。
+
+## 启动它
+
+```bash
+bolt web                                # 仅 localhost
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+然后打开打印出的 URL。当在网络上暴露时，请先设置基本认证：
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## 何时使用 Web UI
+
+- 在性能强的远程机器上运行 Bolt，但从笔记本上驱动它。
+- 与队友分享实时会话进行结对调试。
+- 使用完整 TUI 不便的环境（Chromebook、平板、共享工作机）。
+
+## 相关内容
+
+- [Headless Server](/server/headless-server) — 底层的 API 服务器。
+- [Remote Sessions](/server/remote-sessions) — 将 TUI 连接到 Web UI 所服务的同一服务器。

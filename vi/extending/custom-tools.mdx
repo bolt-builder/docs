@@ -1,0 +1,36 @@
+---
+title: "Công cụ tùy chỉnh trong Bolt"
+sidebarTitle: "Công cụ tùy chỉnh"
+description: "Thêm công cụ đặc thù cho dự án vào Bolt bằng cách thả các tệp thực thi vào .opencode/tool/. Mỗi tệp trở thành một công cụ mà agent có thể gọi."
+---
+
+Công cụ tùy chỉnh cho bạn phơi bày bất cứ thứ gì bạn có thể script (shell script, chương trình Node/Bun/Python, các binary nhỏ) như một công cụ mà agent có thể gọi theo tên. Chúng là cách đơn giản nhất để cho Bolt truy cập vào các workflow build, deploy hoặc dữ liệu của chính dự án bạn.
+
+## Chúng nằm ở đâu
+
+Thả tệp vào một trong:
+
+- `.opencode/tool/` — phạm vi dự án, được commit cùng repo.
+- `.opencode/tools/` — được chấp nhận làm bí danh cho ở trên.
+
+Mỗi tệp trở thành một công cụ được đặt tên theo tệp (không có phần mở rộng). Công cụ được nạp tự động ở lần khởi động Bolt kế tiếp.
+
+## Giải phẫu một công cụ
+
+Một công cụ tùy chỉnh khai báo tên, mô tả và schema đầu vào của nó trong header, sau đó cài đặt hành vi. Hình dáng chính xác phụ thuộc vào runtime bạn chọn (shell script, TypeScript, v.v.), nhưng mỗi công cụ phải:
+
+1. Thông báo một JSON Schema cho đầu vào của nó để mô hình biết cách gọi nó.
+2. Trả về một giá trị (hoặc lỗi) mà Bolt có thể hiển thị trong TUI và đưa lại cho mô hình.
+
+Sau khi được nạp, công cụ xuất hiện trong danh sách công cụ của agent cạnh các công cụ tích hợp sẵn như `bash` và `grep`, và bị kiểm soát bởi cùng hệ thống [quyền](/concepts/permissions).
+
+## Khi nào dùng công cụ tùy chỉnh so với MCP server
+
+- **Công cụ tùy chỉnh** — nhỏ, riêng cho dự án, không tái sử dụng qua các dự án. Viết nhanh.
+- **MCP server** — chia sẻ qua các dự án, hoặc bao bọc một dịch vụ bên ngoài thực với auth. Xem [MCP Server](/extending/mcp-servers).
+- **Công cụ plugin** — phân phối dưới dạng gói npm cùng với các điểm mở rộng khác. Xem [Plugin](/extending/plugins).
+
+## Liên quan
+
+- [Công cụ](/concepts/tools) — tham chiếu công cụ tích hợp sẵn.
+- [Plugin](/extending/plugins) — bề mặt mở rộng cho công cụ cộng với nhiều thứ khác.

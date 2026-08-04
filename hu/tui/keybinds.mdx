@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI billentyűkombinációk"
+sidebarTitle: "Billentyűkombinációk"
+description: "A lényeges Bolt TUI-gyorsbillentyűk: ügynökök váltása Tab-bal, mini mód, push-to-talk hangbevitel és minden más, amit billentyűzetről vezérelhetsz."
+---
+
+A Bolt TUI úgy van tervezve, hogy teljes egészében billentyűzetről vezérelhető legyen. Ez az oldal felsorolja a leggyakrabban használt gyorsbillentyűket. A kimerítő listáért futtasd a `bolt`-ot, és nyisd meg az alkalmazáson belüli súgót.
+
+## Alapvetők
+
+| Billentyűk | Művelet |
+| --- | --- |
+| `Tab` | Ciklikus váltás a következő ügynökre (`code`, `plan`, `ask`, ...). Az aktuális ügynök az állapotsávban látható. |
+| `Shift+Tab` | Ciklikus váltás az előző ügynökre. |
+| `Enter` | Az aktuális üzenet elküldése. |
+| `Esc` | A folyamatban lévő forduló megszakítása. |
+| `Ctrl+C` | Az aktuális eszközhívás megszakítása. |
+| `Ctrl+D` | Leválasztás a munkamenetről (a szerveren futva hagyja). |
+
+## Módok
+
+### `--mini` mód
+
+Indítsd a Bolt-ot kompakt split-footer elrendezéssel, amely kevesebb terminálhelyet foglal, kiváló osztott ablakokhoz:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk hang
+
+Tartsd lenyomva a konfigurált push-to-talk billentyűt egy prompt beszéd-szöveggé alakításához, majd engedd el a küldéshez. Konfiguráld a billentyűt és az STT-szolgáltatót a `.bolt/bolt.jsonc` fájlban.
+
+## Kapcsolódó
+
+- [Slash parancsok](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` és barátaik.
+- [Munkamenetek](/concepts/sessions) — leválasztás, folytatás, elágaztatás és megosztás billentyűzetről.

@@ -1,0 +1,22 @@
+---
+title: "Skills: Qayta ishlatiladigan agent playbook'lari"
+sidebarTitle: "Skills"
+description: "Skills — bu Bolt agent skill asbobi orqali chaqiradigan nomlangan, qayta ishlatiladigan playbook'lar — reliz'larni jo'natish yoki lint to'plamlarini ishga tushirish kabi tayyor workflow'lar uchun qulay."
+---
+
+Skills — bu loyihangiz yonida yashaydigan va `skill` asbobi orqali chaqiriladigan nomlangan, qayta ishlatiladigan playbook'lar. Custom asbob bitta bajariladigan harakat bo'lgan joyda, skill agent bosqichma-bosqich rioya qiladigan skriptli workflow: bu fayllarni yig'ing, bu buyruqlarni ishga tushiring, chiqishga qarab keyingi nima qilishni hal qiling.
+
+Skill'lardan foydalaning, agar:
+
+- Sizda promptlarda qayta-qayta tushuntiruvchi workflow bo'lsa ("avval linter'ni ishga tushiring, keyin …").
+- Agent muayyan qaror daraxtiga rioya qilishini xohlasangiz.
+- Bir xil workflow'ni loyihadagi har bir sessiya va har bir agent uchun mavjud qilishni xohlasangiz.
+
+## Ular qayerda yashaydi
+
+Skill'lar loyiha ildizidagi `.opencode/skill/` (yoki `.opencode/skills/`) ostidagi fayllar. Har bir fayl trigger nomini, agent uni qachon ishlatishi kerakligini va ishtirok etadigan qadamlarni tavsiflaydi. `skill` [tool](/concepts/tools) ularni modelga ochib beradi.
+
+## Aloqador
+
+- [Custom Tools](/extending/custom-tools) — pastroq darajadagi, bir marta harakat qiladigan kengaytma.
+- [Custom Agents](/extending/custom-agents) — o'rniga agentga ko'rsatmalarni pishirib qo'ying.

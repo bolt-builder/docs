@@ -1,0 +1,61 @@
+---
+title: "Referencja zmiennych środowiskowych Bolta"
+sidebarTitle: "Zmienne środowiskowe"
+description: "Każda zmienna środowiskowa rozpoznawana przez Bolta, w tym kontrola logów, uwierzytelnianie serwera, nadpisania konfiguracji i konwencje kluczy API dostawców."
+---
+
+Zmienne środowiskowe pozwalają Ci konfigurować Bolta bez dotykania jakichkolwiek plików konfiguracyjnych — przydatne w pipeline'ach CI, kontenerach Docker i współdzielonych środowiskach, gdzie nie możesz zatwierdzać danych uwierzytelniających. Są odczytywane raz przy uruchamianiu i nie mogą być zmieniane, gdy Bolt jest w trakcie działania.
+
+## Referencja
+
+| Zmienna | Opis |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Ustaw szczegółowość logów. Akceptowane wartości: `DEBUG`, `INFO`, `WARN`, `ERROR`. Odpowiednik flagi `--log-level`. |
+| `BOLT_PRINT_LOGS` | Ustaw na dowolną niepustą wartość, aby wypisywać wyjście logów do stderr. Odpowiednik `--print-logs`. |
+| `BOLT_PURE` | Ustaw na dowolną niepustą wartość, aby wyłączyć wszystkie zewnętrzne wtyczki. Odpowiednik `--pure`. |
+| `BOLT_SERVER_USERNAME` | Nazwa użytkownika basic auth dla `bolt serve` i `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Hasło basic auth dla `bolt serve` i `bolt web`. Wszyscy podłączający się klienci muszą podać to hasło. |
+| `BOLT_CONFIG` | Nadpisz ścieżkę do pliku konfiguracyjnego, który Bolt ładuje. Bolt nie będzie przeszukiwał domyślnych lokalizacji, gdy jest to ustawione. |
+| `BOLT_CONFIG_DIR` | Nadpisz katalog konfiguracyjny. Bolt będzie szukał plików konfiguracyjnych w tym katalogu zamiast w domyślnym systemowym katalogu konfiguracyjnym. |
+| `BOLT_CONFIG_CONTENT` | Podaj całą konfigurację jako inline string JSON. Przydatne w CI, gdzie zapisywanie plików jest niepraktyczne. Ma najwyższy priorytet spośród źródeł konfiguracji. |
+| `BOLT_GIT_BASH_PATH` | Ścieżka do katalogu `bin` Git Basha na Windowsie, używana do lokalizowania narzędzi uniksowych jak `less`. |
+
+## Klucze API dostawców
+
+Bolt automatycznie wykrywa dane uwierzytelniające dostawców ze zmiennych środowiskowych — nie jest wymagany krok `bolt providers login`. Każdy dostawca szuka konkretnej zmiennej środowiskowej, a Bolt użyje jej, jeśli zmienna jest ustawiona, niezależnie od tego, co jest przechowywane w `auth.json`.
+
+<Tip>
+  Ustaw klucze API dostawców w profilu swojej powłoki (np. `~/.zshrc`, `~/.bashrc`) lub w pliku `.env` ładowanym przez Twoją powłokę. Możesz też odwoływać się do nich z pliku konfiguracyjnego za pomocą składni `${VAR_NAME}` w polu `provider.*.apiKey`, aby klucze nigdy nie były przechowywane w postaci jawnej.
+</Tip>
+
+Częste zmienne dostawców:
+
+| Zmienna | Dostawca |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, seria o) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Uruchom `bolt models --verbose`, aby zobaczyć, jakiej zmiennej środowiskowej oczekuje każdy skonfigurowany dostawca.
+
+## Przykłady użycia
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

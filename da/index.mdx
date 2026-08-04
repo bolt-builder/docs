@@ -1,0 +1,78 @@
+---
+title: "Bolt: AI-kodningsagent til din terminal"
+sidebarTitle: "Hjem"
+description: "Bolt er en terminal-først AI-kodningsagent med ti specialiserede agenter, vedvarende sessioner, MCP-understøttelse og en desktop-app – drevet af enhver LLM-udbyder."
+---
+
+Bolt placerer et komplet AI-ingeniørteam direkte i din terminal. Den leveres som en hurtig, tastaturdrevet TUI og en native desktop-app, begge understøttet af den samme motor: ti specialiserede agenter, vedvarende og robuste sessioner, MCP-serveradministration med OAuth, et plugin-system og understøttelse af alle større LLM-udbydere.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Installér Bolt på få sekunder via curl, npm, bun eller din foretrukne pakkehåndtering.
+  </Card>
+  <Card title="Kom hurtigt i gang" icon="rocket" href="/quickstart">
+    Kør din første AI-kodningssession på under et minut.
+  </Card>
+  <Card title="Agenter" icon="robot" href="/concepts/agents">
+    Mød de ti indbyggede agenter: code, plan, ask, review, debug, refactor, docs, security, migrate og perf.
+  </Card>
+  <Card title="Kommandoreference" icon="terminal" href="/reference/commands">
+    Hver CLI-kommando, underkommando og flag dokumenteret fuldt ud.
+  </Card>
+</CardGroup>
+
+## Hvad Bolt gør
+
+Bolt læser din kodebase, forstår hvad du bygger, og leverer kode sammen med dig – i terminalen eller som en desktop-app. Hver session er vedvarende: du kan koble fra, koble på igen fra en anden maskine, forgrene en gren af samtalen, dele et link eller eksportere et anonymiseret transkript.
+
+<CardGroup cols={3}>
+  <Card title="Sessioner" icon="clock-rotate-left" href="/concepts/sessions">
+    Vedvarende sessioner du kan forgrene, gemt i lokal SQLite.
+  </Card>
+  <Card title="Udbydere og modeller" icon="microchip" href="/concepts/providers-and-models">
+    Brug din egen API-nøgle til enhver større LLM-udbyder.
+  </Card>
+  <Card title="Konfiguration" icon="sliders" href="/concepts/configuration">
+    Per-projekt `.bolt/bolt.jsonc` med fuld skema-understøttelse.
+  </Card>
+  <Card title="MCP-servere" icon="plug" href="/extending/mcp-servers">
+    Tilføj værktøjer via Model Context Protocol, inklusive OAuth-flow.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Udvid Bolt med brugerdefinerede udbydere, værktøjer og godkendelsesmetoder.
+  </Card>
+  <Card title="GitHub-integration" icon="github" href="/server/github-actions">
+    AI-drevne commit-beskeder, kodegennemgang og GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Kom i gang
+
+<Steps>
+  <Step title="Installér Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Eller installér via npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Åbn dit projekt">
+    Naviger til en projektmappe og start TUI'en:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Konfigurér en udbyder">
+    Ved første opstart beder Bolt dig om at tilføje en LLM-udbyder. Du kan også køre:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Begynd at kode med AI">
+    Indtast din prompt i TUI-fodbjælken, tryk Enter, og lad Bolts agenter gå i gang. Skift agent med `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Brug `bolt run "explain this codebase"` for et hurtigt, ikke-interaktivt svar uden at åbne den fulde TUI.
+</Tip>

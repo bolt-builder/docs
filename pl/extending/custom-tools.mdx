@@ -1,0 +1,36 @@
+---
+title: "Niestandardowe narzędzia w Bolcie"
+sidebarTitle: "Niestandardowe narzędzia"
+description: "Dodawaj narzędzia specyficzne dla projektu do Bolta, wrzucając pliki wykonywalne do .opencode/tool/. Każdy plik staje się narzędziem, które agent może wywołać."
+---
+
+Niestandardowe narzędzia pozwalają Ci wystawić cokolwiek, co możesz oskryptować (skrypty powłoki, programy Node/Bun/Python, małe pliki binarne), jako narzędzie, które agent może wywołać po nazwie. To najprostszy sposób, aby dać Boltowi dostęp do własnych workflowów budowania, wdrażania lub obsługi danych w Twoim projekcie.
+
+## Gdzie żyją
+
+Wrzuć pliki do jednego z:
+
+- `.opencode/tool/` — zasięg projektu, wersjonowane z repozytorium.
+- `.opencode/tools/` — akceptowane jako alias powyższego.
+
+Każdy plik staje się narzędziem nazwanym po pliku (minus jego rozszerzenie). Narzędzia są automatycznie podnoszone przy następnym uruchomieniu Bolta.
+
+## Anatomia narzędzia
+
+Niestandardowe narzędzie deklaruje swoją nazwę, opis i schemat wejścia w nagłówku, po czym implementuje zachowanie. Dokładny kształt zależy od wybranego runtime'u (skrypt powłoki, TypeScript itd.), ale każde narzędzie musi:
+
+1. Ogłosić JSON Schema dla swoich wejść, aby model wiedział, jak je wywołać.
+2. Zwrócić wartość (lub błąd), które Bolt może wyrenderować w TUI i przekazać z powrotem do modelu.
+
+Po załadowaniu narzędzie pojawia się na liście narzędzi agenta obok wbudowanych narzędzi jak `bash` i `grep` i jest ograniczane tym samym systemem [uprawnień](/concepts/permissions).
+
+## Kiedy używać niestandardowego narzędzia zamiast serwera MCP
+
+- **Niestandardowe narzędzie** — małe, specyficzne dla projektu, brak ponownego użycia między projektami. Szybkie do napisania.
+- **Serwer MCP** — dzielony między projekty lub opakowuje prawdziwą zewnętrzną usługę z uwierzytelnianiem. Zobacz [Serwery MCP](/extending/mcp-servers).
+- **Narzędzie wtyczki** — dystrybuowane jako pakiet npm razem z innymi punktami rozszerzenia. Zobacz [Wtyczki](/extending/plugins).
+
+## Powiązane
+
+- [Narzędzia](/concepts/tools) — referencja wbudowanych narzędzi.
+- [Wtyczki](/extending/plugins) — powierzchnia rozszerzania dla narzędzi i nie tylko.

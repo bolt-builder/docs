@@ -1,0 +1,58 @@
+---
+title: "工具：Bolt 代理实际能做什么"
+sidebarTitle: "工具"
+description: "Bolt 代理可用的内置工具完整列表，以及如何通过插件、MCP 服务器或 .opencode/tool 目录添加你自己的工具。"
+---
+
+Bolt 中的代理通过调用工具来完成工作。你在 TUI 中看到的每一个动作（读取文件、运行测试、搜索网页）都是模型选择工具、Bolt 执行的结果。每个代理都有一个声明的访问级别，用于决定它可以在不先询问你的情况下调用哪些工具（参见 [权限](/concepts/permissions)）。
+
+## 内置工具
+
+| 工具 | 作用 |
+| --- | --- |
+| `read` | 从磁盘读取文件。 |
+| `write` | 创建新文件或覆盖已有文件。 |
+| `edit` | 对文件应用定向编辑（查找/替换）。 |
+| `apply_patch` | 在一个或多个文件上应用 unified-diff 风格的补丁。 |
+| `glob` | 列出匹配 glob 模式的文件。 |
+| `grep` | 按正则/文本搜索文件内容。 |
+| `bash` | 运行 shell 命令。 |
+| `task` | 将子任务委派给子代理（`@general`、`@explore` 或自定义子代理）。 |
+| `todowrite` | 维护代理的结构化任务列表，用于多步骤工作。 |
+| `webfetch` | 获取 URL 并返回其内容。 |
+| `websearch` | 在网页上搜索。 |
+| `skill` | 调用具名的 skill（参见 [Skills](/extending/skills)）。 |
+| `memory_save` | 将事实持久化到 [项目记忆](/concepts/project-memory)。 |
+| `memory_recall` | 查找先前保存的记忆。 |
+| `question` | 向你提出澄清性问题并等待回复。 |
+| `bash_background` | 以受管的后台进程启动 shell 命令（开发服务器、监视器、长时间构建）。 |
+| `process_output` | 读取后台进程累积的输出和状态，可选择等待其完成。 |
+| `list_processes` | 列出后台进程及其 id、状态和命令。 |
+| `kill_process` | 按 id 终止后台进程（及其进程树）。 |
+| `test_run` | 检测并运行项目的测试，返回结构化的通过/失败结果和失败详情。 |
+
+### 实验性
+
+| 工具 | 作用 |
+| --- | --- |
+| `lsp` | 向语言服务器查询定义、引用和诊断信息。 |
+| `execute` | 在隔离的 code-mode 沙箱中运行代码。 |
+| `plan` | 在做出更改前产出结构化计划。 |
+
+实验性工具可能会在版本间变化或被重命名。
+
+## 扩展工具集
+
+除了内置工具，Bolt 还可以调用来自三种来源的工具：
+
+- **自定义工具**，位于项目根目录下的 `.opencode/tool/`（或 `.opencode/tools/`）。参见 [自定义工具](/extending/custom-tools)。
+- **插件工具**，由任何已安装的 [插件](/extending/plugins) 贡献。
+- **MCP 工具**，来自为项目配置的任意 [MCP 服务器](/extending/mcp-servers)。
+
+从代理的角度来看，三者感觉完全一致：它们出现在工具列表中，遵循代理的访问级别，并出现在 TUI 的工具调用输出中。
+
+## 相关内容
+
+- [Agents](/concepts/agents) — 哪些代理可以调用哪些工具。
+- [Permissions](/concepts/permissions) — 每个代理的工具访问如何被管控。
+- [MCP Servers](/extending/mcp-servers) — 添加真实世界工具最常见的方式。

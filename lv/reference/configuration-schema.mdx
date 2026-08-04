@@ -1,0 +1,192 @@
+---
+title: "Bolt konfigurācijas faila atsauce"
+sidebarTitle: "Konfigurācijas shēma"
+description: "Pilna atsauce Bolt konfigurācijas faila shēmai — atrašanās vietas, visi augstākā līmeņa lauki, MCP serveru veidi, sniedzēju ignorējumi un pilns piemērs."
+---
+
+Bolt izmanto JSON ar komentāriem (`.jsonc`) failu projekta un globālajai konfigurācijai. Shēma ir versionēta un publicēta vietnē `https://opencode.ai/config.json`, ko redaktori var izmantot, lai nodrošinātu automātisko pabeigšanu un validāciju.
+
+## Konfigurācijas failu atrašanās vietas
+
+Bolt apvieno konfigurāciju no divām atrašanās vietām. Katram projektam paredzētie iestatījumi uzvar globālos iestatījumus, kad viena un tā pati atslēga parādās abos.
+
+| Apjoms | Ceļš |
+|---|---|
+| **Katram projektam** | `.bolt/bolt.jsonc` (vai `.bolt/bolt.json`) jūsu projekta saknē |
+| **Globāls** | `bolt.jsonc` (vai `bolt.json`) jūsu OS konfigurācijas direktorijā |
+
+OS konfigurācijas direktorija ir:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt arī nolasa mantotos `opencode.jsonc` / `opencode.json` failus tajās pašās vietās. Jauniem projektiem jāizmanto `bolt.jsonc` nosaukumu konvencija, kas ir prioritāra pār mantotajiem failu nosaukumiem.
+</Note>
+
+Bolt izveido minimālu globālo konfigurācijas failu ar `$schema` rindu pirmajā palaišanas reizē un izveido `.bolt/bolt.jsonc` jūsu projekta saknē pirmo reizi, kad atverat TUI šajā direktorijā.
+
+## Shēmas lauki
+
+<ParamField body="$schema" type="string">
+  URL, kas norāda uz šī konfigurācijas faila JSON shēmu. Iespējo automātisko pabeigšanu un iekļautu validāciju redaktoros, kas atbalsta JSON Schema (VS Code, Zed, JetBrains IDE utt.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Noklusējuma modelis visām sesijām, izteikts kā `provider/model`. To var ignorēt uz sesiju ar `bolt run --model` vai TUI modeļa izvēlētājā.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Palaidiet `bolt models`, lai redzētu visas pieejamās `provider/model` virknes jūsu konfigurētajiem sniedzējiem.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Sniedzējam specifiski akreditācijas dati un iestatījumu ignorējumi. Katra atslēga ir sniedzēja ID (piem., `anthropic`, `openai`, `google`). Visizplatītākais lietojums ir iestatīt API atslēgu, izmantojot vides mainīgā atsauci, lai atslēga nekad netiktu glabāta vienkāršā tekstā.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Vērtības, kas sākas ar `${` un beidzas ar `}`, tiek uzskatītas par vides mainīgo atsaucēm un tiek paplašinātas izpildes laikā.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  MCP serveru konfigurācijas, kas atslēgotas ar jūsu izvēlētu vārdu. Bolt atbalsta divus serveru veidus:
+
+  **Attālināts serveris** — savienojas caur HTTP/SSE, ar izvēles OAuth:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Lauks | Veids | Apraksts |
+  |---|---|---|
+  | `type` | `"remote"` | Identificē šo kā attālinātu HTTP serveri |
+  | `url` | string | Pilns MCP galapunkta URL |
+  | `oauth` | object \| `false` | OAuth konfigurācijas objekts (ar izvēles `clientId`, `clientSecret`, `scope`, `redirectUri`). Iestatiet uz `false`, lai atspējotu OAuth automātisko atklāšanu. |
+  | `headers` | object | HTTP galvenes, ko sūtīt ar katru pieprasījumu (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Iespējot vai atspējot šo serveri palaišanas laikā |
+  | `timeout` | number | Pieprasījuma taimauts milisekundēs (noklusējums: 5000) |
+
+  **Lokāls serveris** — palaiž apakšprocesu caur stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Lauks | Veids | Apraksts |
+  |---|---|---|
+  | `type` | `"local"` | Identificē šo kā lokālu stdio serveri |
+  | `command` | string[] | Komanda un visi argumenti palaišanai |
+  | `cwd` | string | Darba direktorija servera procesam (relatīvie ceļi tiek atrisināti no darbvietas direktorijas) |
+  | `environment` | object | Papildu vides mainīgie, ko nodot apakšprocesam |
+  | `enabled` | boolean | Iespējot vai atspējot šo serveri palaišanas laikā |
+  | `timeout` | number | Pieprasījuma taimauts milisekundēs (noklusējums: 5000) |
+
+  Izmantojiet `bolt mcp add` interaktīvam vednim vai `bolt mcp list`, lai pārbaudītu pašreizējo servera statusu.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Papildu sistēmas instrukcijas, kas tiek pievienotas katrai sesijai šajā projektā vai globāli. Instrukcijas no vairākiem konfigurācijas failiem tiek apvienotas (dublikāti noņemti). Izmantojiet to, lai iepludinātu projektam specifiskas konvencijas, stila noteikumus vai ierobežojumus, ko katram aģentam vajadzētu ievērot.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Spraudņu specifikācijas ielādēšanai. Katrs ieraksts ir npm paketes nosaukums, lokāls faila ceļš vai URL. Spraudņi var paplašināt TUI, pievienot slīpsvītras komandas vai reģistrēt papildu sniedzējus. Izmantojiet `bolt plugin install <spec>`, lai instalētu spraudni un lai to automātiski pievienotu šim masīvam.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Pilns piemērs
+
+Šis `.bolt/bolt.jsonc` parāda reālistisku projekta konfigurāciju:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Palaidiet `bolt debug config`, lai redzētu pilnīgi atrisināto konfigurāciju pēc visu failu apvienošanas. Šis ir ātrākais veids, kā apstiprināt, ka jūsu katram projektam paredzētās un globālās konfigurācijas pareizi apvienojas.
+</Tip>

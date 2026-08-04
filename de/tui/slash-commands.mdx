@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI-Slash-Befehle"
+sidebarTitle: "Slash Commands"
+description: "Die Slash-Befehle, die Sie im Bolt-TUI ausführen können – /memory, /plan, /todos, /btw – und wie sie das Verhalten der aktuellen Session ändern."
+---
+
+Slash-Befehle werden in das TUI-Prompt eingetippt und ändern, wie sich die aktuelle Session verhält. Sie senden nichts an das Modell; sie laufen lokal gegen Bolt selbst.
+
+## Referenz
+
+| Befehl | Was er tut |
+| --- | --- |
+| `/memory` | Zeigt den Project-Memory-Status für diese Session an. |
+| \`/memory use on | off\` | Ob diese Session aus dem [Project Memory](/concepts/project-memory) liest. |
+| \`/memory contribute on | off\` | Ob diese Session am Ende der Runde in das Project Memory zurückschreibt. |
+| `/plan` | Schaltet die aktuelle Session in den Planungsmodus (schreibgeschützt, erzeugt einen Plan). |
+| `/todos` | Zeigt die aktuelle strukturierte Aufgabenliste des Agents an. |
+| `/btw` | Fügt einen Nebenhinweis („übrigens ...") ein, den der Agent in seiner nächsten Runde sieht, ohne eine vollständige Antwort auszulösen. |
+
+<Tip>
+  Slash-Befehle sind auf die Session begrenzt. Um eine Präferenz dauerhaft zu machen, setzen Sie sie stattdessen in `.bolt/bolt.jsonc`. Siehe [Konfiguration](/concepts/configuration).
+</Tip>
+
+## Eigene hinzufügen
+
+Benutzerdefinierte Slash-Befehle können von [Plugins](/extending/plugins) und von Dateien in `.opencode/command/` beigesteuert werden. Jeder Befehl ist eine Markdown-Datei, deren Frontmatter Auslöser und Verhalten beschreibt.
+
+## Verwandt
+
+- [Keybinds](/tui/keybinds) – Tastaturkürzel für das TUI.
+- [Project Memory](/concepts/project-memory) – was `/memory` umschaltet.

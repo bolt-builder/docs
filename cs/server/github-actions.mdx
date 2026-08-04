@@ -1,0 +1,179 @@
+---
+title: "Integrace s GitHubem: Actions, PR a AI review"
+sidebarTitle: "GitHub Actions"
+description: "Spouštěj Bolt uvnitř GitHub Actions, stahuj PR lokálně, generuj AI commit zprávy a hlídej merge pomocí AI code review s exit kódy."
+url: "server/github-actions"
+---
+
+Bolt obsahuje čtyři příkazy, které spojují tvůj každodenní Git workflow s AI: GitHub Actions agenta, kterého nainstaluješ jediným příkazem, zkratku pro checkout pull requestů, AI generátor commit zpráv a AI code reviewer se strojově čitelnými exit kódy. Společně ti umožňují přenést Bolt do každé fáze vývoje — lokální kódování, review PR a kontinuální integrace.
+
+---
+
+## `bolt github`
+
+Spravuj GitHub Actions agenta, který spouští Bolt na CI událostech.
+
+### `bolt github install`
+
+Nainstaluj GitHub Actions workflow do aktuálního repozitáře. Zapíše workflow YAML do `.github/workflows/`, takže Bolt startuje automaticky při komentářích u issues, nových pull requestech nebo dalších událostech, které nakonfiguruješ.
+
+```bash
+bolt github install
+```
+
+Spusť z kořene git repozitáře. Budeš potřebovat právo zápisu do `.github/workflows/`.
+
+### `bolt github run`
+
+Spusť GitHub agenta lokálně nebo uvnitř CI kroku a přehraj konkrétní payload GitHub události.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Přepínač | Popis |
+|------|-------------|
+| `--event <event>` | Jméno GitHub události nebo cesta k JSON payloadu události |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) používaný pro odesílání komentářů a získávání kontextu |
+
+---
+
+## Nastavení GitHub Actions agenta
+
+<Steps>
+  <Step title="Nainstaluj workflow">
+    Z kořene svého repozitáře:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt zapíše soubor GitHub Actions workflow do `.github/workflows/`. Commitni a pushni soubor.
+  </Step>
+
+  <Step title="Přidej svůj API klíč jako secret">
+    V nastavení repozitáře přidej API klíč pro svého preferovaného LLM providera jako repository secret (například `ANTHROPIC_API_KEY`). Workflow ho automaticky použije.
+  </Step>
+
+  <Step title="Vyvolej agenta">
+    Zakomentuj `/bolt <your request>` u libovolného issue nebo pull requestu. Workflow se spustí, Bolt přečte payload události a odpoví s výsledkem.
+  </Step>
+
+  <Step title="Spuštění lokálně pro ladění">
+    Přehraj payload z předchozího workflow běhu:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Vytáhne GitHub pull request do lokální větve a spustí Bolt v této větvi — připraveno k review, ladění nebo pokračování práce tam, kde autor PR skončil.
+
+```bash
+bolt pr 42
+```
+
+Bolt použije `gh` CLI ke stažení PR, vytvoří větev pojmenovanou `pr/<number>` a nastaví upstream tracking ref. Pro cross-repository (fork) PR přidá fork jako remote automaticky. Pokud popis PR obsahuje URL sdíleného Bolt sezení (`opncd.ai/s/…`), sezení se importuje, takže můžeš pokračovat v autorově konverzaci.
+
+> Vyžaduje nainstalované a autentizované [GitHub CLI (`gh`)](https://cli.github.com/).
+
+---
+
+## `bolt commit`
+
+Vygeneruje commit zprávu z tvých staged (nebo všech sledovaných) změn a commitne v jednom kroku.
+
+```bash
+bolt commit
+```
+
+Bolt vydiff tvé změny, předá diff agentovi `commit` spolu s nedávnými subjecty commitů pro referenci stylu a spustí `git commit -m <message>` s výsledkem.
+
+### Přepínače
+
+| Přepínač | Alias | Popis |
+|------|-------|-------------|
+| `--all` | `-a` | Commit všech sledovaných změn, ne jen staged (ekvivalent `git commit -a`) |
+| `--dry-run` | | Vytisknout vygenerovanou zprávu bez commitování |
+| `--model <provider/model>` | `-m` | Přepsat model použitý ke generování zprávy |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Použij `bolt commit --dry-run` pro náhled vygenerované zprávy před commitem. Pokud ji chceš upravit, zkopíruj výstup a spusť `git commit -m "…"` s upraveným zněním.
+</Tip>
+
+---
+
+## `bolt review`
+
+Spustí agenta `code-review` proti diffu a ukončí se se strojově čitelným verdiktem. Poslední řádek review je vždy `Verdict: PASS` nebo `Verdict: FAIL`, což činí `bolt review` drop-in-ready pro CI pipelines.
+
+```bash
+bolt review
+```
+
+Ve výchozím stavu `bolt review` diffuje `HEAD` proti pracovnímu stromu. Použij přepínače níže pro omezení diffu.
+
+### Přepínače
+
+| Přepínač | Alias | Popis |
+|------|-------|-------------|
+| `--staged` | | Reviewovat pouze staged změny |
+| `--branch <name>` | | Reviewovat změny od merge base s pojmenovanou větví (výchozí je výchozí větev repozitáře) |
+| `--model <provider/model>` | `-m` | Model k použití pro review |
+
+### Ukončovací kódy
+
+| Kód | Význam |
+|------|---------|
+| `0` | `Verdict: PASS` — žádné kritické nebo velké problémy |
+| `1` | `Verdict: FAIL` — nalezen jeden nebo více kritických nebo velkých problémů |
+| `2` | Verdikt nebylo možné z odpovědi určit |
+
+### Použití v GitHub Actions workflow
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Nenulový exit kód shodí kontrolu, blokující merge, dokud se problémy nevyřeší.
+
+<Tip>
+  Spusť `bolt review --staged` před commitováním, abys zachytil(a) problémy, dokud je jednoduché je změnit — dřív, než se vůbec dostanou do pull requestu.
+</Tip>

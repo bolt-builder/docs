@@ -1,0 +1,107 @@
+---
+title: "Bolt 简介：开源的终端 AI 代理"
+sidebarTitle: "简介"
+description: "认识 Bolt：一款开源的终端 AI 编程代理，内置十个代理、持久化会话、项目记忆、MCP、支持 75+ LLM 提供商，同时提供 TUI 和桌面应用。"
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**你的终端，如今拥有了一支完整的 AI 工程团队。**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">官网</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt 是一款以终端为先的 AI 编程代理，基于 [Effect](https://effect.website)、[OpenTUI](https://github.com/opentui/opentui) 和 [SolidJS](https://www.solidjs.com) 构建。指向任意项目，它会自动获取上下文：探索你的代码，遵循你的约定，执行 shell 命令，编辑文件，运行测试并交付变更。
+
+十个内置代理（`code`、`plan`、`ask`、`code-review`、`debug`、`refactor`、`docs`、`security`、`migrate`、`perf`）加上 `@general` 和 `@explore` 子代理，覆盖整个工程闭环。会话是持久化的：可以随时分离、重新连接（甚至连到远程服务器）、派生、分享、导出和导入。项目记忆会在会话之间保留代理学到的信息。可通过 MCP 服务器（含 OAuth）、插件、自定义代理和自定义工具进行扩展。
+
+Bolt 采用 PolyForm Noncommercial 1.0.0 许可证开源发布。
+
+## 为什么选择 Bolt？
+
+Bolt 的设计紧贴开发者的真实工作方式：在终端里、跨多个会话，处理真实的代码库。以下是它的独到之处：
+
+- **终端优先的 TUI。** 使用 [Effect](https://effect.website)、[OpenTUI](https://github.com/opentui/opentui) 和 [SolidJS](https://www.solidjs.com) 构建的快速、键盘驱动界面。感觉像原生，因为它就是原生的。
+- **一整支代理团队。** 十个专用代理——`code`、`plan`、`ask`、`code-review`、`debug`、`refactor`、`docs`、`security`、`migrate` 和 `perf`——外加用于研究和多步骤委派的子代理。使用 `Tab` 在它们之间切换。
+- **可离开也可重新加入的会话。** 从会话中分离，稍后再连接，甚至连接到远程服务器。随时派生、分享、导出和导入。会话存储在 SQLite 中，可通过 `bolt db` 完全查看。
+- **面向扩展的设计。** 完整支持 OAuth 的 MCP 服务器、插件系统、GitHub 集成、内置 API 服务器以及 Web UI。
+- **桌面应用。** 同一个引擎，被包装为多窗口、多标签的桌面体验——集成终端、文件树、命令面板、28 种 UI 语言以及自动更新。
+
+## 内置代理
+
+Bolt 附带十个专用代理。每个代理都有明确的文件系统访问级别以匹配其用途。
+
+| 代理 | 访问权限 | 说明 |
+| --- | --- | --- |
+| `code` | Full | 默认：读、写并运行代码 |
+| `plan` | Read | 探索代码库并产出计划，不修改文件 |
+| `ask` | Read | 提问和研究——不编辑文件 |
+| `code-review` | Read | 从正确性、风格和安全性角度评审变更 |
+| `debug` | Full | 调试失败的测试、崩溃和逻辑错误 |
+| `refactor` | Full | 安全重构，每步都进行测试验证 |
+| `docs` | Edit | 编写和更新文档与注释 |
+| `security` | Read | 安全审计：漏洞、密钥、模式 |
+| `migrate` | Full | 框架升级和依赖迁移 |
+| `perf` | Full | 性能分析和优化 |
+
+你也可以把自己的代理定义为 Markdown 文件，或使用 `bolt agent create` 生成。
+
+## 桌面应用
+
+Bolt 还以独立桌面应用形式提供，具有多窗口和多标签会话管理、支持附件与剪贴板粘贴图片的提示词编辑器、集成的终端和文件树、命令面板、涵盖键位、模型、提供商和服务器的完整设置、原生通知、深层链接、在 Windows 上的 WSL 集成，以及跨 dev、beta 和生产渠道的自动更新。
+
+从 [releases 页面](https://github.com/Bolt-builder/bolt-cli/releases) 下载桌面应用，或者在 macOS 上通过一行命令绕过 Gatekeeper 直接安装：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## 探索文档
+
+<CardGroup cols={2}>
+  <Card title="安装" icon="download" href="/installation">
+    通过 curl、npm 或系统包管理器在 macOS、Linux 和 Windows 上安装 Bolt。
+  </Card>
+
+  <Card title="快速开始" icon="rocket" href="/quickstart">
+    打开 TUI，运行第一个提示，在不到一分钟内交付一个 AI 生成的提交。
+  </Card>
+
+  <Card title="代理" icon="users" href="/concepts/agents">
+    十个内置代理加子代理。了解每一个的作用以及如何编写你自己的代理。
+  </Card>
+
+  <Card title="项目记忆" icon="brain" href="/concepts/project-memory">
+    Bolt 如何跨会话记住你的项目，以及如何控制记录哪些内容。
+  </Card>
+
+  <Card title="MCP 服务器" icon="plug" href="/extending/mcp-servers">
+    通过 Model Context Protocol 将外部工具和数据源连接到 Bolt。
+  </Card>
+
+  <Card title="Headless 服务器" icon="server" href="/server/headless-server">
+    运行 `bolt serve`，从任意机器连接 TUI，并通过 API 驱动 Bolt。
+  </Card>
+</CardGroup>

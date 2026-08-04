@@ -1,0 +1,61 @@
+---
+title: "Bolt 環境變數參考"
+sidebarTitle: "環境變數"
+description: "Bolt 認得的每個環境變數,包括日誌控制、伺服器驗證、設定覆寫與供應商 API 金鑰慣例。"
+---
+
+環境變數讓你可以在不動任何設定檔的情況下設定 Bolt — 適用於 CI pipeline、Docker 容器與無法提交憑證的共用環境。它們在啟動時被讀取一次,Bolt 執行時無法變更。
+
+## 參考
+
+| 變數 | 描述 |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | 設定日誌詳細程度。接受的值:`DEBUG`、`INFO`、`WARN`、`ERROR`。相當於 `--log-level` 旗標。 |
+| `BOLT_PRINT_LOGS` | 設為任何非空值可將日誌輸出列印到 stderr。相當於 `--print-logs`。 |
+| `BOLT_PURE` | 設為任何非空值可停用所有外部外掛。相當於 `--pure`。 |
+| `BOLT_SERVER_USERNAME` | `bolt serve` 與 `bolt web` 的 basic auth 使用者名稱。 |
+| `BOLT_SERVER_PASSWORD` | `bolt serve` 與 `bolt web` 的 basic auth 密碼。所有連接的用戶端都必須提供此密碼。 |
+| `BOLT_CONFIG` | 覆寫 Bolt 載入的設定檔路徑。設定此值時,Bolt 不會搜尋預設位置。 |
+| `BOLT_CONFIG_DIR` | 覆寫設定目錄。Bolt 會在此目錄尋找設定檔,而不是預設的 OS 設定目錄。 |
+| `BOLT_CONFIG_CONTENT` | 以行內 JSON 字串提供完整設定。適用於不便寫入檔案的 CI。在設定來源中優先度最高。 |
+| `BOLT_GIT_BASH_PATH` | Windows 上 Git Bash `bin` 目錄的路徑,用於找出如 `less` 等 Unix 工具。 |
+
+## 供應商 API 金鑰
+
+Bolt 會自動從環境變數探索供應商憑證 — 不需要 `bolt providers login` 步驟。每個供應商會尋找特定的環境變數,只要該變數已設定,Bolt 就會使用它,無論 `auth.json` 中儲存什麼。
+
+<Tip>
+  在你的 shell 設定檔(例如 `~/.zshrc`、`~/.bashrc`)或 shell 載入的 `.env` 檔案中設定供應商 API 金鑰。你也可以在設定檔中的 `provider.*.apiKey` 欄位使用 `${VAR_NAME}` 語法參考它們,讓金鑰永不以明文儲存。
+</Tip>
+
+常見供應商變數:
+
+| 變數 | 供應商 |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+執行 `bolt models --verbose` 可看到每個已設定供應商預期的環境變數。
+
+## 使用範例
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

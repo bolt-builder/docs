@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI taustiņu piesaistes"
+sidebarTitle: "Taustiņu piesaistes"
+description: "Būtiskās Bolt TUI īsceļi: aģentu pārslēgšana ar Tab, mini režīms, push-to-talk balss un viss pārējais, ko varat vadīt no tastatūras."
+---
+
+Bolt TUI ir izstrādāts tā, lai to no gala līdz galam vadītu no tastatūras. Šajā lapā ir uzskaitīti īsceļi, pēc kuriem sniegsieties visbiežāk. Pilnīgu sarakstu iegūt, palaidiet `bolt` un atveriet lietotnes iekšējo palīdzību.
+
+## Būtiskais
+
+| Taustiņi | Darbība |
+| --- | --- |
+| `Tab` | Pārvietoties uz nākamo aģentu (`code`, `plan`, `ask`, ...). Pašreizējais aģents tiek parādīts statusa joslā. |
+| `Shift+Tab` | Pārvietoties uz iepriekšējo aģentu. |
+| `Enter` | Nosūtīt pašreizējo ziņu. |
+| `Esc` | Atcelt izpildē esošo kārtu. |
+| `Ctrl+C` | Pārtraukt pašreizējo rīka izsaukumu. |
+| `Ctrl+D` | Atvienoties no sesijas (atstāj to darboties serverī). |
+
+## Režīmi
+
+### `--mini` režīms
+
+Sāciet Bolt ar kompaktu sadalītas kājenes izkārtojumu, kas aizņem mazāk termināļa vietas, lieliski piemērots sadalītiem paneļiem:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk balss
+
+Turiet konfigurēto push-to-talk taustiņu, lai diktētu uzvedni, izmantojot runas atpazīšanu, pēc tam atlaidiet, lai nosūtītu. Konfigurējiet taustiņu un STT sniedzēju failā `.bolt/bolt.jsonc`.
+
+## Saistīts
+
+- [Slīpsvītras komandas](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` un draugi.
+- [Sesijas](/concepts/sessions) — atvienot, atsākt, dakšot un dalīties no tastatūras.

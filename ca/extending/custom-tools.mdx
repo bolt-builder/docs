@@ -1,0 +1,36 @@
+---
+title: "Eines personalitzades a Bolt"
+sidebarTitle: "Eines personalitzades"
+description: "Afegeix eines específiques del projecte a Bolt deixant fitxers executables a .opencode/tool/. Cada fitxer es converteix en una eina que l'agent pot cridar."
+---
+
+Les eines personalitzades et permeten exposar qualsevol cosa que puguis escriure en un script (scripts de shell, programes de Node/Bun/Python, binaris petits) com a eina que l'agent pot invocar per nom. Són la manera més senzilla de donar a Bolt accés als teus propis fluxos de treball de compilació, desplegament o dades del projecte.
+
+## On viuen
+
+Deixa fitxers a una de:
+
+- `.opencode/tool/` — d'abast del projecte, consignat al repositori.
+- `.opencode/tools/` — s'accepta com a àlies de l'anterior.
+
+Cada fitxer es converteix en una eina amb el nom del fitxer (menys la seva extensió). Les eines es recullen automàticament la propera vegada que Bolt s'inicia.
+
+## Anatomia d'una eina
+
+Una eina personalitzada declara el seu nom, descripció i esquema d'entrada en una capçalera i, després, implementa el comportament. La forma exacta depèn del temps d'execució que triïs (script de shell, TypeScript, etc.), però cada eina ha de:
+
+1. Anunciar un JSON Schema per a les seves entrades perquè el model sàpiga com cridar-la.
+2. Retornar un valor (o un error) que Bolt pugui renderitzar al TUI i retornar al model.
+
+Un cop carregada, l'eina apareix a la llista d'eines de l'agent al costat d'eines integrades com `bash` i `grep`, i està controlada pel mateix sistema de [permisos](/concepts/permissions).
+
+## Quan utilitzar una eina personalitzada vs. un servidor MCP
+
+- **Eina personalitzada** — petita, específica del projecte, sense reutilització entre projectes. Ràpida d'escriure.
+- **Servidor MCP** — compartit entre projectes, o envolta un servei extern real amb autenticació. Vegeu [Servidors MCP](/extending/mcp-servers).
+- **Eina de plugin** — distribuïda com a paquet npm juntament amb altres punts d'extensió. Vegeu [Plugins](/extending/plugins).
+
+## Relacionat
+
+- [Eines](/concepts/tools) — referència d'eines integrades.
+- [Plugins](/extending/plugins) — la superfície d'extensió per a eines i més.

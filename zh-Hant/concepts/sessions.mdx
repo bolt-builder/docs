@@ -1,0 +1,191 @@
+---
+title: "工作階段 — Bolt 中的持久對話歷史"
+sidebarTitle: "工作階段"
+description: "工作階段是 Bolt 持久工作的單位:每個都在本機 SQLite 中儲存完整對話,讓你隨時可以卸離、恢復、分叉、分享與匯出。"
+---
+
+**工作階段** 是 Bolt 的主要工作單位。你送出的每個提示、代理讀取或編輯的每個檔案,以及模型進行的每個工具呼叫,都會被持久記錄在該工作階段的歷史中。因為工作階段存放在本機 SQLite 資料庫中,它們可以在程序重啟後保留,可以隨時列出與查詢,除非你明確地分享或匯出,否則永遠不會離開你的機器。
+
+<Note>
+  所有工作階段資料都儲存在你自己機器上的本機 SQLite 資料庫中。除非你啟用分享,否則不會傳送任何東西到外部伺服器。使用 `bolt db path` 找出確切的資料庫檔案。
+</Note>
+
+## 工作階段生命週期
+
+工作階段從你送出第一個提示的瞬間開始,直到你刪除它為止才結束。在這兩個時間點之間,你可以自由地卸離、恢復、分支或轉手。
+
+<Steps>
+  <Step title="建立或繼續工作階段">
+    啟動 TUI 以互動方式開始新的工作階段,或將提示傳給 `bolt run` 以非互動方式建立:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="卸離然後稍後回來">
+    隨時關閉 TUI — 工作階段會自動被持久化。使用 `--continue` 恢復最近的工作階段,或使用 `--session` 透過 ID 指定特定工作階段:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="在實驗前分叉">
+    使用 `--fork` 在嘗試有風險的變更之前從目前工作階段歷史分支。分叉是獨立的工作階段,不會影響原本的:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="分享與協作">
+    使用 `--share` 產生分享 URL。任何有此連結的人都可以在瀏覽器中檢視工作階段記錄:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## 工作階段管理命令
+
+### 列出工作階段
+
+```bash
+bolt session list
+```
+
+輸出所有工作階段的格式化表格,包含 ID、標題與最後更新時間。加上 `--format json` 可取得機器可讀輸出,或 `-n <N>` 可限制為最近的 N 個工作階段:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### 刪除工作階段
+
+```bash
+bolt session delete <sessionID>
+```
+
+從本機資料庫永久移除該工作階段及其所有訊息。
+
+## 用於工作階段控制的 run 旗標
+
+這些旗標可用於 `bolt run`:
+
+| 旗標 | 別名 | 描述 |
+|------|-------|-------------|
+| `--continue` | `-c` | 繼續最近的工作階段 |
+| `--session <id>` | `-s` | 透過 ID 繼續指定的工作階段 |
+| `--fork` | | 繼續前分叉工作階段(需要 `--continue` 或 `--session`) |
+| `--share` | | 為工作階段產生分享 URL |
+| `--title <title>` | | 設定或覆寫工作階段標題 |
+
+## 匯出工作階段
+
+將工作階段的完整記錄匯出為 JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` 旗標會將檔案路徑、程式碼內容、工具輸入輸出以及其他可能敏感的欄位替換為 `[redacted:kind:id]` 佔位符 — 適用於與隊友分享記錄或提交錯誤報告。
+
+## 匯入工作階段
+
+從本機 JSON 檔案或直接從分享 URL 匯入工作階段:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+匯入的工作階段會出現在你的本機工作階段清單中,並且可完全恢復。
+
+## 查詢工作階段資料庫
+
+Bolt 為進階使用者直接公開底層的 SQLite 資料庫。
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+輸出格式預設為以 tab 分隔的值;加上 `--format json` 可取得 JSON 輸出。
+
+## Token 用量與成本統計
+
+`bolt stats` 會彙總所有工作階段的 token 使用量與成本資料:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+輸出包括總工作階段數、訊息數、輸入/輸出/推理/快取 token、總成本、每日平均成本、每個工作階段的平均與中位 token,以及工具使用細目。傳入 `--models` 也可顯示每個模型的訊息、token 與成本細目。
+
+## 分叉與分享工作流程
+
+以下是分叉工作階段並分享結果的完整範例:
+
+<Steps>
+  <Step title="在新工作階段中開始工作">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="在有風險的下一步之前分叉">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    分叉出的工作階段 ID 會列印到主控台。原本的工作階段不受影響。
+  </Step>
+  <Step title="分享分叉以供審查">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    工作階段變成閒置後,分享 URL 就會被列印出來。
+  </Step>
+  <Step title="在另一台機器上匯入">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

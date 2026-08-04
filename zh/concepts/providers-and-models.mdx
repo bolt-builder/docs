@@ -1,0 +1,139 @@
+---
+title: "提供商与模型——LLM 认证和选择"
+sidebarTitle: "提供商与模型"
+description: "Bolt 通过 Vercel AI SDK 支持任何 LLM 提供商。认证提供商、列出模型、调整推理强度并运行 best-of-N 并行比较。"
+---
+
+Bolt 在设计上与模型无关。在底层，它使用 **Vercel AI SDK** 与提供商通信,这意味着 SDK 支持的任何提供商 — Anthropic、OpenAI、Google、Amazon Bedrock、OpenRouter 等 — 都开箱即用。提供商和模型目录来自 [models.dev](https://models.dev),这是一个社区维护的提供商元数据和定价数据库。
+
+## 管理提供商凭证
+
+使用 `bolt providers`（别名为 `bolt auth`）添加、列出和删除提供商凭证。
+
+### 添加或更新凭证
+
+```bash
+bolt providers login
+# 或等效地：
+bolt auth login
+```
+
+这会启动一个交互式提示以选择提供商并输入凭证。要跳过交互流程，请直接传递标志：
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### 列出已配置的提供商
+
+```bash
+bolt providers list
+# 或：
+bolt auth list
+```
+
+显示所有存储的凭证以及从环境变量检测到的任何提供商 API 密钥。
+
+### 删除凭证
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### 环境变量认证
+
+对于 CI 管道或无头环境，直接设置提供商的 API 密钥环境变量 — 无需交互式登录。常见示例：
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt 在启动时自动读取这些变量。`bolt providers list` 会显示它检测到哪些环境变量。
+
+## 浏览可用模型
+
+`bolt models` 列出你已配置的所有提供商中可用的每个模型。
+
+```bash
+# 列出所有模型
+bolt models
+
+# 过滤到一个提供商
+bolt models anthropic
+
+# 显示成本和能力元数据
+bolt models --verbose
+
+# 从 models.dev 刷新模型目录
+bolt models --refresh
+```
+
+<Tip>
+  运行 `bolt models --verbose` 以查看每个模型的输入/输出 token 定价。这使你可以在为长时间运行的任务选定模型之前轻松比较成本权衡。
+</Tip>
+
+### 模型标识符格式
+
+模型总是以 `provider/model` 格式引用：
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+在任何 Bolt 接受模型的地方使用此格式 — CLI 标志、配置文件和代理定义。
+
+## 在运行时选择模型
+
+### `--model` / `-m` 标志
+
+`--model` 标志可在 `bolt run`、`bolt commit` 和 `bolt review` 上使用：
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — 控制推理强度
+
+某些模型支持可配置的推理强度级别（例如 Anthropic 的 extended thinking、OpenAI 的推理模型）。使用 `--variant` 选择强度层级：
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  可用的 variant 值取决于提供商和模型。常见值为 `minimal`、`low`、`medium`、`high` 和 `max`，但具体集合各不相同。查看你的提供商文档，或使用 `bolt models --verbose` 查看给定模型支持的 variant。
+</Note>
+
+### `--thinking` — 显示推理块
+
+使用支持 extended thinking 的模型时,传递 `--thinking` 以在输出中显示模型的思维链：
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Best-of-N 并行运行
+
+`--best-of` 将同一提示并行发送给多个模型,然后使用评判模型对响应进行排序并保留最佳响应：
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+评判默认为通过 `--model` 传递的模型,或者如果未设置 `--model`,则默认为 `--best-of` 列表中的第一个条目。该标志接受用逗号分隔的 `provider/model` 标识符列表。
+
+<Tip>
+  Best-of-N 对于复杂的算法问题或架构决策特别有用，因为不同的模型可能带来真正不同的方法。让 Bolt 并行运行它们并自动选择胜者。
+</Tip>

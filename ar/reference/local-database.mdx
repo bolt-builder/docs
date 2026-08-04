@@ -1,0 +1,38 @@
+---
+title: "قاعدة البيانات المحلية (bolt db)"
+sidebarTitle: "قاعدة البيانات المحلية"
+description: "يخزّن Bolt كل جلسة ورسالة واستدعاء أداة في قاعدة بيانات SQLite محلية. افحصها أو انسخها احتياطيًا أو استعلم منها مباشرة عبر bolt db."
+---
+
+يحتفظ Bolt بكل جلسة ورسالة واستدعاء أداة في قاعدة بيانات SQLite محلية. إنها قابلة للفحص بالكامل وملكك بالكامل — لا يُرفع شيء إلا إذا شاركت جلسة صراحة.
+
+## العمليات الشائعة
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## نسخها احتياطيًا
+
+لأنها ملف SQLite واحد، النسخ الاحتياطي هو نسخ:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+للتخزين الطويل الأمد أو النقل، فضّل `bolt export` / `bolt import` — تنتج تمثيل JSON محمول ينجو من ترحيلات المخطط.
+
+## المخطط لمحة
+
+- `sessions` — صف واحد لكل جلسة، مع العنوان والمشروع والطوابع الزمنية والحالة.
+- `messages` — سجل الأدوار الكامل لكل جلسة.
+- `tool_calls` — كل استدعاء مع مدخلاته ومخرجاته ومدّته.
+
+تتطوّر الأعمدة الدقيقة؛ استخدم `PRAGMA table_info(<table>)` لرؤية المخطط الحيّ.
+
+## ذات صلة
+
+- [الجلسات](/concepts/sessions) — ما تخزّنه قاعدة البيانات.
+- [الإحصائيات والتكلفة](/reference/stats-and-cost) — عروض مجمّعة على نفس البيانات.

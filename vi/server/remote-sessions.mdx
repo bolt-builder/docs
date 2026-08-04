@@ -1,0 +1,185 @@
+---
+title: "Gắn vào các phiên Bolt từ xa qua HTTP"
+sidebarTitle: "Phiên từ xa"
+description: "Khởi động server Bolt headless, gắn TUI từ bất kỳ máy nào và khám phá server trên mạng cục bộ với mDNS — có tùy chọn basic auth."
+url: "server/remote-sessions"
+---
+
+Bolt có một server HTTP tích hợp sẵn tách hoàn toàn engine khỏi giao diện. Bạn có thể khởi động một server headless trên máy từ xa mạnh mẽ (một VM đám mây, một dev container, một máy desktop để chạy qua đêm) và gắn TUI từ laptop của bạn, terminal thứ hai, hoặc thậm chí một trình duyệt — tất cả đều trỏ tới cùng một phiên đang chạy. Điều này khiến Bolt phù hợp cho các nhóm, tác vụ từ xa và các tác vụ chạy lâu mà bạn muốn kiểm tra mà không cần SSH vào một máy.
+
+---
+
+## `bolt serve`
+
+Khởi động một server Bolt headless phơi bày API đầy đủ qua HTTP và chấp nhận các kết nối TUI.
+
+```bash
+bolt serve
+```
+
+### Cờ
+
+| Cờ | Mặc định | Mô tả |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Hostname hoặc địa chỉ IP để bind |
+| `--port <n>` | `0` (tự động) | Cổng để lắng nghe; Bolt in cổng đã gán khi khởi động |
+| `--mdns` | `false` | Quảng bá server qua mDNS để khám phá mạng cục bộ zero-config; cũng đặt hostname thành `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | Miền dịch vụ mDNS tùy chỉnh |
+| `--cors <origin>` | `[]` | Các origin bổ sung để cho phép qua CORS (có thể lặp lại) |
+
+<Warning>
+  Nếu `OPENCODE_SERVER_PASSWORD` không được đặt, Bolt in cảnh báo và server hoàn toàn mở cho bất kỳ ai có thể truy cập. Luôn đặt mật khẩu trước khi bind vào bất kỳ giao diện nào khác `127.0.0.1`.
+</Warning>
+
+### Xác thực
+
+Bảo mật server bằng HTTP Basic Auth với biến môi trường:
+
+| Biến | Mô tả |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Mật khẩu basic auth |
+| `OPENCODE_SERVER_USERNAME` | Tên người dùng basic auth (mặc định `opencode` nếu bỏ qua) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Gắn TUI đầy đủ vào một server Bolt đang chạy. Điều này hoạt động với bất kỳ server nào có thể truy cập qua HTTP — cục bộ hoặc từ xa.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Cờ
+
+| Cờ | Bí danh | Mô tả |
+|------|-------|-------------|
+| `--dir <path>` | | Thư mục để chạy trên server từ xa |
+| `--continue` | `-c` | Tiếp tục phiên gần nhất trên server |
+| `--session <id>` | `-s` | ID phiên để tiếp tục |
+| `--fork` | | Fork phiên khi tiếp tục (dùng với `--continue` hoặc `--session`) |
+| `--password <pw>` | `-p` | Mật khẩu basic auth (ghi đè `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | Tên người dùng basic auth (ghi đè `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | Dùng giao diện tương tác tối giản thay vì TUI đầy đủ |
+
+```bash
+# Tiếp tục phiên gần nhất trên server từ xa
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork một phiên cụ thể
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Giao diện tối giản — hữu ích trong các terminal bị hạn chế
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Khởi động server Bolt và ngay lập tức mở giao diện web trong trình duyệt mặc định của bạn. Đây là cách nhanh nhất để có được giao diện dựa trên trình duyệt chạy cục bộ.
+
+```bash
+bolt web
+```
+
+`bolt web` chấp nhận cùng các cờ mạng như `bolt serve`.
+
+---
+
+## Khám phá mDNS
+
+Truyền `--mdns` cho `bolt serve` để phát địa chỉ server trên mạng cục bộ của bạn dùng mDNS. Bất kỳ máy nào trên cùng mạng có thể gắn dùng hostname mDNS mà không cần biết địa chỉ IP hoặc cổng.
+
+```bash
+# Trên máy server
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# Từ máy khác trên cùng LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+Miền mDNS mặc định là `opencode.local`. Ghi đè với `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Khởi động server và gắn từ xa
+
+<Steps>
+  <Step title="Đặt mật khẩu trên máy server">
+    Export `OPENCODE_SERVER_PASSWORD` trước khi khởi động server. Không có nó, Bolt in cảnh báo và API không được xác thực.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Khởi động server headless">
+    Bind vào mọi interface để laptop của bạn có thể truy cập, và tùy chọn chọn cổng cố định:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Để terminal này mở (hoặc chạy nó trong `tmux` / `screen` / một unit systemd).
+  </Step>
+
+  <Step title="Gắn từ laptop của bạn">
+    Trên bất kỳ máy nào có thể truy cập server, chạy:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    TUI đầy đủ mở và kết nối tới engine từ xa. Các phiên, lịch sử và trạng thái công cụ đều sống trên server.
+  </Step>
+
+  <Step title="Tiếp tục phiên sau">
+    Tách bằng cách thoát TUI (`q` hoặc `Ctrl-C`). Phiên tiếp tục chạy trên server. Để tham gia lại:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Hoặc fork để phân nhánh mà không ảnh hưởng đến bản gốc:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Ví dụ workflow từ xa
+
+Một mẫu phổ biến là để một server Bolt chạy trên máy dev có nhiều core và kết nối từ một laptop mỏng.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Máy dev (mạnh mẽ, luôn bật)                     │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Mọi dữ liệu phiên được lưu trên cơ sở dữ liệu SQLite của server. Laptop chỉ hiển thị TUI — nó có thể ngắt kết nối và kết nối lại bất kỳ lúc nào mà không mất công việc.

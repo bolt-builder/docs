@@ -1,0 +1,142 @@
+---
+title: "在一分钟内开始使用 Bolt"
+sidebarTitle: "快速开始"
+description: "安装 Bolt，打开你的项目，连接提供商，并运行你的第一个 AI 提示——全部在 60 秒内完成，配以此分步指南。"
+---
+
+本指南将引导你安装 Bolt、在项目中启动它、连接 AI 提供商，并运行你的第一个提示。整个流程不到一分钟。
+
+<Steps>
+  <Step title="安装 Bolt">
+    最快捷的方式是官方安装脚本，它可在 macOS 和 Linux 上运行：
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    更喜欢包管理器？使用 npm、bun、pnpm 或 yarn 全局安装：
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    macOS 上的桌面应用（无需 Gatekeeper 绕行）：
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    查看[安装指南](/installation)了解所有方法，包括 Homebrew、Chocolatey、Scoop 和 Windows 特定说明。
+  </Step>
+  <Step title="打开你的项目">
+    进入任意项目目录并启动交互式 TUI：
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt 会自动接收你的项目上下文 — 读取文件树、理解技术栈，并从打开的那一刻起让每个代理都能访问它。
+  </Step>
+  <Step title="配置 AI 提供商">
+    首次启动时，如果没有设置任何提供商，Bolt 会提示你配置。你也可以随时运行此命令：
+
+    ```bash
+    bolt providers
+    ```
+
+    这将打开提供商管理流程，你可以在其中为 OpenAI、Anthropic 和其他受支持的 LLM 提供商添加 API 密钥。配置保存到项目根目录的 `.bolt/bolt.jsonc`。
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="输入提示并探索代理">
+    进入 TUI 后，输入你的提示并按 Enter。随时使用 **Tab** 在 Bolt 的十个内置代理之间切换 — 当前代理显示在状态栏中。
+
+    你也可以直接从命令行运行提示，无需打开 TUI：
+
+    ```bash
+    # 使用默认代理的非交互式提示
+    bolt run "explain this codebase"
+    
+    # 使用特定代理
+    bolt run --agent ask "what does this project do?"
+    
+    # 将 TUI 附加到正在运行的服务器（本地或远程）
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## 内置代理
+
+在 TUI 中使用 `Tab` 切换代理，或向 `bolt run` 传递 `--agent <name>`。每个代理都有明确的访问级别，以匹配其用途。
+
+| 代理 | 访问权限 | 描述 |
+| --- | --- | --- |
+| `code` | Full | 默认：读取、写入并运行代码 |
+| `plan` | Read | 探索代码库并生成计划，不修改文件 |
+| `ask` | Read | 提问与研究 — 不编辑文件 |
+| `code-review` | Read | 审查变更的正确性、风格和安全性 |
+| `debug` | Full | 调试失败的测试、崩溃和逻辑错误 |
+| `refactor` | Full | 每一步都有测试验证的安全重构 |
+| `docs` | Edit | 撰写和更新文档与注释 |
+| `security` | Read | 安全审计：漏洞、机密、模式 |
+| `migrate` | Full | 框架升级和依赖迁移 |
+| `perf` | Full | 性能分析和优化 |
+
+还有两个用于委派的内置子代理：`@general` 用于复杂的多步骤任务，`@explore` 用于快速的只读代码库研究。你可以将自己的代理定义为 Markdown 文件，或使用 `bolt agent create` 生成一个。
+
+## 接下来可尝试的常用命令
+
+```bash
+# 审查已暂存的更改，返回通过/失败退出码
+bolt review --staged
+
+# 为已暂存的更改生成提交消息
+bolt commit
+
+# 列出和管理会话
+bolt session list
+
+# 查看 token 使用情况和成本统计
+bolt stats
+
+# 查询本地会话数据库
+bolt db
+```
+
+<Tip>
+  向 `bolt` 或 `bolt attach` 传递 `--mini`，可获得占用更少终端空间的紧凑 UI — 非常适合小窗口或分屏布局。
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` 接受 `--auto`、`--yolo` 和 `--dangerously-skip-permissions` 标志，会自动批准所有权限提示而不进行询问。仅在受信任的环境中使用它们 — 它们允许代理在没有确认的情况下进行读、写和执行操作。
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt 支持 bash、zsh、fish 和其他 shell 的 shell 补全。使用以下命令生成并安装补全：
+
+  ```bash
+  bolt completion
+  ```
+
+  按照打印的说明在你的 shell 配置中加载补全脚本。
+</Note>

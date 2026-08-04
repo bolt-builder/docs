@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI slash parancsok"
+sidebarTitle: "Slash parancsok"
+description: "A slash parancsok, amelyeket a Bolt TUI-n belül futtathatsz — /memory, /plan, /todos, /btw — és hogyan változtatják meg az aktuális munkamenet viselkedését."
+---
+
+A slash parancsokat a TUI-promptba írod be, és megváltoztatják az aktuális munkamenet viselkedését. Nem küldenek semmit a modellnek; helyben futnak a Bolt-tal szemben.
+
+## Referencia
+
+| Parancs | Mit csinál |
+| --- | --- |
+| `/memory` | A projektmemória állapotának megjelenítése ehhez a munkamenethez. |
+| \`/memory use on | off\` | Hogy ez a munkamenet olvasson-e a [projektmemóriából](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Hogy ez a munkamenet visszaírjon-e a projektmemóriába, amikor a forduló bezárul. |
+| `/plan` | Az aktuális munkamenet átváltása tervezési módba (csak olvasható, tervet készít). |
+| `/todos` | Az ügynök aktuális strukturált feladatlistájának megjelenítése. |
+| `/btw` | Sávon kívüli megjegyzés injektálása („mellesleg…"), amelyet az ügynök a következő fordulón lát anélkül, hogy teljes választ váltana ki. |
+
+<Tip>
+  A slash parancsok munkamenet-hatókörűek. Egy preferencia tartósításához állítsd be a `.bolt/bolt.jsonc` fájlban. Lásd: [Konfiguráció](/concepts/configuration).
+</Tip>
+
+## Saját parancsok hozzáadása
+
+Az egyedi slash parancsokat [pluginek](/extending/plugins) hozzájárulhatnak, valamint a `.opencode/command/` mappában lévő fájlok. Minden parancs egy Markdown-fájl, amelynek frontmatterje leírja a triggert és a viselkedést.
+
+## Kapcsolódó
+
+- [Billentyűkombinációk](/tui/keybinds) — a TUI gyorsbillentyűi.
+- [Projektmemória](/concepts/project-memory) — mit kapcsol a `/memory`.

@@ -1,0 +1,61 @@
+---
+title: "Bolt 環境変数リファレンス"
+sidebarTitle: "環境変数"
+description: "ログ制御、サーバ認証、設定オーバーライド、プロバイダ API キー規約を含む、Bolt が認識するすべての環境変数。"
+---
+
+環境変数を使うと、設定ファイルに触れることなく Bolt を設定できます — 認証情報をコミットできない CI パイプライン、Docker コンテナ、共有環境で便利です。起動時に一度読み取られ、Bolt の実行中は変更できません。
+
+## リファレンス
+
+| 変数 | 説明 |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | ログ詳細度を設定します。受け入れられる値: `DEBUG`、`INFO`、`WARN`、`ERROR`。`--log-level` フラグと同等です。 |
+| `BOLT_PRINT_LOGS` | 空でない値を設定するとログ出力を stderr に出力します。`--print-logs` と同等です。 |
+| `BOLT_PURE` | 空でない値を設定するとすべての外部プラグインが無効になります。`--pure` と同等です。 |
+| `BOLT_SERVER_USERNAME` | `bolt serve` と `bolt web` の Basic 認証ユーザ名。 |
+| `BOLT_SERVER_PASSWORD` | `bolt serve` と `bolt web` の Basic 認証パスワード。接続するすべてのクライアントはこのパスワードを提供する必要があります。 |
+| `BOLT_CONFIG` | Bolt がロードする設定ファイルへのパスをオーバーライドします。設定されると Bolt はデフォルトの場所を検索しません。 |
+| `BOLT_CONFIG_DIR` | 設定ディレクトリをオーバーライドします。Bolt はデフォルト OS 設定ディレクトリの代わりにこのディレクトリで設定ファイルを探します。 |
+| `BOLT_CONFIG_CONTENT` | 設定全体をインライン JSON 文字列として提供します。ファイル書き込みが実用的でない CI で便利です。設定ソースの中で最優先されます。 |
+| `BOLT_GIT_BASH_PATH` | Windows で `less` などの Unix ユーティリティを見つけるために使用される Git Bash の `bin` ディレクトリへのパス。 |
+
+## プロバイダ API キー
+
+Bolt はプロバイダ認証情報を環境変数から自動的に発見します — `bolt providers login` ステップは不要です。各プロバイダは特定の環境変数を探し、その変数が設定されていれば Bolt はそれを使用します (`auth.json` に保存されているものに関係なく)。
+
+<Tip>
+  プロバイダ API キーはシェルプロファイル (例: `~/.zshrc`、`~/.bashrc`) またはシェルによって読み込まれる `.env` ファイルに設定してください。キーが平文で保存されないよう、`provider.*.apiKey` フィールドで `${VAR_NAME}` 構文を使って設定ファイルから参照することもできます。
+</Tip>
+
+一般的なプロバイダ変数:
+
+| 変数 | プロバイダ |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT、o シリーズ) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+設定された各プロバイダが期待する環境変数を確認するには `bolt models --verbose` を実行してください。
+
+## 使用例
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

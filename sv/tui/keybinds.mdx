@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI-tangentbindningar"
+sidebarTitle: "Tangentbindningar"
+description: "De väsentliga Bolt TUI-genvägarna: växla agenter med Tab, mini-läge, push-to-talk-röst och allt annat du kan driva från tangentbordet."
+---
+
+Bolts TUI är designad för att drivas hela vägen från tangentbordet. Den här sidan listar genvägarna du kommer att sträcka efter oftast. För den uttömmande listan, kör `bolt` och öppna hjälpen i appen.
+
+## Väsentliga
+
+| Tangenter | Åtgärd |
+| --- | --- |
+| `Tab` | Cykla till nästa agent (`code`, `plan`, `ask`, ...). Den aktuella agenten visas i statusraden. |
+| `Shift+Tab` | Cykla till föregående agent. |
+| `Enter` | Skicka det aktuella meddelandet. |
+| `Esc` | Avbryt turen som pågår. |
+| `Ctrl+C` | Avbryt det aktuella verktygsanropet. |
+| `Ctrl+D` | Koppla från sessionen (lämnar den körande på servern). |
+
+## Lägen
+
+### `--mini`-läge
+
+Starta Bolt med en kompakt split-footer-layout som tar mindre terminalutrymme, perfekt för delade paneler:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk-röst
+
+Håll ner den konfigurerade push-to-talk-tangenten för att diktera en prompt med tal-till-text, släpp sedan för att skicka. Konfigurera tangenten och STT-leverantören i `.bolt/bolt.jsonc`.
+
+## Relaterat
+
+- [Slash-kommandon](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` med vänner.
+- [Sessioner](/concepts/sessions) — koppla från, återuppta, förgrena och dela från tangentbordet.

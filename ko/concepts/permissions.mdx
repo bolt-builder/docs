@@ -1,0 +1,53 @@
+---
+title: "Permissions: Bolt 에이전트가 할 수 있는 것을 제어하기"
+sidebarTitle: "Permissions"
+description: "Bolt의 에이전트별 접근 수준, 권한 프롬프트, 설정 수준의 허용/거부 규칙이 승인하지 않은 작업을 에이전트가 수행하지 못하게 하는 방법."
+---
+
+Bolt 에이전트는 파일을 읽고, 파일을 쓰고, 셸 명령을 실행할 수 있습니다. 이러한 권한은 두 개의 계층을 통해 범위가 지정됩니다: 에이전트별 접근 수준, 그리고 미리 승인, 거부, 또는 구성할 수 있는 대화형 권한 프롬프트.
+
+## 에이전트 접근 수준
+
+각 내장 에이전트에는 선언된 접근 수준이 있습니다:
+
+| 접근 수준 | 파일 읽기 | 파일 쓰기 | 셸 명령 실행 |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+내장 매핑:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+TUI에서 `Tab`으로 에이전트를 전환하거나, `bolt run`에 `--agent <name>`을 전달하세요.
+
+## 대화형 프롬프트
+
+에이전트의 접근 수준 내에서도, 파괴적일 수 있는 작업은 여전히 확인을 요청합니다. 한 번 승인하거나, 세션 동안 승인하거나, 거부할 수 있습니다. 거부된 호출은 에이전트에 오류를 반환하고 에이전트는 다음으로 진행합니다.
+
+## 비대화형 승인
+
+CI, 스크립트, 신뢰할 수 있는 로컬 워크플로에서는 `bolt run`이 프롬프트를 건너뛰는 플래그를 지원합니다:
+
+```bash
+bolt run --auto "tidy up imports"                   # 명시적으로 거부되지 않은 모든 것을 자동 승인
+bolt run --yolo "tidy up imports"                   # --auto의 별칭
+bolt run --dangerously-skip-permissions "..."       # 모든 프롬프트 우회
+```
+
+<Warning>
+  `--auto`, `--yolo`, `--dangerously-skip-permissions`는 에이전트가 묻지 않고 읽고, 쓰고, 실행할 수 있게 합니다. 신뢰할 수 있는 환경에서만 사용하세요.
+</Warning>
+
+## 설정 수준 규칙
+
+`.bolt/bolt.jsonc`에 `permission` 블록을 추가하여 프로젝트 전체에 대해 특정 도구를 사전 거부(또는 사전 허용)할 수 있습니다. 이는 비대화형 `bolt run` 호출을 포함하여 프로젝트의 모든 세션에 적용됩니다. 스키마는 [Configuration](/concepts/configuration)을 참조하세요.
+
+## 관련 항목
+
+- [Agents](/concepts/agents) — 어떤 에이전트가 어떤 접근 수준을 가지는지.
+- [Tools](/concepts/tools) — 권한이 게이트하는 도구의 전체 목록.
+- [Configuration](/concepts/configuration) — 지속적인 권한 규칙 설정.

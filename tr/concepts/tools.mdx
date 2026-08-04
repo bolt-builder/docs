@@ -1,0 +1,58 @@
+---
+title: "Araçlar: Bolt Ajanlarının Gerçekten Neler Yapabileceği"
+sidebarTitle: "Araçlar"
+description: "Bolt ajanları için mevcut yerleşik araçların tam listesi ve eklentiler, MCP sunucuları veya .opencode/tool dizini aracılığıyla kendi araçlarınızı nasıl ekleyeceğiniz."
+---
+
+Bolt'taki ajanlar araç çağırarak iş yapar. TUI'de gördüğünüz her eylem (bir dosyayı okuma, testleri çalıştırma, webde arama yapma), modelin bir araç seçmesi ve Bolt'un onu yürütmesidir. Her ajanın, sizden önce sormadan hangi araçları çağırabileceğini belirleyen bildirilmiş bir erişim düzeyi vardır ([İzinler](/concepts/permissions) bölümüne bakın).
+
+## Yerleşik araçlar
+
+| Araç | Ne yapar |
+| --- | --- |
+| `read` | Diskten bir dosya okur. |
+| `write` | Yeni bir dosya oluşturur veya var olan bir dosyanın üzerine yazar. |
+| `edit` | Bir dosyaya hedeflenmiş bir düzenleme (bul/değiştir) uygular. |
+| `apply_patch` | Bir veya daha fazla dosyada birleşik fark stili bir yama uygular. |
+| `glob` | Bir glob desenine uyan dosyaları listeler. |
+| `grep` | Regex/metin ile dosya içeriklerini arar. |
+| `bash` | Bir kabuk komutu çalıştırır. |
+| `task` | Bir alt göreve bir alt ajanı devreder (`@general`, `@explore` veya özel bir alt ajan). |
+| `todowrite` | Çok adımlı iş için ajanın yapılandırılmış görev listesini korur. |
+| `webfetch` | Bir URL alır ve içeriğini döndürür. |
+| `websearch` | Webde arama yapar. |
+| `skill` | Adlandırılmış bir beceriyi çağırır ([Beceriler](/extending/skills) bölümüne bakın). |
+| `memory_save` | Bir gerçeği [proje belleğine](/concepts/project-memory) kalıcılaştırır. |
+| `memory_recall` | Daha önce kaydedilmiş bir belleği arar. |
+| `question` | Size açıklayıcı bir soru sorar ve yanıt bekler. |
+| `bash_background` | Bir kabuk komutunu yönetilen bir arka plan süreci olarak başlatır (geliştirme sunucuları, izleyiciler, uzun derlemeler). |
+| `process_output` | Bir arka plan süreci için birikmiş çıktıyı ve durumu okur, isteğe bağlı olarak bitmesini bekler. |
+| `list_processes` | Arka plan süreçlerini kimlikleri, durumları ve komutlarıyla listeler. |
+| `kill_process` | Bir arka plan sürecini (ve süreç ağacını) kimliğe göre sonlandırır. |
+| `test_run` | Projenin testlerini algılar ve çalıştırır; yapılandırılmış geçme/başarısız sonuçları ve başarısızlık ayrıntılarını döndürür. |
+
+### Deneysel
+
+| Araç | Ne yapar |
+| --- | --- |
+| `lsp` | Tanımlar, referanslar ve tanılar için bir dil sunucusunu sorgular. |
+| `execute` | Yalıtılmış bir kod modu korumalı alanında kod çalıştırır. |
+| `plan` | Değişiklik yapmadan önce yapılandırılmış bir plan üretir. |
+
+Deneysel araçlar sürümler arasında değişebilir veya yeniden adlandırılabilir.
+
+## Araç setini genişletme
+
+Yerleşiklerin ötesinde, Bolt üç kaynaktan gelen araçları çağırabilir:
+
+- Proje kökündeki `.opencode/tool/` (veya `.opencode/tools/`) klasöründeki **özel araçlar**. [Özel Araçlar](/extending/custom-tools) bölümüne bakın.
+- Yüklü herhangi bir [eklenti](/extending/plugins) tarafından katkıda bulunulan **eklenti araçları**.
+- Proje için yapılandırılmış herhangi bir [MCP sunucusundan](/extending/mcp-servers) gelen **MCP araçları**.
+
+Üçü de ajanın bakış açısından aynı hisseder: araç listesinde görünürler, ajanın erişim düzeyine uyarlar ve TUI'nin araç çağrısı çıktısında görünürler.
+
+## İlgili
+
+- [Ajanlar](/concepts/agents) — hangi ajanların hangi araçları çağırabileceği.
+- [İzinler](/concepts/permissions) — araç erişiminin ajan başına nasıl kapılandığı.
+- [MCP Sunucuları](/extending/mcp-servers) — gerçek dünya araçlarını eklemenin en yaygın yolu.

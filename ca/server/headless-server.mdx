@@ -1,0 +1,52 @@
+---
+title: "Executa Bolt com a servidor sense capçalera"
+sidebarTitle: "Servidor sense capçalera"
+description: "bolt serve exposa un runtime complet de Bolt sobre HTTP perquè qualsevol TUI, interfície web, integració d'editor o script pugui connectar-s'hi localment o a través de la xarxa."
+---
+
+`bolt serve` executa un servidor Bolt sense capçalera que exposa el motor complet sobre HTTP: sessions, agents, eines, accés al proveïdor, MCP i esdeveniments d'streaming. Tot el que Bolt pot fer interactivament, ho pot fer sobre l'API.
+
+## Iniciar un servidor
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  Enllaçar a `0.0.0.0` exposa Bolt a la teva xarxa. Estableix sempre `BOLT_SERVER_USERNAME` i `BOLT_SERVER_PASSWORD` abans de fer-ho.
+</Warning>
+
+## Connectar un TUI
+
+Des de qualsevol màquina que pugui arribar al servidor:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+O executa un prompt d'un sol tret contra un servidor remot:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Autenticació bàsica
+
+Estableix les credencials via variables d'entorn (vegeu [Variables d'entorn](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Tots els clients han d'enviar credencials coincidents.
+
+## Relacionat
+
+- [Sessions remotes](/server/remote-sessions) — connexió, descobriment mDNS i servidors compartits.
+- [Interfície web](/server/web-ui) — la interfície frontal del navegador.
+- [ACP](/server/acp) — controlar Bolt des de Zed i altres editors.

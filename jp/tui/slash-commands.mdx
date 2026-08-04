@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI スラッシュコマンド"
+sidebarTitle: "Slash Commands"
+description: "Bolt TUI 内で実行できるスラッシュコマンド — /memory、/plan、/todos、/btw — と、それらが現在のセッションの挙動をどう変えるか。"
+---
+
+スラッシュコマンドは TUI のプロンプトに入力し、現在のセッションの挙動を変更します。モデルに何かを送信するわけではなく、Bolt 自体に対してローカルで実行されます。
+
+## リファレンス
+
+| Command | What it does |
+| --- | --- |
+| `/memory` | このセッションのプロジェクトメモリのステータスを表示します。 |
+| \`/memory use on | off\` | このセッションが[プロジェクトメモリ](/concepts/project-memory)から読み込むかどうかを指定します。 |
+| \`/memory contribute on | off\` | このセッションがターン終了時にプロジェクトメモリに書き戻すかどうかを指定します。 |
+| `/plan` | 現在のセッションをプランニングモード (読み取り専用でプランを生成する) に切り替えます。 |
+| `/todos` | エージェントの現在の構造化タスクリストを表示します。 |
+| `/btw` | 完全なレスポンスをトリガせずに、次のターンでエージェントが目にする帯域外のメモ (「ところで…」) を注入します。 |
+
+<Tip>
+  スラッシュコマンドはセッションスコープです。設定を永続化するには、代わりに `.bolt/bolt.jsonc` で設定してください。[Configuration](/concepts/configuration) を参照してください。
+</Tip>
+
+## 独自のコマンドを追加する
+
+カスタムスラッシュコマンドは、[plugins](/extending/plugins) や `.opencode/command/` 内のファイルから提供できます。各コマンドは、トリガと動作をフロントマターに記述した Markdown ファイルです。
+
+## 関連項目
+
+- [Keybinds](/tui/keybinds) — TUI のキーボードショートカット。
+- [Project Memory](/concepts/project-memory) — `/memory` が切り替える対象。

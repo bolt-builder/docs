@@ -1,0 +1,191 @@
+---
+title: "Sessions — Bolt의 지속적 대화 기록"
+sidebarTitle: "Sessions"
+description: "세션은 Bolt의 지속적 작업 단위입니다: 각각의 세션은 전체 대화를 로컬 SQLite에 저장하므로 언제든지 분리, 재개, 포크, 공유, 내보내기가 가능합니다."
+---
+
+**세션**은 Bolt의 기본 작업 단위입니다. 여러분이 보내는 모든 프롬프트, 에이전트가 읽거나 편집하는 모든 파일, 모델이 하는 모든 도구 호출이 해당 세션의 히스토리에 내구성 있게 기록됩니다. 세션은 로컬 SQLite 데이터베이스에 저장되므로 프로세스 재시작에도 살아남고, 언제든지 나열하고 쿼리할 수 있으며, 명시적으로 공유하거나 내보내지 않는 한 여러분의 머신을 떠나지 않습니다.
+
+<Note>
+  모든 세션 데이터는 여러분의 로컬 SQLite 데이터베이스에 저장됩니다. 공유를 활성화하지 않는 한 외부 서버로 아무것도 전송되지 않습니다. 정확한 데이터베이스 파일을 찾으려면 `bolt db path`를 사용하세요.
+</Note>
+
+## 세션 수명 주기
+
+세션은 첫 프롬프트를 보내는 순간 시작되며 삭제할 때만 종료됩니다. 그 두 지점 사이에서는 자유롭게 분리, 재개, 브랜치, 인수인계할 수 있습니다.
+
+<Steps>
+  <Step title="세션 생성 또는 계속">
+    대화형으로 새 세션을 시작하려면 TUI를 시작하거나, 비대화형으로 세션을 생성하려면 `bolt run`에 프롬프트를 전달하세요:
+
+    ```bash
+    # TUI에서 새 세션
+    bolt
+
+    # 비대화형으로 새 세션
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="분리했다가 나중에 돌아오기">
+    언제든지 TUI를 닫으세요 — 세션은 자동으로 유지됩니다. 가장 최근 세션은 `--continue`로 재개하거나, 특정 세션은 `--session`으로 ID를 지정해 대상으로 삼으세요:
+
+    ```bash
+    # 가장 최근 세션 재개
+    bolt run --continue "now write the tests too"
+
+    # 특정 세션 재개
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="실험 전에 포크">
+    위험한 변경을 시도하기 전에 현재 세션 히스토리에서 브랜치를 만들려면 `--fork`를 사용하세요. 포크는 원본에 영향을 주지 않는 독립적인 세션입니다:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="공유 및 협업">
+    `--share`로 공유 URL을 생성하세요. 링크가 있는 누구든지 브라우저에서 세션 기록을 볼 수 있습니다:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## 세션 관리 명령
+
+### 세션 목록
+
+```bash
+bolt session list
+```
+
+모든 세션의 ID, 제목, 마지막 업데이트 시간이 포함된 포맷된 테이블을 출력합니다. 머신 판독 가능한 출력을 얻으려면 `--format json`을, 가장 최근 N개 세션으로 제한하려면 `-n <N>`을 추가하세요:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### 세션 삭제
+
+```bash
+bolt session delete <sessionID>
+```
+
+세션과 모든 메시지를 로컬 데이터베이스에서 영구적으로 제거합니다.
+
+## 세션 제어를 위한 run 플래그
+
+다음 플래그들은 `bolt run`에서 사용할 수 있습니다:
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--continue` | `-c` | 가장 최근 세션을 계속 |
+| `--session <id>` | `-s` | ID로 특정 세션을 계속 |
+| `--fork` | | 계속하기 전에 세션 포크 (`--continue` 또는 `--session` 필요) |
+| `--share` | | 세션에 대한 공유 URL 생성 |
+| `--title <title>` | | 세션 제목을 설정하거나 재정의 |
+
+## 세션 내보내기
+
+세션의 전체 기록을 JSON으로 내보냅니다:
+
+```bash
+# 가장 최근 세션 내보내기
+bolt export
+
+# 특정 세션 내보내기
+bolt export <sessionID>
+
+# 민감한 데이터를 마스킹하여 내보내기
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` 플래그는 파일 경로, 코드 콘텐츠, 도구 입력 및 출력, 기타 잠재적으로 민감한 필드를 `[redacted:kind:id]` 자리 표시자로 대체합니다 — 팀원과 기록을 공유하거나 버그 리포트를 제출할 때 유용합니다.
+
+## 세션 가져오기
+
+로컬 JSON 파일이나 공유 URL에서 직접 세션을 가져옵니다:
+
+```bash
+# 로컬 파일에서
+bolt import ./transcript.json
+
+# 공유 URL에서
+bolt import https://opncd.ai/share/abc123
+```
+
+가져온 세션은 로컬 세션 목록에 나타나며 완전히 재개할 수 있습니다.
+
+## 세션 데이터베이스 쿼리
+
+Bolt는 파워 유저를 위해 기본 SQLite 데이터베이스를 직접 노출합니다.
+
+```bash
+# 데이터베이스 파일 경로 출력
+bolt db path
+
+# 대화형 SQLite 셸 열기
+bolt db
+
+# 임시 쿼리 실행
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+출력 형식은 기본적으로 탭으로 구분된 값이며, JSON 출력을 원하면 `--format json`을 추가하세요.
+
+## 토큰 사용량 및 비용 통계
+
+`bolt stats`는 모든 세션에 걸쳐 토큰 사용량과 비용 데이터를 집계합니다:
+
+```bash
+# 전체 기간 통계
+bolt stats
+
+# 최근 7일
+bolt stats --days 7
+
+# 현재 프로젝트만
+bolt stats --project ""
+
+# 모델별 분석 표시 (상위 5개 모델)
+bolt stats --models 5
+
+# 도구 사용 테이블을 상위 10개로 제한
+bolt stats --tools 10
+```
+
+출력에는 총 세션, 메시지, 입력/출력/추론/캐시 토큰, 총 비용, 일평균 비용, 세션당 평균 및 중앙값 토큰, 도구 사용 분석이 포함됩니다. `--models`를 전달하면 메시지, 토큰, 비용의 모델별 분석도 표시됩니다.
+
+## 포크 및 공유 워크플로
+
+다음은 세션을 포크하고 결과를 공유하는 완전한 예제입니다:
+
+<Steps>
+  <Step title="새 세션에서 작업 시작">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="위험한 다음 단계 전에 포크">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    포크된 세션 ID가 콘솔에 출력됩니다. 원본 세션은 그대로입니다.
+  </Step>
+  <Step title="검토를 위해 포크 공유">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    세션이 유휴 상태가 되면 공유 URL이 출력됩니다.
+  </Step>
+  <Step title="다른 머신에서 가져오기">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

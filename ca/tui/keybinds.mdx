@@ -1,0 +1,38 @@
+---
+title: "Combinacions de tecles del TUI de Bolt"
+sidebarTitle: "Combinacions de tecles"
+description: "Les dreceres essencials del TUI de Bolt: canviar d'agent amb Tab, mode mini, veu push-to-talk, i tota la resta que pots controlar des del teclat."
+---
+
+El TUI de Bolt està dissenyat per ser controlat d'extrem a extrem des del teclat. Aquesta pàgina llista les dreceres a les quals recorreràs més sovint. Per a la llista exhaustiva, executa `bolt` i obre l'ajuda dins de l'aplicació.
+
+## Essencials
+
+| Tecles | Acció |
+| --- | --- |
+| `Tab` | Passa al següent agent (`code`, `plan`, `ask`, ...). L'agent actual es mostra a la barra d'estat. |
+| `Shift+Tab` | Passa a l'agent anterior. |
+| `Enter` | Envia el missatge actual. |
+| `Esc` | Cancel·la el torn en curs. |
+| `Ctrl+C` | Interromp la crida d'eina actual. |
+| `Ctrl+D` | Desconnecta't de la sessió (la deixa executant-se al servidor). |
+
+## Modes
+
+### Mode `--mini`
+
+Inicia Bolt amb una disposició compacta de peu dividit que ocupa menys espai al terminal, ideal per a panells dividits:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Veu push-to-talk
+
+Mantén premuda la tecla push-to-talk configurada per dictar un prompt utilitzant text a veu, després deixa'l anar per enviar-lo. Configura la tecla i el proveïdor de STT a `.bolt/bolt.jsonc`.
+
+## Relacionat
+
+- [Ordres de barra inclinada](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` i companys.
+- [Sessions](/concepts/sessions) — desconnectar, reprendre, bifurcar i compartir des del teclat.

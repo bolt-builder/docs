@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI 斜線命令"
+sidebarTitle: "斜線命令"
+description: "你可在 Bolt TUI 內執行的斜線命令 — /memory、/plan、/todos、/btw — 以及它們如何改變目前工作階段的行為。"
+---
+
+斜線命令是輸入到 TUI 提示中的命令,用於改變目前工作階段的行為。它們不會送出任何內容給模型;它們是在本機對 Bolt 本身執行。
+
+## 參考
+
+| 命令 | 功能 |
+| --- | --- |
+| `/memory` | 顯示此工作階段的專案記憶狀態。 |
+| \`/memory use on | off\` | 此工作階段是否從 [專案記憶](/concepts/project-memory) 讀取。 |
+| \`/memory contribute on | off\` | 此工作階段在回合結束時是否寫回專案記憶。 |
+| `/plan` | 將目前工作階段切換到規劃模式(唯讀、產生計畫)。 |
+| `/todos` | 顯示代理目前的結構化任務清單。 |
+| `/btw` | 注入一則帶外備註(「順帶一提...」),代理下一輪會看到但不會觸發完整回應。 |
+
+<Tip>
+  斜線命令的範圍是工作階段。若要讓偏好持久化,請改在 `.bolt/bolt.jsonc` 中設定。請見 [設定](/concepts/configuration)。
+</Tip>
+
+## 新增你自己的
+
+自訂斜線命令可由 [外掛](/extending/plugins) 或 `.opencode/command/` 中的檔案貢獻。每個命令是一個 Markdown 檔案,其 frontmatter 描述觸發與行為。
+
+## 相關
+
+- [快捷鍵](/tui/keybinds) — TUI 的鍵盤快捷鍵。
+- [專案記憶](/concepts/project-memory) — `/memory` 切換的內容。

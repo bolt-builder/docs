@@ -1,0 +1,107 @@
+---
+title: "مقدمة إلى Bolt: وكيل الذكاء الاصطناعي مفتوح المصدر للطرفية"
+sidebarTitle: "المقدمة"
+description: "تعرّف على Bolt: وكيل برمجة بالذكاء الاصطناعي مفتوح المصدر للطرفية يضم عشرة وكلاء، وجلسات دائمة، وذاكرة مشروع، وMCP، وأكثر من 75 مزوّد LLM، وTUI، وتطبيق سطح مكتب."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**طرفيتك، والآن مع فريق هندسي كامل بالذكاء الاصطناعي بداخلها.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">الموقع</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt هو وكيل برمجة بالذكاء الاصطناعي مبني على [Effect](https://effect.website) و[OpenTUI](https://github.com/opentui/opentui) و[SolidJS](https://www.solidjs.com)، وموجّه للطرفية أولاً. وجّهه إلى أي مشروع فيلتقط السياق تلقائيًا: يستكشف الشيفرة، ويتبع اصطلاحاتك، وينفّذ أوامر الصدفة، ويعدّل الملفات، ويشغّل الاختبارات، ويسلّم التغييرات.
+
+عشرة وكلاء مدمجين (`code`، `plan`، `ask`، `code-review`، `debug`، `refactor`، `docs`، `security`، `migrate`، `perf`) بالإضافة إلى الوكلاء الفرعيين `@general` و`@explore` يغطون كامل دورة الهندسة. الجلسات دائمة: يمكنك الانفصال وإعادة الاتصال (حتى بخادم بعيد) والتفريع والمشاركة والتصدير والاستيراد في أي وقت. تحفظ ذاكرة المشروع ما يتعلّمه الوكيل بين الجلسات. قابل للتوسيع عبر خوادم MCP (مع OAuth)، والإضافات، والوكلاء المخصّصين، والأدوات المخصّصة.
+
+Bolt مفتوح المصدر بموجب رخصة PolyForm Noncommercial 1.0.0.
+
+## لماذا Bolt؟
+
+صُمّم Bolt وفق الطريقة التي يعمل بها المطورون فعليًا: في الطرفية، عبر جلسات متعدّدة، على قواعد شيفرة حقيقية. إليك ما يميّزه:
+
+- **TUI موجّه للطرفية أولاً.** واجهة سريعة تعمل بلوحة المفاتيح، مبنية باستخدام [Effect](https://effect.website) و[OpenTUI](https://github.com/opentui/opentui) و[SolidJS](https://www.solidjs.com). تشعر بأنها أصلية لأنها كذلك.
+- **فريق كامل من الوكلاء.** عشرة وكلاء متخصصون — `code`، `plan`، `ask`، `code-review`، `debug`، `refactor`، `docs`، `security`، `migrate`، و`perf` — بالإضافة إلى وكلاء فرعيين للبحث والتفويض متعدّد الخطوات. بدّل بينهم بـ `Tab`.
+- **جلسات يمكنك تركها والعودة إليها.** انفصل عن جلسة وعُد إليها لاحقًا، حتى على خادم بعيد. فرّع وشارك وصدّر واستورد العمل في أي وقت. تُخزّن الجلسات في SQLite ويمكن فحصها بالكامل عبر `bolt db`.
+- **قابل للتوسيع بالتصميم.** خوادم MCP بدعم كامل لـ OAuth، ونظام إضافات، وتكامل GitHub، وخادم API مدمج، وواجهة ويب.
+- **تطبيق سطح مكتب.** نفس المحرك مغلّف بتجربة سطح مكتب متعدّدة النوافذ ومتعدّدة التبويبات — مع طرفية متكاملة، وشجرة ملفات، ولوحة أوامر، و28 لغة واجهة، وتحديثات تلقائية.
+
+## الوكلاء المدمجون
+
+يأتي Bolt مع عشرة وكلاء متخصصين. لكل وكيل مستوى محدّد من الوصول إلى نظام الملفات يتناسب مع غرضه.
+
+| الوكيل | الوصول | الوصف |
+| --- | --- | --- |
+| `code` | كامل | الافتراضي: يقرأ ويكتب ويشغّل الشيفرة |
+| `plan` | قراءة | يستكشف قاعدة الشيفرة وينتج خطة دون تعديل الملفات |
+| `ask` | قراءة | أسئلة وبحث — بدون تعديل الملفات |
+| `code-review` | قراءة | يراجع التغييرات بحثًا عن الصحة والأسلوب والأمان |
+| `debug` | كامل | يصحّح الاختبارات الفاشلة والانهيارات وأخطاء المنطق |
+| `refactor` | كامل | إعادة هيكلة آمنة مع التحقق من الاختبارات في كل خطوة |
+| `docs` | تحرير | يكتب ويحدّث الوثائق والتعليقات |
+| `security` | قراءة | مراجعة أمنية: ثغرات، أسرار، أنماط |
+| `migrate` | كامل | ترقيات إطارات العمل وترحيل الاعتماديات |
+| `perf` | كامل | تحليل الأداء والتحسين |
+
+يمكنك أيضًا تعريف وكلاء خاصّين بك كملفات Markdown أو توليد وكيل باستخدام `bolt agent create`.
+
+## تطبيق سطح المكتب
+
+يأتي Bolt أيضًا كتطبيق سطح مكتب مستقل مع إدارة جلسات متعدّدة النوافذ ومتعدّدة التبويبات، ومحرّر موجّهات يدعم المرفقات ولصق الصور من الحافظة، وطرفية متكاملة وشجرة ملفات، ولوحة أوامر، وإعدادات كاملة لاختصارات لوحة المفاتيح والنماذج والمزوّدين والخوادم، وإشعارات نظام أصلية، وروابط عميقة، وتكامل WSL على ويندوز، وتحديثات تلقائية عبر قنوات dev وbeta وproduction.
+
+نزّل تطبيق سطح المكتب من [صفحة الإصدارات](https://github.com/Bolt-builder/bolt-cli/releases)، أو ثبّته بسطر واحد على macOS دون المرور بـ Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## استكشف الوثائق
+
+<CardGroup cols={2}>
+  <Card title="التثبيت" icon="download" href="/installation">
+    ثبّت Bolt عبر curl أو npm أو مدير الحزم في نظامك على macOS وLinux وWindows.
+  </Card>
+
+  <Card title="البدء السريع" icon="rocket" href="/quickstart">
+    افتح الـ TUI، شغّل أول موجّه لك، وسلّم commit مُولَّد بالذكاء الاصطناعي في أقل من دقيقة.
+  </Card>
+
+  <Card title="الوكلاء" icon="users" href="/concepts/agents">
+    عشرة وكلاء مدمجين بالإضافة إلى الوكلاء الفرعيين. تعرّف على ما يفعله كل واحد وكيف تكتب وكيلك الخاص.
+  </Card>
+
+  <Card title="ذاكرة المشروع" icon="brain" href="/concepts/project-memory">
+    كيف يتذكّر Bolt مشروعك عبر الجلسات وكيف تتحكم فيما يتم التقاطه.
+  </Card>
+
+  <Card title="خوادم MCP" icon="plug" href="/extending/mcp-servers">
+    اربط أدوات ومصادر بيانات خارجية بـ Bolt عبر Model Context Protocol.
+  </Card>
+
+  <Card title="الخادم بدون واجهة" icon="server" href="/server/headless-server">
+    شغّل `bolt serve`، وأرفق TUI من أي جهاز، وقُد Bolt من الـ API.
+  </Card>
+</CardGroup>

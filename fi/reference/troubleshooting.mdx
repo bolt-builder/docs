@@ -1,0 +1,395 @@
+---
+title: "Yleisten Bolt-ongelmien vianmääritys"
+sidebarTitle: "Vianmääritys"
+description: "Ratkaisuja yleisimpiin Bolt-ongelmiin: käynnistysvirheet, tarjoajan todennusvirheet, MCP-yhteydellisyys, istunto-ongelmat, oikeudet, kustannukset ja lisää."
+---
+
+Useimmat Bolt-ongelmat kuuluvat pieneen määrään luokkia. Käy läpi asianmukainen alla oleva accordion ja tarkista lokituloste komennolla `bolt logs` aina, kun jotain odottamatonta tapahtuu.
+
+<Note>
+  Kysymyksiin, joihin ei tässä vastata, hae tai aloita keskustelu [Boltin GitHub Discussionsissa](https://github.com/bolt-builder/bolt-cli/discussions). Sisällytä `bolt debug info`n ja `bolt logs --tail 50`n tuloste postiisi, jotta yhteisö voi auttaa nopeammin.
+</Note>
+
+## Ensimmäiset kokeiltavat asiat
+
+Ennen kuin sukellat tiettyyn osioon, nämä neljä komentoa ratkaisevat useimmat ongelmat:
+
+| Oire | Ensimmäinen komento | Miksi |
+| --- | --- | --- |
+| Mitä tahansa outoa | `bolt debug info` | Kertaluonteinen järjestelmä- \+ laajennusyhteenveto. |
+| Toimi aiemmin, ei enää | `bolt logs --tail 100` | Viimeaikaiset virheet, yleensä lähellä alkua. |
+| Epäilyt laajennusta | `bolt --pure` | Käynnistä kaikki laajennukset poistettuina käytöstä. |
+| Konfiguraatio ei tule käyttöön | `bolt debug config` | Tulostaa täysin ratkaistun konfiguraation. |
+
+<Tip>
+  `bolt debug`-perhe on ensimmäinen pysähdyksesi mysteerikäyttäytymiselle. `bolt debug info` järjestelmäyhteenvetoon, `bolt debug config` ratkaistuun konfiguraatioon, `bolt debug paths` levylle sijainteihin ja `bolt debug snapshot` istunnon tilan tarkasteluun.
+</Tip>
+
+<Accordion title="Bolt ei käynnisty / kaatuu käynnistyksessä">
+  **Oireet:** Terminaali vilkkuu ja poistuu välittömästi tai näet stack tracen ennen kuin TUI renderöityy.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Kerää järjestelmätiedot">
+      ```bash
+      bolt debug info
+      ```
+
+      Tämä tulostaa Bolt-versiosi, käyttöjärjestelmäsi, terminaaliemulaattorisi ja ladatut laajennukset. Kopioi tämä tuloste ilmoittaessasi virheestä.
+    </Step>
+    <Step title="Tarkista viimeaikainen lokituloste">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Etsi `ERROR`-rivejä. Yleinen syy on laajennus, joka ei lataudu — tässä tapauksessa näet virheen, joka mainitsee laajennuksen nimen.
+    </Step>
+    <Step title="Poista laajennukset käytöstä ongelman eristämiseksi">
+      ```bash
+      bolt --pure
+      ```
+
+      Jos Bolt käynnistyy puhtaasti `--pure`n kanssa, jokin laajennus aiheuttaa kaatumisen. Poista loukkaava laajennus konfiguraatiostasi tai raportoi se laajennuksen tekijälle.
+    </Step>
+    <Step title="Tarkista vaurioitunut konfiguraatio">
+      ```bash
+      bolt debug config
+      ```
+
+      Jos tämä tulostaa virheen virheellisestä JSONista, avaa mainittu konfigurointitiedosto ja korjaa syntaksi. Suorita `bolt db path` vahvistaaksesi, että tietokantapolku on käytettävissä.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Tarjoajan todennus epäonnistuu">
+  **Oireet:** Bolt näyttää "No providers configured", API-pyynnöt epäonnistuvat 401-virheillä tai `bolt run` poistuu välittömästi tuottamatta tulostetta.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Suorita tarjoajan kirjautumisvirta uudelleen">
+      ```bash
+      bolt providers login
+      ```
+
+      Valitse tarjoaja ja seuraa kehotteita. Bolt opastaa sinut API-avaimen syöttämiseen tai OAuthiin.
+    </Step>
+    <Step title="Vahvista API-avaimen ympäristömuuttuja">
+      Jos käytät env-muuttujaa (esim. `ANTHROPIC_API_KEY`), vahvista, että se on todella asetettu nykyisessä shellissä:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Jos se on tyhjä, lisää se shell-profiiliisi ja avaa terminaalisi uudelleen.
+    </Step>
+    <Step title="Tarkastele ratkaistua konfiguraatiota">
+      ```bash
+      bolt debug config
+      ```
+
+      Katso `provider`-osiota. Jos tarjoajasi näkyy tyhjällä `apiKey`llä, konfiguraatiotiedostosi ympäristömuuttujaviittausta ei laajenneta.
+    </Step>
+    <Step title="Listaa tallennetut tunnistetiedot">
+      ```bash
+      bolt providers list
+      ```
+
+      Tämä näyttää kaikki `auth.json`iin tallennetut tunnistetiedot ja kaikki tarjoajaan liittyvät ympäristömuuttujat, jotka Bolt havaitsi.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP-palvelin ei yhdistä">
+  **Oireet:** `bolt mcp list` näyttää palvelimen `failed`- tai `needs authentication` -tilassa, tai agentti ei voi käyttää mitään työkaluja kyseiseltä palvelimelta.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Suorita MCP-debug-luotaus">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Tämä testaa perus-HTTP-yhteydellisyyden, tarkastelee `WWW-Authenticate`-otsaketta ja käy OAuth-havaitsemisvirran läpi tarvittaessa. Tuloste kertoo, onko palvelin tavoitettavissa ja vaaditaanko todennus.
+    </Step>
+    <Step title="Tarkista palvelimen URL">
+      Vahvista URL tiedostossa `.bolt/bolt.jsonc`. Etäpalvelimille varmista, että URL päättyy MCP-polkuun (esim. `/mcp` tai `/tools`), ei vain isäntään.
+    </Step>
+    <Step title="Todenna uudelleen OAuth-palvelimille">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Seuraa selainvirtaa. Jos palvelin vaatii esirekisteröityn asiakas-ID:n, lisää se konfiguraatioon:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Tarkista paikallisen palvelimen komento">
+      `local`-palvelimille suorita komento manuaalisesti terminaalissasi vahvistaaksesi, että se käynnistyy ilman virheitä:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Istuntoa ei löydy">
+  **Oireet:** `bolt run --session <id>` poistuu "Session not found" -viestillä tai muistamasi istunto on kadonnut.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Listaa kaikki käytettävissä olevat istunnot">
+      ```bash
+      bolt session list
+      ```
+
+      Istunnot lajitellaan viimeksi päivitetyn mukaan ensin. Jos istuntosi poistettiin tai tietokanta migroitiin, se ei näy tässä.
+    </Step>
+    <Step title="Löydä tietokantapolku">
+      ```bash
+      bolt db path
+      ```
+
+      Tämä tulostaa SQLite-tiedoston täyden polun. Vahvista, että tiedosto on olemassa eikä ole tyhjä.
+    </Step>
+    <Step title="Kysele tietokantaa suoraan">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Jos istuntosi näkyy tietokannassa mutta ei komennossa `bolt session list`, saattaa olla projektin ID:n epäsuhta — istunnot on rajattu projekteihin.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Oikeusvirheet TUI:ssa">
+  **Oireet:** Agentti pyytää oikeuksia toistuvasti, kieltäytyy kirjoittamasta tiedostoja tai näet "Permission denied" -bannereita.
+
+  **Käyttöoikeustasojen ymmärtäminen:**
+
+  Jokaisella sisäänrakennetulla agentilla on ilmoitettu käyttöoikeustaso, joka ohjaa, mitä se voi tehdä kysymättä:
+
+  | Käyttöoikeustaso | Mitä se sallii |
+  | --- | --- |
+  | **Full** | Lue tiedostoja, kirjoita tiedostoja, suorita shell-komentoja |
+  | **Edit** | Lue ja kirjoita tiedostoja, ei shell-komentoja |
+  | **Read** | Vain lue tiedostoja, ei kirjoituksia tai komentoja |
+
+  `code`-, `debug`-, `refactor`-, `migrate`- ja `perf`-agenteilla on **Full**-käyttöoikeus. `docs`illa on **Edit**-käyttöoikeus. `plan`illa, `ask`illa, `code-review`illa ja `security`illä on **Read**-käyttöoikeus.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Vaihda agenttiin, jolla on Full-käyttöoikeus">
+      Jos tarvitset tiedostojen kirjoittamista, käytä `code`-agenttia:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Tai paina `Tab`ia TUI:ssa selataksesi agentteja.
+    </Step>
+    <Step title="Käytä --auto hyväksyäksesi kehotteet ei-interaktiivisesti">
+      CI:ssä tai skriptatuissa yhteyksissä anna `--auto` `bolt run` -komennolle hyväksyäksesi automaattisesti oikeuksia, joita ei nimenomaisesti kielletty konfiguraatiossa.
+    </Step>
+    <Step title="Määritä oikeudet konfigurointitiedostossa">
+      Voit kieltää tiettyjä työkaluja kaikille projektin istunnoille lisäämällä `permission`-lohkon tiedostoon `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Korkea tokenien käyttö tai odottamattomat kustannukset">
+  **Oireet:** `bolt stats` näyttää odotettua korkeampia tokeneiden lukuja tai API-laskusi kasvaa ennakoitua nopeammin.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Tarkastele käyttötilastojasi">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Tuloste erittelee kustannukset per päivä, keskimääräiset tokenit per istunto ja käytön mallikohtaisesti.
+    </Step>
+    <Step title="Alenna päättelytasoa">
+      Malleille, jotka tukevat sitä, vähennä päättelytasoa `--variant`in avulla:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Tuetut arvot ovat tarjoajakohtaisia (esim. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Vaihda halvempaan malliin">
+      Käytä `bolt models` löytääksesi pienemmän mallin. Pienemmät mallit (esim. `claude-haiku`, `gpt-4o-mini`) maksavat merkittävästi vähemmän per token ja toimivat hyvin moniin tehtäviin.
+    </Step>
+    <Step title="Käytä ask- tai plan-agenttia tutkimukseen">
+      `ask`- ja `plan`-agenteilla on **Read**-käyttöoikeus, eivätkä ne kutsu kirjoitustyökaluja, mikä tarkoittaa, että ne välttävät työkaluvaltaisia silmukoita, jotka tuottavat suurta tulostetta.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Laajennusristiriitoja tai odottamatonta käyttäytymistä">
+  **Oireet:** Kauttaviivakomento käyttäytyy odottamattomasti, TUI renderöityy väärin tai jokin muuttui laajennuksen asentamisen jälkeen.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Poista kaikki laajennukset käytöstä lähtötason luomiseksi">
+      ```bash
+      bolt --pure
+      ```
+
+      Jos ongelma katoaa, laajennus on vastuussa.
+    </Step>
+    <Step title="Tunnista loukkaava laajennus">
+      ```bash
+      bolt debug info
+      ```
+
+      Tuloste listaa kaikki ladatut laajennukset. Poista niitä väliaikaisesti yksi kerrallaan konfiguraatiostasi ja käynnistä Bolt uudelleen, kunnes ongelma on poissa.
+    </Step>
+    <Step title="Tarkista versioyhteensopimattomuus">
+      ```bash
+      bolt upgrade
+      ```
+
+      Laajennukset ilmoittavat yhteensopivan Bolt-versioalueen. Jos päivitit Boltin äskettäin, laajennus saattaa myös tarvita päivityksen.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows-polkuongelmat">
+  **Oireet:** Windowsissa WSL:llä Bolt ei löydä `less`iä, tiedostopolut sisältävät odottamattomia kenoviivoja tai `bolt session list` -komennon paginator ei käynnisty.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Aseta Git Bash -polku">
+      Bolt etsii Unix-apuohjelmia (mukaan lukien `less`) suhteessa Git for Windows -asennukseen. Aseta ympäristömuuttuja Git Bash -hakemistoosi:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Lisää tämä PowerShell-profiiliisi (`$PROFILE`) säilyttääksesi sen.
+    </Step>
+    <Step title="Vahvista debug-tiedoilla">
+      ```bash
+      bolt debug info
+      ```
+
+      Vahvistaa käyttöjärjestelmän havaitsemisen ja mitä polkuja Bolt käyttää.
+    </Step>
+    <Step title="Suorita Bolt suoraan WSL:n sisällä">
+      Parhaan kokemuksen saamiseksi Windowsissa suorita `bolt` WSL-terminaalista PowerShellin tai Command Promptin sijaan.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Boltia ei voi päivittää">
+  **Oireet:** `bolt upgrade` raportoi virheen tai ei tee mitään hiljaisesti, tai versionumero ei muutu sen suorittamisen jälkeen.
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Määritä asennusmenetelmä eksplisiittisesti">
+      Bolt yrittää havaita, miten se asennettiin. Jos havaitseminen epäonnistuu, ohita se:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Asenna uudelleen asennusskriptin kautta">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: suorita järjestelmänvalvojana Chocolateylle">
+      Jos asensit `choco`n kautta, päivitykset vaativat korotetun terminaalin. Avaa PowerShell järjestelmänvalvojana ennen `bolt upgrade`n suorittamista.
+    </Step>
+    <Step title="Vahvista, että uusi versio on aktiivinen">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agentti ei löydä tiedostoja (tai löytää liian monta)">
+  **Oireet:** Agentti valittaa, ettei se näe tiedostoja, jotka ovat olemassa, tai se poimii toistuvasti tiedostoja, joihin et halua sen koskettavan (kuten `node_modules`, buildin tuloste tai salaisuudet).
+
+  **Vaiheet:**
+
+  <Steps>
+    <Step title="Tarkista .boltignore">
+      Bolt kunnioittaa `.boltignore`-tiedostoa projektin juuressa, joka ohjaa, mitä tiedostoja agentin tiedostojen hakutyökalut näkevät. Se käyttää samaa syntaksia kuin `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Vahvista työhakemisto">
+      ```bash
+      bolt debug info
+      ```
+
+      Vahvista, että `cwd` vastaa projektin juurta. Jos käynnistit Boltin alihakemistosta, agentin tiedostohaku juurtaa sinne.
+    </Step>
+    <Step title="Pyydä agenttia grepaamaan, ei arvaamaan">
+      Jos agentti väittää, ettei tiedostoa ole olemassa, pyydä sitä suorittamaan `grep` tai `glob` eksplisiittisesti. Tämä ohittaa mahdolliset vanhentuneet sisäiset oletukset.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Debug-tietojen hankkiminen virheraporttia varten">
+  Virhettä ilmoittaessasi seuraavat tiedot ovat hyödyllisimmät ylläpitäjille:
+
+  <Steps>
+    <Step title="Kerää järjestelmä- ja laajennustiedot">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Kerää viimeaikainen lokituloste">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Vie asianomainen istunto (siivottuna)">
+      Jos ongelma tapahtui tietyssä istunnossa, vie se salaisuuksien poistolla:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Liitä `session-debug.json` issueen.
+    </Step>
+    <Step title="Avaa issue tai keskustelu">
+      Siirry [GitHub Discussionsiin](https://github.com/bolt-builder/bolt-cli/discussions) ja liitä `bolt debug info` -tulosteesi sekä kuvaus toistamisen vaiheista.
+    </Step>
+  </Steps>
+</Accordion>

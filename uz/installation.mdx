@@ -1,0 +1,121 @@
+---
+title: "Bolt'ni macOS, Linux yoki Windows'da o'rnating"
+sidebarTitle: "O'rnatish"
+description: "Bolt CLI'ni curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey yoki Scoop orqali o'rnating. Yangilash, o'chirish va desktop ilovani qamrab oladi."
+---
+
+Bolt macOS, Linux va Windows'ga workflow'ingizga mos keladigan usul yordamida o'rnatilishi mumkin — bir qatorli curl skript, har qanday yirik Node.js paket menejeri yoki Homebrew, Chocolatey yoki Scoop kabi tizim paket menejeri.
+
+## Tezkor o'rnatish (macOS / Linux)
+
+Boshlashning eng tez yo'li — rasmiy o'rnatish skripti. U OS va arxitekturangizni avtomatik aniqlaydi, to'g'ri binaryni `~/.bolt/bin` ga yuklab oladi va uni `$PATH` ga qo'shadi.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+O'rnatgich shuningdek ixtiyoriy ovoz kirish bog'liqliklarini (sox va offline transkripsiya uchun whisper-cpp) o'rnatadi. Buni o'tkazib yuborish uchun `--no-voice` ni uzating:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Muayyan versiyani belgilash uchun:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Paket menejerlari
+
+Bolt'ni tanlagan paket menejeringiz bilan global tarzda o'rnating:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## O'rnatishni tekshirish
+
+<Steps>
+  <Step title="O'rnatilgan versiyani tekshiring">
+    O'rnatgandan so'ng, `bolt` sizning `$PATH` da mavjudligini tasdiqlang:
+
+    ```bash
+    bolt --version
+    ```
+
+    Agar buyruq topilmasa, yangi terminal sessiyasini oching (yoki shell konfiguratsiyasini qayta manbaga oling), shunda yangilangan `$PATH` kuchga kiradi.
+  </Step>
+</Steps>
+
+## Yangilash
+
+Eng so'nggi relizga yangilash uchun `bolt upgrade` ni ishga tushiring:
+
+```bash
+bolt upgrade
+```
+
+Bolt sizning asl o'rnatish usulingizni avtomatik aniqlaydi. Uni `--method` bayrog'i bilan override qilishingiz mumkin:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Qo'llab-quvvatlanadigan usullar: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Shuningdek, versiyani positional argument sifatida uzatib muayyan versiyaga yangilashingiz mumkin:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## O'chirish
+
+Bolt'ni tizimingizdan olib tashlash uchun:
+
+```bash
+bolt uninstall
+```
+
+## Environment variable'lar
+
+| O'zgaruvchi               | Tavsif                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Log batafsilligi: `DEBUG`, `INFO`, `WARN` yoki `ERROR`    |
+| `BOLT_PRINT_LOGS`      | Log'larni stderr'ga chop etish                                  |
+| `BOLT_PURE`            | Tashqi plaginlar yuklamasdan ishga tushirish                  |
+| `BOLT_SERVER_PASSWORD` | Headless API server uchun basic auth paroli       |
+| `BOLT_SERVER_USERNAME` | Headless API server uchun basic auth foydalanuvchi nomi       |
+
+<Tip>
+  Har qanday uchinchi tomon plaginlarisiz toza ishga tushirishni xohlaganda `BOLT_PURE=1` ni o'rnating — debug qilish yoki boshqariladigan CI muhitlar uchun foydali.
+</Tip>
+
+## Desktop ilova
+
+<Note>
+  Bolt shuningdek ko'p oynali sessiya boshqaruvi, integratsiyalashgan terminal va fayl daraxti, buyruqlar paletasi, 28 ta UI tili va avtomatik yangilanishlarga ega native desktop ilova sifatida yetkaziladi. So'nggi relizni [releases sahifasi](https://github.com/Bolt-builder/bolt-cli/releases) dan yuklab oling.
+
+  macOS'da Gatekeeper aylanishisiz bir qatorda o'rnatishingiz mumkin:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

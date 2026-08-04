@@ -1,0 +1,58 @@
+---
+title: "Công cụ: Những gì agent Bolt thực sự có thể làm"
+sidebarTitle: "Công cụ"
+description: "Danh sách đầy đủ các công cụ tích hợp sẵn dành cho agent Bolt, cùng cách thêm công cụ của riêng bạn qua plugin, MCP server hoặc thư mục .opencode/tool."
+---
+
+Các agent trong Bolt làm việc bằng cách gọi công cụ. Mọi hành động bạn thấy trong TUI (đọc tệp, chạy test, tìm kiếm trên web) đều là mô hình chọn một công cụ và Bolt thực thi nó. Mỗi agent có một mức truy cập được khai báo xác định các công cụ mà nó có thể gọi mà không cần hỏi bạn trước (xem [Quyền](/concepts/permissions)).
+
+## Công cụ tích hợp sẵn
+
+| Công cụ | Nó làm gì |
+| --- | --- |
+| `read` | Đọc một tệp từ đĩa. |
+| `write` | Tạo một tệp mới hoặc ghi đè tệp hiện có. |
+| `edit` | Áp dụng một chỉnh sửa có mục tiêu (find/replace) lên một tệp. |
+| `apply_patch` | Áp dụng patch kiểu unified-diff trên một hoặc nhiều tệp. |
+| `glob` | Liệt kê các tệp khớp với mẫu glob. |
+| `grep` | Tìm kiếm nội dung tệp theo regex/text. |
+| `bash` | Chạy một lệnh shell. |
+| `task` | Ủy thác một tác vụ con cho một subagent (`@general`, `@explore`, hoặc subagent tùy chỉnh). |
+| `todowrite` | Duy trì danh sách tác vụ có cấu trúc của agent cho công việc nhiều bước. |
+| `webfetch` | Fetch một URL và trả về nội dung của nó. |
+| `websearch` | Tìm kiếm trên web. |
+| `skill` | Gọi một skill có tên (xem [Skill](/extending/skills)). |
+| `memory_save` | Lưu một sự kiện vào [bộ nhớ dự án](/concepts/project-memory). |
+| `memory_recall` | Tra cứu một bộ nhớ đã lưu trước đó. |
+| `question` | Hỏi bạn một câu hỏi làm rõ và chờ phản hồi. |
+| `bash_background` | Khởi chạy một lệnh shell dưới dạng tiến trình nền được quản lý (dev server, watcher, build dài). |
+| `process_output` | Đọc đầu ra tích lũy và trạng thái của một tiến trình nền, tùy chọn chờ nó kết thúc. |
+| `list_processes` | Liệt kê các tiến trình nền với id, trạng thái và lệnh của chúng. |
+| `kill_process` | Kết thúc một tiến trình nền (và cây tiến trình của nó) theo id. |
+| `test_run` | Phát hiện và chạy test của dự án, trả về kết quả pass/fail có cấu trúc và chi tiết thất bại. |
+
+### Thử nghiệm
+
+| Công cụ | Nó làm gì |
+| --- | --- |
+| `lsp` | Truy vấn language server để lấy definition, reference và diagnostic. |
+| `execute` | Chạy code trong một sandbox code-mode cô lập. |
+| `plan` | Tạo ra một kế hoạch có cấu trúc trước khi thực hiện thay đổi. |
+
+Các công cụ thử nghiệm có thể thay đổi hoặc bị đổi tên giữa các bản phát hành.
+
+## Mở rộng bộ công cụ
+
+Ngoài các công cụ tích hợp sẵn, Bolt có thể gọi công cụ từ ba nguồn:
+
+- **Công cụ tùy chỉnh** trong `.opencode/tool/` (hoặc `.opencode/tools/`) ở gốc dự án. Xem [Công cụ tùy chỉnh](/extending/custom-tools).
+- **Công cụ plugin** được đóng góp bởi bất kỳ [plugin](/extending/plugins) nào đã cài.
+- **Công cụ MCP** từ bất kỳ [MCP server](/extending/mcp-servers) nào được cấu hình cho dự án.
+
+Cả ba đều giống hệt nhau từ góc nhìn của agent: chúng xuất hiện trong danh sách công cụ, tôn trọng mức truy cập của agent và hiển thị trong đầu ra tool-call của TUI.
+
+## Liên quan
+
+- [Agent](/concepts/agents) — agent nào có thể gọi công cụ nào.
+- [Quyền](/concepts/permissions) — cách truy cập công cụ bị kiểm soát theo agent.
+- [MCP Server](/extending/mcp-servers) — cách phổ biến nhất để thêm công cụ thực tế.

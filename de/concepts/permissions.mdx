@@ -1,0 +1,53 @@
+---
+title: "Berechtigungen: Steuern, was Bolt-Agents dürfen"
+sidebarTitle: "Berechtigungen"
+description: "Wie die Zugriffsebenen pro Agent, die interaktiven Berechtigungsabfragen und die Allow/Deny-Regeln in der Konfiguration verhindern, dass der Agent etwas tut, das Sie nicht genehmigt haben."
+---
+
+Bolt-Agents können Dateien lesen, Dateien schreiben und Shell-Befehle ausführen. Diese Macht wird durch zwei Ebenen begrenzt: eine Zugriffsebene pro Agent und interaktive Berechtigungsabfragen, die Sie genehmigen, ablehnen oder im Voraus konfigurieren können.
+
+## Zugriffsebenen der Agents
+
+Jedem integrierten Agent ist eine Zugriffsebene zugewiesen:
+
+| Zugriffsebene | Dateien lesen | Dateien schreiben | Shell-Befehle ausführen |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Integrierte Zuordnungen:
+
+- **Full** – `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** – `docs`
+- **Read** – `plan`, `ask`, `code-review`, `security`
+
+Wechseln Sie Agents mit `Tab` im TUI oder übergeben Sie `--agent <name>` an `bolt run`.
+
+## Interaktive Abfragen
+
+Innerhalb der Zugriffsebene eines Agents lösen potenziell destruktive Aktionen weiterhin Bestätigungsabfragen aus. Sie können einmalig zustimmen, für die Sitzung zustimmen oder ablehnen. Abgelehnte Aufrufe geben einen Fehler an den Agent zurück, und er fährt fort.
+
+## Nicht-interaktive Genehmigung
+
+Für CI, Skripte oder vertrauenswürdige lokale Workflows unterstützt `bolt run` Flags, die Abfragen überspringen:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` und `--dangerously-skip-permissions` lassen den Agent lesen, schreiben und ausführen, ohne zu fragen. Verwenden Sie sie nur in vertrauenswürdigen Umgebungen.
+</Warning>
+
+## Regeln auf Konfigurationsebene
+
+Sie können bestimmte Tools für das gesamte Projekt vorab verbieten (oder erlauben), indem Sie einen `permission`-Block zu `.bolt/bolt.jsonc` hinzufügen. Das gilt für jede Sitzung im Projekt, einschließlich nicht-interaktiver `bolt run`-Aufrufe. Siehe [Konfiguration](/concepts/configuration) für das Schema.
+
+## Verwandt
+
+- [Agents](/concepts/agents) – welche Agents welche Zugriffsebenen haben.
+- [Tools](/concepts/tools) – die vollständige Liste der Tools, die Berechtigungen kontrollieren.
+- [Konfiguration](/concepts/configuration) – dauerhafte Berechtigungsregeln festlegen.

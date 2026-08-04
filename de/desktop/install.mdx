@@ -1,0 +1,116 @@
+---
+title: "Bolt Desktop-App: Mehrfenster-KI-Codingsessions"
+sidebarTitle: "Install"
+description: "Installieren Sie die Bolt Desktop-App für Mehrfenster-Sessions, ein integriertes Terminal, einen Prompt-Composer mit Bild-Einfügen, Auto-Updates und 28 UI-Sprachen."
+url: "desktop/install"
+---
+
+Die Bolt Desktop-App bündelt dieselbe Engine wie die CLI in einer vollständigen Electron-Hülle. Jedes im Terminal verfügbare Feature – Agents, MCP-Server, Plugins, Remote-Sessions, Sessions zum Forken und Teilen – funktioniert in der Desktop-App identisch, ergänzt um ein Mehrfenster- und Mehr-Tab-Erlebnis, eine grafische Einstellungs-UI, native Benachrichtigungen und Auto-Updates. Wenn Sie die CLI bereits nutzen, ist die Desktop-App eine Drop-in-Ergänzung, kein Ersatz.
+
+---
+
+## Installation
+
+### macOS
+
+<Steps>
+  <Step title="Mit dem One-Liner installieren (empfohlen)">
+    Öffnen Sie ein Terminal und führen Sie aus:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Das Skript lädt das neueste Release herunter, verifiziert es und legt die App in `/Applications` ab. Kein Gatekeeper-Popup.
+  </Step>
+
+  <Step title="App starten">
+    Öffnen Sie **Bolt** aus `/Applications` oder über Spotlight. Beim ersten Start fordert Bolt Sie auf, einen Standard-LLM-Provider auszuwählen, und erstellt eine globale Konfigurationsdatei.
+  </Step>
+</Steps>
+
+<Tip>
+  Der One-Liner installiert die App so, dass der macOS-Gatekeeper-Dialog „unidentified developer" umgangen wird, sodass Sie ohne zusätzliche Sicherheitsabfragen direkt loslegen können.
+</Tip>
+
+### Alle Plattformen – Download von den Releases
+
+Laden Sie den neuesten Installer für Ihre Plattform von der [Bolt-Releases-Seite](https://github.com/Bolt-builder/bolt-cli/releases) herunter.
+
+| Plattform | Installertyp |
+|-----------|--------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe`-Installer |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Unter Windows bringt Bolt eine WSL (Windows Subsystem for Linux)-Integration mit. Ist WSL verfügbar, kann Bolt Sessions direkt in Ihrer WSL-Distribution öffnen – Sie erhalten eine Linux-native Agent-Umgebung mit einer nativen Windows-UI drumherum.
+</Note>
+
+---
+
+## Funktionen
+
+### Mehrfenster- und Mehr-Tab-Sitzungsverwaltung
+
+Öffnen Sie beliebig viele Fenster, jedes mit einer eigenen Tab-Reihe. Tabs entsprechen direkt Bolt-Sessions, sodass Sie einen Agent für ein Refactoring in einem Tab, eine Frage in einem anderen und einen Hintergrundjob in einem dritten laufen lassen können – alles gleichzeitig.
+
+### Prompt-Composer
+
+Der Prompt-Composer unterstützt umfangreiche Eingaben: Text einfügen, Dateien als Anhänge hineinziehen oder ein Bild direkt aus der Zwischenablage einfügen. Bolt kodiert das Bild und sendet es automatisch an jedes bildfähige Modell.
+
+### Integriertes Terminal und Dateibaum
+
+Ein Split-Layout zeigt auf der einen Seite die Agent-Konversation und auf der anderen ein Live-Terminal und den Projekt-Dateibaum. Sie können Befehle ausführen, Ausgaben prüfen und die Ergebnisse an den Agent zurückgeben, ohne die App zu wechseln.
+
+### Befehlspalette
+
+Drücken Sie `Cmd/Ctrl+K`, um die Befehlspalette zu öffnen. Von hier aus können Sie Sessions wechseln, Agents ändern, die Einstellungen öffnen oder jede Aktion auslösen, ohne zur Maus greifen zu müssen.
+
+### Vollständige Einstellungs-UI
+
+Der Einstellungsbereich deckt jede Option ab, die in `.bolt/bolt.jsonc` lebt – Tastenzuweisungen, Modellauswahl, LLM-Provider, MCP-Server und Auth – mit Dropdowns, Umschaltern und Inline-Validierung. Sie müssen die Konfigurationsdatei selten von Hand bearbeiten.
+
+### Native Benachrichtigungen
+
+Bolt löst eine native OS-Benachrichtigung aus, wenn eine lang laufende Aufgabe abgeschlossen ist. Klicken Sie auf die Benachrichtigung, um direkt zur Session zu springen.
+
+### Deep Links
+
+Öffnen Sie eine bestimmte Session, indem Sie zu einer `bolt://`-URL navigieren. Nützlich, um Session-Links mit Teamkollegen zu teilen oder laufende Arbeit als Lesezeichen zu speichern.
+
+### Auto-Updates
+
+Die Desktop-App aktualisiert sich über drei Kanäle:
+
+| Kanal | Beschreibung |
+|-------|--------------|
+| `prod` | Stabile Releases, wird bei jedem Produktions-Tag aktualisiert |
+| `beta` | Pre-Release-Builds für frühen Zugang zu neuen Funktionen |
+| `dev` | Nightly-Builds aus dem `dev`-Branch |
+
+Wechseln Sie Kanäle unter **Settings → About**.
+
+### 28 UI-Sprachen
+
+Die Oberfläche von Bolt ist in 28 Sprachen lokalisiert. Ändern Sie die Anzeigesprache unter **Settings → Appearance → Language**.
+
+---
+
+## Verwandte Dokumente
+
+<CardGroup cols={2}>
+  <Card title="Remote sessions" icon="server" href="/server/remote-sessions">
+    Führen Sie einen Headless-Server auf einem Remote-Rechner aus und verbinden Sie sich von der Desktop-App oder der CLI aus.
+  </Card>
+  <Card title="MCP servers" icon="plug" href="/extending/mcp-servers">
+    Fügen Sie Ihren Agents externe Tools und APIs über das Model Context Protocol hinzu.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Erweitern Sie Bolt mit benutzerdefinierten Providern, Auth-Methoden und Workspace-Adaptern.
+  </Card>
+  <Card title="GitHub integration" icon="github" href="/server/github-actions">
+    Automatisieren Sie PRs, Commit-Nachrichten und Code-Reviews aus der Desktop-App oder der CI.
+  </Card>
+</CardGroup>

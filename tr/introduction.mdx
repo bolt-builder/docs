@@ -1,0 +1,107 @@
+---
+title: "Bolt'a Giriş: açık kaynaklı terminal AI ajanı"
+sidebarTitle: "Giriş"
+description: "Bolt ile tanışın: on ajan, kalıcı oturumlar, proje belleği, MCP, 75+ LLM sağlayıcısı, TUI ve masaüstü uygulaması içeren açık kaynaklı bir terminal AI kodlama ajanı."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Terminaliniz, artık içinde tam bir AI mühendislik ekibiyle.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Web sitesi</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt; [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) ve [SolidJS](https://www.solidjs.com) üzerine kurulmuş terminal öncelikli bir AI kodlama ajanıdır. Herhangi bir projeye yöneltin ve bağlamı otomatik olarak alsın: kodunuzu keşfeder, kurallarınızı izler, kabuk komutlarını yürütür, dosyaları düzenler, testleri çalıştırır ve değişiklikleri teslim eder.
+
+On yerleşik ajan (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) artı `@general` ve `@explore` alt ajanları tüm mühendislik döngüsünü kapsar. Oturumlar kalıcıdır: istediğiniz zaman ayrılabilir, yeniden bağlanabilir (uzak bir sunucuya bile), çatallayabilir, paylaşabilir, dışa aktarabilir ve içe aktarabilirsiniz. Proje belleği ajanın oturumlar arasında öğrendiklerini kalıcılaştırır. MCP sunucuları (OAuth ile), eklentiler, özel ajanlar ve özel araçlar aracılığıyla genişletilebilir.
+
+Bolt, PolyForm Noncommercial 1.0.0 lisansı altında açık kaynaklıdır.
+
+## Neden Bolt?
+
+Bolt, geliştiricilerin gerçekten çalıştığı şekilde tasarlanmıştır: terminalde, birden çok oturum arasında, gerçek kod tabanlarında. Onu ayıran şeyler:
+
+- **Terminal öncelikli TUI.** [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) ve [SolidJS](https://www.solidjs.com) ile inşa edilmiş hızlı, klavyeyle sürülen bir arabirim. Yerel hissettirir çünkü yereldir.
+- **Bütün bir ajan ekibi.** On uzmanlaşmış ajan — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` ve `perf` — artı araştırma ve çok adımlı devretme için alt ajanlar. `Tab` ile aralarında geçiş yapın.
+- **Terk edip yeniden katılabileceğiniz oturumlar.** Bir oturumdan ayrılın ve daha sonra, hatta uzak bir sunucuda bile bağlanın. Çalışmayı istediğiniz zaman çatallayın, paylaşın, dışa aktarın ve içe aktarın. Oturumlar SQLite'ta saklanır ve `bolt db` ile tamamen incelenebilir.
+- **Tasarımı gereği genişletilebilir.** Tam OAuth desteği olan MCP sunucuları, bir eklenti sistemi, GitHub entegrasyonu, yerleşik bir API sunucusu ve bir web arayüzü.
+- **Masaüstü uygulaması.** Aynı motor, çok pencereli, çok sekmeli bir masaüstü deneyiminde paketlenmiş — entegre terminal, dosya ağacı, komut paleti, 28 arayüz dili ve otomatik güncellemelerle.
+
+## Yerleşik ajanlar
+
+Bolt on uzmanlaşmış ajanla gelir. Her ajan, amacına uygun tanımlı bir dosya sistemi erişim düzeyine sahiptir.
+
+| Ajan | Erişim | Açıklama |
+| --- | --- | --- |
+| `code` | Full | Varsayılan: kod okur, yazar ve çalıştırır |
+| `plan` | Read | Kod tabanını keşfeder ve dosyaları değiştirmeden bir plan üretir |
+| `ask` | Read | Sorular ve araştırma — dosya düzenlemesi yok |
+| `code-review` | Read | Değişiklikleri doğruluk, stil ve güvenlik açısından inceler |
+| `debug` | Full | Başarısız testler, çökmeler ve mantık hatalarını ayıklar |
+| `refactor` | Full | Her adımda test doğrulamasıyla güvenli yeniden düzenleme |
+| `docs` | Edit | Dokümantasyon ve yorumları yazar ve günceller |
+| `security` | Read | Güvenlik denetimi: güvenlik açıkları, sırlar, desenler |
+| `migrate` | Full | Çerçeve yükseltmeleri ve bağımlılık göçleri |
+| `perf` | Full | Performans analizi ve optimizasyon |
+
+Kendi ajanlarınızı Markdown dosyaları olarak da tanımlayabilir veya `bolt agent create` ile üretebilirsiniz.
+
+## Masaüstü uygulaması
+
+Bolt ayrıca çok pencereli ve çok sekmeli oturum yönetimi, ek ve pano görüntü yapıştırma desteğine sahip komut oluşturucu, entegre terminal ve dosya ağacı, komut paleti, kısayol tuşları, modeller, sağlayıcılar ve sunucular için tam ayarlar, yerel bildirimler, derin bağlantılar, Windows'ta WSL entegrasyonu ve geliştirme, beta ve üretim kanalları arasında otomatik güncellemelere sahip bağımsız bir masaüstü uygulaması olarak da sunulur.
+
+Masaüstü uygulamasını [sürümler sayfasından](https://github.com/Bolt-builder/bolt-cli/releases) indirin veya macOS'ta Gatekeeper detourı olmadan tek satırda kurun:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Belgeleri keşfedin
+
+<CardGroup cols={2}>
+  <Card title="Kurulum" icon="download" href="/installation">
+    Bolt'u macOS, Linux ve Windows üzerine curl, npm veya sistem paket yöneticinizle kurun.
+  </Card>
+
+  <Card title="Hızlı Başlangıç" icon="rocket" href="/quickstart">
+    TUI'yi açın, ilk komutunuzu çalıştırın ve bir dakikadan kısa sürede AI tarafından üretilmiş bir commit teslim edin.
+  </Card>
+
+  <Card title="Ajanlar" icon="users" href="/concepts/agents">
+    On yerleşik ajan artı alt ajanlar. Her birinin ne yaptığını ve kendinizinkini nasıl yazacağınızı öğrenin.
+  </Card>
+
+  <Card title="Proje belleği" icon="brain" href="/concepts/project-memory">
+    Bolt'un projenizi oturumlar arasında nasıl hatırladığı ve neyin yakalandığını nasıl kontrol edeceğiniz.
+  </Card>
+
+  <Card title="MCP sunucuları" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol aracılığıyla Bolt'a harici araçları ve veri kaynaklarını bağlayın.
+  </Card>
+
+  <Card title="Başsız sunucu" icon="server" href="/server/headless-server">
+    `bolt serve` çalıştırın, herhangi bir makineden bir TUI bağlayın ve Bolt'u API'den sürün.
+  </Card>
+</CardGroup>

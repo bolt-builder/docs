@@ -1,0 +1,31 @@
+---
+title: "Boltin TUI-kauttaviivakomennot"
+sidebarTitle: "Kauttaviivakomennot"
+description: "Kauttaviivakomennot, joita voit suorittaa Bolt-TUI:n sisällä — /memory, /plan, /todos, /btw — ja miten ne muuttavat nykyisen istunnon käyttäytymistä."
+---
+
+Kauttaviivakomennot kirjoitetaan TUI:n kehotteeseen ja muuttavat sitä, miten nykyinen istunto käyttäytyy. Ne eivät lähetä mitään mallille; ne suoritetaan paikallisesti itse Boltia vasten.
+
+## Viite
+
+| Komento | Mitä se tekee |
+| --- | --- |
+| `/memory` | Näytä projektin muistin tila tälle istunnolle. |
+| \`/memory use on | off\` | Lukeeko tämä istunto [projektimuistista](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Kirjoittaako tämä istunto takaisin projektimuistiin, kun vuoro sulkeutuu. |
+| `/plan` | Vaihda nykyinen istunto suunnittelutilaan (vain luku, tuottaa suunnitelman). |
+| `/todos` | Näytä agentin nykyinen strukturoitu tehtäväluettelo. |
+| `/btw` | Syötä band-out-of-huomautus ("muuten..."), jonka agentti näkee seuraavalla vuorollaan käynnistämättä täyttä vastausta. |
+
+<Tip>
+  Kauttaviivakomennot ovat istuntokohtaisia. Tehdäksesi preferenssistä kestävän aseta se tiedostoon `.bolt/bolt.jsonc` sen sijaan. Katso [Konfigurointi](/concepts/configuration).
+</Tip>
+
+## Omien lisääminen
+
+Mukautettuja kauttaviivakomentoja voivat tuoda [laajennukset](/extending/plugins) ja tiedostot hakemistossa `.opencode/command/`. Jokainen komento on Markdown-tiedosto, jonka frontmatter kuvaa laukaisun ja käyttäytymisen.
+
+## Liittyvät
+
+- [Näppäinsidokset](/tui/keybinds) — TUI:n näppäimistöoikotiet.
+- [Projektimuisti](/concepts/project-memory) — mitä `/memory` vaihtaa.

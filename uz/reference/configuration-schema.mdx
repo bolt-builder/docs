@@ -1,0 +1,192 @@
+---
+title: "Bolt konfiguratsiya fayl ma'lumotnomasi"
+sidebarTitle: "Konfiguratsiya sxemasi"
+description: "Bolt konfiguratsiya fayl sxemasi uchun to'liq ma'lumotnoma — joylashuvlar, barcha top-level maydonlar, MCP server turlari, provayder override'lari va to'liq misol."
+---
+
+Bolt loyiha va global konfiguratsiya uchun Comments'li JSON (`.jsonc`) faylidan foydalanadi. Sxema versiyalangan va `https://opencode.ai/config.json` da nashr etilgan, muharrirlar undan avtoto'ldirish va tekshirish uchun foydalanishi mumkin.
+
+## Konfiguratsiya fayli joylari
+
+Bolt ikki joydan konfiguratsiyani birlashtiradi. Bir xil kalit ikkalasida ham paydo bo'lganda, loyiha darajasidagi sozlamalar global sozlamalardan ustun keladi.
+
+| Qamrov | Yo'l |
+|---|---|
+| **Loyiha darajasida** | Loyihangiz ildizidagi `.bolt/bolt.jsonc` (yoki `.bolt/bolt.json`) |
+| **Global** | OS konfiguratsiya katalogingizdagi `bolt.jsonc` (yoki `bolt.json`) |
+
+OS konfiguratsiya katalogi:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt shuningdek bir xil joylardagi eski `opencode.jsonc` / `opencode.json` fayllarini o'qiydi. Yangi loyihalar `bolt.jsonc` nomlash konvensiyasidan foydalanishi kerak, u eski fayl nomlaridan ustun keladi.
+</Note>
+
+Bolt birinchi ishga tushirishda `$schema` qatori bilan minimal global konfiguratsiya faylini yaratadi va shu katalogda TUI ni birinchi marta ochganingizda loyiha ildizingizda `.bolt/bolt.jsonc` ni yaratadi.
+
+## Sxema maydonlari
+
+<ParamField body="$schema" type="string">
+  Bu konfiguratsiya fayli uchun JSON sxemaga ishora qiluvchi URL. JSON Schema'ni qo'llab-quvvatlaydigan muharrirlarda avtoto'ldirish va inline tekshirishni yoqadi (VS Code, Zed, JetBrains IDE'lari va h.k.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  `provider/model` sifatida ifodalangan barcha sessiyalar uchun standart model. Buni `bolt run --model` bilan yoki TUI model tanlagichida har bir sessiya uchun override qilish mumkin.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Sozlangan provayderlaringiz uchun barcha mavjud `provider/model` satrlarini ko'rish uchun `bolt models` ni ishga tushiring.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Provayderga xos hisob ma'lumotlari va sozlamalar override'lari. Har bir kalit — provayder ID (masalan, `anthropic`, `openai`, `google`). Eng keng tarqalgan foydalanish — kalit hech qachon plaintext'da saqlanmasligi uchun environment variable havolasi orqali API kalitini o'rnatish.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  `${` bilan boshlanadigan va `}` bilan tugaydigan qiymatlar environment variable havolalari sifatida qaraladi va runtime da kengaytiriladi.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Siz tanlagan nom bilan kalitlangan MCP server konfiguratsiyalari. Bolt ikki turdagi serverni qo'llab-quvvatlaydi:
+
+  **Remote server** — HTTP/SSE orqali, ixtiyoriy OAuth bilan ulanadi:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Maydon | Turi | Tavsif |
+  |---|---|---|
+  | `type` | `"remote"` | Buni remote HTTP server sifatida belgilaydi |
+  | `url` | string | MCP endpoint uchun to'liq URL |
+  | `oauth` | object \| `false` | OAuth konfiguratsiya obyekti (ixtiyoriy `clientId`, `clientSecret`, `scope`, `redirectUri` bilan). OAuth avtomatik aniqlashni o'chirish uchun `false` ga o'rnating. |
+  | `headers` | object | Har bir so'rov bilan yuboriladigan HTTP header'lar (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Bu serverni ishga tushirishda yoqish yoki o'chirish |
+  | `timeout` | number | Millisekundlarda so'rov timeout (standart: 5000) |
+
+  **Mahalliy server** — subprocess'ni stdio orqali spawn qiladi:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Maydon | Turi | Tavsif |
+  |---|---|---|
+  | `type` | `"local"` | Buni mahalliy stdio server sifatida belgilaydi |
+  | `command` | string[] | Spawn qilish uchun buyruq va barcha argumentlar |
+  | `cwd` | string | Server jarayoni uchun ish katalogi (nisbiy yo'llar workspace katalogidan hal qilinadi) |
+  | `environment` | object | Subprocess'ga uzatiladigan qo'shimcha environment variable'lar |
+  | `enabled` | boolean | Bu serverni ishga tushirishda yoqish yoki o'chirish |
+  | `timeout` | number | Millisekundlarda so'rov timeout (standart: 5000) |
+
+  Interaktiv sehrgar uchun `bolt mcp add` dan yoki joriy server statusini tekshirish uchun `bolt mcp list` dan foydalaning.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Bu loyihadagi yoki global tarzda har bir sessiyaga qo'shiladigan qo'shimcha system ko'rsatmalari. Bir nechta konfiguratsiya fayllaridan olingan ko'rsatmalar birlashtiriladi (deduplikatsiya qilinadi). Har bir agent rioya qilishi kerak bo'lgan loyihaga xos konvensiyalar, uslub qoidalari yoki cheklovlarni kiritish uchun foydalaning.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Yuklaniladigan plagin speclari. Har bir yozuv — npm paket nomi, mahalliy fayl yo'li yoki URL. Plaginlar TUI'ni kengaytirishi, slash-buyruqlar qo'shishi yoki qo'shimcha provayderlarni ro'yxatga olishi mumkin. Plaginni o'rnatish va uni ushbu massivga avtomatik qo'shish uchun `bolt plugin install <spec>` dan foydalaning.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## To'liq misol
+
+Quyidagi `.bolt/bolt.jsonc` haqiqiy loyiha konfiguratsiyasini ko'rsatadi:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Bu loyihadagi barcha sessiyalar uchun standart model
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provayder hisob ma'lumotlari — kalitlarni hech qachon hardcode qilmang; env var havolalaridan foydalaning
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // Bu loyihada mavjud MCP serverlari
+  "mcp": {
+    // OAuth bilan remote server
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Mahalliy stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // Har bir sessiyaga kiritiladigan system ko'rsatmalari
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Yuklaniladigan plaginlar
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Barcha fayllar birlashtirilgandan keyin to'liq hal qilingan konfiguratsiyani ko'rish uchun `bolt debug config` ni ishga tushiring. Bu loyiha darajasidagi va global konfiguratsiyalaringiz to'g'ri birlashayotganini tasdiqlashning eng tez yo'li.
+</Tip>

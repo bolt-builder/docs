@@ -1,0 +1,78 @@
+---
+title: "Bolt: MI kodēšanas aģents jūsu terminālī"
+sidebarTitle: "Sākums"
+description: "Bolt ir terminālim primāri paredzēts MI kodēšanas aģents ar desmit specializētiem aģentiem, noturīgām sesijām, MCP atbalstu un darbvirsmas lietotni — darbināts ar jebkuru LLM sniedzēju."
+---
+
+Bolt ievieto pilnu MI inženieru komandu tieši jūsu terminālī. Tas tiek piegādāts kā ātrs, ar tastatūru vadāms TUI un kā vietējā darbvirsmas lietotne, abi balstīti uz vienu un to pašu dzinēju: desmit specializēti aģenti, noturīgas un ilgstošas sesijas, MCP serveru pārvaldība ar OAuth, spraudņu sistēma un atbalsts katram lielākajam LLM sniedzējam.
+
+<CardGroup cols={2}>
+  <Card title="Instalēšana" icon="download" href="/installation">
+    Instalējiet Bolt sekundēs, izmantojot curl, npm, bun vai savu iecienītāko pakotņu pārvaldnieku.
+  </Card>
+  <Card title="Ātrā palaišana" icon="rocket" href="/quickstart">
+    Palaidiet savu pirmo MI kodēšanas sesiju mazāk nekā minūtē.
+  </Card>
+  <Card title="Aģenti" icon="robot" href="/concepts/agents">
+    Iepazīstiet desmit iebūvētos aģentus: code, plan, ask, review, debug, refactor, docs, security, migrate un perf.
+  </Card>
+  <Card title="Komandu atsauce" icon="terminal" href="/reference/commands">
+    Katra CLI komanda, apakškomanda un karogs pilnībā dokumentēti.
+  </Card>
+</CardGroup>
+
+## Ko Bolt dara
+
+Bolt lasa jūsu koda bāzi, saprot, ko jūs veidojat, un piegādā kodu kopā ar jums — terminālī vai kā darbvirsmas lietotni. Katra sesija ir noturīga: atvienojieties, pievienojieties no citas iekārtas, dakšojiet sarunas atzaru, dalieties ar saiti vai eksportējiet notīrītu norakstu.
+
+<CardGroup cols={3}>
+  <Card title="Sesijas" icon="clock-rotate-left" href="/concepts/sessions">
+    Noturīgas, dakšojamas sesijas glabātas lokālā SQLite.
+  </Card>
+  <Card title="Sniedzēji un modeļi" icon="microchip" href="/concepts/providers-and-models">
+    Izmantojiet savu API atslēgu jebkuram lielākajam LLM sniedzējam.
+  </Card>
+  <Card title="Konfigurācija" icon="sliders" href="/concepts/configuration">
+    Katram projektam savs `.bolt/bolt.jsonc` ar pilnu shēmas atbalstu.
+  </Card>
+  <Card title="MCP serveri" icon="plug" href="/extending/mcp-servers">
+    Pievienojiet rīkus, izmantojot Model Context Protocol, ieskaitot OAuth plūsmas.
+  </Card>
+  <Card title="Spraudņi" icon="puzzle-piece" href="/extending/plugins">
+    Paplašiniet Bolt ar pielāgotiem sniedzējiem, rīkiem un autentifikācijas metodēm.
+  </Card>
+  <Card title="GitHub integrācija" icon="github" href="/server/github-actions">
+    Ar MI darbinātas commit ziņas, koda pārskati un GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Sāciet darbu
+
+<Steps>
+  <Step title="Instalējiet Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Vai instalējiet ar npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Atveriet savu projektu">
+    Dodieties uz jebkuru projekta direktoriju un palaidiet TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Konfigurējiet sniedzēju">
+    Pirmajā palaišanas reizē Bolt jums lūgs pievienot LLM sniedzēju. Jūs varat arī palaist:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Sāciet kodēt ar MI">
+    Ierakstiet savu uzvedni TUI kājenē, nospiediet Enter un ļaujiet Bolt aģentiem strādāt. Pārslēdziet aģentus ar `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Izmantojiet `bolt run "explain this codebase"`, lai iegūtu ātru, neinteraktīvu atbildi, neatverot pilnu TUI.
+</Tip>

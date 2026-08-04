@@ -1,0 +1,52 @@
+---
+title: "Bolt'ni Headless Server sifatida ishga tushiring"
+sidebarTitle: "Headless Server"
+description: "bolt serve to'liq Bolt runtime'ni HTTP orqali ochib beradi, shuning uchun har qanday TUI, web UI, muharrir integratsiyasi yoki skript unga mahalliy yoki tarmoq bo'ylab biriktirilishi mumkin."
+---
+
+`bolt serve` HTTP orqali to'liq dvigatel'ni ochib beruvchi headless Bolt serverni ishga tushiradi: sessiyalar, agentlar, asboblar, provayder kirish, MCP va streaming voqealar. Bolt interaktiv tarzda qila oladigan har qanday narsani, u API orqali ham qila oladi.
+
+## Serverni boshlash
+
+```bash
+bolt serve                              # faqat localhost, tasodifiy port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # mahalliy tarmoqda e'lon qilish
+```
+
+<Warning>
+  `0.0.0.0` ga bog'lash Bolt'ni tarmog'ingizda ochib beradi. Buni qilishdan oldin har doim `BOLT_SERVER_USERNAME` va `BOLT_SERVER_PASSWORD` ni o'rnating.
+</Warning>
+
+## TUI biriktirish
+
+Serverga yetib bo'ladigan har qanday mashinadan:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Yoki remote serverga qarshi bir marta promptni ishga tushiring:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+Hisob ma'lumotlarini environment variable'lar orqali o'rnating ([Env Variables](/reference/environment-variables) ga qarang):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Barcha mijozlar mos keladigan hisob ma'lumotlarini yuborishi kerak.
+
+## Aloqador
+
+- [Remote Sessions](/server/remote-sessions) — biriktirish, mDNS discovery va bo'lishilgan serverlar.
+- [Web UI](/server/web-ui) — brauzer front-end.
+- [ACP](/server/acp) — Zed va boshqa muharrirlardan Bolt'ni boshqarish.

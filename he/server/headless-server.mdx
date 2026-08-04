@@ -1,0 +1,52 @@
+---
+title: "הרץ את Bolt כשרת ללא ראש"
+sidebarTitle: "שרת ללא ראש"
+description: "bolt serve חושף זמן ריצה מלא של Bolt על גבי HTTP כדי שכל TUI, ממשק ווב, אינטגרציית עורך או סקריפט יוכלו להתחבר אליו מקומית או ברשת."
+---
+
+`bolt serve` מריץ שרת Bolt ללא ראש שחושף את המנוע המלא על גבי HTTP: סשנים, סוכנים, כלים, גישת ספק, MCP ואירועי הזרמה. כל דבר ש-Bolt יכול לעשות אינטראקטיבית, הוא יכול לעשות דרך ה-API.
+
+## הפעל שרת
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  חיבור ל-`0.0.0.0` חושף את Bolt ברשת שלך. תמיד הגדר `BOLT_SERVER_USERNAME` ו-`BOLT_SERVER_PASSWORD` לפני שאתה עושה זאת.
+</Warning>
+
+## חבר TUI
+
+מכל מכונה שיכולה להגיע לשרת:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+או הרץ הנחיה חד-פעמית מול שרת מרוחק:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## אימות בסיסי
+
+הגדר אישורים דרך משתני סביבה (ראה [משתני סביבה](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+כל הלקוחות חייבים לשלוח אישורים תואמים.
+
+## קשור
+
+- [סשנים מרוחקים](/server/remote-sessions) — חיבור, גילוי mDNS ושרתים משותפים.
+- [ממשק ווב](/server/web-ui) — ה-front-end של הדפדפן.
+- [ACP](/server/acp) — הפעלת Bolt מ-Zed ועורכים אחרים.

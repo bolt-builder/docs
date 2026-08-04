@@ -1,0 +1,78 @@
+---
+title: "Bolt: agent de codificació d'IA per al teu terminal"
+sidebarTitle: "Inici"
+description: "Bolt és un agent de codificació d'IA amb prioritat al terminal amb deu agents especialitzats, sessions persistents, suport MCP i una aplicació d'escriptori—alimentat per qualsevol proveïdor LLM."
+---
+
+Bolt posa un equip complet d'enginyeria d'IA directament al teu terminal. Es distribueix com un TUI ràpid impulsat per teclat i una aplicació d'escriptori nativa, tots dos recolzats pel mateix motor: deu agents especialitzats, sessions duradores persistents, gestió de servidors MCP amb OAuth, un sistema de plugins i suport per a cada proveïdor d'LLM important.
+
+<CardGroup cols={2}>
+  <Card title="Instal·lació" icon="download" href="/installation">
+    Instal·la Bolt en segons via curl, npm, bun o el teu gestor de paquets preferit.
+  </Card>
+  <Card title="Inici ràpid" icon="rocket" href="/quickstart">
+    Executa la teva primera sessió de codificació d'IA en menys d'un minut.
+  </Card>
+  <Card title="Agents" icon="robot" href="/concepts/agents">
+    Coneix els deu agents integrats: code, plan, ask, review, debug, refactor, docs, security, migrate i perf.
+  </Card>
+  <Card title="Referència d'ordres" icon="terminal" href="/reference/commands">
+    Totes les ordres CLI, subordres i flags documentats en detall.
+  </Card>
+</CardGroup>
+
+## Què fa Bolt
+
+Bolt llegeix el teu codi base, entén el que estàs construint i envia codi amb tu — al terminal o com a aplicació d'escriptori. Cada sessió és duradora: desconnecta't, torna a connectar-te des d'una altra màquina, bifurca una branca de la conversa, comparteix un enllaç o exporta una transcripció sanejada.
+
+<CardGroup cols={3}>
+  <Card title="Sessions" icon="clock-rotate-left" href="/concepts/sessions">
+    Sessions persistents i bifurcables emmagatzemades en SQLite local.
+  </Card>
+  <Card title="Proveïdors i models" icon="microchip" href="/concepts/providers-and-models">
+    Porta la teva pròpia clau API per a qualsevol proveïdor d'LLM important.
+  </Card>
+  <Card title="Configuració" icon="sliders" href="/concepts/configuration">
+    `.bolt/bolt.jsonc` per projecte amb suport complet d'esquema.
+  </Card>
+  <Card title="Servidors MCP" icon="plug" href="/extending/mcp-servers">
+    Afegeix eines via Model Context Protocol, inclosos els fluxos OAuth.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Amplia Bolt amb proveïdors, eines i mètodes d'autenticació personalitzats.
+  </Card>
+  <Card title="Integració amb GitHub" icon="github" href="/server/github-actions">
+    Missatges de commit amb IA, revisió de codi i GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Posa'ns en marxa
+
+<Steps>
+  <Step title="Instal·la Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    O instal·la via npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Obre el teu projecte">
+    Navega a qualsevol directori de projecte i llança el TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Configura un proveïdor">
+    Al primer llançament, Bolt et demana afegir un proveïdor d'LLM. També pots executar:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Comença a codificar amb IA">
+    Escriu el teu prompt al peu del TUI, prem Enter i deixa que els agents de Bolt es posin a treballar. Canvia d'agent amb `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Utilitza `bolt run "explain this codebase"` per obtenir una resposta ràpida no interactiva sense obrir el TUI complet.
+</Tip>

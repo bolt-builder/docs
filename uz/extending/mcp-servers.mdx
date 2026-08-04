@@ -1,0 +1,215 @@
+---
+title: "MCP serverlari bilan Bolt'ga asboblar qo'shish"
+sidebarTitle: "MCP serverlari"
+description: "Model Context Protocol yordamida Bolt'ga tashqi asboblar va resurslarni ulang. CLI'dan MCP serverlarini qo'shing, autentifikatsiya qiling va debug qiling."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) — bu AI agentlariga umumiy interfeys orqali tashqi asboblar va ma'lumot manbalari bilan aloqa qilish imkonini beruvchi ochiq standart. Bolt agentlar nima qila olishlarini kengaytirish uchun MCP dan foydalanadi — ulangan MCP server ma'lumotlar bazasi so'rov asbobidan tortib to to'liq web-qidiruv API'gacha bo'lgan har qanday narsani ochishi mumkin. Bolt to'liq hayot davrini boshqaradi: serverlarni qo'shish, OAuth oqimlarini ishga tushirish, tokenlarni yangilash va ulanish qobiliyatini tekshirish.
+
+## Server turlari
+
+Bolt ikki turdagi MCP serverlarini qo'llab-quvvatlaydi.
+
+| Tur | Transport | Tavsif |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Tarmoq orqali erishishingiz mumkin bo'lgan URL'da ishlaydigan server |
+| `local` | stdio | Bolt bola jarayoni sifatida spawn qiladigan mahalliy buyruq |
+
+Remote serverlar qutidan OAuth autentifikatsiyasini qo'llab-quvvatlaydi. Bolt token olish, saqlash va avtomatik yangilashni boshqaradi — siz hech qachon tokenlarni qo'lda boshqarmaysiz.
+
+---
+
+## Buyruqlar
+
+### `bolt mcp add`
+
+Yangi MCP serverni interaktiv yoki bir marta qo'shing.
+
+**Interaktiv** — nom, qamrov (loyiha yoki global), tur, URL yoki buyruq va serverning OAuth ishlatishini so'rab beruvchi bosqichma-bosqich sehrgar orqali o'tish uchun `bolt mcp add` ni argumentlarsiz ishga tushiring.
+
+**Interaktiv bo'lmagan** — nom, shuningdek remote server uchun `--url` yoki mahalliy uchun `--` dan keyin buyruqni bering:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**`bolt mcp add` uchun bayroqlar**
+
+| Bayroq | Tavsif |
+|------|-------------|
+| `--url <url>` | Remote MCP server URL |
+| `--header <KEY=VALUE>` | Remote serverga yuborilishi kerak bo'lgan HTTP header (takrorlanadi) |
+| `--env <KEY=VALUE>` | Mahalliy server uchun environment variable (takrorlanadi) |
+
+---
+
+### `bolt mcp list`
+
+Har bir sozlangan MCP serverni ulanish va autentifikatsiya statusi bilan ro'yxatga oling.
+
+```bash
+bolt mcp list
+```
+
+Har bir yozuv status belgichini ko'rsatadi:
+
+| Belgi | Ma'nosi |
+|------|---------|
+| `✓` | Ulangan (va OAuth ishlatilsa autentifikatsiya qilingan) |
+| `⚠` | Autentifikatsiya kerak yoki hisob ma'lumotlari muddati o'tgan |
+| `✗` | Ulanishda muvaffaqiyatsizlik yoki mijoz ro'yxatga olish talab qilinadi |
+| `○` | Hali initsializatsiya qilinmagan yoki o'chirilgan |
+
+---
+
+### `bolt mcp auth <name>`
+
+OAuth yoqilgan remote MCP server bilan autentifikatsiya qiling. Agar nomni tashlab qo'ysangiz, Bolt joriy auth statusi (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`) bilan barcha OAuth-qobiliyatli serverlarni ro'yxatga oluvchi interaktiv tanlagichni ko'rsatadi.
+
+```bash
+# Muayyan serverni autentifikatsiya qilish
+bolt mcp auth my-server
+
+# OAuth-qobiliyatli serverlar ro'yxatidan tanlash
+bolt mcp auth
+```
+
+Bolt brauzeringizni provayderning avtorizatsiya URL'ida ochadi va callback'ni kutadi — to'liq OAuth qo'l silkitish, jumladan zarur bo'lganda dinamik mijoz ro'yxatga olish, avtomatik ravishda sodir bo'ladi.
+
+<Note>
+  Bolt to'liq OAuth oqimini, jumladan token saqlash va avtomatik token yangilashni boshqaradi. Tokenlarni nusxalash yoki muddat tugashini qo'lda boshqarish kerak emas. Agar server oldindan ro'yxatga olingan mijoz ID ni talab qilsa, `.bolt/bolt.jsonc` dagi server konfiguratsiyasi yozuviga `oauth.clientId` (va ixtiyoriy ravishda `oauth.clientSecret`) ni qo'shing.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Server uchun saqlangan OAuth hisob ma'lumotlarini olib tashlang. Agar nomni tashlab qo'ysangiz, Bolt sizdan saqlangan tokenlari bo'lgan serverlar ro'yxatidan tanlashni so'raydi.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Remote serverning ulanish qobiliyatini tekshiring va to'liq sessiyani boshlashsiz uning OAuth holatini tekshiring. Server `✗ failed` yoki `⚠ needs authentication` ni ko'rsatganda birinchi navbatda tortish kerak bo'lgan asbob.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` quyidagilarni hisobot beradi:
+- Server URL va joriy auth statusi
+- Access-token tafsilotlari (maskalangan) va muddati o'tish vaqti
+- Refresh token mavjudmi
+- Serverdan xom HTTP javob kodi
+- `WWW-Authenticate` header mazmuni
+- OAuth discovery probe natijasi (oqimni yakunlamasdan)
+
+---
+
+## Qo'lda konfiguratsiya
+
+CLI buyruqlarini ishlatmasdan `.bolt/bolt.jsonc` da MCP serverlarini to'g'ridan-to'g'ri qo'shishingiz yoki tahrirlashingiz mumkin. Bolt keyingi sessiya boshlanganda o'zgarishlarni oladi.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Local stdio server shunday ko'rinadi:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Remote serverga custom HTTP header'lar berish yoki OAuth'ni o'chirish uchun:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Remote MCP serverni qo'shish va autentifikatsiya qilish
+
+<Steps>
+  <Step title="Serverni qo'shing">
+    `bolt mcp add` ni ishga tushiring va so'rovlarga rioya qiling yoki interaktiv bo'lmagan shakldan foydalaning:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt yozuvni `.bolt/bolt.jsonc` (loyiha qamrovi) yoki global konfiguratsiyangizga yozadi.
+  </Step>
+
+  <Step title="Ulanish statusini tekshiring">
+    ```bash
+    bolt mcp list
+    ```
+
+    Agar server autentifikatsiya talab qilsa, uning nomi yonida `⚠ needs authentication` ni ko'rasiz.
+  </Step>
+
+  <Step title="OAuth bilan autentifikatsiya qiling">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt brauzeringizni ochadi. Kirishni tasdiqlaganingizdan so'ng, terminal autentifikatsiya muvaffaqiyatli bo'lganini tasdiqlaydi va server statusi `✓ connected (OAuth)` ga o'zgaradi.
+  </Step>
+
+  <Step title="Asboblar mavjudligini tekshiring">
+    Bolt sessiyasini boshlang. Server tomonidan ochilgan asboblar endi barcha agentlar uchun mavjud. Ularni istalgan vaqtda tekshirishingiz mumkin:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

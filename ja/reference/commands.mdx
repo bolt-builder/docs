@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI コマンドリファレンス"
+sidebarTitle: "コマンド"
+description: "TUI、run、serve、session、agent などの Bolt CLI コマンド、フラグ、引数、使用例をすべて網羅した完全なリファレンス。"
+---
+
+Bolt は豊富なサブコマンドセットを持つ単一の `bolt` バイナリを公開しています。引数なしで `bolt` を実行すると完全なターミナル UI が開きます。他のすべてのサブコマンドは以下にリストされています。いつでも `bolt <command> --help` を使ってインラインヘルプを表示できます。
+
+<Accordion title="bolt (デフォルト — TUI を起動)">
+  現在のディレクトリで対話型ターミナル UI を開きます。Bolt はプロジェクトコンテキストを自動的に発見し、設定をロードして、設定済みプロバイダに接続します。
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **グローバルフラグ** — すべてのコマンドで利用可能:
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | ログ出力を stderr に出力 |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | ログ詳細度を設定 |
+  | `--pure` | boolean | 外部プラグインをロードせずに実行 |
+  | `--help`, `-h` | boolean | ヘルプテキストを表示 |
+  | `--version`, `-v` | boolean | インストールされているバージョン番号を出力 |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  非対話モードで単一のプロンプトで Bolt を実行します。Bolt はインプロセスサーバを起動し、プロンプトをアクティブセッションに送信して、応答を stdout にストリーミングして終了します。stdin をパイプするか `--file` を渡してコンテキストを添付します。
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | 実行するスラッシュコマンド。引数はメッセージとして渡します |
+  | `--continue` | `-c` | boolean | 最新のセッションを継続 |
+  | `--session` | `-s` | string | 継続するセッション ID |
+  | `--fork` |  | boolean | 継続前にセッションをフォーク (`--continue` または `--session` が必要) |
+  | `--share` |  | boolean | 完了後にセッションを共有 |
+  | `--model` | `-m` | string | `provider/model` 形式で使用するモデル |
+  | `--best-of` |  | string | カンマ区切りの `provider/model` リスト。タスクを並列実行し、結果をランク付けし、勝者を保持 |
+  | `--agent` |  | string | 使用するエージェント (例: `code`、`ask`、`review`) |
+  | `--format` |  | `default`\|`json` | 出力形式。`json` は改行区切りの生 JSON イベントをストリーミング |
+  | `--file` | `-f` | string\[\] | コンテキストとして添付するファイル |
+  | `--title` |  | string | セッションのタイトル |
+  | `--attach` |  | string | リモート Bolt サーバに対して実行 (例: `http://localhost:4096`) |
+  | `--password` | `-p` | string | リモートサーバの Basic 認証パスワード |
+  | `--username` | `-u` | string | リモートサーバの Basic 認証ユーザ名 |
+  | `--dir` |  | string | 作業ディレクトリ。`--attach` が設定されている場合、これはリモートサーバ上のディレクトリ |
+  | `--port` |  | number | ローカルインプロセスサーバのポート (省略時はランダム) |
+  | `--variant` |  | string | 推論エフォートレベル、プロバイダ固有 (例: `high`、`max`、`minimal`) |
+  | `--thinking` |  | boolean | 出力に推論/思考ブロックを表示 |
+  | `--mini` |  | boolean | 最小の split-footer 対話型 UI を開始 (非表示) |
+  | `--interactive` | `-i` | boolean | 直接対話型 split-footer モードを強制 |
+  | `--auto` |  | boolean | 明示的に拒否されていない権限を自動承認 |
+  | `--yolo` |  | boolean | すべての権限プロンプトをスキップ (`--auto` のエイリアス、非表示) |
+  | `--dangerously-skip-permissions` |  | boolean | すべての権限チェックをスキップ (非表示) |
+  | `--demo` |  | boolean | 直接対話型のデモスラッシュコマンドを有効化 (非表示) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  完全な TUI を稼働中の Bolt サーバにアタッチします。サーバはローカルでもリモートでも構いません。完全な TUI ではなく最小 split-footer UI を使用するには `--mini` を渡してください。
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | リモートサーバのディレクトリ |
+  | `--continue` | `-c` | boolean | リモートサーバの最新セッションを継続 |
+  | `--session` | `-s` | string | 継続するセッション ID |
+  | `--fork` |  | boolean | 継続時にセッションをフォーク |
+  | `--password` | `-p` | string | Basic 認証パスワード |
+  | `--username` | `-u` | string | Basic 認証ユーザ名 |
+  | `--mini` |  | boolean | 最小対話型 UI を使用 |
+  | `--no-replay` |  | boolean | 再開時とサイズ変更後のセッション履歴リプレイを無効化 (`--mini` が必要) |
+  | `--replay-limit` |  | number | 表示リプレイを最新の N メッセージに制限 (`--mini` が必要) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  ヘッドレスの Bolt API サーバを起動します。サーバは TUI、`bolt run --attach`、`bolt attach` が接続できる REST\+SSE API を公開します。他のマシンから到達可能にするには `0.0.0.0` にバインドします — その際は必ず `BOLT_SERVER_PASSWORD` を設定してください。
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--hostname` | string | バインドするアドレス (デフォルト: `127.0.0.1`) |
+  | `--port` | number | リッスンするポート (省略時はランダム) |
+  | `--mdns` | boolean | mDNS サービスディスカバリを有効化 (ホスト名のデフォルトを `0.0.0.0` に) |
+  | `--mdns-domain` | string | mDNS サービスのカスタムドメイン名 (デフォルト: `opencode.local`) |
+  | `--cors` | string\[\] | CORS で許可する追加のドメイン |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` はデフォルトで設定されていません。設定するまで、サーバは警告をログに出力し、すべての接続を受け入れます。
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Bolt サーバを起動し、デフォルトブラウザで Web UI を即座に開きます。`bolt serve` と同じネットワークフラグを受け付けます。
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--hostname` | string | バインドするアドレス (デフォルト: `127.0.0.1`) |
+  | `--port` | number | リッスンするポート (省略時はランダム) |
+  | `--mdns` | boolean | mDNS サービスディスカバリを有効化 (ホスト名のデフォルトを `0.0.0.0` に) |
+  | `--mdns-domain` | string | mDNS サービスのカスタムドメイン名 (デフォルト: `opencode.local`) |
+  | `--cors` | string\[\] | CORS で許可する追加のドメイン |
+</Accordion>
+
+<Accordion title="bolt session">
+  ローカル SQLite データベースに保存された Bolt セッションを管理します。
+
+  **サブコマンド**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **`bolt session list` のフラグ**
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | 出力を直近 N セッションに制限 |
+  | `--format` |  | `table`\|`json` | 出力形式 (デフォルト: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  カスタムエージェントの一覧表示と作成を行います。エージェントは YAML フロントマターを持つ Markdown ファイルで、システムプロンプト、権限、モードを定義します。
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` のフラグ**
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | エージェントファイルを書き込むディレクトリパス |
+  | `--description` |  | string | エージェントの動作の自然言語による説明 |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | プライマリエージェント、サブエージェント、または両方として動作するか |
+  | `--permissions` | `--tools` | string | 許可された権限のカンマ区切りリスト (デフォルト: すべて) |
+  | `--model` | `-m` | string | `provider/model` 形式で使用するモデル |
+</Accordion>
+
+<Accordion title="bolt providers (エイリアス: auth)">
+  AI プロバイダの認証情報を対話的に管理します。認証情報は OS データディレクトリに保存されます (Linux では `~/.local/share/bolt/auth.json`、macOS では `~/Library/Application Support/bolt/auth.json`)。
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  設定されたプロバイダで利用可能なすべてのモデルを一覧表示します。
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--verbose` | boolean | 各モデルのコストメタデータ (JSON) を含める |
+  | `--refresh` | boolean | models.dev からモデルキャッシュを更新 |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Model Context Protocol (MCP) サーバを管理します。Bolt は OAuth 付きのリモート (HTTP/SSE) サーバとローカル (stdio) サーバの両方をサポートします。
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **`bolt mcp add` のフラグ**
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--url` | string | リモート MCP サーバの URL |
+  | `--env` | string\[\] | ローカルサーバの環境変数 (`KEY=VALUE`) |
+  | `--header` | string\[\] | リモートサーバの HTTP ヘッダ (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  npm から Bolt プラグインをインストールし、関連する設定ファイルを更新します。プラグインは TUI の拡張、新しいスラッシュコマンドの追加、新しいプロバイダの登録が可能です。
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | プロジェクト設定ではなくグローバル設定に追加 |
+  | `--force` | `-f` | boolean | すでに設定されているプラグインバージョンを置き換え |
+</Accordion>
+
+<Accordion title="bolt github">
+  Bolt GitHub Actions 統合を管理し、Bolt がプルリクエスト、issue、その他の GitHub イベントに応答できるようにします。
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` のフラグ**
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--event` | string | シミュレートする GitHub イベント名 (例: `pull_request`) |
+  | `--token` | string | GitHub パーソナルアクセストークン |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  `gh` CLI を使って GitHub プルリクエストをローカルブランチとしてチェックアウトし、チェックアウトしたディレクトリで Bolt を起動します。PR 説明にセッション共有リンクが含まれている場合、Bolt はそのセッションを自動的にインポートします。
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    このコマンドには [GitHub CLI (`gh`)](https://cli.github.com/) のインストールと認証が必要です。
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  AI モデルを使ってステージ済み (またはすべての追跡中の) 変更に対するコミットメッセージを生成してコミットします。モデルは最近のコミット履歴を確認してスタイルコンテキストを取得します。
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | ステージ済みだけでなく、追跡中のすべての変更をコミット |
+  | `--dry-run` |  | boolean | コミットせずに生成されたメッセージを出力 |
+  | `--model` | `-m` | string | `provider/model` 形式で使用するモデル |
+</Accordion>
+
+<Accordion title="bolt review">
+  diff に対して AI コードレビューを実行し、`0` (合格) または `1` (不合格) の終了コードで終了します。`code-review` エージェントは正確性、スタイル、セキュリティの問題について diff を検査し、`Verdict: PASS` または `Verdict: FAIL` の行を出力します。
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | ステージ済み変更のみをレビュー |
+  | `--branch` |  | string | このブランチとのマージベース以降の変更をレビュー |
+  | `--model` | `-m` | string | `provider/model` 形式で使用するモデル |
+
+  <Note>
+    終了コード: `0` = PASS、`1` = FAIL、`2` = 判定を決定できませんでした。
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  セッションを JSON として stdout にエクスポートします。アーカイブ、共有、他のツールへの入力に便利です。公開共有前にファイルパス、プロンプト、その他機密のトランスクリプト内容を編集するには `--sanitize` を渡してください。
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | エクスポート前に機密データ (ファイルパス、プロンプトテキスト、ツール I/O) を編集 |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  以前にエクスポートしたセッションをローカルデータベースにインポートします。ローカル JSON ファイルまたはセッション共有 URL のいずれかを受け付けます。
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  すべてのセッションにわたる集約されたトークン使用量とコスト統計を表示します。出力には概要テーブル、コストとトークンの内訳、モデルの使用状況、ツール使用の棒グラフが含まれます。
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--days` | number | 直近 N 日のみに制限 (デフォルト: 全期間) |
+  | `--tools` | number | ツール使用チャートに表示するツールの数 |
+  | `--models` | boolean\|number | モデル統計を表示。数値を渡すとリストの上限になる |
+  | `--project` | string | プロジェクト ID でフィルタ。空文字列は現在のプロジェクトを意味する |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Bolt アプリケーションログを出力します。ログは OS のログディレクトリに保存されます (例: `~/.local/state/bolt/opencode.log`)。
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | 出力する末尾の行数 (デフォルト: 1000) |
+  | `--follow` | `-f` | boolean | 新しいログ行をリアルタイムでストリーミング |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  ローカル SQLite セッションデータベースを直接照会または検査します。
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | クエリ結果の出力形式 (デフォルト: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  最新リリースまたは特定のバージョンに Bolt をアップグレードします。Bolt はインストール方法を自動検出し、適切なパッケージマネージャを使用します。
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | フラグ | エイリアス | 型 | 説明 |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | 使用するインストール方法 |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Bolt バイナリと関連するすべてのデータを削除します。
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  `bash`、`zsh`、または `fish` のシェル補完スクリプトを生成します。
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  トラブルシューティングと内省のためのサブコマンド集。バグレポートを提出する際や、予期しない動作を診断する際に便利です。
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  ACP (Agent Client Protocol) サーバを起動します。ACP は [Zed](https://zed.dev) などのエディタ統合が stdin/stdout 経由で Bolt と通信するために使うプロトコルです。
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | フラグ | 型 | 説明 |
+  | --- | --- | --- |
+  | `--cwd` | string | サーバの作業ディレクトリ (デフォルト: `process.cwd()`) |
+  | `--hostname` | string | バインドホスト名 (デフォルト: `127.0.0.1`) |
+  | `--port` | number | バインドポート |
+  | `--mdns` | boolean | mDNS サービスディスカバリを有効化 |
+  | `--mdns-domain` | string | mDNS サービスのカスタムドメイン名 (デフォルト: `opencode.local`) |
+  | `--cors` | string\[\] | CORS で許可する追加のドメイン |
+</Accordion>

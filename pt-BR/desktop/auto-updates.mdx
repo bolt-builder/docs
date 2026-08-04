@@ -1,0 +1,26 @@
+---
+title: "Atualizações automáticas do Bolt Desktop"
+sidebarTitle: "Atualizações automáticas"
+description: "Como o app desktop do Bolt se atualiza nos canais dev, beta e produção — e como alternar canais de atualização ou reverter para uma versão anterior."
+---
+
+O app desktop se atualiza automaticamente em background em três canais de release:
+
+| Canal | Cadência | Para quem é |
+| --- | --- | --- |
+| `prod` | Apenas releases estáveis. | Todos por padrão. |
+| `beta` | Release candidates. | Times que querem um aviso prévio do próximo estável. |
+| `dev` | Quase nightly. | Early adopters e contribuidores. |
+
+## Trocar de canal
+
+Alterne canais no painel de configurações do app. No próximo início, o app verifica no canal selecionado uma build mais recente; você também pode disparar uma verificação manualmente.
+
+## Nos bastidores
+
+As atualizações são baixadas em background e aplicadas no próximo início. Se uma atualização falhar ao aplicar, o app mantém a versão anterior e mostra um erro — não há um estado intermediário.
+
+## Relacionados
+
+- [Instalação](/desktop/install) — caminhos de instalação inicial.
+- [Recursos](/desktop/features) — o que você obtém no app desktop.

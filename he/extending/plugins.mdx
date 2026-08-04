@@ -1,0 +1,145 @@
+---
+title: "הרחב את Bolt עם תוספים"
+sidebarTitle: "תוספים"
+description: "התקן ובנה תוספי Bolt כדי להוסיף ספקי AI מותאמים אישית, שיטות אימות, כלים ומתאמי סביבת עבודה לכל פרויקט או גלובלית."
+url: "extending/plugins"
+---
+
+תוספים מאפשרים לך להרחיב את Bolt מעבר ליכולות המובנות שלו. תוסף הוא מודול Node או Bun שמייצא מניפסט תוסף של Bolt; כשהוא נטען, הוא יכול לרשום ספקי LLM חדשים, שיטות אימות מותאמות אישית, כלים נוספים ומתאמי סביבת עבודה. תוספים ניתנים להתקנה לפרויקט יחיד או להחלה גלובלית על כל העבודה שלך.
+
+## התקנת תוסף
+
+השתמש ב-`bolt plugin install` (כינוי: `bolt plug`) כדי להתקין תוסף מ-npm ולרשום אותו אוטומטית בתצורה שלך:
+
+```bash
+bolt plugin install <module>
+```
+
+### דגלים
+
+| דגל | כינוי | תיאור |
+|------|-------|-------------|
+| `--global` | `-g` | התקן לתצורה הגלובלית במקום לפרויקט הנוכחי |
+| `--force` | `-f` | החלף רשומה קיימת עבור אותו מודול |
+
+### היקף: פרויקט לעומת גלובלי
+
+כברירת מחדל, `bolt plugin install` מוסיף את התוסף ל-`.bolt/bolt.jsonc` ברמת הפרויקט. העבר `--global` כדי להוסיף אותו לתצורה שלך ברמת המשתמש כך שהוא נטען בכל פרויקט.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  הרץ `bolt --pure` (או הגדר `OPENCODE_PURE=1`) כדי להתחיל את Bolt עם כל התוספים החיצוניים מושבתים. זה שימושי לניפוי שגיאות אם תוסף גורם להתנהגות לא צפויה, מבלי להסיר אותו.
+</Note>
+
+---
+
+## התקנת תוסף שפורסם
+
+<Steps>
+  <Step title="מצא את חבילת התוסף">
+    חפש ב-npm חבילות עם `bolt-plugin` או `opencode-plugin` בשם, או עקוב אחרי קישור מתיעוד של ספק.
+  </Step>
+
+  <Step title="התקן לפרויקט שלך">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt מתקין את החבילה, קורא את המניפסט שלה כדי לזהות יעדי שרת ו-TUI, ואז כותב את הרשומה ל-`.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="ודא את התצורה">
+    פתח את `.bolt/bolt.jsonc` וודא שרשומת התוסף נוספה:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="התחל סשן">
+    ```bash
+    bolt
+    ```
+
+    Bolt טוען את התוסף בהפעלה. כל ספקים או כלים שהוא רושם זמינים מיידית.
+  </Step>
+</Steps>
+
+---
+
+## תצורת תוסף ידנית
+
+תוכל לרשום תוספים על ידי עריכת `.bolt/bolt.jsonc` ישירות. זה שימושי עבור תוספים מקומיים בפיתוח:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+נתיבים יחסיים מפוענחים משורש הפרויקט. גם נקודות כניסה של TypeScript וגם של JavaScript נתמכות.
+
+---
+
+## בניית תוסף
+
+תוספים נכתבים כנגד חבילת `@opencode-ai/plugin`, שמספקת את ממשק `Hooks` שהמודול שלך חייב לספק.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+תוסף מינימלי מייצא פונקציה שמקבלת אובייקט `PluginInput` ומחזירה אובייקט `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### סוגי hook זמינים
+
+| Hook | מטרה |
+|------|---------|
+| `auth` | רישום ספקי אימות מותאמים אישית עם מערך `methods` |
+| `event` | תגובה לאירועי סשן (הודעות, קריאות כלים, השלמות) |
+| `config` | הגבה לשינויי תצורה בזמן ריצה |
+| `dispose` | ניקוי משאבים כשהתוסף נפרק |
+
+אובייקט `PluginInput` חושף את `client` (לקוח API מסוג של Bolt), `project`, `worktree`, `directory` ו-`serverUrl` כדי שהתוסף שלך יוכל לתקשר עם השרת הרץ.
+
+---
+
+## משתני סביבה
+
+| משתנה | תיאור |
+|----------|-------------|
+| `OPENCODE_PURE` | הגדר ל-`1` כדי לרוץ ללא כל תוספים חיצוניים |

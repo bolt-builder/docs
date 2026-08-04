@@ -1,0 +1,68 @@
+---
+title: "Custom agents in Bolt"
+sidebarTitle: "Custom agents"
+description: "Definieer je eigen Bolt-agents als Markdown-bestanden — kies een model, stel het toegangsniveau in, beperk tools en voeg domeinspecifieke instructies toe."
+---
+
+Naast de tien ingebouwde agents kun je je eigen definiëren. Custom agents zijn Markdown-bestanden met een frontmatter-blok dat het model, toegangsniveau en de beschikbare tools van de agent beschrijft, plus een body die als zijn systeemprompt fungeert.
+
+## Een agent maken
+
+De snelste weg is de ingebouwde generator, die een paar vragen stelt en het bestand voor je schrijft:
+
+```bash
+bolt agent create
+```
+
+Agents leven onder `.opencode/agent/` in het project (of je globale configuratiemap voor persoonlijke agents). Elke agent is een enkel `.md`-bestand waarvan de bestandsnaam de naam van de agent wordt.
+
+## Anatomie van een agent-bestand
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Veelvoorkomende frontmatter-velden:
+
+| Veld | Doel |
+| --- | --- |
+| `name` | Agent-naam gebruikt met `--agent`. |
+| `description` | Eén-regelige samenvatting die in lijsten wordt getoond. |
+| `model` | Standaardmodel in `provider/model` formaat. |
+| `access` | `full`, `edit` of `read` (zie [Permissies](/concepts/permissions)). |
+| `tools` | Optionele allow-list die beperkt welke [tools](/concepts/tools) de agent mag aanroepen. |
+
+## Een custom agent gebruiken
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+In de TUI druk je op `Tab` om door de agents te bladeren; custom agents verschijnen naast de ingebouwde.
+
+## Subagents
+
+Agents kunnen delegeren aan subagents via de `task`-tool. Bolt levert `@general` en `@explore`, en elke custom agent waarvan het bestand onder `.opencode/agent/` leeft kan ook als subagent op naam worden aangeroepen.
+
+## Gerelateerd
+
+- [Agents](/concepts/agents) — de ingebouwde agent-line-up.
+- [Tools](/concepts/tools) — wat je kunt toevoegen aan `tools:`.
+- [Custom Tools](/extending/custom-tools) — bouw de tool die de agent gaat aanroepen.

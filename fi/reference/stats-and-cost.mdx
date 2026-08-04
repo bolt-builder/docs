@@ -1,0 +1,32 @@
+---
+title: "Tilastot ja kustannukset (bolt stats)"
+sidebarTitle: "Tilastot ja kustannukset"
+description: "bolt stats aggregoi tokenien käytön ja kustannukset istunnoissasi, jotta näet, minne kulutuksesi menee, ja voit virittää malleja tai agentteja sen mukaisesti."
+---
+
+`bolt stats` aggregoi tokeneiden lukumäärät ja kustannukset paikallisessa istuntotietokannassa. Koska jokainen työkalukutsu tallennetaan (katso [Paikallinen tietokanta](/reference/local-database)), luvut ovat tarkkoja Boltin ohjaamiin LLM-kutsuihin.
+
+## Peruskäyttö
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Mitä se näyttää
+
+- Kokonaissyöte-, tuloste- ja välimuistitokenit.
+- Arvioidut kustannukset per tarjoaja (käyttäen tarjoajien hinnoittelutaulukkoja ajon aikaan).
+- Malli-, agentti- ja päiväkohtaiset erittelyt lipuista riippuen.
+
+## Kustannusten vähentäminen
+
+- Käytä `--variant minimal` tai `--variant low` päättelyvaltaisilla malleilla. Katso [Tarjoajat ja mallit](/concepts/providers-and-models).
+- Suosittele `ask`- tai `plan`-agenttia tutkimukseen; ne ovat vain luku ja välttävät työkaluvaltaisia silmukoita.
+- Vaihda pienempään malliin komennolla `bolt models` tehtäviin, jotka eivät tarvitse eturivin kykyjä.
+
+## Liittyvät
+
+- [Tarjoajat ja mallit](/concepts/providers-and-models) — valitse ja viritä mallit, joita `stats` mittaa.
+- [Vianmääritys](/reference/troubleshooting) — mitä tehdä yllätyslaskulle.

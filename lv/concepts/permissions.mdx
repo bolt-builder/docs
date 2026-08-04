@@ -1,0 +1,53 @@
+---
+title: "Atļaujas: kontrolējiet, ko Bolt aģenti var darīt"
+sidebarTitle: "Atļaujas"
+description: "Kā Bolt katram aģentam paredzētie piekļuves līmeņi, atļauju uzvednes un konfigurācijas līmeņa atļaušanas/liegšanas noteikumi neļauj aģentam darīt to, ko jūs neapstiprinājāt."
+---
+
+Bolt aģenti var lasīt failus, rakstīt failus un izpildīt čaulas komandas. Šī spēja tiek ierobežota ar diviem slāņiem: katram aģentam paredzētu piekļuves līmeni un interaktīvām atļauju uzvednēm, kuras jūs varat apstiprināt, noraidīt vai konfigurēt iepriekš.
+
+## Aģentu piekļuves līmeņi
+
+Katram iebūvētajam aģentam ir deklarēts piekļuves līmenis:
+
+| Piekļuves līmenis | Lasa failus | Raksta failus | Izpilda čaulas komandas |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Iebūvētie sadalījumi:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Pārslēdziet aģentus ar `Tab` TUI vai nododiet `--agent <name>` komandai `bolt run`.
+
+## Interaktīvās uzvednes
+
+Aģenta piekļuves līmeņa ietvaros potenciāli destruktīvas darbības joprojām lūdz apstiprinājumu. Jūs varat apstiprināt vienreiz, apstiprināt uz sesiju vai noraidīt. Noraidītie izsaukumi atgriež kļūdu aģentam, un tas turpina strādāt.
+
+## Neinteraktīva apstiprināšana
+
+CI, skriptiem vai uzticamām lokālām darbplūsmām `bolt run` atbalsta karogus, kas izlaiž uzvednes:
+
+```bash
+bolt run --auto "tidy up imports"                   # automātiski apstiprināt visu, kas nav skaidri liegts
+bolt run --yolo "tidy up imports"                   # aizstājējs --auto
+bolt run --dangerously-skip-permissions "..."       # apiet katru uzvedni
+```
+
+<Warning>
+  `--auto`, `--yolo` un `--dangerously-skip-permissions` ļauj aģentam lasīt, rakstīt un izpildīt, nejautājot. Izmantojiet tos tikai uzticamās vidēs.
+</Warning>
+
+## Konfigurācijas līmeņa noteikumi
+
+Jūs varat iepriekš liegt (vai iepriekš atļaut) konkrētus rīkus visam projektam, pievienojot `permission` bloku failam `.bolt/bolt.jsonc`. Tas attiecas uz katru sesiju projektā, ieskaitot neinteraktīvos `bolt run` izsaukumus. Shēmu skatiet sadaļā [Konfigurācija](/concepts/configuration).
+
+## Saistīts
+
+- [Aģenti](/concepts/agents) — kuriem aģentiem ir kuri piekļuves līmeņi.
+- [Rīki](/concepts/tools) — pilns rīku saraksts, kurus atļaujas kontrolē.
+- [Konfigurācija](/concepts/configuration) — noturīgu atļauju noteikumu iestatīšana.

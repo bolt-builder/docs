@@ -1,0 +1,78 @@
+---
+title: "Bolt: Agent Coding AI untuk Terminal Kamu"
+sidebarTitle: "Home"
+description: "Bolt adalah agent coding AI yang mengutamakan terminal dengan sepuluh agent khusus, sesi persisten, dukungan MCP, dan aplikasi desktop—didukung oleh provider LLM mana pun."
+---
+
+Bolt menempatkan tim engineering AI penuh langsung di terminal kamu. Bolt hadir sebagai TUI yang cepat dan berbasis keyboard serta aplikasi desktop native, keduanya didukung oleh engine yang sama: sepuluh agent khusus, sesi persisten yang tahan lama, manajemen MCP server dengan OAuth, sistem plugin, dan dukungan untuk setiap provider LLM utama.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Instal Bolt dalam hitungan detik via curl, npm, bun, atau package manager pilihanmu.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Jalankan sesi coding AI pertamamu dalam kurang dari satu menit.
+  </Card>
+  <Card title="Agents" icon="robot" href="/concepts/agents">
+    Temui sepuluh agent bawaan: code, plan, ask, review, debug, refactor, docs, security, migrate, dan perf.
+  </Card>
+  <Card title="Command Reference" icon="terminal" href="/reference/commands">
+    Setiap perintah CLI, subperintah, dan flag didokumentasikan secara lengkap.
+  </Card>
+</CardGroup>
+
+## Apa yang dilakukan Bolt
+
+Bolt membaca basis kode kamu, memahami apa yang sedang kamu bangun, dan mengirimkan kode bersamamu—di terminal atau sebagai aplikasi desktop. Setiap sesi tahan lama: detach, re-attach dari mesin lain, fork percabangan percakapan, share sebuah tautan, atau ekspor transkrip yang di-sanitasi.
+
+<CardGroup cols={3}>
+  <Card title="Sessions" icon="clock-rotate-left" href="/concepts/sessions">
+    Sesi yang persisten dan dapat di-fork, disimpan di SQLite lokal.
+  </Card>
+  <Card title="Providers & Models" icon="microchip" href="/concepts/providers-and-models">
+    Bawa API key kamu sendiri untuk provider LLM utama mana pun.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/concepts/configuration">
+    `.bolt/bolt.jsonc` per-proyek dengan dukungan skema penuh.
+  </Card>
+  <Card title="MCP Servers" icon="plug" href="/extending/mcp-servers">
+    Tambahkan tool via Model Context Protocol, termasuk alur OAuth.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Perluas Bolt dengan provider, tool, dan metode auth kustom.
+  </Card>
+  <Card title="GitHub Integration" icon="github" href="/server/github-actions">
+    Pesan commit, tinjauan kode, dan GitHub Actions yang didukung AI.
+  </Card>
+</CardGroup>
+
+## Mulai jalan
+
+<Steps>
+  <Step title="Install Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Atau instal via npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Open your project">
+    Navigasikan ke direktori proyek mana pun dan luncurkan TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Configure a provider">
+    Pada peluncuran pertama, Bolt memintamu menambahkan provider LLM. Kamu juga dapat menjalankan:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Start coding with AI">
+    Ketik prompt kamu di footer TUI, tekan Enter, dan biarkan agent Bolt bekerja. Ganti agent dengan `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Gunakan `bolt run "explain this codebase"` untuk jawaban non-interaktif yang cepat tanpa membuka TUI penuh.
+</Tip>

@@ -1,0 +1,185 @@
+---
+title: "通过 HTTP 连接远程 Bolt 会话"
+sidebarTitle: "远程会话"
+description: "启动 headless Bolt 服务器，从任意机器连接 TUI，并通过 mDNS 在本地网络中发现服务器——可选配置基本认证。"
+url: "server/remote-sessions"
+---
+
+Bolt 内置 HTTP 服务器，能将引擎与界面完全解耦。你可以在性能强大的远程机器（云 VM、开发容器、通宵开着的桌面机）上启动 headless 服务器，然后从你的笔记本、另一个终端甚至浏览器连接 TUI——全部指向同一个实时会话。这使得 Bolt 适用于团队、远程工作负载以及你希望在不 SSH 到机器的情况下追踪的长时间任务。
+
+---
+
+## `bolt serve`
+
+启动一个 headless 的 Bolt 服务器，通过 HTTP 暴露完整 API 并接受 TUI 连接。
+
+```bash
+bolt serve
+```
+
+### 标志
+
+| 标志 | 默认 | 说明 |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | 绑定的主机名或 IP 地址 |
+| `--port <n>` | `0`（自动） | 监听端口；Bolt 会在启动时打印分配的端口 |
+| `--mdns` | `false` | 通过 mDNS 广播服务器，实现零配置的局域网发现；同时会将主机名设为 `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | 自定义 mDNS 服务域 |
+| `--cors <origin>` | `[]` | 允许通过 CORS 的额外来源（可重复） |
+
+<Warning>
+  如果未设置 `OPENCODE_SERVER_PASSWORD`，Bolt 会打印警告，且服务器对任何可访问它的人完全开放。在绑定到除 `127.0.0.1` 之外的任何接口前，请始终设置密码。
+</Warning>
+
+### 认证
+
+使用环境变量通过 HTTP 基本认证保护服务器：
+
+| 变量 | 说明 |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | 基本认证密码 |
+| `OPENCODE_SERVER_USERNAME` | 基本认证用户名（省略时默认为 `opencode`） |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+将完整 TUI 连接到运行中的 Bolt 服务器。这适用于任何可通过 HTTP 访问的服务器——本地或远程。
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### 标志
+
+| 标志 | 别名 | 说明 |
+|------|-------|-------------|
+| `--dir <path>` | | 在远程服务器上运行的目录 |
+| `--continue` | `-c` | 继续服务器上最近的会话 |
+| `--session <id>` | `-s` | 要继续的会话 ID |
+| `--fork` | | 继续时派生会话（与 `--continue` 或 `--session` 一起使用） |
+| `--password <pw>` | `-p` | 基本认证密码（覆盖 `OPENCODE_SERVER_PASSWORD`） |
+| `--username <user>` | `-u` | 基本认证用户名（覆盖 `OPENCODE_SERVER_USERNAME`） |
+| `--mini` | | 使用最小化交互 UI，而非完整 TUI |
+
+```bash
+# 继续远程服务器上的最近会话
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# 派生特定会话
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# 最小化 UI——适用于受限终端
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+启动 Bolt 服务器并立即在你的默认浏览器中打开 Web UI。这是在本地运行基于浏览器界面的最快方式。
+
+```bash
+bolt web
+```
+
+`bolt web` 接受与 `bolt serve` 相同的网络标志。
+
+---
+
+## mDNS 发现
+
+向 `bolt serve` 传入 `--mdns` 可通过 mDNS 在本地网络上广播服务器地址。同一网络中的任何机器随后都可以通过 mDNS 主机名连接，无需知道 IP 地址或端口。
+
+```bash
+# 在服务器机器上
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# 从同一 LAN 中的另一台机器
+bolt attach http://opencode.local --password my-secret
+```
+
+默认 mDNS 域为 `opencode.local`。使用 `--mdns-domain` 覆盖：
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## 启动服务器并远程连接
+
+<Steps>
+  <Step title="在服务器机器上设置密码">
+    在启动服务器前 export `OPENCODE_SERVER_PASSWORD`。否则 Bolt 会打印警告，API 将无认证。
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="启动 headless 服务器">
+    绑定到所有接口，让你的笔记本可以访问，并可选择固定端口：
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    保持该终端打开（或在 `tmux` / `screen` / systemd 单元中运行）。
+  </Step>
+
+  <Step title="从笔记本连接">
+    在任何能访问该服务器的机器上运行：
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    完整 TUI 会打开并连接到远程引擎。会话、历史和工具状态都保存在服务器上。
+  </Step>
+
+  <Step title="稍后继续会话">
+    通过退出 TUI（`q` 或 `Ctrl-C`）分离。会话会继续在服务器上运行。要重新加入：
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    或者派生它，以在不影响原始会话的情况下分支：
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## 远程工作流示例
+
+一个常见模式是将 Bolt 服务器留在高核心数的开发机上运行，然后从瘦客户端笔记本连接。
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+所有会话数据都存储在服务器的 SQLite 数据库中。笔记本仅渲染 TUI——它可以随时断开和重连而不丢失工作。

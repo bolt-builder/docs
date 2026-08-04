@@ -1,0 +1,53 @@
+---
+title: "Ruxsatlar: Bolt Agentlari nima qilishini boshqarish"
+sidebarTitle: "Ruxsatlar"
+description: "Bolt'ning har bir agent uchun kirish darajalari, ruxsat so'rovlari va konfiguratsiya darajasidagi ruxsat/rad qoidalari qanday qilib agentni siz tasdiqlamagan narsalarni qilishdan saqlaydi."
+---
+
+Bolt agentlari fayllarni o'qishi, fayllarni yozishi va shell buyruqlarini bajarishi mumkin. Bu quvvat ikki qatlam orqali cheklangan: har bir agent uchun kirish darajasi va oldindan tasdiqlashingiz, rad etishingiz yoki sozlashingiz mumkin bo'lgan interaktiv ruxsat so'rovlari.
+
+## Agent kirish darajalari
+
+Har bir o'rnatilgan agentda e'lon qilingan kirish darajasi mavjud:
+
+| Kirish darajasi | Fayllarni o'qish | Fayllarni yozish | Shell buyruqlarini bajarish |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+O'rnatilgan xaritalash:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+TUI da agentlarni `Tab` bilan almashtiring yoki `bolt run` ga `--agent <name>` uzating.
+
+## Interaktiv so'rovlar
+
+Agent kirish darajasi ichida ham potentsial buzuvchi harakatlar tasdiqlash uchun so'raydi. Bir marta tasdiqlashingiz, sessiya uchun tasdiqlashingiz yoki rad etishingiz mumkin. Rad etilgan chaqiruvlar agentga xatolik qaytaradi va u davom etadi.
+
+## Interaktiv bo'lmagan tasdiqlash
+
+CI, skriptlar yoki ishonchli mahalliy workflow'lar uchun `bolt run` so'rovlarni o'tkazib yuboradigan bayroqlarni qo'llab-quvvatlaydi:
+
+```bash
+bolt run --auto "tidy up imports"                   # aniq rad etilmagan har qanday narsani avtomatik tasdiqlash
+bolt run --yolo "tidy up imports"                   # --auto uchun alias
+bolt run --dangerously-skip-permissions "..."       # har qanday so'rovni chetlab o'tish
+```
+
+<Warning>
+  `--auto`, `--yolo` va `--dangerously-skip-permissions` agentga so'ramasdan o'qish, yozish va bajarish imkonini beradi. Ulardan faqat ishonchli muhitlarda foydalaning.
+</Warning>
+
+## Konfiguratsiya darajasidagi qoidalar
+
+`.bolt/bolt.jsonc` ga `permission` bloki qo'shib butun loyiha uchun ma'lum asboblarni oldindan rad etishingiz (yoki oldindan ruxsat berishingiz) mumkin. Bu loyihadagi har bir sessiyaga, jumladan interaktiv bo'lmagan `bolt run` chaqiruvlariga ham tatbiq etiladi. Sxema uchun [Configuration](/concepts/configuration) ga qarang.
+
+## Aloqador
+
+- [Agents](/concepts/agents) — qaysi agentlar qaysi kirish darajalariga ega.
+- [Tools](/concepts/tools) — ruxsatlar boshqaradigan asboblarning to'liq ro'yxati.
+- [Configuration](/concepts/configuration) — barqaror ruxsat qoidalarini o'rnatish.

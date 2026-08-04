@@ -1,0 +1,61 @@
+---
+title: "Bolt környezeti változó-referencia"
+sidebarTitle: "Környezeti változók"
+description: "Minden környezeti változó, amelyet a Bolt felismer, beleértve a naplózásvezérlést, szerver-hitelesítést, konfigurációs felülírásokat és szolgáltatói API-kulcs konvenciókat."
+---
+
+A környezeti változók lehetővé teszik a Bolt konfigurálását anélkül, hogy konfigurációs fájlokhoz kellene nyúlnod — hasznos CI-pipeline-ekben, Docker-konténerekben és megosztott környezetekben, ahol nem tudsz hitelesítő adatokat commitolni. Egyszer olvasódnak be indításkor, és nem módosíthatók a Bolt futása közben.
+
+## Referencia
+
+| Változó | Leírás |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Naplózási részletesség beállítása. Elfogadott értékek: `DEBUG`, `INFO`, `WARN`, `ERROR`. Egyenértékű a `--log-level` kapcsolóval. |
+| `BOLT_PRINT_LOGS` | Állítsd bármilyen nem üres értékre, hogy a naplókimenetet a stderr-re írja. Egyenértékű a `--print-logs` kapcsolóval. |
+| `BOLT_PURE` | Állítsd bármilyen nem üres értékre az összes külső plugin letiltásához. Egyenértékű a `--pure` kapcsolóval. |
+| `BOLT_SERVER_USERNAME` | Basic auth felhasználónév a `bolt serve` és `bolt web` parancsokhoz. |
+| `BOLT_SERVER_PASSWORD` | Basic auth jelszó a `bolt serve` és `bolt web` parancsokhoz. Minden csatlakozó kliensnek meg kell adnia ezt a jelszót. |
+| `BOLT_CONFIG` | Felülírja a Bolt által betöltött konfigurációs fájl útvonalát. A Bolt nem keres az alapértelmezett helyeken, ha ez be van állítva. |
+| `BOLT_CONFIG_DIR` | Felülírja a konfigurációs könyvtárat. A Bolt ebben a könyvtárban keres konfigurációs fájlokat az alapértelmezett OS konfigurációs könyvtár helyett. |
+| `BOLT_CONFIG_CONTENT` | Adja meg a teljes konfigurációt beágyazott JSON-karakterláncként. Hasznos CI-ben, ahol a fájlírás nem praktikus. A legmagasabb elsőbbséget élvezi a konfigurációs források között. |
+| `BOLT_GIT_BASH_PATH` | Útvonal a Git Bash `bin` könyvtárához Windowson, amelyet Unix-segédprogramok, például a `less` megkereséséhez használ. |
+
+## Szolgáltatói API-kulcsok
+
+A Bolt automatikusan felfedezi a szolgáltatói hitelesítő adatokat környezeti változókból — nincs szükség `bolt providers login` lépésre. Minden szolgáltató egy adott környezeti változót keres, és a Bolt használja azt, ha a változó be van állítva, függetlenül attól, mi van tárolva az `auth.json` fájlban.
+
+<Tip>
+  Állítsd be a szolgáltatói API-kulcsokat a shell-profilodban (pl. `~/.zshrc`, `~/.bashrc`) vagy egy `.env` fájlban, amit a shelled betölt. Hivatkozhatsz rájuk a konfigurációs fájlból is a `${VAR_NAME}` szintaxissal egy `provider.*.apiKey` mezőben, hogy a kulcsok soha ne legyenek sima szövegként tárolva.
+</Tip>
+
+Gyakori szolgáltatói változók:
+
+| Változó | Szolgáltató |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Futtasd a `bolt models --verbose` parancsot, hogy lásd, minden beállított szolgáltató melyik környezeti változót várja.
+
+## Használati példák
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

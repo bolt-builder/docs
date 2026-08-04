@@ -1,0 +1,53 @@
+---
+title: "Permisiuni: controlul a ceea ce pot face agenții Bolt"
+sidebarTitle: "Permisiuni"
+description: "Cum nivelurile de acces per agent, cererile interactive de permisiune și regulile de tip allow/deny din configurație împiedică agentul Bolt să facă lucruri pe care nu le-ai aprobat."
+---
+
+Agenții Bolt pot citi fișiere, scrie fișiere și rula comenzi shell. Această putere este delimitată prin două straturi: un nivel de acces per agent și solicitări interactive de permisiune pe care le poți aproba, respinge sau configura din timp.
+
+## Nivelurile de acces ale agentului
+
+Fiecare agent încorporat are un nivel de acces declarat:
+
+| Nivel de acces | Citește fișiere | Scrie fișiere | Rulează comenzi shell |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Corespondențe încorporate:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Schimbă agenții cu `Tab` în TUI sau transmite `--agent <name>` către `bolt run`.
+
+## Solicitări interactive
+
+În cadrul nivelului de acces al unui agent, acțiunile potențial distructive solicită în continuare confirmarea. Poți aproba o singură dată, aproba pe durata sesiunii sau respinge. Apelurile respinse returnează o eroare către agent, iar acesta trece mai departe.
+
+## Aprobare neinteractivă
+
+Pentru CI, scripturi sau fluxuri de lucru locale de încredere, `bolt run` acceptă opțiuni care omit solicitările:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` și `--dangerously-skip-permissions` permit agentului să citească, să scrie și să execute fără să întrebe. Folosește-le doar în medii de încredere.
+</Warning>
+
+## Reguli la nivel de configurație
+
+Poți pre-respinge (sau pre-aproba) anumite instrumente pentru întregul proiect adăugând un bloc `permission` în `.bolt/bolt.jsonc`. Acesta se aplică fiecărei sesiuni din proiect, inclusiv apelurilor neinteractive `bolt run`. Consultă [Configurație](/concepts/configuration) pentru schemă.
+
+## Legături conexe
+
+- [Agenți](/concepts/agents) — ce niveluri de acces au fiecare agent.
+- [Instrumente](/concepts/tools) — lista completă a instrumentelor controlate de permisiuni.
+- [Configurație](/concepts/configuration) — setarea regulilor durabile de permisiuni.

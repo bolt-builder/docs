@@ -1,0 +1,395 @@
+---
+title: "सामान्य Bolt समस्याओं का समाधान"
+sidebarTitle: "Troubleshooting"
+description: "सबसे सामान्य Bolt समस्याओं के लिए समाधान: स्टार्टअप विफलताएँ, provider auth त्रुटियाँ, MCP कनेक्टिविटी, session समस्याएँ, permissions, लागत, और अधिक।"
+---
+
+अधिकांश Bolt समस्याएँ कुछ श्रेणियों में आती हैं। नीचे प्रासंगिक accordion के माध्यम से काम करें, और जब कुछ अनपेक्षित हो तो `bolt logs` के साथ log आउटपुट देखें।
+
+<Note>
+  ऐसे प्रश्नों के लिए जिनका उत्तर यहाँ नहीं है, [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) में खोजें या चर्चा शुरू करें। अपने post में `bolt debug info` और `bolt logs --tail 50` के आउटपुट को शामिल करें ताकि community तेज़ी से मदद कर सके।
+</Note>
+
+## पहले क्या आज़माएँ
+
+किसी विशिष्ट अनुभाग में जाने से पहले, ये चार कमांड अधिकांश समस्याओं को हल करते हैं:
+
+| लक्षण | पहला कमांड | क्यों |
+| --- | --- | --- |
+| कुछ भी अजीब | `bolt debug info` | एक-shot system \+ plugin सारांश। |
+| कुछ पहले काम करता था, अब नहीं | `bolt logs --tail 100` | हाल की त्रुटियाँ, आमतौर पर शीर्ष के पास। |
+| plugin पर संदेह है | `bolt --pure` | सभी plugins अक्षम के साथ शुरू करें। |
+| Config नहीं उठाया जा रहा | `bolt debug config` | पूरी तरह हल की गई config प्रिंट करता है। |
+
+<Tip>
+  `bolt debug` परिवार किसी भी रहस्यमय व्यवहार के लिए आपका पहला स्टॉप है। सिस्टम सारांश के लिए `bolt debug info`, हल की गई config के लिए `bolt debug config`, on-disk स्थानों के लिए `bolt debug paths`, और session स्थिति का निरीक्षण करने के लिए `bolt debug snapshot`।
+</Tip>
+
+<Accordion title="Bolt शुरू नहीं होता / लॉन्च पर crash हो जाता है">
+  **लक्षण:** टर्मिनल flash करता है और तुरंत बाहर निकल जाता है, या आप TUI render होने से पहले एक stack trace देखते हैं।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="सिस्टम जानकारी एकत्र करें">
+      ```bash
+      bolt debug info
+      ```
+
+      यह आपका Bolt वर्ज़न, OS, टर्मिनल एमुलेटर, और लोड किए गए plugins प्रिंट करता है। bug रिपोर्ट करते समय इस आउटपुट को कॉपी करें।
+    </Step>
+    <Step title="हाल के log आउटपुट की जाँच करें">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      `ERROR` lines की तलाश करें। एक सामान्य कारण एक plugin है जो लोड होने में विफल रहता है — उस स्थिति में आप plugin नाम का उल्लेख करती एक त्रुटि देखेंगे।
+    </Step>
+    <Step title="समस्या को अलग करने के लिए plugins अक्षम करें">
+      ```bash
+      bolt --pure
+      ```
+
+      यदि Bolt `--pure` के साथ साफ़-सुथरा शुरू होता है, तो कोई plugin crash का कारण बन रहा है। अपने config से आपत्तिजनक plugin को हटा दें, या इसे plugin author को रिपोर्ट करें।
+    </Step>
+    <Step title="Corrupted config की जाँच करें">
+      ```bash
+      bolt debug config
+      ```
+
+      यदि यह invalid JSON के बारे में एक त्रुटि प्रिंट करता है, तो जिस config फ़ाइल का उल्लेख करता है उसे खोलें और syntax ठीक करें। यह पुष्टि करने के लिए `bolt db path` चलाएँ कि डेटाबेस path पहुँच योग्य है।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Provider authentication विफल होता है">
+  **लक्षण:** Bolt "No providers configured" दिखाता है, API अनुरोध 401 त्रुटियों के साथ विफल हो जाते हैं, या `bolt run` कोई आउटपुट उत्पन्न किए बिना तुरंत बाहर निकल जाता है।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="Provider login फ़्लो फिर से चलाएँ">
+      ```bash
+      bolt providers login
+      ```
+
+      अपना provider चुनें और prompts का पालन करें। Bolt आपको API key entry या OAuth के माध्यम से ले जाएगा।
+    </Step>
+    <Step title="API key environment variable verify करें">
+      यदि आप एक env var (उदा. `ANTHROPIC_API_KEY`) का उपयोग करते हैं, तो पुष्टि करें कि यह वास्तव में वर्तमान shell में सेट है:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      यदि यह खाली है, तो इसे अपने shell profile में जोड़ें और अपना टर्मिनल फिर से खोलें।
+    </Step>
+    <Step title="हल की गई config का निरीक्षण करें">
+      ```bash
+      bolt debug config
+      ```
+
+      `provider` अनुभाग को देखें। यदि आपका provider blank `apiKey` के साथ दिखाई देता है, तो आपकी config फ़ाइल में environment variable संदर्भ विस्तारित नहीं हो रहा है।
+    </Step>
+    <Step title="संग्रहीत क्रेडेंशियल्स की सूची">
+      ```bash
+      bolt providers list
+      ```
+
+      यह `auth.json` में संग्रहीत सभी क्रेडेंशियल्स और Bolt द्वारा पहचाने गए सभी provider-related environment variables दिखाता है।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP सर्वर कनेक्ट नहीं होगा">
+  **लक्षण:** `bolt mcp list` एक सर्वर को `failed` या `needs authentication` के रूप में दिखाता है, या agent उस सर्वर से किसी भी tools का उपयोग नहीं कर सकता।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="MCP debug probe चलाएँ">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      यह basic HTTP कनेक्टिविटी परीक्षण करता है, `WWW-Authenticate` header का निरीक्षण करता है, और यदि लागू हो तो OAuth discovery फ़्लो के माध्यम से चलता है। आउटपुट आपको बताएगा कि क्या सर्वर पहुँच योग्य है और क्या auth की आवश्यकता है।
+    </Step>
+    <Step title="सर्वर URL की जाँच करें">
+      अपने `.bolt/bolt.jsonc` में URL verify करें। Remote servers के लिए, सुनिश्चित करें कि URL MCP path (उदा. `/mcp` या `/tools`) पर समाप्त होता है, केवल host पर नहीं।
+    </Step>
+    <Step title="OAuth servers के लिए फिर से authenticate करें">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      ब्राउज़र फ़्लो का पालन करें। यदि सर्वर को पूर्व-रजिस्टर्ड client ID की आवश्यकता है, तो इसे config में जोड़ें:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Local server कमांड जाँचें">
+      `local` servers के लिए, यह पुष्टि करने के लिए अपने टर्मिनल में मैन्युअली कमांड चलाएँ कि यह त्रुटियों के बिना शुरू होता है:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Session नहीं मिला">
+  **लक्षण:** `bolt run --session <id>` "Session not found" के साथ बाहर निकलता है, या एक session जिसके साथ आपको काम करना याद है वह गायब हो गया है।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="सभी उपलब्ध sessions की सूची">
+      ```bash
+      bolt session list
+      ```
+
+      Sessions को सबसे हाल-में-अपडेट किए गए के अनुसार पहले क्रमबद्ध किया जाता है। यदि आपका session delete किया गया था या डेटाबेस migrate किया गया था, तो यह यहाँ दिखाई नहीं देगा।
+    </Step>
+    <Step title="डेटाबेस path खोजें">
+      ```bash
+      bolt db path
+      ```
+
+      यह SQLite फ़ाइल का पूरा path प्रिंट करता है। पुष्टि करें कि फ़ाइल मौजूद है और खाली नहीं है।
+    </Step>
+    <Step title="डेटाबेस को सीधे query करें">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      यदि आपका session डेटाबेस में दिखाई देता है लेकिन `bolt session list` में नहीं, तो एक project ID मिसमैच हो सकता है — sessions projects के लिए स्कोप किए गए हैं।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="TUI में Permission त्रुटियाँ">
+  **लक्षण:** agent बार-बार अनुमति माँगता है, फ़ाइलें लिखने से इनकार करता है, या आप "Permission denied" banners देखते हैं।
+
+  **एक्सेस levels को समझना:**
+
+  प्रत्येक बिल्ट-इन agent का एक declared एक्सेस लेवल होता है जो नियंत्रित करता है कि वह बिना पूछे क्या कर सकता है:
+
+  | एक्सेस लेवल | यह क्या अनुमति देता है |
+  | --- | --- |
+  | **Full** | फ़ाइलें पढ़ें, फ़ाइलें लिखें, shell कमांड चलाएँ |
+  | **Edit** | फ़ाइलें पढ़ें और लिखें, कोई shell कमांड नहीं |
+  | **Read** | केवल फ़ाइलें पढ़ें, कोई writes या commands नहीं |
+
+  `code`, `debug`, `refactor`, `migrate`, और `perf` agents के पास **Full** एक्सेस है। `docs` के पास **Edit** एक्सेस है। `plan`, `ask`, `code-review`, और `security` के पास **Read** एक्सेस है।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="Full एक्सेस वाले agent पर स्विच करें">
+      यदि आपको फ़ाइल writes की आवश्यकता है, तो `code` agent का उपयोग करें:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      या agents के बीच साइकिल करने के लिए TUI में `Tab` दबाएँ।
+    </Step>
+    <Step title="prompts को non-interactively approve करने के लिए --auto का उपयोग करें">
+      CI या scripted contexts में, config में स्पष्ट रूप से अस्वीकृत नहीं किए गए permissions को auto-approve करने के लिए `bolt run` को `--auto` पास करें।
+    </Step>
+    <Step title="Config फ़ाइल में permissions कॉन्फ़िगर करें">
+      आप `.bolt/bolt.jsonc` में `permission` block जोड़कर एक project में सभी sessions के लिए विशिष्ट tools को deny कर सकते हैं।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="उच्च token उपयोग या अप्रत्याशित लागत">
+  **लक्षण:** `bolt stats` अपेक्षा से अधिक token counts दिखाता है, या आपका API बिल अपेक्षा से तेज़ी से बढ़ रहा है।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="अपने usage आँकड़ों की समीक्षा करें">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      आउटपुट प्रति दिन लागत, प्रति session औसत tokens, और मॉडल के अनुसार उपयोग को तोड़ता है।
+    </Step>
+    <Step title="Reasoning effort कम करें">
+      इसका समर्थन करने वाले models के लिए, `--variant` के साथ reasoning effort कम करें:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      समर्थित मान provider-विशिष्ट हैं (उदा. `minimal`, `low`, `high`, `max`)।
+    </Step>
+    <Step title="सस्ते मॉडल पर स्विच करें">
+      छोटा मॉडल खोजने के लिए `bolt models` का उपयोग करें। छोटे models (उदा. `claude-haiku`, `gpt-4o-mini`) प्रति token काफी कम लागत लेते हैं और कई कार्यों के लिए अच्छी तरह से काम करते हैं।
+    </Step>
+    <Step title="अन्वेषण के लिए ask या plan agent का उपयोग करें">
+      `ask` और `plan` agents के पास **Read** एक्सेस है और वे write tools को इनवोक नहीं करते, जिसका अर्थ है कि वे tool-heavy loops से बचते हैं जो बड़े आउटपुट tokens उत्पन्न करते हैं।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Plugin conflicts या अप्रत्याशित व्यवहार">
+  **लक्षण:** एक slash-command अप्रत्याशित रूप से व्यवहार करता है, TUI ग़लत तरीक़े से render होता है, या plugin इंस्टॉल करने के बाद कुछ बदल गया।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="Baseline स्थापित करने के लिए सभी plugins अक्षम करें">
+      ```bash
+      bolt --pure
+      ```
+
+      यदि समस्या ग़ायब हो जाती है, तो एक plugin ज़िम्मेदार है।
+    </Step>
+    <Step title="आपत्तिजनक plugin की पहचान करें">
+      ```bash
+      bolt debug info
+      ```
+
+      आउटपुट सभी लोड किए गए plugins की सूची बनाता है। अपने config से उन्हें एक-एक करके अस्थायी रूप से हटाएँ और Bolt को रीस्टार्ट करें जब तक कि समस्या ख़त्म न हो जाए।
+    </Step>
+    <Step title="Version असंगति की जाँच करें">
+      ```bash
+      bolt upgrade
+      ```
+
+      Plugins एक compatible Bolt वर्ज़न range घोषित करते हैं। यदि आपने हाल ही में Bolt अपग्रेड किया है, तो एक plugin को भी अपडेट करने की आवश्यकता हो सकती है।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows path समस्याएँ">
+  **लक्षण:** WSL के साथ Windows पर, Bolt `less` नहीं ढूँढ पाता, फ़ाइल पथों में अप्रत्याशित backslashes होते हैं, या `bolt session list` के लिए pager launch नहीं होता।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="Git Bash path सेट करें">
+      Bolt Unix utilities (जिसमें `less` शामिल है) की तलाश Git for Windows इंस्टॉलेशन के सापेक्ष करता है। environment variable को अपनी Git Bash directory पर सेट करें:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      इसे persist करने के लिए अपने PowerShell profile (`$PROFILE`) में जोड़ें।
+    </Step>
+    <Step title="Debug info से verify करें">
+      ```bash
+      bolt debug info
+      ```
+
+      OS detection और Bolt कौन-से paths का उपयोग कर रहा है, इसकी पुष्टि करता है।
+    </Step>
+    <Step title="Bolt को WSL के अंदर सीधे चलाएँ">
+      Windows पर सर्वोत्तम अनुभव के लिए, PowerShell या Command Prompt से नहीं बल्कि WSL टर्मिनल के अंदर से `bolt` चलाएँ।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Bolt अपग्रेड नहीं कर सकता">
+  **लक्षण:** `bolt upgrade` एक त्रुटि रिपोर्ट करता है या चुपचाप कुछ नहीं करता, या इसे चलाने के बाद वर्ज़न नंबर नहीं बदलता।
+
+  **चरण:**
+
+  <Steps>
+    <Step title="इंस्टॉलेशन विधि को स्पष्ट रूप से निर्दिष्ट करें">
+      Bolt यह पहचानने का प्रयास करता है कि इसे कैसे इंस्टॉल किया गया था। यदि detection विफल हो जाती है, तो इसे override करें:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Install script के माध्यम से पुनः इंस्टॉल करें">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: Chocolatey के लिए Administrator के रूप में चलाएँ">
+      यदि आपने `choco` के माध्यम से इंस्टॉल किया है, तो अपग्रेड के लिए elevated टर्मिनल की आवश्यकता होती है। `bolt upgrade` चलाने से पहले PowerShell को Administrator के रूप में खोलें।
+    </Step>
+    <Step title="पुष्टि करें कि नया वर्ज़न सक्रिय है">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agent फ़ाइलें नहीं ढूँढ सकता (या बहुत अधिक ढूँढता है)">
+  **लक्षण:** agent शिकायत करता है कि वह मौजूद फ़ाइलें नहीं देख सकता, या बार-बार उन फ़ाइलों को उठाता है जिन्हें आप नहीं चाहते कि वह छुए (जैसे `node_modules`, build आउटपुट, या secrets)।
+
+  **चरण:**
+
+  <Steps>
+    <Step title=".boltignore की जाँच करें">
+      Bolt project root पर एक `.boltignore` फ़ाइल का सम्मान करता है जो नियंत्रित करती है कि agent के फ़ाइल-search tools कौन-सी फ़ाइलें देख सकते हैं। यह `.gitignore` के समान syntax का उपयोग करता है।
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Working directory की पुष्टि करें">
+      ```bash
+      bolt debug info
+      ```
+
+      Verify करें कि `cwd` project root से मेल खाता है। यदि आपने Bolt को एक subdirectory से लॉन्च किया है, तो agent की फ़ाइल खोज वहाँ rooted है।
+    </Step>
+    <Step title="Agent को grep करने के लिए कहें, अनुमान न लगाने">
+      यदि agent दावा करता है कि फ़ाइल मौजूद नहीं है, तो उसे स्पष्ट रूप से `grep` या `glob` चलाने के लिए कहें। यह किसी भी बासी आंतरिक धारणा को बायपास करता है।
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="बग रिपोर्ट के लिए debug info प्राप्त करना">
+  Issue दाखिल करते समय, निम्नलिखित जानकारी maintainers के लिए सबसे उपयोगी है:
+
+  <Steps>
+    <Step title="सिस्टम और plugin जानकारी एकत्र करें">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="हाल के log आउटपुट एकत्र करें">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="प्रासंगिक session को (sanitized) एक्सपोर्ट करें">
+      यदि समस्या किसी विशिष्ट session के दौरान हुई, तो इसे secrets redacted के साथ एक्सपोर्ट करें:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      `session-debug.json` को issue में attach करें।
+    </Step>
+    <Step title="Issue या discussion खोलें">
+      [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) पर जाएँ और reproduce करने के चरणों के विवरण के साथ अपना `bolt debug info` आउटपुट पेस्ट करें।
+    </Step>
+  </Steps>
+</Accordion>

@@ -1,0 +1,36 @@
+---
+title: "Egendefinerte verktøy i Bolt"
+sidebarTitle: "Egendefinerte verktøy"
+description: "Legg til prosjektspesifikke verktøy til Bolt ved å legge kjørbare filer i .opencode/tool/. Hver fil blir et verktøy agenten kan kalle."
+---
+
+Egendefinerte verktøy lar deg eksponere alt du kan skripte (shell-skript, Node/Bun/Python-programmer, små binærfiler) som et verktøy agenten kan påkalle ved navn. De er den enkleste måten å gi Bolt tilgang til prosjektets egne bygg-, deploy- eller dataarbeidsflyter.
+
+## Hvor de bor
+
+Slipp filer i en av:
+
+- `.opencode/tool/` — prosjektavgrenset, sjekket inn med repoet.
+- `.opencode/tools/` — akseptert som et alias for det ovennevnte.
+
+Hver fil blir et verktøy oppkalt etter filen (minus filendelsen). Verktøy plukkes opp automatisk neste gang Bolt starter.
+
+## Anatomien til et verktøy
+
+Et egendefinert verktøy deklarerer navn, beskrivelse og input-skjema i en topptekst, og implementerer deretter oppførselen. Nøyaktig form avhenger av kjøretiden du velger (shell-skript, TypeScript osv.), men hvert verktøy må:
+
+1. Annonsere et JSON-skjema for inputene sine slik at modellen vet hvordan den skal kalle det.
+2. Returnere en verdi (eller en feil) som Bolt kan gjengi i TUI-en og mate tilbake til modellen.
+
+Når det er lastet inn, dukker verktøyet opp i agentens verktøyliste ved siden av innebygde verktøy som `bash` og `grep`, og styres av samme [tillatelses](/concepts/permissions)-system.
+
+## Når bør du bruke et egendefinert verktøy vs. en MCP-server
+
+- **Egendefinert verktøy** — lite, prosjektspesifikt, ingen gjenbruk på tvers av prosjekter. Raskt å skrive.
+- **MCP-server** — delt på tvers av prosjekter, eller pakker inn en ekte ekstern tjeneste med autentisering. Se [MCP-servere](/extending/mcp-servers).
+- **Plugin-verktøy** — distribuert som en npm-pakke sammen med andre utvidelsespunkter. Se [Plugins](/extending/plugins).
+
+## Relatert
+
+- [Verktøy](/concepts/tools) — referanse for innebygde verktøy.
+- [Plugins](/extending/plugins) — utvidelsesflaten for verktøy og mer.

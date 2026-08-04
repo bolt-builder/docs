@@ -1,0 +1,192 @@
+---
+title: "Referência do arquivo de configuração do Bolt"
+sidebarTitle: "Schema de config"
+description: "Referência completa para o schema do arquivo de configuração do Bolt — localizações, todos os campos de nível superior, tipos de servidor MCP, overrides de provedor e um exemplo completo."
+---
+
+O Bolt usa um arquivo JSON com comentários (`.jsonc`) para configuração de projeto e global. O schema é versionado e publicado em `https://opencode.ai/config.json`, que os editores podem usar para fornecer autocompletar e validação.
+
+## Localizações do arquivo de config
+
+O Bolt mescla configuração de duas localizações. Configurações por projeto vencem sobre as globais quando a mesma chave aparece em ambas.
+
+| Escopo | Caminho |
+|---|---|
+| **Por projeto** | `.bolt/bolt.jsonc` (ou `.bolt/bolt.json`) na raiz do seu projeto |
+| **Global** | `bolt.jsonc` (ou `bolt.json`) no diretório de config do seu SO |
+
+O diretório de config do SO é:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+O Bolt também lê arquivos legados `opencode.jsonc` / `opencode.json` nas mesmas localizações. Novos projetos devem usar a convenção de nomenclatura `bolt.jsonc`, que tem prioridade sobre os nomes de arquivo legados.
+</Note>
+
+O Bolt cria um arquivo de config global mínimo com a linha `$schema` na primeira execução, e cria `.bolt/bolt.jsonc` na raiz do seu projeto na primeira vez que você abre o TUI naquele diretório.
+
+## Campos do schema
+
+<ParamField body="$schema" type="string">
+  URL apontando para o JSON schema deste arquivo de config. Habilita autocompletar e validação inline em editores que suportam JSON Schema (VS Code, Zed, IDEs JetBrains etc.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Modelo padrão para todas as sessões, expresso como `provider/model`. Isso pode ser sobrescrito por sessão com `bolt run --model` ou no seletor de modelo do TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Execute `bolt models` para ver todas as strings `provider/model` disponíveis para seus provedores configurados.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Overrides de credenciais e configurações específicos do provedor. Cada chave é um ID de provedor (por exemplo, `anthropic`, `openai`, `google`). O uso mais comum é definir uma chave de API por meio de uma referência de variável de ambiente para que a chave nunca seja armazenada em texto plano.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Valores que começam com `${` e terminam com `}` são tratados como referências de variável de ambiente e expandidos em tempo de execução.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Configurações de servidor MCP, indexadas por um nome que você escolhe. O Bolt suporta dois tipos de servidor:
+
+  **Servidor remoto** — conecta via HTTP/SSE, com OAuth opcional:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Campo | Tipo | Descrição |
+  |---|---|---|
+  | `type` | `"remote"` | Identifica isso como um servidor HTTP remoto |
+  | `url` | string | URL completa do endpoint MCP |
+  | `oauth` | object \| `false` | Objeto de configuração OAuth (com `clientId`, `clientSecret`, `scope`, `redirectUri` opcionais). Defina como `false` para desabilitar detecção automática de OAuth. |
+  | `headers` | object | Cabeçalhos HTTP a enviar com cada requisição (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Habilita ou desabilita este servidor na inicialização |
+  | `timeout` | number | Timeout de requisição em milissegundos (padrão: 5000) |
+
+  **Servidor local** — inicia um subprocesso via stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Campo | Tipo | Descrição |
+  |---|---|---|
+  | `type` | `"local"` | Identifica isso como um servidor stdio local |
+  | `command` | string[] | Comando e todos os argumentos para iniciar |
+  | `cwd` | string | Diretório de trabalho para o processo do servidor (caminhos relativos resolvem a partir do diretório do workspace) |
+  | `environment` | object | Variáveis de ambiente adicionais para passar ao subprocesso |
+  | `enabled` | boolean | Habilita ou desabilita este servidor na inicialização |
+  | `timeout` | number | Timeout de requisição em milissegundos (padrão: 5000) |
+
+  Use `bolt mcp add` para um assistente interativo ou `bolt mcp list` para inspecionar o status atual dos servidores.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Instruções de sistema adicionais anexadas a cada sessão neste projeto ou globalmente. Instruções de vários arquivos de config são mescladas (deduplicadas). Use isto para injetar convenções específicas do projeto, regras de estilo ou restrições que cada agente deve seguir.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Specs de plugin a carregar. Cada entrada é um nome de pacote npm, um caminho de arquivo local ou uma URL. Plugins podem estender o TUI, adicionar slash-commands ou registrar provedores adicionais. Use `bolt plugin install <spec>` para instalar um plugin e tê-lo adicionado a este array automaticamente.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Exemplo completo
+
+O seguinte `.bolt/bolt.jsonc` mostra uma configuração realista de projeto:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Execute `bolt debug config` para ver a configuração totalmente resolvida depois que todos os arquivos são mesclados. Esta é a maneira mais rápida de confirmar que suas configs por projeto e global estão se combinando corretamente.
+</Tip>

@@ -1,0 +1,33 @@
+---
+title: "Bolt webes felület"
+sidebarTitle: "Webes felület"
+description: "A bolt web egy böngészőalapú felületet szolgál ki egy futó Bolt-szerveren — hasznos megosztott csapatgépekhez, távoli gépekhez és bárhol, ahol a TUI nem praktikus."
+---
+
+A `bolt web` egy Bolt-szervert indít, és egy böngészőfelületet szolgál ki előtte. Ugyanaz a motor, mint a TUI, csak egy böngészőlapon renderelve.
+
+## Indítás
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Aztán nyisd meg a kiírt URL-t. Amikor hálózaton keresztül teszed elérhetővé, először állíts be basic auth-t:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Mikor használd a webes felületet
+
+- Amikor a Bolt-ot egy erős távoli gépen futtatod, de egy laptopról vezérled.
+- Egy élő munkamenet megosztása egy csapattaggal pár-hibakereséshez.
+- Környezetek, ahol a teljes TUI kényelmetlen (Chromebookok, táblagépek, coworking-gépek).
+
+## Kapcsolódó
+
+- [Fej nélküli szerver](/server/headless-server) — a mögöttes API-szerver.
+- [Távoli munkamenetek](/server/remote-sessions) — csatolj egy TUI-t ugyanahhoz a szerverhez, amelyet a webes felület kiszolgál.

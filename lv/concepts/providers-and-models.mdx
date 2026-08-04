@@ -1,0 +1,139 @@
+---
+title: "Sniedzēji un modeļi — LLM autentifikācija un izvēle"
+sidebarTitle: "Sniedzēji un modeļi"
+description: "Bolt atbalsta jebkuru LLM sniedzēju, izmantojot Vercel AI SDK. Autentificējiet sniedzējus, uzskaitiet modeļus, pielāgojiet spriešanas piepūli un palaidiet best-of-N paralēlus salīdzinājumus."
+---
+
+Bolt ir modeļa ziņā neitrāls pēc dizaina. Aizkulisēs tas izmanto **Vercel AI SDK**, lai sazinātos ar sniedzējiem, kas nozīmē, ka jebkurš sniedzējs, ko SDK atbalsta — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter un citi — darbojas jau no kastes. Sniedzēju un modeļu katalogs tiek iegūts no [models.dev](https://models.dev) — kopienas uzturētas sniedzēju metadatu un cenu datubāzes.
+
+## Sniedzēju akreditācijas datu pārvaldība
+
+Izmantojiet `bolt providers` (aizstājējs `bolt auth`), lai pievienotu, uzskaitītu un noņemtu sniedzēju akreditācijas datus.
+
+### Pievienot vai atjaunināt akreditācijas datus
+
+```bash
+bolt providers login
+# vai līdzvērtīgi:
+bolt auth login
+```
+
+Tas palaiž interaktīvu uzvedni, lai izvēlētos sniedzēju un ievadītu akreditācijas datus. Lai izlaistu interaktīvo plūsmu, nododiet karogus tieši:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Uzskaitiet konfigurētos sniedzējus
+
+```bash
+bolt providers list
+# vai:
+bolt auth list
+```
+
+Parāda visus saglabātos akreditācijas datus un jebkuras sniedzēju API atslēgas, kas atklātas no vides mainīgajiem.
+
+### Noņemt akreditācijas datus
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Vides mainīgo autentifikācija
+
+CI konveijeriem vai bezgalvas vidēm iestatiet sniedzēja API atslēgas vides mainīgo tieši — interaktīva pieteikšanās nav nepieciešama. Bieži sastopami piemēri:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt automātiski nolasa šos mainīgos palaišanas laikā. `bolt providers list` parādīs, kurus vides mainīgos tas atklāja.
+
+## Pieejamo modeļu pārlūkošana
+
+`bolt models` uzskaita katru modeli, kas pieejams visos jūsu konfigurētajos sniedzējos.
+
+```bash
+# Uzskaitiet visus modeļus
+bolt models
+
+# Filtrējiet uz vienu sniedzēju
+bolt models anthropic
+
+# Parādiet izmaksu un spēju metadatus
+bolt models --verbose
+
+# Atsvaidziniet modeļu katalogu no models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Palaidiet `bolt models --verbose`, lai redzētu ievades/izvades žetonu cenas katram modelim. Tas atvieglo izmaksu kompromisu salīdzināšanu pirms modeļa izvēles ilgstošam uzdevumam.
+</Tip>
+
+### Modeļa identifikatora formāts
+
+Modeļi vienmēr tiek norādīti `provider/model` formātā:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Izmantojiet šo formātu jebkur, kur Bolt pieņem modeli — CLI karogos, konfigurācijas failos un aģentu definīcijās.
+
+## Modeļa izvēle izpildes laikā
+
+### `--model` / `-m` karogs
+
+Karogs `--model` ir pieejams komandās `bolt run`, `bolt commit` un `bolt review`:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — spriešanas piepūles kontrolēšana
+
+Daži modeļi atbalsta konfigurējamus spriešanas piepūles līmeņus (piemēram, Anthropic paplašinātā domāšana, OpenAI spriešanas modeļi). Izmantojiet `--variant`, lai izvēlētos piepūles līmeni:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Pieejamās varianta vērtības ir atkarīgas no sniedzēja un modeļa. Bieži sastopamas vērtības ir `minimal`, `low`, `medium`, `high` un `max`, bet precīzs komplekts atšķiras. Pārbaudiet sava sniedzēja dokumentāciju vai izmantojiet `bolt models --verbose`, lai redzētu atbalstītos variantus konkrētam modelim.
+</Note>
+
+### `--thinking` — parādīt spriešanas blokus
+
+Izmantojot modeli, kas atbalsta paplašinātu domāšanu, nododiet `--thinking`, lai izvadē parādītu modeļa domu ķēdi:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Best-of-N paralēlie palaišanas gadījumi
+
+`--best-of` izšauj to pašu uzvedni vairākiem modeļiem paralēli, pēc tam izmanto tiesneša modeli, lai sarindotu atbildes un paturētu labāko:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+Tiesnesis pēc noklusējuma ir modelis, kas nodots caur `--model`, vai pirmais ieraksts `--best-of` sarakstā, ja `--model` nav iestatīts. Karogs pieņem ar komatiem atdalītu `provider/model` identifikatoru sarakstu.
+
+<Tip>
+  Best-of-N ir īpaši noderīgs sarežģītām algoritmiskām problēmām vai arhitektūras lēmumiem, kur dažādi modeļi var patiesi nest atšķirīgas pieejas. Ļaujiet Bolt palaist tos paralēli un automātiski izvēlēties uzvarētāju.
+</Tip>

@@ -1,0 +1,61 @@
+---
+title: "Referens för Bolts miljövariabler"
+sidebarTitle: "Miljövariabler"
+description: "Varje miljövariabel som Bolt känner igen, inklusive loggkontroll, serverauth, konfigurationsåsidosättningar och konventioner för leverantörs-API-nycklar."
+---
+
+Miljövariabler låter dig konfigurera Bolt utan att röra några konfigurationsfiler — användbart i CI-pipelines, Docker-containrar och delade miljöer där du inte kan committa inloggningsuppgifter. De läses en gång vid start och kan inte ändras medan Bolt körs.
+
+## Referens
+
+| Variabel | Beskrivning |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Sätt loggens verbositet. Accepterade värden: `DEBUG`, `INFO`, `WARN`, `ERROR`. Motsvarar flaggan `--log-level`. |
+| `BOLT_PRINT_LOGS` | Sätt till valfritt icke-tomt värde för att skriva ut loggutdata till stderr. Motsvarar `--print-logs`. |
+| `BOLT_PURE` | Sätt till valfritt icke-tomt värde för att inaktivera alla externa plugins. Motsvarar `--pure`. |
+| `BOLT_SERVER_USERNAME` | Basic auth-användarnamn för `bolt serve` och `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Basic auth-lösenord för `bolt serve` och `bolt web`. Alla anslutande klienter måste ange detta lösenord. |
+| `BOLT_CONFIG` | Åsidosätt sökvägen till konfigurationsfilen som Bolt laddar. Bolt söker inte i standardplatserna när detta är satt. |
+| `BOLT_CONFIG_DIR` | Åsidosätt konfigurationskatalogen. Bolt letar efter konfigurationsfiler i den här katalogen istället för OS-standardkonfigurationskatalogen. |
+| `BOLT_CONFIG_CONTENT` | Ange hela konfigurationen som en inline JSON-sträng. Användbart i CI där det är opraktiskt att skriva filer. Har högst prioritet bland konfigurationskällor. |
+| `BOLT_GIT_BASH_PATH` | Sökväg till Git Bashs `bin`-katalog på Windows, används för att hitta Unix-verktyg som `less`. |
+
+## Leverantörs-API-nycklar
+
+Bolt upptäcker leverantörsinloggningsuppgifter från miljövariabler automatiskt — inget steg med `bolt providers login` krävs. Varje leverantör letar efter en specifik miljövariabel, och Bolt kommer att använda den om variabeln är satt, oavsett vad som är lagrat i `auth.json`.
+
+<Tip>
+  Sätt leverantörs-API-nycklar i din shell-profil (t.ex. `~/.zshrc`, `~/.bashrc`) eller i en `.env`-fil som laddas av ditt skal. Du kan även referera till dem från konfigurationsfilen med `${VAR_NAME}`-syntaxen i ett `provider.*.apiKey`-fält så att nycklar aldrig lagras i klartext.
+</Tip>
+
+Vanliga leverantörsvariabler:
+
+| Variabel | Leverantör |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-serien) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Kör `bolt models --verbose` för att se vilken miljövariabel varje konfigurerad leverantör förväntar sig.
+
+## Användningsexempel
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

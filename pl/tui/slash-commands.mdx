@@ -1,0 +1,31 @@
+---
+title: "Komendy slash TUI Bolta"
+sidebarTitle: "Komendy slash"
+description: "Komendy slash, które możesz uruchamiać w TUI Bolta — /memory, /plan, /todos, /btw — i jak zmieniają zachowanie bieżącej sesji."
+---
+
+Komendy slash są wpisywane w prompcie TUI i zmieniają sposób zachowania bieżącej sesji. Nie wysyłają niczego do modelu; uruchamiają się lokalnie wobec samego Bolta.
+
+## Referencja
+
+| Komenda | Co robi |
+| --- | --- |
+| `/memory` | Pokaż status pamięci projektu dla tej sesji. |
+| \`/memory use on | off\` | Czy ta sesja czyta z [pamięci projektu](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Czy ta sesja zapisuje z powrotem do pamięci projektu, gdy tura się zamyka. |
+| `/plan` | Przełącz bieżącą sesję w tryb planowania (tylko-do-odczytu, tworzy plan). |
+| `/todos` | Pokaż bieżącą ustrukturyzowaną listę zadań agenta. |
+| `/btw` | Wstrzyknij notatkę out-of-band („nawiasem mówiąc..."), którą agent zobaczy w swojej następnej turze bez wyzwalania pełnej odpowiedzi. |
+
+<Tip>
+  Komendy slash mają zasięg sesji. Aby uczynić preferencję trwałą, ustaw ją w `.bolt/bolt.jsonc`. Zobacz [Konfiguracja](/concepts/configuration).
+</Tip>
+
+## Dodawanie własnych
+
+Niestandardowe komendy slash mogą być wnoszone przez [wtyczki](/extending/plugins) oraz przez pliki w `.opencode/command/`. Każda komenda to plik Markdown, którego frontmatter opisuje wyzwalacz i zachowanie.
+
+## Powiązane
+
+- [Skróty klawiszowe](/tui/keybinds) — skróty klawiaturowe dla TUI.
+- [Pamięć projektu](/concepts/project-memory) — co przełącza `/memory`.

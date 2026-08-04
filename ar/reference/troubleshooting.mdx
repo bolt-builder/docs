@@ -1,0 +1,395 @@
+---
+title: "استكشاف مشكلات Bolt الشائعة وإصلاحها"
+sidebarTitle: "استكشاف الأخطاء"
+description: "حلول لأكثر مشكلات Bolt شيوعًا: فشل بدء التشغيل، أخطاء مصادقة المزوّد، اتصال MCP، مشكلات الجلسات، الأذونات، التكلفة، والمزيد."
+---
+
+تقع معظم مشكلات Bolt ضمن عدد قليل من الفئات. اعمل خلال القسم ذي الصلة أدناه، وتحقق من إخراج السجل عبر `bolt logs` كلما حدث شيء غير متوقّع.
+
+<Note>
+  للأسئلة التي لا تُجاب هنا، ابحث أو ابدأ نقاشًا في [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). ضمّن إخراج `bolt debug info` و`bolt logs --tail 50` في منشورك حتى يستطيع المجتمع المساعدة بشكل أسرع.
+</Note>
+
+## أول أشياء تجربها
+
+قبل الغوص في قسم معيّن، تحلّ هذه الأوامر الأربعة معظم المشكلات:
+
+| العَرَض | الأمر الأول | لماذا |
+| --- | --- | --- |
+| أي شيء غريب | `bolt debug info` | ملخّص نظام \+ إضافات دفعة واحدة. |
+| كان شيء يعمل، الآن لا يعمل | `bolt logs --tail 100` | أخطاء حديثة، عادة قرب الأعلى. |
+| اشتباه بإضافة | `bolt --pure` | ابدأ مع تعطيل جميع الإضافات. |
+| الإعدادات لا تُلتقط | `bolt debug config` | يطبع الإعدادات المحلولة بالكامل. |
+
+<Tip>
+  عائلة `bolt debug` هي محطتك الأولى لأي سلوك غامض. `bolt debug info` لملخّص النظام، و`bolt debug config` للإعدادات المحلولة، و`bolt debug paths` للمواقع على القرص، و`bolt debug snapshot` لفحص حالة الجلسة.
+</Tip>
+
+<Accordion title="Bolt لا يبدأ / يتعطّل عند الإطلاق">
+  **الأعراض:** تومض الطرفية وتخرج فورًا، أو ترى تتبع مكدس قبل عرض الـ TUI.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="اجمع معلومات النظام">
+      ```bash
+      bolt debug info
+      ```
+
+      يطبع هذا إصدار Bolt ونظام التشغيل ومحاكي الطرفية والإضافات المحمّلة. انسخ هذا الإخراج عند الإبلاغ عن خطأ.
+    </Step>
+    <Step title="افحص إخراج السجل الأخير">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      ابحث عن سطور `ERROR`. سبب شائع هو إضافة تفشل في التحميل — في تلك الحالة سترى خطأ يذكر اسم الإضافة.
+    </Step>
+    <Step title="عطّل الإضافات لعزل المشكلة">
+      ```bash
+      bolt --pure
+      ```
+
+      إذا بدأ Bolt نظيفًا بـ `--pure`، فإن إضافة تسبّب التعطّل. أزل الإضافة المخالفة من إعداداتك، أو أبلغ مؤلّف الإضافة.
+    </Step>
+    <Step title="افحص وجود إعدادات تالفة">
+      ```bash
+      bolt debug config
+      ```
+
+      إذا طبع هذا خطأ حول JSON غير صالح، افتح ملف الإعدادات المذكور وأصلح الصياغة. شغّل `bolt db path` لتأكيد أن مسار قاعدة البيانات متاح.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="فشل مصادقة المزوّد">
+  **الأعراض:** يعرض Bolt "No providers configured"، تفشل طلبات API بأخطاء 401، أو يخرج `bolt run` فورًا دون إنتاج أي إخراج.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="أعِد تشغيل تدفق تسجيل دخول المزوّد">
+      ```bash
+      bolt providers login
+      ```
+
+      اختر مزوّدك واتّبع الموجّهات. سيرشدك Bolt خلال إدخال مفتاح API أو OAuth.
+    </Step>
+    <Step title="تحقق من متغير بيئة مفتاح API">
+      إذا كنت تستخدم متغير بيئة (مثل `ANTHROPIC_API_KEY`)، تأكّد من أنه مضبوط فعلًا في الصدفة الحالية:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      إذا كان فارغًا، أضفه إلى ملف تعريف الصدفة الخاص بك وأعِد فتح طرفيتك.
+    </Step>
+    <Step title="افحص الإعدادات المحلولة">
+      ```bash
+      bolt debug config
+      ```
+
+      انظر إلى قسم `provider`. إذا ظهر مزوّدك مع `apiKey` فارغ، فإن مرجع متغير البيئة في ملف إعداداتك لا يتم توسيعه.
+    </Step>
+    <Step title="اسرد بيانات الاعتماد المخزّنة">
+      ```bash
+      bolt providers list
+      ```
+
+      يعرض هذا جميع بيانات الاعتماد المخزّنة في `auth.json` وجميع متغيرات البيئة المتعلّقة بالمزوّد التي اكتشفها Bolt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="خادم MCP لا يتصل">
+  **الأعراض:** `bolt mcp list` يعرض خادمًا كـ `failed` أو `needs authentication`، أو لا يستطيع الوكيل استخدام أي أدوات من ذلك الخادم.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="شغّل فحص تصحيح MCP">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      يختبر هذا اتصال HTTP الأساسي، ويفحص رأس `WWW-Authenticate`، ويمشي خلال تدفق اكتشاف OAuth إذا كان ذلك مطبقًا. سيخبرك الإخراج ما إذا كان الخادم قابلًا للوصول وما إذا كانت المصادقة مطلوبة.
+    </Step>
+    <Step title="تحقق من عنوان URL للخادم">
+      تحقق من عنوان URL في `.bolt/bolt.jsonc`. للخوادم البعيدة، تأكّد من أن عنوان URL ينتهي بمسار MCP (مثل `/mcp` أو `/tools`)، وليس فقط المضيف.
+    </Step>
+    <Step title="أعِد المصادقة لخوادم OAuth">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      اتّبع تدفق المتصفح. إذا كان الخادم يتطلّب معرّف عميل مسجّل مسبقًا، أضفه إلى الإعدادات:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="افحص أمر الخادم المحلي">
+      للخوادم `local`، شغّل الأمر يدويًا في طرفيتك لتأكيد أنه يبدأ دون أخطاء:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="الجلسة غير موجودة">
+  **الأعراض:** يخرج `bolt run --session <id>` بـ "Session not found"، أو اختفت جلسة تتذكّر العمل عليها.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="اسرد جميع الجلسات المتاحة">
+      ```bash
+      bolt session list
+      ```
+
+      تُرتّب الجلسات حسب الأحدث تحديثًا أولًا. إذا حُذفت جلستك أو رُحّلت قاعدة البيانات، فلن تظهر هنا.
+    </Step>
+    <Step title="اعثر على مسار قاعدة البيانات">
+      ```bash
+      bolt db path
+      ```
+
+      يطبع هذا المسار الكامل لملف SQLite. تحقق من أن الملف موجود وليس فارغًا.
+    </Step>
+    <Step title="استعلم من قاعدة البيانات مباشرة">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      إذا ظهرت جلستك في قاعدة البيانات ولكن ليس في `bolt session list`، فقد يكون هناك عدم تطابق في معرّف المشروع — الجلسات مرتبطة بالمشاريع.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="أخطاء الأذونات في الـ TUI">
+  **الأعراض:** يطلب الوكيل الإذن مرارًا، أو يرفض كتابة الملفات، أو ترى لافتات "Permission denied".
+
+  **فهم مستويات الوصول:**
+
+  لكل وكيل مدمج مستوى وصول معلن يتحكّم فيما يمكنه فعله دون سؤال:
+
+  | مستوى الوصول | ما يسمح به |
+  | --- | --- |
+  | **كامل** | قراءة الملفات، كتابة الملفات، تشغيل أوامر الصدفة |
+  | **تحرير** | قراءة وكتابة الملفات، لا أوامر صدفة |
+  | **قراءة** | قراءة الملفات فقط، لا كتابة أو أوامر |
+
+  الوكلاء `code` و`debug` و`refactor` و`migrate` و`perf` لديهم وصول **كامل**. `docs` لديه وصول **تحرير**. `plan` و`ask` و`code-review` و`security` لديهم وصول **قراءة**.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="بدّل إلى وكيل بوصول كامل">
+      إذا احتجت إلى كتابة ملفات، استخدم الوكيل `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      أو اضغط `Tab` في الـ TUI للتنقّل بين الوكلاء.
+    </Step>
+    <Step title="استخدم --auto للموافقة على الموجّهات بدون تفاعل">
+      في CI أو السياقات المسكرَبتة، مرّر `--auto` إلى `bolt run` للموافقة تلقائيًا على الأذونات غير المرفوضة صراحة في الإعدادات.
+    </Step>
+    <Step title="اضبط الأذونات في ملف الإعدادات">
+      يمكنك رفض أدوات معيّنة لجميع الجلسات في مشروع بإضافة كتلة `permission` إلى `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="استخدام رموز مرتفع أو تكاليف غير متوقّعة">
+  **الأعراض:** يعرض `bolt stats` أعداد رموز أعلى من المتوقّع، أو فاتورة API تنمو أسرع من المتوقّع.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="راجع إحصائيات استخدامك">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      يفصّل الإخراج التكلفة يوميًا ومتوسط الرموز لكل جلسة والاستخدام حسب النموذج.
+    </Step>
+    <Step title="اخفض جهد الاستدلال">
+      للنماذج التي تدعمه، اخفض جهد الاستدلال بـ `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      القيم المدعومة خاصة بالمزوّد (مثل `minimal`، `low`، `high`، `max`).
+    </Step>
+    <Step title="انتقل إلى نموذج أرخص">
+      استخدم `bolt models` للعثور على نموذج أصغر. النماذج الأصغر (مثل `claude-haiku`، `gpt-4o-mini`) تكلّف أقل بكثير لكل رمز وتعمل بشكل جيد لكثير من المهام.
+    </Step>
+    <Step title="استخدم وكيل ask أو plan للاستكشاف">
+      وكيلا `ask` و`plan` لهما وصول **قراءة** ولا يستدعيان أدوات الكتابة، ما يعني أنهما يتجنّبان الحلقات الثقيلة بالأدوات التي تولّد رموز إخراج كبيرة.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="تعارضات الإضافات أو سلوك غير متوقّع">
+  **الأعراض:** يتصرّف أمر slash بشكل غير متوقّع، تُعرض الـ TUI بشكل خاطئ، أو تغيّر شيء بعد تثبيت إضافة.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="عطّل جميع الإضافات لتحديد خط الأساس">
+      ```bash
+      bolt --pure
+      ```
+
+      إذا اختفت المشكلة، فإن إضافة مسؤولة.
+    </Step>
+    <Step title="حدّد الإضافة المخالفة">
+      ```bash
+      bolt debug info
+      ```
+
+      يعرض الإخراج جميع الإضافات المحمّلة. أزلها مؤقتًا واحدة تلو الأخرى من إعداداتك وأعِد تشغيل Bolt حتى تختفي المشكلة.
+    </Step>
+    <Step title="افحص عدم توافق الإصدار">
+      ```bash
+      bolt upgrade
+      ```
+
+      تُعلن الإضافات نطاق إصدار Bolt المتوافق. إذا رقّيت Bolt مؤخرًا، قد تحتاج إضافة إلى التحديث أيضًا.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="مشكلات مسارات WSL / Windows">
+  **الأعراض:** على Windows مع WSL، لا يستطيع Bolt العثور على `less`، أو تحتوي مسارات الملفات على شرطات مائلة عكسية غير متوقّعة، أو لا يُطلق pager لـ `bolt session list`.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="اضبط مسار Git Bash">
+      يبحث Bolt عن أدوات Unix (بما في ذلك `less`) بالنسبة إلى تثبيت Git for Windows. اضبط متغير البيئة على مجلد Git Bash الخاص بك:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      أضف هذا إلى ملف تعريف PowerShell الخاص بك (`$PROFILE`) لإبقائه.
+    </Step>
+    <Step title="تحقق باستخدام معلومات التصحيح">
+      ```bash
+      bolt debug info
+      ```
+
+      يؤكّد اكتشاف نظام التشغيل والمسارات التي يستخدمها Bolt.
+    </Step>
+    <Step title="شغّل Bolt داخل WSL مباشرة">
+      للحصول على أفضل تجربة على Windows، شغّل `bolt` من داخل طرفية WSL بدلًا من PowerShell أو Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="لا يمكن ترقية Bolt">
+  **الأعراض:** يبلّغ `bolt upgrade` عن خطأ أو لا يفعل شيئًا بصمت، أو لا يتغيّر رقم الإصدار بعد تشغيله.
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="حدّد طريقة التثبيت صراحة">
+      يحاول Bolt اكتشاف كيفية تثبيته. إذا فشل الاكتشاف، تجاوزه:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="أعِد التثبيت عبر سكربت التثبيت">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: شغّل كمسؤول لـ Chocolatey">
+      إذا ثبّت عبر `choco`، تتطلّب الترقيات طرفية مرفوعة الصلاحيات. افتح PowerShell كمسؤول قبل تشغيل `bolt upgrade`.
+    </Step>
+    <Step title="أكّد أن الإصدار الجديد نشط">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="لا يستطيع الوكيل العثور على الملفات (أو يعثر على الكثير)">
+  **الأعراض:** يشكو الوكيل من أنه لا يستطيع رؤية ملفات موجودة، أو يلتقط مرارًا ملفات لا تريده أن يلمسها (مثل `node_modules` أو مخرجات البناء أو الأسرار).
+
+  **الخطوات:**
+
+  <Steps>
+    <Step title="افحص وجود .boltignore">
+      يحترم Bolt ملف `.boltignore` في جذر المشروع الذي يتحكّم في الملفات التي يمكن لأدوات بحث ملفات الوكيل رؤيتها. يستخدم نفس صياغة `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="تحقق من مجلد العمل">
+      ```bash
+      bolt debug info
+      ```
+
+      تحقق من أن `cwd` يطابق جذر المشروع. إذا أطلقت Bolt من مجلد فرعي، فإن بحث ملفات الوكيل متجذّر هناك.
+    </Step>
+    <Step title="اطلب من الوكيل grep وليس التخمين">
+      إذا ادّعى الوكيل أن ملفًا غير موجود، اطلب منه تشغيل `grep` أو `glob` صراحة. يتجاوز هذا أي افتراض داخلي قديم.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="الحصول على معلومات التصحيح لتقرير خطأ">
+  عند تقديم مشكلة، المعلومات التالية هي الأكثر فائدة للمشرفين:
+
+  <Steps>
+    <Step title="اجمع معلومات النظام والإضافات">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="اجمع إخراج السجل الأخير">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="صدّر الجلسة ذات الصلة (مُنقّاة)">
+      إذا حدثت المشكلة أثناء جلسة معيّنة، صدّرها مع إخفاء الأسرار:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      أرفق `session-debug.json` بالمشكلة.
+    </Step>
+    <Step title="افتح مشكلة أو نقاشًا">
+      اذهب إلى [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) والصق إخراج `bolt debug info` بالإضافة إلى وصف لخطوات إعادة الإنتاج.
+    </Step>
+  </Steps>
+</Accordion>

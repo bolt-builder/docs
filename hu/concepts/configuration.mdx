@@ -1,0 +1,193 @@
+---
+title: "Konfiguráció — bolt.jsonc beállítások és globális felülírások"
+sidebarTitle: "Konfiguráció"
+description: "A Bolt réteges JSONC-konfigurációs fájlokat olvas a projektedből és az operációs rendszer konfigurációs könyvtáraiból. Állíts be szolgáltatókat, MCP-szervereket, utasításokat, plugineket és környezeti felülírásokat."
+---
+
+A Bolt réteges konfigurációs rendszert használ: egy **globális** konfigurációs fájlt a felhasználó szintű alapértékekhez, és egy **projektenkénti** konfigurációs fájlt a repositoryra jellemző beállításokhoz. Mindkét fájl JSONC formátumot (JSON megjegyzésekkel) használ, és mindkettő automatikusan létrejön egy `$schema` mutatóval, amely lehetővé teszi a szerkesztő automatikus kiegészítését.
+
+## A konfigurációs fájl helye
+
+### Projektenkénti konfiguráció
+
+Automatikusan létrejön az első futtatáskor a projekted belsejében:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Commitold ezt a fájlt, hogy megoszd a szolgáltatói konfigurációt, MCP-szervereket és egyedi utasításokat a csapatod többi tagjával. Érzékeny hitelesítő adatoknak soha nem szabad ide kerülniük — használj környezeti változókat vagy a globális konfigurációt.
+
+### Globális konfiguráció
+
+Az összes projektre vonatkozik a gépeden. A Bolt az operációs rendszer konfigurációs könyvtárában keresi az első illeszkedő fájlt:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferált)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Hol van a globális konfigurációs könyvtár?">
+  A Bolt Linuxon és macOS-en az XDG Base Directory Specification-t követi (`~/.config/bolt/`), Windowson pedig `%APPDATA%\bolt\` alatt keres. Futtasd a `bolt debug config` parancsot, hogy kiírd a teljes feloldott konfigurációt a gépeden.
+</Accordion>
+
+## Minimális konfigurációs példa
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+A `$schema` mező lehetővé teszi az IntelliSense-t és az érvényesítést a JSON Schemát támogató szerkesztőkben. A Bolt automatikusan beírja ezt a mezőt, ha hiányzik.
+
+## Konfigurációs referencia
+
+### `provider`
+
+Szolgáltató-specifikus beállítások konfigurálása, például egyedi alap URL-ek, régiós beállítások vagy nevesített hitelesítő adatok:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Regisztrálj [Model Context Protocol](https://modelcontextprotocol.io) szervereket, amelyeket az ügynök eszközként hívhat:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Az MCP-szervereket interaktívan kezelheted a `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` és `bolt mcp debug` parancsokkal.
+
+### `instructions`
+
+Fűzz hozzá egyedi rendszerutasításokat, amelyek minden munkamenetbe beinjektálódnak. Hasznos kódolási konvenciók, stílusútmutatók vagy projekt-specifikus szabályok betartatásához:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Több konfigurációs fájlból (globális \+ projekt) származó utasítások automatikusan egyesítve és deduplikálva vannak.
+
+### `plugin`
+
+Tölts be Bolt-plugineket. A pluginek új eszközöket, szolgáltatókat, kontextusforrásokat és hookokat adhatnak hozzá:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Távoli konfiguráció `url` mezővel
+
+Konfiguráció letöltése egy távoli URL-ről induláskor. Hasznos központosított csapatkonfigurációhoz:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Változó-helyettesítés
+
+A konfigurációs értékek hivatkozhatnak környezeti változókra `$VAR_NAME` vagy `${VAR_NAME}` szintaxissal. A helyettesítés betöltéskor történik, mielőtt a konfigurációt elemeznék:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Hogyan használjak környezeti változókat a konfigurációban?">
+  Hivatkozz bármely környezeti változóra `$VAR_NAME` vagy `${VAR_NAME}` szintaxissal bárhol egy karakterlánc konfigurációs értékben. A Bolt betöltéskor helyettesíti az értéket. Ha a változó nincs beállítva, a `$VAR_NAME` szöveges érték kerül felhasználásra — a Bolt nem hallgat el csendben, és nem dob hibát a hiányzó helyettesítések miatt.
+</Accordion>
+
+## Környezeti változós felülírások
+
+Ezek a környezeti változók lehetővé teszik a konfiguráció átirányítását vagy teljes felülírását, ami hasznos CI-hez, konténerekhez és teszteléshez:
+
+| Változó | Leírás |
+| --- | --- |
+| `BOLT_CONFIG` | Abszolút útvonal egy konfigurációs fájlhoz, amelyet a projekt-lokális helyett tölts be |
+| `BOLT_CONFIG_DIR` | Felülírja azt a könyvtárat, amelyben a Bolt konfigurációs fájlokat keres |
+| `BOLT_CONFIG_CONTENT` | Nyers JSONC konfigurációs tartalmat ad meg karakterláncként — nincs szükség fájlra |
+
+A `BOLT_CONFIG_CONTENT` különösen hasznos konténerizált környezetekben, ahol egy fájl csatolása kényelmetlen:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Melyik konfiguráció élvez elsőbbséget, ha több forrás aktív?">
+  A Bolt ebben a sorrendben egyesíti a konfigurációkat (a későbbi bejegyzések nyernek):
+
+  1. Globális konfigurációs fájl (`bolt.jsonc` / `bolt.json` az OS konfigurációs könyvtárában)
+  2. A globális konfiguráció `url` bejegyzéseiből letöltött távoli konfigurációk
+  3. Projektenkénti konfigurációs fájlok (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` fájl (ha be van állítva)
+  5. `BOLT_CONFIG_CONTENT` (ha be van állítva)
+
+  A tömbmezők, például az `instructions`, a források között összefűződnek, nem felülírják őket. Az objektummezők mélyen egyesülnek, konfliktus esetén a későbbi értékek nyernek.
+</Accordion>

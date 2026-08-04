@@ -1,0 +1,38 @@
+---
+title: "Lokal database (bolt db)"
+sidebarTitle: "Lokal database"
+description: "Bolt lagrer hver økt, melding og verktøykall i en lokal SQLite-database. Inspiser den, ta sikkerhetskopi eller spør den direkte med bolt db."
+---
+
+Bolt beholder hver økt, melding og verktøykall i en lokal SQLite-database. Den er fullt inspiserbar og fullt din — ingenting lastes opp med mindre du eksplisitt deler en økt.
+
+## Vanlige operasjoner
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Ta sikkerhetskopi
+
+Fordi det er en enkelt SQLite-fil, er sikkerhetskopi en kopi:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+For langtidsoppbevaring eller transport, foretrekk `bolt export` / `bolt import` — de produserer en portabel JSON-representasjon som overlever skjema-migreringer.
+
+## Skjema i et øyeblikk
+
+- `sessions` — én rad per økt, med tittel, prosjekt, tidsstempler og status.
+- `messages` — hele turloggen per økt.
+- `tool_calls` — hver påkalling med inputs, outputs og varighet.
+
+Nøyaktige kolonner utvikler seg; bruk `PRAGMA table_info(<table>)` for å se live-skjemaet.
+
+## Relatert
+
+- [Økter](/concepts/sessions) — hva databasen lagrer.
+- [Statistikk og kostnad](/reference/stats-and-cost) — aggregerte visninger over samme data.

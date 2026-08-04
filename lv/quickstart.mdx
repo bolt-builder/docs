@@ -1,0 +1,142 @@
+---
+title: "Sāciet darbu ar Bolt mazāk nekā minūtē"
+sidebarTitle: "Ātrā palaišana"
+description: "Instalējiet Bolt, atveriet savu projektu, savienojiet sniedzēju un palaidiet savu pirmo MI uzvedni — viss mazāk nekā 60 sekundēs ar šo pakāpenisko ceļvedi."
+---
+
+Šis ceļvedis iepazīstina jūs ar Bolt instalēšanu, tā palaišanu projektā, MI sniedzēja pievienošanu un pirmās uzvednes palaišanu. Visa plūsma aizņem mazāk par minūti.
+
+<Steps>
+  <Step title="Instalējiet Bolt">
+    Ātrākais ceļš ir oficiālais instalēšanas skripts, kas darbojas uz macOS un Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Priekšroku dodat pakotņu pārvaldniekam? Instalējiet globāli ar npm, bun, pnpm vai yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Darbvirsmas lietotnei uz macOS (bez Gatekeeper apiešanas):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skatiet [Instalēšanas ceļvedi](/installation) visām metodēm, tostarp Homebrew, Chocolatey, Scoop un Windows specifiskām piezīmēm.
+  </Step>
+  <Step title="Atveriet savu projektu">
+    Dodieties uz jebkuru projekta direktoriju un palaidiet interaktīvo TUI:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt automātiski uzņem jūsu projekta kontekstu — nolasa jūsu failu koku, izprot steku un padara to pieejamu katram aģentam no brīža, kad jūs to atverat.
+  </Step>
+  <Step title="Konfigurējiet MI sniedzēju">
+    Pirmajā palaišanas reizē Bolt aicinās jūs konfigurēt sniedzēju, ja neviens nav iestatīts. Jūs varat to arī palaist jebkurā laikā:
+
+    ```bash
+    bolt providers
+    ```
+
+    Tas atver sniedzēju pārvaldības plūsmu, kur jūs varat pievienot API atslēgas OpenAI, Anthropic un citiem atbalstītajiem LLM sniedzējiem. Konfigurācija tiek saglabāta failā `.bolt/bolt.jsonc` jūsu projekta saknē.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Ierakstiet uzvedni un izpētiet aģentus">
+    Kad esat iekšā TUI, ierakstiet savu uzvedni un nospiediet Enter. Izmantojiet **Tab**, lai jebkurā laikā pārslēgtos starp Bolt desmit iebūvētajiem aģentiem — pašreizējais aģents tiek parādīts statusa joslā.
+
+    Jūs varat arī palaist uzvednes tieši no komandrindas, neatverot TUI:
+
+    ```bash
+    # Neinteraktīva uzvedne, izmantojot noklusējuma aģentu
+    bolt run "explain this codebase"
+    
+    # Izmantojiet konkrētu aģentu
+    bolt run --agent ask "what does this project do?"
+    
+    # Pievienojiet TUI palaistam serverim (lokāli vai attālināti)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Iebūvētie aģenti
+
+Pārslēdziet aģentus ar `Tab` TUI vai nododiet `--agent <name>` komandai `bolt run`. Katram aģentam ir definēts piekļuves līmenis, kas atbilst tā mērķim.
+
+| Aģents | Piekļuve | Apraksts |
+| --- | --- | --- |
+| `code` | Full | Noklusējums: lasa, raksta un izpilda kodu |
+| `plan` | Read | Izpēta koda bāzi un izveido plānu, nemainot failus |
+| `ask` | Read | Jautājumi un izpēte — bez failu izmaiņām |
+| `code-review` | Read | Pārskata izmaiņas attiecībā uz pareizību, stilu un drošību |
+| `debug` | Full | Atkļūdo neizdevušos testus, avārijas un loģikas kļūdas |
+| `refactor` | Full | Droša pārstrukturēšana ar testu pārbaudi katrā solī |
+| `docs` | Edit | Raksta un atjaunina dokumentāciju un komentārus |
+| `security` | Read | Drošības audits: ievainojamības, noslēpumi, paraugi |
+| `migrate` | Full | Ietvaru jauninājumi un atkarību migrācijas |
+| `perf` | Full | Veiktspējas analīze un optimizācija |
+
+Ir arī divi iebūvēti apakšaģenti deleģēšanai: `@general` sarežģītiem daudzsoļu uzdevumiem un `@explore` ātrai tikai lasāmai koda bāzes izpētei. Jūs varat definēt savus aģentus kā Markdown failus vai ģenerēt vienu ar `bolt agent create`.
+
+## Bieži izmantojamas komandas, ko izmēģināt tālāk
+
+```bash
+# Pārskatiet staged izmaiņas ar izpildījās/neizpildījās izejas kodu
+bolt review --staged
+
+# Ģenerējiet commit ziņu staged izmaiņām
+bolt commit
+
+# Uzskaitiet un pārvaldiet sesijas
+bolt session list
+
+# Skatiet žetonu izmantošanas un izmaksu statistiku
+bolt stats
+
+# Vaicājiet lokālo sesiju datubāzi
+bolt db
+```
+
+<Tip>
+  Nododiet `--mini` komandai `bolt` vai `bolt attach`, lai iegūtu kompaktu UI, kas aizņem mazāk termināļa vietas — lieliski piemērots mazākiem logiem vai sadalītiem izkārtojumiem.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` pieņem `--auto`, `--yolo` un `--dangerously-skip-permissions` karogus, kas automātiski apstiprina visas atļauju uzvednes, nejautājot. Izmantojiet tos tikai uzticamās vidēs — tie ļauj aģentam lasīt, rakstīt un izpildīt bez apstiprinājuma.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt atbalsta čaulas pabeigšanas bash, zsh, fish un citām čaulām. Ģenerējiet un instalējiet pabeigšanas ar:
+
+  ```bash
+  bolt completion
+  ```
+
+  Sekojiet izdrukātajām instrukcijām, lai iegūtu pabeigšanas skriptu savā čaulas konfigurācijā.
+</Note>

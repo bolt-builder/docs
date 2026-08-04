@@ -1,0 +1,38 @@
+---
+title: "Lokální databáze (bolt db)"
+sidebarTitle: "Lokální databáze"
+description: "Bolt ukládá každé sezení, zprávu a volání nástroje do lokální SQLite databáze. Prozkoumej ji, zálohuj nebo se jí dotazuj přímo pomocí bolt db."
+---
+
+Bolt drží každé sezení, zprávu a volání nástroje v lokální SQLite databázi. Je plně prohledávatelná a plně tvá — nic se neuploaduje, dokud sezení výslovně nesdílíš.
+
+## Běžné operace
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Zálohování
+
+Protože jde o jediný SQLite soubor, záloha je kopie:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Pro dlouhodobé skladování nebo přenos preferuj `bolt export` / `bolt import` — produkují přenositelnou JSON reprezentaci, která přežije migrace schématu.
+
+## Schéma v kostce
+
+- `sessions` — jeden řádek na sezení, s názvem, projektem, časovými razítky a stavem.
+- `messages` — kompletní log tahů na sezení.
+- `tool_calls` — každé vyvolání se vstupy, výstupy a dobou trvání.
+
+Přesné sloupce se vyvíjejí; použij `PRAGMA table_info(<table>)` pro zobrazení živého schématu.
+
+## Související
+
+- [Sezení](/concepts/sessions) — co databáze ukládá.
+- [Statistiky a náklady](/reference/stats-and-cost) — agregované pohledy nad stejnými daty.

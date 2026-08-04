@@ -1,0 +1,395 @@
+---
+title: "Resol problemes comuns de Bolt"
+sidebarTitle: "Resolució de problemes"
+description: "Solucions per als problemes més comuns de Bolt: fallades a l'inici, errors d'autenticació de proveïdor, connectivitat MCP, problemes de sessió, permisos, cost i més."
+---
+
+La majoria dels problemes de Bolt cauen en un petit nombre de categories. Treballa a través de l'accordió rellevant a continuació, i comprova la sortida del registre amb `bolt logs` sempre que passi alguna cosa inesperada.
+
+<Note>
+  Per a preguntes que no es responen aquí, cerca o inicia una discussió a les [Discussions de GitHub de Bolt](https://github.com/bolt-builder/bolt-cli/discussions). Inclou la sortida de `bolt debug info` i `bolt logs --tail 50` a la teva publicació perquè la comunitat pugui ajudar més ràpidament.
+</Note>
+
+## Primeres coses a provar
+
+Abans de submergir-te en una secció específica, aquestes quatre ordres resolen la majoria dels problemes:
+
+| Símptoma | Primera ordre | Per què |
+| --- | --- | --- |
+| Qualsevol cosa estranya | `bolt debug info` | Resum del sistema \+ plugins d'un sol tret. |
+| Alguna cosa funcionava abans, ara no | `bolt logs --tail 100` | Errors recents, normalment a prop del capdamunt. |
+| Sospita d'un plugin | `bolt --pure` | Inicia amb tots els plugins desactivats. |
+| La configuració no es recull | `bolt debug config` | Imprimeix la configuració completament resolta. |
+
+<Tip>
+  La família `bolt debug` és la teva primera parada per a qualsevol comportament misteriós. `bolt debug info` per a un resum del sistema, `bolt debug config` per a la configuració resolta, `bolt debug paths` per a ubicacions al disc, i `bolt debug snapshot` per inspeccionar l'estat de la sessió.
+</Tip>
+
+<Accordion title="Bolt no s'inicia / falla en llançar-se">
+  **Símptomes:** El terminal parpelleja i surt immediatament, o veus un rastre de pila abans que el TUI es renderitzi.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Recull informació del sistema">
+      ```bash
+      bolt debug info
+      ```
+
+      Això imprimeix la teva versió de Bolt, sistema operatiu, emulador de terminal i plugins carregats. Copia aquesta sortida quan reportis un error.
+    </Step>
+    <Step title="Comprova la sortida del registre recent">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Cerca línies `ERROR`. Una causa comuna és un plugin que no es carrega — en aquest cas veuràs un error que menciona el nom del plugin.
+    </Step>
+    <Step title="Desactiva els plugins per aïllar el problema">
+      ```bash
+      bolt --pure
+      ```
+
+      Si Bolt s'inicia netament amb `--pure`, un plugin està causant la fallada. Elimina el plugin ofensiu de la teva configuració o reporta'l a l'autor del plugin.
+    </Step>
+    <Step title="Comprova si hi ha configuració corrupta">
+      ```bash
+      bolt debug config
+      ```
+
+      Si això imprimeix un error sobre JSON no vàlid, obre el fitxer de configuració que menciona i corregeix la sintaxi. Executa `bolt db path` per confirmar que la ruta de la base de dades és accessible.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="L'autenticació del proveïdor falla">
+  **Símptomes:** Bolt mostra "No providers configured", les sol·licituds API fallen amb errors 401, o `bolt run` surt immediatament sense produir cap sortida.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Torna a executar el flux d'inici de sessió del proveïdor">
+      ```bash
+      bolt providers login
+      ```
+
+      Selecciona el teu proveïdor i segueix els avisos. Bolt et guiarà per l'entrada de la clau API o OAuth.
+    </Step>
+    <Step title="Verifica la variable d'entorn de la clau API">
+      Si utilitzes una variable d'entorn (p. ex. `ANTHROPIC_API_KEY`), confirma que realment està definida al shell actual:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Si està buida, afegeix-la al teu perfil de shell i torna a obrir el terminal.
+    </Step>
+    <Step title="Inspecciona la configuració resolta">
+      ```bash
+      bolt debug config
+      ```
+
+      Mira la secció `provider`. Si el teu proveïdor apareix amb `apiKey` en blanc, la referència a la variable d'entorn al teu fitxer de configuració no s'està expandint.
+    </Step>
+    <Step title="Llista les credencials emmagatzemades">
+      ```bash
+      bolt providers list
+      ```
+
+      Això mostra totes les credencials emmagatzemades a `auth.json` i totes les variables d'entorn relacionades amb el proveïdor que Bolt va detectar.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="El servidor MCP no es connecta">
+  **Símptomes:** `bolt mcp list` mostra un servidor com a `failed` o `needs authentication`, o l'agent no pot utilitzar cap eina d'aquest servidor.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Executa la comprovació de depuració MCP">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Això prova la connectivitat HTTP bàsica, inspecciona la capçalera `WWW-Authenticate` i recorre el flux de descobriment d'OAuth si s'aplica. La sortida et dirà si el servidor és accessible i si es requereix autenticació.
+    </Step>
+    <Step title="Comprova la URL del servidor">
+      Verifica la URL al teu `.bolt/bolt.jsonc`. Per a servidors remots, assegura't que la URL acaba amb la ruta MCP (p. ex. `/mcp` o `/tools`), no només l'amfitrió.
+    </Step>
+    <Step title="Torna a autenticar per a servidors OAuth">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Segueix el flux del navegador. Si el servidor requereix un ID de client pre-registrat, afegeix-lo a la configuració:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Comprova l'ordre del servidor local">
+      Per a servidors `local`, executa l'ordre manualment al teu terminal per confirmar que s'inicia sense errors:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sessió no trobada">
+  **Símptomes:** `bolt run --session <id>` surt amb "Session not found", o una sessió amb la qual recordes haver treballat ha desaparegut.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Llista totes les sessions disponibles">
+      ```bash
+      bolt session list
+      ```
+
+      Les sessions s'ordenen per l'actualització més recent primer. Si la teva sessió va ser eliminada o la base de dades va ser migrada, no apareixerà aquí.
+    </Step>
+    <Step title="Troba la ruta de la base de dades">
+      ```bash
+      bolt db path
+      ```
+
+      Això imprimeix la ruta completa al fitxer SQLite. Verifica que el fitxer existeix i no està buit.
+    </Step>
+    <Step title="Consulta la base de dades directament">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Si la teva sessió apareix a la base de dades però no a `bolt session list`, pot haver-hi un desaparellament d'ID de projecte — les sessions estan delimitades a projectes.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Errors de permís al TUI">
+  **Símptomes:** L'agent demana permís repetidament, es nega a escriure fitxers, o veus banners "Permission denied".
+
+  **Entendre els nivells d'accés:**
+
+  Cada agent integrat té un nivell d'accés declarat que controla el que pot fer sense preguntar:
+
+  | Nivell d'accés | Què permet |
+  | --- | --- |
+  | **Full** | Llegir fitxers, escriure fitxers, executar ordres de shell |
+  | **Edit** | Llegir i escriure fitxers, sense ordres de shell |
+  | **Read** | Només llegir fitxers, sense escriptures ni ordres |
+
+  Els agents `code`, `debug`, `refactor`, `migrate` i `perf` tenen accés **Full**. `docs` té accés **Edit**. `plan`, `ask`, `code-review` i `security` tenen accés **Read**.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Canvia a un agent amb accés Full">
+      Si necessites escriptures de fitxers, utilitza l'agent `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      O prem `Tab` al TUI per recórrer els agents.
+    </Step>
+    <Step title="Utilitza --auto per aprovar avisos no interactivament">
+      En contextos de CI o d'script, passa `--auto` a `bolt run` per auto-aprovar els permisos que no estan explícitament denegats a la configuració.
+    </Step>
+    <Step title="Configura els permisos al fitxer de configuració">
+      Pots denegar eines específiques per a totes les sessions d'un projecte afegint un bloc `permission` a `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Alt ús de tokens o costos inesperats">
+  **Símptomes:** `bolt stats` mostra recomptes de tokens més alts del que s'esperava, o la teva factura d'API creix més ràpid del previst.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Revisa les estadístiques d'ús">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      La sortida desglossa el cost per dia, els tokens mitjans per sessió i l'ús per model.
+    </Step>
+    <Step title="Redueix l'esforç de raonament">
+      Per a models que ho suporten, redueix l'esforç de raonament amb `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Els valors suportats són específics del proveïdor (p. ex. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Canvia a un model més barat">
+      Utilitza `bolt models` per trobar un model més petit. Els models més petits (p. ex. `claude-haiku`, `gpt-4o-mini`) costen significativament menys per token i funcionen bé per a moltes tasques.
+    </Step>
+    <Step title="Utilitza l'agent ask o plan per a exploració">
+      Els agents `ask` i `plan` tenen accés **Read** i no invoquen eines d'escriptura, cosa que significa que eviten bucles pesats d'eines que generen grans tokens de sortida.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Conflictes de plugins o comportament inesperat">
+  **Símptomes:** Una ordre de barra inclinada es comporta de manera inesperada, el TUI es renderitza incorrectament, o alguna cosa va canviar després d'instal·lar un plugin.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Desactiva tots els plugins per establir una línia base">
+      ```bash
+      bolt --pure
+      ```
+
+      Si el problema desapareix, un plugin n'és responsable.
+    </Step>
+    <Step title="Identifica el plugin problemàtic">
+      ```bash
+      bolt debug info
+      ```
+
+      La sortida llista tots els plugins carregats. Elimina-los temporalment un a un de la teva configuració i reinicia Bolt fins que el problema desaparegui.
+    </Step>
+    <Step title="Comprova la incompatibilitat de versió">
+      ```bash
+      bolt upgrade
+      ```
+
+      Els plugins declaren un rang de versió compatible amb Bolt. Si has actualitzat Bolt recentment, un plugin també pot necessitar ser actualitzat.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Problemes de ruta WSL / Windows">
+  **Símptomes:** A Windows amb WSL, Bolt no pot trobar `less`, les rutes de fitxers contenen barres invertides inesperades, o el paginador per a `bolt session list` no es llança.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Estableix la ruta de Git Bash">
+      Bolt busca utilitats Unix (incloent `less`) relatives a la instal·lació de Git per a Windows. Estableix la variable d'entorn al teu directori de Git Bash:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Afegeix-ho al teu perfil de PowerShell (`$PROFILE`) per persistir-ho.
+    </Step>
+    <Step title="Verifica amb debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Confirma la detecció del sistema operatiu i quines rutes està utilitzant Bolt.
+    </Step>
+    <Step title="Executa Bolt dins de WSL directament">
+      Per a la millor experiència a Windows, executa `bolt` des d'un terminal WSL en lloc de PowerShell o Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="No es pot actualitzar Bolt">
+  **Símptomes:** `bolt upgrade` informa d'un error o no fa res silenciosament, o el número de versió no canvia després d'executar-lo.
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Especifica el mètode d'instal·lació explícitament">
+      Bolt intenta detectar com va ser instal·lat. Si la detecció falla, sobreescriu-ho:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Reinstal·la via l'script d'instal·lació">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: executa com a administrador per a Chocolatey">
+      Si vas instal·lar via `choco`, les actualitzacions requereixen un terminal elevat. Obre PowerShell com a administrador abans d'executar `bolt upgrade`.
+    </Step>
+    <Step title="Confirma que la nova versió està activa">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="L'agent no pot trobar fitxers (o en troba massa)">
+  **Símptomes:** L'agent es queixa que no pot veure fitxers que existeixen, o repetidament recull fitxers que no vols que toqui (com `node_modules`, sortida de compilació o secrets).
+
+  **Passos:**
+
+  <Steps>
+    <Step title="Comprova si hi ha un .boltignore">
+      Bolt honra un fitxer `.boltignore` a l'arrel del projecte que controla quins fitxers poden veure les eines de cerca de fitxers de l'agent. Utilitza la mateixa sintaxi que `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Confirma el directori de treball">
+      ```bash
+      bolt debug info
+      ```
+
+      Verifica que el `cwd` coincideix amb l'arrel del projecte. Si vas llançar Bolt des d'un subdirectori, la cerca de fitxers de l'agent està arrelada allà.
+    </Step>
+    <Step title="Demana a l'agent que faci grep, no que endevini">
+      Si l'agent diu que un fitxer no existeix, demana-li que executi `grep` o `glob` explícitament. Això evita qualsevol suposició interna obsoleta.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Obtenir informació de depuració per a un informe d'error">
+  Quan presentis una incidència, la informació següent és més útil per als mantenidors:
+
+  <Steps>
+    <Step title="Recull informació del sistema i plugins">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Recull la sortida del registre recent">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Exporta la sessió rellevant (sanejada)">
+      Si el problema va passar durant una sessió específica, exporta-la amb els secrets redactats:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Adjunta `session-debug.json` a la incidència.
+    </Step>
+    <Step title="Obre una incidència o discussió">
+      Ves a [Discussions de GitHub](https://github.com/bolt-builder/bolt-cli/discussions) i enganxa la sortida de `bolt debug info` més una descripció dels passos per reproduir-ho.
+    </Step>
+  </Steps>
+</Accordion>

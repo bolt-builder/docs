@@ -1,0 +1,145 @@
+---
+title: "وسّع Bolt بالإضافات"
+sidebarTitle: "الإضافات"
+description: "ثبّت وابنِ إضافات Bolt لإضافة مزوّدي ذكاء اصطناعي وطرق مصادقة وأدوات ومهايئات مساحة عمل مخصّصة إلى أي مشروع أو عالميًا."
+url: "extending/plugins"
+---
+
+تتيح لك الإضافات توسيع Bolt بما يتجاوز قدراته المدمجة. الإضافة هي وحدة Node أو Bun تصدّر بيان إضافة Bolt؛ عند تحميلها، يمكنها تسجيل مزوّدي LLM جدد، وطرق مصادقة مخصّصة، وأدوات إضافية، ومهايئات مساحة عمل. يمكن تثبيت الإضافات لمشروع واحد أو تطبيقها عالميًا عبر كل عملك.
+
+## تثبيت إضافة
+
+استخدم `bolt plugin install` (لقب: `bolt plug`) لتثبيت إضافة من npm وتسجيلها تلقائيًا في إعداداتك:
+
+```bash
+bolt plugin install <module>
+```
+
+### الخيارات
+
+| الخيار | اللقب | الوصف |
+|------|-------|-------------|
+| `--global` | `-g` | التثبيت في الإعدادات العامة بدلًا من المشروع الحالي |
+| `--force` | `-f` | استبدال إدخال موجود لنفس الوحدة |
+
+### النطاق: مشروع مقابل عام
+
+افتراضيًا، يضيف `bolt plugin install` الإضافة إلى `.bolt/bolt.jsonc` على مستوى المشروع. مرّر `--global` لإضافتها إلى إعدادات المستخدم على مستوى النظام بحيث تُحمَّل في كل مشروع.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  شغّل `bolt --pure` (أو اضبط `OPENCODE_PURE=1`) لبدء Bolt مع تعطيل كل الإضافات الخارجية. هذا مفيد لتصحيح ما إذا كانت إضافة تسبّب سلوكًا غير متوقّع، دون إلغاء تثبيتها.
+</Note>
+
+---
+
+## تثبيت إضافة منشورة
+
+<Steps>
+  <Step title="ابحث عن حزمة الإضافة">
+    ابحث في npm عن حزم تحمل `bolt-plugin` أو `opencode-plugin` في اسمها، أو اتّبع رابطًا من وثائق مزوّد.
+  </Step>
+
+  <Step title="ثبّت في مشروعك">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    يثبّت Bolt الحزمة، ويقرأ بيانها للكشف عن أهداف الخادم والـ TUI، ثم يكتب المدخل إلى `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="تحقق من الإعدادات">
+    افتح `.bolt/bolt.jsonc` وأكّد أنه تمّت إضافة إدخال الإضافة:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="ابدأ جلسة">
+    ```bash
+    bolt
+    ```
+
+    يحمّل Bolt الإضافة عند بدء التشغيل. أي مزوّدين أو أدوات تسجّلها تصبح متاحة فورًا.
+  </Step>
+</Steps>
+
+---
+
+## إعداد الإضافات يدويًا
+
+يمكنك تسجيل الإضافات بتحرير `.bolt/bolt.jsonc` مباشرة. هذا مفيد للإضافات المحلية قيد التطوير:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+تُحل المسارات النسبية من جذر المشروع. نقاط الدخول من TypeScript وJavaScript كلاهما مدعومة.
+
+---
+
+## بناء إضافة
+
+تُكتب الإضافات مقابل حزمة `@opencode-ai/plugin`، التي توفّر واجهة `Hooks` التي يجب أن تلبّيها وحدتك.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+إضافة بسيطة تصدّر دالة تتلقّى كائن `PluginInput` وتُعيد كائن `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### أنواع الربطات المتاحة
+
+| الربطة | الغرض |
+|------|---------|
+| `auth` | تسجيل مزوّدي مصادقة مخصّصين بمصفوفة `methods` |
+| `event` | التفاعل مع أحداث الجلسة (الرسائل، استدعاءات الأدوات، الاكتمال) |
+| `config` | الاستجابة لتغييرات الإعدادات في وقت التشغيل |
+| `dispose` | تنظيف الموارد عند إلغاء تحميل الإضافة |
+
+يعرض كائن `PluginInput` `client` (عميل API نمطي لـ Bolt) و`project` و`worktree` و`directory` و`serverUrl` بحيث يمكن لإضافتك التفاعل مع الخادم قيد التشغيل.
+
+---
+
+## متغيرات البيئة
+
+| المتغير | الوصف |
+|----------|-------------|
+| `OPENCODE_PURE` | اضبط على `1` للتشغيل دون أي إضافات خارجية |

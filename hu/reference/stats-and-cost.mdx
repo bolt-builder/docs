@@ -1,0 +1,32 @@
+---
+title: "Statisztikák és költségek (bolt stats)"
+sidebarTitle: "Statisztikák és költségek"
+description: "A bolt stats aggregálja a token-használatot és a költséget a munkameneteid között, hogy lásd, hová megy a költésed, és ehhez igazítsd a modelleket vagy ügynököket."
+---
+
+A `bolt stats` aggregálja a token-számokat és a költséget a helyi munkamenet-adatbázisban. Mivel minden eszközhívás rögzítve van (lásd: [Helyi adatbázis](/reference/local-database)), a számok pontosak a Bolt által vezérelt LLM-hívásokra.
+
+## Alapvető használat
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Mit mutat
+
+- Összes bemeneti, kimeneti és gyorsítótár-token.
+- Becsült költség szolgáltatónként (a futáskor érvényes szolgáltatói ártáblákat használva).
+- Modellenkénti, ügynökönkénti és napi bontások a kapcsolóktól függően.
+
+## Költségcsökkentés
+
+- Használd a `--variant minimal` vagy `--variant low` kapcsolót gondolkodás-igényes modelleken. Lásd: [Szolgáltatók és modellek](/concepts/providers-and-models).
+- Preferáld az `ask` vagy `plan` ügynököt feltáráshoz; ezek csak olvashatók és elkerülik az eszköz-igényes ciklusokat.
+- Válts kisebb modellre a `bolt models` paranccsal olyan feladatokhoz, amelyeknek nincs szükségük élvonalbeli képességre.
+
+## Kapcsolódó
+
+- [Szolgáltatók és modellek](/concepts/providers-and-models) — válaszd ki és hangold a modelleket, amelyeket a `stats` mér.
+- [Hibaelhárítás](/reference/troubleshooting) — mit tegyél egy meglepetés-számla esetén.

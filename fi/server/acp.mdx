@@ -1,0 +1,28 @@
+---
+title: "ACP: Ohjaa Boltia Zedistä ja muista editoreista"
+sidebarTitle: "ACP (editorit)"
+description: "Bolt puhuu Agent Client Protocolia (ACP), jonka avulla editorit kuten Zed voivat upottaa sen natiiviksi AI-koodaustaustaksi ilman erillistä sovellusta tai TUI:ta."
+---
+
+Bolt toteuttaa Agent Client Protocolin (ACP), joka on tapa, jolla editorit kuten Zed puhuvat AI-agenteille. Kun se on määritetty, editori käynnistää `bolt acp`n aliprosessina ja ohjaa sitä suoraan — saat Boltin agentit, työkalut, istunnot ja tarjoajapinon poistumatta editoristasi.
+
+## Ota ACP käyttöön
+
+Editorisi AI-asetuksissa lisää Bolt ACP-yhteensopivana agenttina ja osoita se komentoon:
+
+```bash
+bolt acp
+```
+
+Editori hallitsee prosessin elinkaarta. Määritä tarjoajat, mallit ja MCP-palvelimet kuten normaalisti tiedostossa `.bolt/bolt.jsonc` — ne pätevät myös täällä.
+
+## Mitä saat
+
+- Jokainen Bolt-agentti, kutsuttavissa editorin AI-paneelista.
+- Jaetut istunnot TUI:n ja web-käyttöliittymän kanssa (paikallisen tietokannan kautta).
+- Sama työkalusarja, oikeusmalli ja projektimuisti kuin missä tahansa muussa Boltin sisääntulossa.
+
+## Liittyvät
+
+- [Päätön palvelin](/server/headless-server) — rinnakkainen HTTP-rajapinta.
+- [Konfigurointi](/concepts/configuration) — konfigurointitiedosto, jonka ACP perii.

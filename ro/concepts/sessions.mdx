@@ -1,0 +1,191 @@
+---
+title: "Sesiuni — istoric conversațional durabil în Bolt"
+sidebarTitle: "Sesiuni"
+description: "Sesiunile sunt unitatea de lucru persistent a Bolt: fiecare stochează o conversație completă într-un SQLite local, astfel încât să te poți detașa, relua, ramifica, partaja și exporta oricând."
+---
+
+O **sesiune** este unitatea principală de lucru a Bolt. Fiecare prompt pe care îl trimiți, fiecare fișier pe care agentul îl citește sau editează și fiecare apel de instrument pe care îl face modelul sunt înregistrate durabil în istoricul acelei sesiuni. Deoarece sesiunile trăiesc într-o bază de date SQLite locală, supraviețuiesc reporniilor procesului, pot fi listate și interogate oricând și nu părăsesc niciodată mașina ta decât dacă le partajezi sau le exporți explicit.
+
+<Note>
+  Toate datele sesiunii sunt stocate local într-o bază de date SQLite pe propria ta mașină. Nimic nu este trimis către servere externe decât dacă activezi partajarea. Folosește `bolt db path` pentru a găsi fișierul exact al bazei de date.
+</Note>
+
+## Ciclul de viață al sesiunii
+
+O sesiune începe în momentul în care trimiți primul prompt și se încheie doar când o ștergi. Între aceste două momente te poți detașa, relua, ramifica sau preda liber sesiunea.
+
+<Steps>
+  <Step title="Creează sau continuă o sesiune">
+    Lansează TUI-ul pentru a începe interactiv o sesiune nouă sau transmite un prompt către `bolt run` pentru a crea una neinteractiv:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Detașează-te și revino mai târziu">
+    Închide TUI-ul oricând — sesiunea este persistată automat. Reia cea mai recentă sesiune cu `--continue` sau vizează o sesiune specifică după ID cu `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Ramifică înainte de a experimenta">
+    Folosește `--fork` pentru a te ramifica din istoricul sesiunii curente înainte de a încerca o modificare riscantă. Ramificația este o sesiune independentă care nu afectează originalul:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Partajează și colaborează">
+    Generează un URL de partajare cu `--share`. Oricine are linkul poate vedea transcrierea sesiunii într-un browser:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Comenzi pentru gestionarea sesiunilor
+
+### Listează sesiunile
+
+```bash
+bolt session list
+```
+
+Afișează un tabel formatat cu toate sesiunile, cu ID-ul lor, titlul și momentul ultimei actualizări. Adaugă `--format json` pentru a obține o ieșire lizibilă de mașină sau `-n <N>` pentru a limita la cele mai recente N sesiuni:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Șterge o sesiune
+
+```bash
+bolt session delete <sessionID>
+```
+
+Elimină definitiv sesiunea și toate mesajele ei din baza de date locală.
+
+## Opțiuni de rulare pentru controlul sesiunii
+
+Aceste opțiuni sunt disponibile pe `bolt run`:
+
+| Opțiune | Alias | Descriere |
+|---------|-------|-----------|
+| `--continue` | `-c` | Continuă cea mai recentă sesiune |
+| `--session <id>` | `-s` | Continuă o sesiune specifică după ID |
+| `--fork` | | Ramifică sesiunea înainte de a continua (necesită `--continue` sau `--session`) |
+| `--share` | | Generează un URL de partajare pentru sesiune |
+| `--title <title>` | | Setează sau suprascrie titlul sesiunii |
+
+## Exportarea sesiunilor
+
+Exportă transcrierea completă a unei sesiuni ca JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+Opțiunea `--sanitize` înlocuiește căile de fișiere, conținutul de cod, intrările și ieșirile instrumentelor și alte câmpuri potențial sensibile cu markeri de tip `[redacted:kind:id]` — util pentru partajarea transcrierilor cu colegii sau pentru raportarea erorilor.
+
+## Importarea sesiunilor
+
+Importă o sesiune dintr-un fișier JSON local sau direct dintr-un URL de partajare:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Sesiunile importate apar în lista ta locală de sesiuni și pot fi reluate complet.
+
+## Interogarea bazei de date a sesiunilor
+
+Bolt expune direct baza de date SQLite subiacentă pentru utilizatorii avansați.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Formatul de ieșire implicit este cu valori separate prin tab; adaugă `--format json` pentru ieșire JSON.
+
+## Statistici de utilizare a token-urilor și de cost
+
+`bolt stats` agregă utilizarea token-urilor și datele de cost pentru toate sesiunile tale:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Ieșirea include totalul de sesiuni, mesaje, token-uri de intrare/ieșire/raționament/cache, costul total, costul mediu pe zi, media și mediana token-urilor pe sesiune și o defalcare a utilizării instrumentelor. Transmite `--models` pentru a afișa și o defalcare pe model a mesajelor, token-urilor și costului.
+
+## Flux de lucru fork și share
+
+Iată un exemplu complet de ramificare a unei sesiuni și partajarea rezultatului:
+
+<Steps>
+  <Step title="Începe lucrul într-o sesiune nouă">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Ramifică înainte de următorul pas riscant">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    ID-ul sesiunii ramificate este afișat în consolă. Sesiunea originală rămâne neatinsă.
+  </Step>
+  <Step title="Partajează ramificația pentru revizuire">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    URL-ul de partajare este afișat odată ce sesiunea devine inactivă.
+  </Step>
+  <Step title="Importă pe altă mașină">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

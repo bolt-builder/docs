@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI:n komentoviite"
+sidebarTitle: "Komennot"
+description: "Täydellinen viite jokaiselle Bolt CLI -komennolle, mukaan lukien liput, argumentit ja käyttöesimerkit TUI:lle, runille, servelle, sessionille, agentille ja muille."
+---
+
+Bolt paljastaa yhden `bolt`-binäärin rikkaalla alikomentojoukolla. `bolt`in suorittaminen ilman argumentteja avaa täyden terminaalikäyttöliittymän. Kaikki muut alikomennot on lueteltu alla. Käytä `bolt <command> --help` milloin tahansa inline-ohjeeseen.
+
+<Accordion title="bolt (oletus — käynnistä TUI)">
+  Avaa interaktiivisen terminaalikäyttöliittymän nykyisessä hakemistossa. Bolt havaitsee automaattisesti projektisi kontekstin, lataa konfiguraation ja yhdistää mihin tahansa määritettyyn tarjoajaan.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Globaalit liput** — käytettävissä jokaisessa komennossa:
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Tulosta lokituloste stderriin |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Aseta lokin sanaisuustaso |
+  | `--pure` | boolean | Suorita ilman ulkoisia laajennuksia |
+  | `--help`, `-h` | boolean | Näytä ohjeteksti |
+  | `--version`, `-v` | boolean | Tulosta asennetun version numero |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Suorita Bolt yhdellä kehotteella ei-interaktiivisessa tilassa. Bolt käynnistää in-process-palvelimen, lähettää kehotteen aktiiviselle istunnolle, suoratoistaa vastauksen stdouttiin ja poistuu sitten. Putkita stdin tai anna `--file` liittääksesi kontekstin.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Suoritettava kauttaviivakomento; anna argumentit viestinä |
+  | `--continue` | `-c` | boolean | Jatka uusinta istuntoa |
+  | `--session` | `-s` | string | Jatkettavan istunnon ID |
+  | `--fork` |  | boolean | Haaraudu istunnosta ennen jatkamista (vaatii `--continue`n tai `--session`in) |
+  | `--share` |  | boolean | Jaa istunto sen valmistuttua |
+  | `--model` | `-m` | string | Käytettävä malli muodossa `provider/model` |
+  | `--best-of` |  | string | Pilkulla eroteltu `provider/model`-luettelo; ajaa tehtävän rinnakkain, järjestää tulokset, pitää voittajan |
+  | `--agent` |  | string | Käytettävä agentti (esim. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Tulostemuoto; `json` suoratoistaa raakoja rivierotettuja JSON-tapahtumia |
+  | `--file` | `-f` | string\[\] | Kontekstiksi liitettävä tiedosto tai tiedostot |
+  | `--title` |  | string | Istunnon otsikko |
+  | `--attach` |  | string | Suorita etä-Bolt-palvelinta vasten (esim. `http://localhost:4096`) |
+  | `--password` | `-p` | string | Etäpalvelimen perustodennuksen salasana |
+  | `--username` | `-u` | string | Etäpalvelimen perustodennuksen käyttäjänimi |
+  | `--dir` |  | string | Työhakemisto; jos `--attach` on asetettu, tämä on hakemisto etäpalvelimella |
+  | `--port` |  | number | Paikallisen in-process-palvelimen portti (satunnainen jos jätetty pois) |
+  | `--variant` |  | string | Päättelytaso, tarjoajakohtainen (esim. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Näytä päättely-/ajattelulohkot tulosteessa |
+  | `--mini` |  | boolean | Käynnistä minimaalinen split-footer-interaktiivinen käyttöliittymä (piilotettu) |
+  | `--interactive` | `-i` | boolean | Pakota suora interaktiivinen split-footer-tila |
+  | `--auto` |  | boolean | Hyväksy automaattisesti oikeudet, joita ei nimenomaisesti kielletty |
+  | `--yolo` |  | boolean | Ohita kaikki oikeuskehotteet (`--auto`n alias, piilotettu) |
+  | `--dangerously-skip-permissions` |  | boolean | Ohita kaikki oikeustarkastukset (piilotettu) |
+  | `--demo` |  | boolean | Ota käyttöön suorat interaktiiviset demo-kauttaviivakomennot (piilotettu) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Liitä täysi TUI käynnissä olevaan Bolt-palvelimeen. Palvelin voi olla paikallinen tai etä. Anna `--mini` käyttääksesi minimaalista split-footer-käyttöliittymää täyden TUI:n sijaan.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Hakemisto etäpalvelimella |
+  | `--continue` | `-c` | boolean | Jatka uusinta istuntoa etäpalvelimella |
+  | `--session` | `-s` | string | Jatkettavan istunnon ID |
+  | `--fork` |  | boolean | Haaraudu istunnosta jatkettaessa |
+  | `--password` | `-p` | string | Perustodennuksen salasana |
+  | `--username` | `-u` | string | Perustodennuksen käyttäjänimi |
+  | `--mini` |  | boolean | Käytä minimaalista interaktiivista käyttöliittymää |
+  | `--no-replay` |  | boolean | Poista istuntohistorian toisto käytöstä jatkettaessa ja koon muutoksen jälkeen (vaatii `--mini`n) |
+  | `--replay-limit` |  | number | Rajoita näkyvä toisto uusimpiin N viestiin (vaatii `--mini`n) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Käynnistä päätön Bolt API -palvelin. Palvelin paljastaa REST\+SSE-API:n, johon TUI, `bolt run --attach` ja `bolt attach` voivat yhdistyä. Sido `0.0.0.0`iin tehdäksesi siitä tavoitettavan muilta koneilta — aseta aina `BOLT_SERVER_PASSWORD`, kun teet niin.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--hostname` | string | Sidottava osoite (oletus: `127.0.0.1`) |
+  | `--port` | number | Kuunneltava portti (satunnainen jos jätetty pois) |
+  | `--mdns` | boolean | Ota mDNS-palvelun havainnointi käyttöön (oletukseksi hostname `0.0.0.0`) |
+  | `--mdns-domain` | string | Mukautettu domain-nimi mDNS-palvelulle (oletus: `opencode.local`) |
+  | `--cors` | string\[\] | Lisädomain-alueita CORSia varten |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD`ia ei ole asetettu oletuksena. Palvelin kirjaa varoituksen ja hyväksyy kaikki yhteydet, kunnes asetat sen.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Käynnistä Bolt-palvelin ja avaa web-käyttöliittymä välittömästi oletusselaimessasi. Hyväksyy samat verkkoliput kuin `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--hostname` | string | Sidottava osoite (oletus: `127.0.0.1`) |
+  | `--port` | number | Kuunneltava portti (satunnainen jos jätetty pois) |
+  | `--mdns` | boolean | Ota mDNS-palvelun havainnointi käyttöön (oletukseksi hostname `0.0.0.0`) |
+  | `--mdns-domain` | string | Mukautettu domain-nimi mDNS-palvelulle (oletus: `opencode.local`) |
+  | `--cors` | string\[\] | Lisädomain-alueita CORSia varten |
+</Accordion>
+
+<Accordion title="bolt session">
+  Hallitse Bolt-istuntoja, jotka on tallennettu paikalliseen SQLite-tietokantaan.
+
+  **Alikomennot**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **`bolt session list` -liput**
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Rajoita tuloste N uusimpaan istuntoon |
+  | `--format` |  | `table`\|`json` | Tulostemuoto (oletus: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Listaa ja luo mukautettuja agentteja. Agentit ovat markdown-tiedostoja YAML-frontmatterilla, jotka määrittelevät järjestelmäkehotteen, oikeudet ja tilan.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` -liput**
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Hakemiston polku agenttitiedoston kirjoittamiselle |
+  | `--description` |  | string | Luonnollisen kielen kuvaus siitä, mitä agentin tulisi tehdä |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Toimiiko agentti ensisijaisena agenttina, aliagenttina vai molempina |
+  | `--permissions` | `--tools` | string | Pilkulla eroteltu luettelo sallituista oikeuksista (oletus: kaikki) |
+  | `--model` | `-m` | string | Käytettävä malli muodossa `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  Hallitse interaktiivisesti AI-tarjoajien tunnistetietoja. Tunnistetiedot tallennetaan käyttöjärjestelmän datahakemistoon (`~/.local/share/bolt/auth.json` Linuxissa, `~/Library/Application Support/bolt/auth.json` macOS:ssä).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Listaa kaikki mallit, jotka ovat käytettävissä määritetyistä tarjoajistasi.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Sisällytä JSON-kustannusmetatiedot jokaiselle mallille |
+  | `--refresh` | boolean | Päivitä mallien välimuisti models.devistä |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Hallitse Model Context Protocol (MCP) -palvelimia. Bolt tukee sekä etä- (HTTP/SSE) palvelimia OAuthilla että paikallisia (stdio) palvelimia.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **`bolt mcp add` -liput**
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--url` | string | Etä-MCP-palvelimen URL |
+  | `--env` | string\[\] | Ympäristömuuttuja paikalliselle palvelimelle (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP-otsake etäpalvelimelle (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Asenna Bolt-laajennus npm:stä ja päivitä asianomainen konfigurointitiedosto. Laajennukset voivat laajentaa TUI:ta, lisätä uusia kauttaviivakomentoja tai rekisteröidä uusia tarjoajia.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Lisää laajennus globaaliin konfiguraatioon projektikonfiguraation sijaan |
+  | `--force` | `-f` | boolean | Korvaa jo määritetty laajennusversio |
+</Accordion>
+
+<Accordion title="bolt github">
+  Hallitse Bolt GitHub Actions -integraatiota, joka mahdollistaa Boltin vastaamisen pull requesteihin, issueihin ja muihin GitHub-tapahtumiin.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` -liput**
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--event` | string | Simuloitavan GitHub-tapahtuman nimi (esim. `pull_request`) |
+  | `--token` | string | GitHub-henkilökohtainen käyttöoikeustunnus |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Kloonaa GitHub-pull request paikallisena haarana käyttäen `gh`-CLI:tä ja käynnistä sitten Bolt kloonatussa hakemistossa. Jos PR-kuvaus sisältää istunnon jakolinkin, Bolt tuo kyseisen istunnon automaattisesti.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Tämä komento vaatii, että [GitHub CLI (`gh`)](https://cli.github.com/) on asennettu ja todennettu.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Luo commit-viesti stagatuille (tai kaikille seuratuille) muutoksille käyttäen AI-mallia ja tee sitten commit. Malli tarkastelee viimeaikaista commit-historiaa tyylikonteksti varten.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Committaa kaikki seuratut muutokset, ei vain stagattuja |
+  | `--dry-run` |  | boolean | Tulosta luotu viesti committaamatta |
+  | `--model` | `-m` | string | Käytettävä malli muodossa `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Suorita AI-koodikatselmointi diffille ja poistu koodilla `0` (läpäisy) tai `1` (epäonnistuminen). `code-review`-agentti tutkii diffiä oikeellisuuden, tyylin ja tietoturva-asioiden osalta ja lähettää sitten rivin `Verdict: PASS` tai `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Katsele vain stagattuja muutoksia |
+  | `--branch` |  | string | Katsele muutoksia tämän haaran yhdistämiskohdasta lähtien |
+  | `--model` | `-m` | string | Käytettävä malli muodossa `provider/model` |
+
+  <Note>
+    Poistumiskoodit: `0` = PASS, `1` = FAIL, `2` = tuomiota ei voitu määrittää.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Vie istunto JSON-muodossa stdouttiin. Hyödyllinen arkistoimiseen, jakamiseen tai muihin työkaluihin syöttämiseen. Anna `--sanitize` ennen julkista jakamista poistaaksesi tiedostopolut, kehotteet ja muun arkaluontoisen transkriptin sisällön.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Poista arkaluontoiset tiedot (tiedostopolut, kehoteteksti, työkalu-I/O) ennen vientiä |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Tuo aiemmin viety istunto paikalliseen tietokantaan. Hyväksyy joko paikallisen JSON-tiedoston tai istunnon jakolinkin.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Näytä yhteenlasketut tokenien käyttö- ja kustannustilastot kaikkien istuntojen välillä. Tuloste sisältää yleistaulukon, kustannus- ja tokenerittelyn, mallin käytön ja työkalun käytön palkkikaavion.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--days` | number | Rajoita viimeisiin N päivään (oletus: kaikki aika) |
+  | `--tools` | number | Näytettävien työkalujen määrä työkalun käytön kaaviossa |
+  | `--models` | boolean\|number | Näytä mallitilastot; anna numero rajataksesi luetteloa |
+  | `--project` | string | Suodata projektin ID:n perusteella; tyhjä merkkijono tarkoittaa nykyistä projektia |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Tulosta Bolt-sovelluksen loki. Loki tallennetaan käyttöjärjestelmän lokihakemistoon (esim. `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Tulostettavien loppurivien määrä (oletus: 1000) |
+  | `--follow` | `-f` | boolean | Suoratoista uudet lokirivit reaaliaikaisesti |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Kysele tai tarkastele paikallista SQLite-istuntotietokantaa suoraan.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Tulostemuoto kyselytuloksille (oletus: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Päivitä Bolt uusimpaan julkaisuun tai tiettyyn versioon. Bolt havaitsee asennusmenetelmän automaattisesti ja käyttää sopivaa paketinhallintaa.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Lippu | Alias | Tyyppi | Kuvaus |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Käytettävä asennusmenetelmä |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Poista Bolt-binääri ja kaikki siihen liittyvä data.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Luo shell-täydennysskripti `bashille`, `zsh`:lle tai `fishille`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Kokoelma vianmääritys- ja introspektioalikomentoja. Hyödyllinen virheraportteja lähetettäessä tai odottamatonta käyttäytymistä diagnosoitaessa.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Käynnistä ACP (Agent Client Protocol) -palvelin. ACP on protokolla, jota editori-integraatiot, kuten [Zed](https://zed.dev), käyttävät kommunikoidakseen Boltin kanssa stdin/stdoutin yli.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Lippu | Tyyppi | Kuvaus |
+  | --- | --- | --- |
+  | `--cwd` | string | Palvelimen työhakemisto (oletus: `process.cwd()`) |
+  | `--hostname` | string | Sidontahostname (oletus: `127.0.0.1`) |
+  | `--port` | number | Sidontaportti |
+  | `--mdns` | boolean | Ota mDNS-palvelun havainnointi käyttöön |
+  | `--mdns-domain` | string | Mukautettu domain-nimi mDNS-palvelulle (oletus: `opencode.local`) |
+  | `--cors` | string\[\] | Lisädomain-alueita CORSia varten |
+</Accordion>

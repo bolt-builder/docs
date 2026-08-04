@@ -1,0 +1,36 @@
+---
+title: "Anpassade verktyg i Bolt"
+sidebarTitle: "Anpassade verktyg"
+description: "Lägg till projektspecifika verktyg i Bolt genom att droppa körbara filer i .opencode/tool/. Varje fil blir ett verktyg agenten kan anropa."
+---
+
+Anpassade verktyg låter dig exponera vad som helst du kan skripta (skalskript, Node/Bun/Python-program, små binärer) som ett verktyg agenten kan anropa via namn. Det är det enklaste sättet att ge Bolt tillgång till ditt eget projekts build-, deploy- eller data-arbetsflöden.
+
+## Var de bor
+
+Droppa filer i en av:
+
+- `.opencode/tool/` — projekt-scoped, checkas in med repot.
+- `.opencode/tools/` — accepteras som alias för ovan.
+
+Varje fil blir ett verktyg med namn efter filen (minus dess filändelse). Verktyg plockas upp automatiskt nästa gång Bolt startar.
+
+## Ett verktygs anatomi
+
+Ett anpassat verktyg deklarerar sitt namn, sin beskrivning och sitt inmatningsschema i en header och implementerar sedan beteendet. Exakt hur det ser ut beror på vilken runtime du väljer (skalskript, TypeScript etc.), men varje verktyg måste:
+
+1. Annonsera ett JSON Schema för sina inmatningar så att modellen vet hur den ska anropa det.
+2. Returnera ett värde (eller ett fel) som Bolt kan rendera i TUI:n och mata tillbaka till modellen.
+
+När det har laddats visas verktyget i agentens verktygslista bredvid inbyggda verktyg som `bash` och `grep`, och det styrs av samma [behörighetssystem](/concepts/permissions).
+
+## När använder man ett anpassat verktyg vs. en MCP-server
+
+- **Anpassat verktyg** — litet, projektspecifikt, ingen återanvändning mellan projekt. Snabbt att skriva.
+- **MCP-server** — delas mellan projekt, eller bäddar in en riktig extern tjänst med auth. Se [MCP-servrar](/extending/mcp-servers).
+- **Plugin-verktyg** — distribueras som ett npm-paket tillsammans med andra utökningspunkter. Se [Plugins](/extending/plugins).
+
+## Relaterat
+
+- [Verktyg](/concepts/tools) — referens för inbyggda verktyg.
+- [Plugins](/extending/plugins) — utökningsytan för verktyg och mer.

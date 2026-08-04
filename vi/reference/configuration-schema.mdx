@@ -1,0 +1,192 @@
+---
+title: "Tham chiếu tệp cấu hình Bolt"
+sidebarTitle: "Config Schema"
+description: "Tham chiếu đầy đủ cho schema tệp cấu hình Bolt — vị trí, mọi trường cấp cao nhất, các loại MCP server, ghi đè provider và ví dụ đầy đủ."
+---
+
+Bolt sử dụng tệp JSON with Comments (`.jsonc`) cho cấu hình dự án và toàn cục. Schema được đánh phiên bản và xuất bản tại `https://opencode.ai/config.json`, mà các trình soạn thảo có thể dùng để cung cấp tự động hoàn thành và xác thực.
+
+## Vị trí tệp cấu hình
+
+Bolt gộp cấu hình từ hai vị trí. Cài đặt theo dự án thắng cài đặt toàn cục khi cùng một khóa xuất hiện ở cả hai.
+
+| Phạm vi | Đường dẫn |
+|---|---|
+| **Theo dự án** | `.bolt/bolt.jsonc` (hoặc `.bolt/bolt.json`) trong gốc dự án của bạn |
+| **Toàn cục** | `bolt.jsonc` (hoặc `bolt.json`) trong thư mục cấu hình OS của bạn |
+
+Thư mục cấu hình OS là:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt cũng đọc các tệp `opencode.jsonc` / `opencode.json` cũ ở cùng vị trí. Các dự án mới nên dùng quy ước đặt tên `bolt.jsonc`, có ưu tiên hơn các tên tệp cũ.
+</Note>
+
+Bolt tạo tệp cấu hình toàn cục tối thiểu với dòng `$schema` ở lần chạy đầu tiên, và tạo `.bolt/bolt.jsonc` trong gốc dự án của bạn lần đầu bạn mở TUI trong thư mục đó.
+
+## Các trường schema
+
+<ParamField body="$schema" type="string">
+  URL trỏ tới JSON schema cho tệp cấu hình này. Bật tự động hoàn thành và xác thực nội tuyến trong các trình soạn thảo hỗ trợ JSON Schema (VS Code, Zed, JetBrains IDE, v.v.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Mô hình mặc định cho tất cả các phiên, biểu diễn dưới dạng `provider/model`. Điều này có thể được ghi đè theo phiên với `bolt run --model` hoặc trong bộ chọn mô hình của TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Chạy `bolt models` để xem mọi chuỗi `provider/model` có sẵn cho các provider đã cấu hình của bạn.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Ghi đè thông tin xác thực và cài đặt riêng cho provider. Mỗi khóa là một ID provider (ví dụ `anthropic`, `openai`, `google`). Sử dụng phổ biến nhất là đặt API key qua tham chiếu biến môi trường để key không bao giờ được lưu ở dạng văn bản thô.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Các giá trị bắt đầu bằng `${` và kết thúc bằng `}` được xử lý như tham chiếu biến môi trường và mở rộng tại thời điểm chạy.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Cấu hình MCP server, được đánh khóa theo tên bạn chọn. Bolt hỗ trợ hai loại server:
+
+  **Server từ xa** — kết nối qua HTTP/SSE, với OAuth tùy chọn:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Trường | Loại | Mô tả |
+  |---|---|---|
+  | `type` | `"remote"` | Xác định đây là server HTTP từ xa |
+  | `url` | string | URL đầy đủ của endpoint MCP |
+  | `oauth` | object \| `false` | Đối tượng cấu hình OAuth (với `clientId`, `clientSecret`, `scope`, `redirectUri` tùy chọn). Đặt thành `false` để tắt tự động phát hiện OAuth. |
+  | `headers` | object | HTTP header để gửi với mọi request (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Bật hoặc tắt server này khi khởi động |
+  | `timeout` | number | Thời gian chờ request tính bằng mili-giây (mặc định: 5000) |
+
+  **Server cục bộ** — spawn một tiến trình con qua stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Trường | Loại | Mô tả |
+  |---|---|---|
+  | `type` | `"local"` | Xác định đây là server stdio cục bộ |
+  | `command` | string[] | Lệnh và mọi đối số để spawn |
+  | `cwd` | string | Thư mục làm việc cho tiến trình server (đường dẫn tương đối giải quyết từ thư mục workspace) |
+  | `environment` | object | Biến môi trường bổ sung để truyền vào tiến trình con |
+  | `enabled` | boolean | Bật hoặc tắt server này khi khởi động |
+  | `timeout` | number | Thời gian chờ request tính bằng mili-giây (mặc định: 5000) |
+
+  Dùng `bolt mcp add` để có trình hướng dẫn tương tác, hoặc `bolt mcp list` để kiểm tra trạng thái server hiện tại.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Các hướng dẫn hệ thống bổ sung được thêm vào mọi phiên trong dự án này hoặc toàn cục. Các hướng dẫn từ nhiều tệp cấu hình được gộp (loại trùng). Dùng cái này để đưa các quy ước riêng cho dự án, quy tắc phong cách hoặc các ràng buộc mà mọi agent nên tuân theo.
+
+  ```jsonc
+  "instructions": [
+    "Luôn viết test cho mọi hàm mới.",
+    "Dùng chế độ strict của TypeScript. Không bao giờ dùng `any`.",
+    "Tuân theo các quy ước đặt tên hiện có của repository."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Các spec plugin để nạp. Mỗi mục là một tên gói npm, đường dẫn tệp cục bộ hoặc URL. Plugin có thể mở rộng TUI, thêm slash command hoặc đăng ký các provider bổ sung. Dùng `bolt plugin install <spec>` để cài đặt plugin và tự động thêm nó vào mảng này.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Ví dụ đầy đủ
+
+`.bolt/bolt.jsonc` sau đây hiển thị một cấu hình dự án thực tế:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Mô hình mặc định cho tất cả các phiên trong dự án này
+  "model": "anthropic/claude-opus-4-5",
+
+  // Thông tin xác thực provider — không bao giờ hard-code key; dùng tham chiếu env var
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // Các MCP server có sẵn trong dự án này
+  "mcp": {
+    // Server từ xa với OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Server stdio cục bộ
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // Các hướng dẫn hệ thống được đưa vào mọi phiên
+  "instructions": [
+    "Luôn viết test cho các hàm mới.",
+    "Dùng conventional commits cho mọi commit message.",
+    "Ưu tiên xử lý lỗi tường minh thay vì các khối try/catch quá rộng."
+  ],
+
+  // Các plugin để nạp
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Chạy `bolt debug config` để xem cấu hình đã được giải quyết đầy đủ sau khi mọi tệp được gộp. Đây là cách nhanh nhất để xác nhận rằng cấu hình theo dự án và toàn cục của bạn đang kết hợp đúng.
+</Tip>

@@ -1,0 +1,193 @@
+---
+title: "Configurație — setări bolt.jsonc și suprascrieri globale"
+sidebarTitle: "Configurație"
+description: "Bolt citește fișiere JSONC de configurație pe niveluri din proiect și din directoarele de configurare ale sistemului de operare. Setează furnizori, servere MCP, instrucțiuni, plugin-uri și suprascrieri de mediu."
+---
+
+Bolt folosește un sistem de configurare pe niveluri: un fișier de configurare **global** pentru valorile implicite ale utilizatorului și un fișier de configurare **per proiect** pentru setări specifice fiecărui repository. Ambele fișiere folosesc formatul JSONC (JSON cu comentarii) și ambele sunt create automat cu un pointer `$schema` care activează autocompletarea în editor.
+
+## Locațiile fișierelor de configurare
+
+### Configurație per proiect
+
+Creată automat la prima rulare în interiorul proiectului tău:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Comite acest fișier pentru a partaja configurația furnizorului, serverele MCP și instrucțiunile personalizate cu restul echipei. Credențialele sensibile nu ar trebui să ajungă niciodată aici — folosește variabile de mediu sau configurația globală în schimb.
+
+### Configurație globală
+
+Se aplică tuturor proiectelor de pe mașina ta. Bolt caută primul fișier care se potrivește în directorul de configurare al sistemului de operare:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferat)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Unde este directorul de configurare globală?">
+  Bolt urmează specificația XDG Base Directory pe Linux și macOS (`~/.config/bolt/`) și `%APPDATA%\bolt\` pe Windows. Rulează `bolt debug config` pentru a afișa configurația completă rezolvată de pe mașina ta.
+</Accordion>
+
+## Exemplu minim de configurare
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+Câmpul `$schema` activează IntelliSense și validarea în editoarele care acceptă JSON Schema. Bolt scrie automat acest câmp dacă lipsește.
+
+## Referință de configurare
+
+### `provider`
+
+Configurează opțiuni specifice furnizorului, cum ar fi URL-uri de bază personalizate, setări regionale sau credențiale denumite:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Înregistrează servere [Model Context Protocol](https://modelcontextprotocol.io) pe care agentul le poate apela ca instrumente:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Gestionează interactiv serverele MCP cu `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` și `bolt mcp debug`.
+
+### `instructions`
+
+Adaugă instrucțiuni de sistem personalizate care sunt injectate în fiecare sesiune. Utile pentru impunerea convențiilor de codare, a ghidurilor de stil sau a regulilor specifice proiectului:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instrucțiunile din mai multe fișiere de configurare (global \+ proiect) sunt îmbinate și deduplicate automat.
+
+### `plugin`
+
+Încarcă plugin-uri Bolt. Plugin-urile pot adăuga instrumente noi, furnizori, surse de context și hook-uri:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Configurație la distanță prin `url`
+
+Preia configurația de la o adresă URL la distanță la pornire. Util pentru configurări centralizate pe echipă:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Substituția variabilelor
+
+Valorile din configurație pot face referire la variabile de mediu folosind sintaxa `$VAR_NAME` sau `${VAR_NAME}`. Substituția se face la momentul încărcării, înainte ca fișierul de configurare să fie parsat:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Cum folosesc variabile de mediu în configurație?">
+  Fă referire la orice variabilă de mediu cu `$VAR_NAME` sau `${VAR_NAME}` oriunde într-o valoare de configurare de tip șir. Bolt substituie valoarea la momentul încărcării. Dacă variabila nu este setată, se folosește șirul literal `$VAR_NAME` — Bolt nu eșuează în tăcere și nu aruncă o eroare pentru substituții lipsă.
+</Accordion>
+
+## Suprascrieri prin variabile de mediu
+
+Aceste variabile de mediu îți permit să redirecționezi sau să suprascrii complet configurația, ceea ce este util pentru CI, containere și testare:
+
+| Variabilă | Descriere |
+| --- | --- |
+| `BOLT_CONFIG` | Cale absolută către un fișier de configurare care se încarcă în locul celui local al proiectului |
+| `BOLT_CONFIG_DIR` | Suprascrie directorul în care Bolt caută fișierele de configurare |
+| `BOLT_CONFIG_CONTENT` | Furnizează conținut brut de configurație JSONC ca șir — fără fișier |
+
+`BOLT_CONFIG_CONTENT` este deosebit de util în medii containerizate în care montarea unui fișier este incomodă:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Care configurație are prioritate atunci când sunt active mai multe surse?">
+  Bolt îmbină configurațiile în această ordine (intrările ulterioare câștigă):
+
+  1. Fișierul de configurare globală (`bolt.jsonc` / `bolt.json` din directorul de configurare al sistemului de operare)
+  2. Configurații la distanță preluate din intrările `url` ale configurației globale
+  3. Fișierele de configurare per proiect (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. Fișierul `BOLT_CONFIG` (dacă este setat)
+  5. `BOLT_CONFIG_CONTENT` (dacă este setat)
+
+  Câmpurile de tip listă, cum ar fi `instructions`, sunt concatenate între surse în loc să fie înlocuite. Câmpurile de tip obiect sunt îmbinate în profunzime, valorile ulterioare câștigând în cazul conflictelor.
+</Accordion>

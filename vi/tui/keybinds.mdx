@@ -1,0 +1,38 @@
+---
+title: "Phím tắt TUI của Bolt"
+sidebarTitle: "Phím tắt"
+description: "Các phím tắt Bolt TUI thiết yếu: chuyển đổi agent bằng Tab, chế độ mini, push-to-talk và mọi thứ khác bạn có thể điều khiển từ bàn phím."
+---
+
+Bolt TUI được thiết kế để có thể điều khiển hoàn toàn từ bàn phím. Trang này liệt kê các phím tắt bạn sẽ dùng nhiều nhất. Cho danh sách đầy đủ, hãy chạy `bolt` và mở trợ giúp trong ứng dụng.
+
+## Thiết yếu
+
+| Phím | Hành động |
+| --- | --- |
+| `Tab` | Chuyển sang agent tiếp theo (`code`, `plan`, `ask`, ...). Agent hiện tại được hiển thị trong thanh trạng thái. |
+| `Shift+Tab` | Chuyển sang agent trước đó. |
+| `Enter` | Gửi tin nhắn hiện tại. |
+| `Esc` | Hủy lượt đang thực thi. |
+| `Ctrl+C` | Ngắt lời gọi công cụ hiện tại. |
+| `Ctrl+D` | Tách khỏi phiên (để nó tiếp tục chạy trên server). |
+
+## Các chế độ
+
+### Chế độ `--mini`
+
+Khởi động Bolt với bố cục chân tách gọn chiếm ít không gian terminal, tuyệt cho chia ngăn:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk voice
+
+Giữ phím push-to-talk được cấu hình để đọc prompt bằng speech-to-text, rồi thả để gửi. Cấu hình phím và provider STT trong `.bolt/bolt.jsonc`.
+
+## Liên quan
+
+- [Slash command](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` và các bạn của chúng.
+- [Phiên](/concepts/sessions) — tách, tiếp tục, fork và chia sẻ từ bàn phím.

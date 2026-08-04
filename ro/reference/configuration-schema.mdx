@@ -1,0 +1,192 @@
+---
+title: "Referință pentru fișierul de configurare Bolt"
+sidebarTitle: "Schema de configurare"
+description: "Referință completă pentru schema fișierului de configurare Bolt — locații, toate câmpurile de nivel superior, tipurile de server MCP, suprascrierile de furnizor și un exemplu complet."
+---
+
+Bolt folosește un fișier JSON cu comentarii (`.jsonc`) pentru configurația proiectului și pentru cea globală. Schema este versionată și publicată la `https://opencode.ai/config.json`, pe care editoarele o pot folosi pentru a oferi autocompletare și validare.
+
+## Locațiile fișierelor de configurare
+
+Bolt îmbină configurația din două locații. Setările per proiect câștigă asupra setărilor globale atunci când aceeași cheie apare în ambele.
+
+| Domeniu | Cale |
+|---|---|
+| **Per proiect** | `.bolt/bolt.jsonc` (sau `.bolt/bolt.json`) în rădăcina proiectului tău |
+| **Global** | `bolt.jsonc` (sau `bolt.json`) în directorul de configurare al sistemului tău de operare |
+
+Directorul de configurare al sistemului de operare este:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt citește și fișierele legacy `opencode.jsonc` / `opencode.json` din aceleași locații. Proiectele noi ar trebui să folosească convenția de denumire `bolt.jsonc`, care are prioritate față de numele de fișiere legacy.
+</Note>
+
+Bolt creează un fișier minim de configurare globală cu linia `$schema` la prima rulare și creează `.bolt/bolt.jsonc` în rădăcina proiectului tău la prima deschidere a TUI-ului în acel director.
+
+## Câmpurile schemei
+
+<ParamField body="$schema" type="string">
+  URL care indică schema JSON pentru acest fișier de configurare. Activează autocompletarea și validarea inline în editoarele care acceptă JSON Schema (VS Code, Zed, IDE-urile JetBrains etc.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Modelul implicit pentru toate sesiunile, exprimat ca `provider/model`. Acest lucru poate fi suprascris per sesiune cu `bolt run --model` sau din selectorul de model din TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Rulează `bolt models` pentru a vedea toate șirurile `provider/model` disponibile pentru furnizorii tăi configurați.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Suprascrieri de credențiale și setări specifice furnizorului. Fiecare cheie este un ID de furnizor (de ex. `anthropic`, `openai`, `google`). Cea mai comună utilizare este setarea unei chei de API printr-o referință la o variabilă de mediu, astfel încât cheia să nu fie niciodată stocată în text simplu.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Valorile care încep cu `${` și se termină cu `}` sunt tratate ca referințe la variabile de mediu și expandate la runtime.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Configurările serverelor MCP, indexate după un nume ales de tine. Bolt acceptă două tipuri de servere:
+
+  **Server la distanță** — se conectează prin HTTP/SSE, cu OAuth opțional:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Câmp | Tip | Descriere |
+  |---|---|---|
+  | `type` | `"remote"` | Identifică acest server ca server HTTP la distanță |
+  | `url` | string | URL-ul complet al endpoint-ului MCP |
+  | `oauth` | object \| `false` | Obiect de configurare OAuth (cu `clientId`, `clientSecret`, `scope`, `redirectUri` opționale). Setează la `false` pentru a dezactiva detectarea automată OAuth. |
+  | `headers` | object | Antete HTTP de trimis cu fiecare cerere (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Activează sau dezactivează acest server la pornire |
+  | `timeout` | number | Timeout de cerere în milisecunde (implicit: 5000) |
+
+  **Server local** — generează un subproces prin stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Câmp | Tip | Descriere |
+  |---|---|---|
+  | `type` | `"local"` | Identifică acest server ca server local stdio |
+  | `command` | string[] | Comanda și toate argumentele de generat |
+  | `cwd` | string | Director de lucru pentru procesul serverului (căile relative se rezolvă din directorul workspace-ului) |
+  | `environment` | object | Variabile de mediu suplimentare de transmis subprocesului |
+  | `enabled` | boolean | Activează sau dezactivează acest server la pornire |
+  | `timeout` | number | Timeout de cerere în milisecunde (implicit: 5000) |
+
+  Folosește `bolt mcp add` pentru un asistent interactiv sau `bolt mcp list` pentru a inspecta starea curentă a serverului.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Instrucțiuni suplimentare de sistem adăugate la fiecare sesiune din acest proiect sau global. Instrucțiunile din mai multe fișiere de configurare sunt îmbinate (deduplicate). Folosește-le pentru a injecta convenții specifice proiectului, reguli de stil sau constrângeri pe care fiecare agent ar trebui să le respecte.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Specificații de plugin de încărcat. Fiecare intrare este un nume de pachet npm, o cale de fișier local sau un URL. Plugin-urile pot extinde TUI-ul, adăuga comenzi slash sau înregistra furnizori suplimentari. Folosește `bolt plugin install <spec>` pentru a instala un plugin și a-l adăuga automat în acest array.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Exemplu complet
+
+Următorul `.bolt/bolt.jsonc` arată o configurație realistă de proiect:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Rulează `bolt debug config` pentru a vedea configurația complet rezolvată după ce toate fișierele sunt îmbinate. Aceasta este cea mai rapidă modalitate de a confirma că fișierele tale per proiect și globale se combină corect.
+</Tip>

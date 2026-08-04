@@ -1,0 +1,139 @@
+---
+title: "Leverandører og modeller — LLM-autentisering og valg"
+sidebarTitle: "Leverandører og modeller"
+description: "Bolt støtter alle LLM-leverandører via Vercel AI SDK. Autentiser leverandører, list modeller, juster resonneringsinnsats og kjør best-of-N-sammenligninger parallelt."
+---
+
+Bolt er modellagnostisk av design. Under panseret bruker den **Vercel AI SDK** for å snakke med leverandører, noe som betyr at enhver leverandør som SDK-en støtter – Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter og flere – fungerer rett ut av boksen. Katalogen over leverandører og modeller hentes fra [models.dev](https://models.dev), en fellesskapsvedlikeholdt database med leverandørmetadata og priser.
+
+## Håndtere leverandørlegitimasjoner
+
+Bruk `bolt providers` (alias `bolt auth`) for å legge til, liste og fjerne leverandørlegitimasjoner.
+
+### Legg til eller oppdater legitimasjoner
+
+```bash
+bolt providers login
+# or equivalently:
+bolt auth login
+```
+
+Dette starter en interaktiv forespørsel for å velge en leverandør og skrive inn legitimasjoner. For å hoppe over den interaktive flyten, send flagg direkte:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Liste konfigurerte leverandører
+
+```bash
+bolt providers list
+# or:
+bolt auth list
+```
+
+Viser alle lagrede legitimasjoner og eventuelle leverandør-API-nøkler som er oppdaget fra miljøvariabler.
+
+### Fjerne legitimasjoner
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Autentisering via miljøvariabler
+
+For CI-pipelines eller headless-miljøer, sett leverandørens API-nøkkel-miljøvariabel direkte – ingen interaktiv innlogging kreves. Vanlige eksempler:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt leser disse variablene automatisk ved oppstart. `bolt providers list` vil vise hvilke miljøvariabler den har oppdaget.
+
+## Bla gjennom tilgjengelige modeller
+
+`bolt models` lister alle modeller som er tilgjengelige på tvers av de konfigurerte leverandørene dine.
+
+```bash
+# List all models
+bolt models
+
+# Filter to one provider
+bolt models anthropic
+
+# Show cost and capability metadata
+bolt models --verbose
+
+# Refresh the model catalog from models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Kjør `bolt models --verbose` for å se prising for input- og output-tokens for hver modell. Dette gjør det enkelt å sammenligne kostnadsavveininger før du forplikter deg til en modell for en langvarig oppgave.
+</Tip>
+
+### Format for modell-identifikator
+
+Modeller refereres alltid i `provider/model`-format:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Bruk dette formatet hvor som helst Bolt godtar en modell – CLI-flagg, konfigurasjonsfiler og agent-definisjoner.
+
+## Velge en modell ved kjøretid
+
+### `--model` / `-m`-flagget
+
+`--model`-flagget er tilgjengelig for `bolt run`, `bolt commit` og `bolt review`:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — styre resonneringsinnsats
+
+Noen modeller støtter konfigurerbare nivåer for resonneringsinnsats (f.eks. Anthropics utvidede tenking, OpenAIs resonneringsmodeller). Bruk `--variant` for å velge innsatsnivå:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  De tilgjengelige variantverdiene avhenger av leverandøren og modellen. Vanlige verdier er `minimal`, `low`, `medium`, `high` og `max`, men det nøyaktige settet varierer. Sjekk leverandørens dokumentasjon eller bruk `bolt models --verbose` for å se støttede varianter for en gitt modell.
+</Note>
+
+### `--thinking` — vis resonneringsblokker
+
+Når du bruker en modell som støtter utvidet tenking, send `--thinking` for å vise modellens tankekjede i utdataene:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Best-of-N parallelle kjøringer
+
+`--best-of` sender samme ledetekst til flere modeller parallelt, og bruker deretter en dommermodell for å rangere svarene og beholde det beste:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+Dommeren er som standard modellen som er sendt via `--model`, eller den første oppføringen i `--best-of`-listen hvis `--model` ikke er satt. Flagget godtar en kommaseparert liste av `provider/model`-identifikatorer.
+
+<Tip>
+  Best-of-N er spesielt nyttig for komplekse algoritmiske problemer eller arkitekturbeslutninger der ulike modeller kan bringe genuint ulike tilnærminger. La Bolt kjøre dem parallelt og velge vinneren automatisk.
+</Tip>

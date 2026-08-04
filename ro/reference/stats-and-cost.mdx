@@ -1,0 +1,32 @@
+---
+title: "Statistici și cost (bolt stats)"
+sidebarTitle: "Statistici și cost"
+description: "bolt stats agregă utilizarea token-urilor și costul între sesiunile tale, astfel încât să poți vedea unde se duce cheltuiala și să reglezi modele sau agenți în consecință."
+---
+
+`bolt stats` agregă numărul de token-uri și costul din baza de date locală a sesiunilor. Deoarece fiecare apel de instrument este înregistrat (consultă [Baza de date locală](/reference/local-database)), numerele sunt exacte pentru apelurile LLM pe care Bolt le-a inițiat.
+
+## Utilizare de bază
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Ce afișează
+
+- Total de token-uri de intrare, ieșire și cache.
+- Cost estimat per furnizor (folosind tabelele de prețuri ale furnizorului la momentul rulării).
+- Defalcări per model, per agent și per zi, în funcție de opțiuni.
+
+## Reducerea costului
+
+- Folosește `--variant minimal` sau `--variant low` pe modele intensive în raționament. Consultă [Furnizori și modele](/concepts/providers-and-models).
+- Preferă agentul `ask` sau `plan` pentru explorare; sunt doar în citire și evită buclele grele de instrumente.
+- Comută la un model mai mic cu `bolt models` pentru sarcinile care nu au nevoie de capabilitate de frontieră.
+
+## Legături conexe
+
+- [Furnizori și modele](/concepts/providers-and-models) — alege și reglează modelele pe care le măsoară `stats`.
+- [Depanare](/reference/troubleshooting) — ce să faci în legătură cu o factură surpriză.

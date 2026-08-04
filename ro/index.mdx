@@ -1,0 +1,78 @@
+---
+title: "Bolt: agent AI de codare pentru terminalul tău"
+sidebarTitle: "Acasă"
+description: "Bolt este un agent AI de codare axat pe terminal, cu zece agenți specializați, sesiuni persistente, suport MCP și o aplicație desktop — alimentat de orice furnizor LLM."
+---
+
+Bolt îți pune o echipă completă de inginerie AI direct în terminal. Este livrat ca un TUI rapid, controlat de la tastatură, și ca o aplicație desktop nativă, ambele susținute de același motor: zece agenți specializați, sesiuni persistente durabile, gestionarea serverelor MCP cu OAuth, un sistem de plugin-uri și suport pentru fiecare furnizor LLM major.
+
+<CardGroup cols={2}>
+  <Card title="Instalare" icon="download" href="/installation">
+    Instalează Bolt în câteva secunde prin curl, npm, bun sau managerul de pachete pe care îl preferi.
+  </Card>
+  <Card title="Ghid rapid" icon="rocket" href="/quickstart">
+    Rulează prima ta sesiune de codare AI în mai puțin de un minut.
+  </Card>
+  <Card title="Agenți" icon="robot" href="/concepts/agents">
+    Descoperă cei zece agenți încorporați: code, plan, ask, review, debug, refactor, docs, security, migrate și perf.
+  </Card>
+  <Card title="Referință comenzi" icon="terminal" href="/reference/commands">
+    Fiecare comandă CLI, subcomandă și opțiune, documentate complet.
+  </Card>
+</CardGroup>
+
+## Ce face Bolt
+
+Bolt îți citește baza de cod, înțelege ce construiești și livrează cod împreună cu tine — în terminal sau ca aplicație desktop. Fiecare sesiune este durabilă: te poți detașa, te poți reataca de pe altă mașină, poți crea o ramură a conversației, poți partaja un link sau exporta o transcriere curățată.
+
+<CardGroup cols={3}>
+  <Card title="Sesiuni" icon="clock-rotate-left" href="/concepts/sessions">
+    Sesiuni persistente, care se pot ramifica, stocate într-un SQLite local.
+  </Card>
+  <Card title="Furnizori și modele" icon="microchip" href="/concepts/providers-and-models">
+    Folosește propria cheie de API pentru orice furnizor LLM major.
+  </Card>
+  <Card title="Configurație" icon="sliders" href="/concepts/configuration">
+    Fișier `.bolt/bolt.jsonc` per proiect, cu suport complet pentru schemă.
+  </Card>
+  <Card title="Servere MCP" icon="plug" href="/extending/mcp-servers">
+    Adaugă instrumente prin Model Context Protocol, inclusiv fluxuri OAuth.
+  </Card>
+  <Card title="Plugin-uri" icon="puzzle-piece" href="/extending/plugins">
+    Extinde Bolt cu furnizori, instrumente și metode de autentificare personalizate.
+  </Card>
+  <Card title="Integrare GitHub" icon="github" href="/server/github-actions">
+    Mesaje de commit generate de AI, revizuire de cod și GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Pune totul în funcțiune
+
+<Steps>
+  <Step title="Instalează Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Sau instalează prin npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Deschide-ți proiectul">
+    Navighează în orice director de proiect și lansează TUI-ul:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Configurează un furnizor">
+    La prima lansare, Bolt îți cere să adaugi un furnizor LLM. Poți rula și:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Începe să codezi cu AI">
+    Scrie promptul în subsolul TUI-ului, apasă Enter și lasă agenții Bolt să se apuce de treabă. Schimbă agenții cu `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Folosește `bolt run "explain this codebase"` pentru un răspuns rapid, neinteractiv, fără a deschide întregul TUI.
+</Tip>

@@ -1,0 +1,191 @@
+---
+title: "Sesijas — noturīga sarunu vēsture Bolt"
+sidebarTitle: "Sesijas"
+description: "Sesijas ir Bolt noturīgā darba vienība: katra glabā pilnu sarunu lokālā SQLite, lai jūs jebkurā laikā varētu atvienot, atsākt, dakšot, dalīties un eksportēt."
+---
+
+**Sesija** ir Bolt galvenā darba vienība. Katra jūsu nosūtītā uzvedne, katrs fails, ko aģents lasa vai rediģē, un katrs rīka izsaukums, ko modelis veic, tiek noturīgi ierakstīti tās sesijas vēsturē. Tā kā sesijas dzīvo lokālā SQLite datubāzē, tās izdzīvo procesa restartus, tās var uzskaitīt un vaicāt jebkurā laikā, un tās nekad neatstāj jūsu iekārtu, ja vien jūs skaidri neizvēlaties tās kopīgot vai eksportēt.
+
+<Note>
+  Visi sesijas dati tiek glabāti lokāli SQLite datubāzē jūsu iekārtā. Nekas netiek nosūtīts uz ārējiem serveriem, ja vien neieslēdzat kopīgošanu. Izmantojiet `bolt db path`, lai atrastu precīzu datubāzes failu.
+</Note>
+
+## Sesijas dzīves cikls
+
+Sesija sākas brīdī, kad nosūtāt savu pirmo uzvedni, un beidzas tikai tad, kad to izdzēšat. Starp šiem diviem punktiem jūs to varat brīvi atvienot, atsākt, sazarot vai nodot tālāk.
+
+<Steps>
+  <Step title="Izveidojiet vai turpiniet sesiju">
+    Palaidiet TUI, lai sāktu jaunu sesiju interaktīvi, vai nododiet uzvedni komandai `bolt run`, lai izveidotu to neinteraktīvi:
+
+    ```bash
+    # Jauna sesija TUI
+    bolt
+
+    # Jauna sesija neinteraktīvi
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Atvienojieties un atgriezieties vēlāk">
+    Aizveriet TUI jebkurā laikā — sesija tiek automātiski saglabāta. Atsāciet savu jaunāko sesiju ar `--continue` vai mērķējiet uz konkrētu sesiju pēc ID ar `--session`:
+
+    ```bash
+    # Atsāciet jaunāko sesiju
+    bolt run --continue "now write the tests too"
+
+    # Atsāciet konkrētu sesiju
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Dakšojiet pirms eksperimentēšanas">
+    Izmantojiet `--fork`, lai sazarotos no pašreizējās sesijas vēstures pirms riskantas izmaiņas mēģināšanas. Dakša ir neatkarīga sesija, kas neietekmē oriģinālu:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Dalieties un sadarbojieties">
+    Ģenerējiet kopīgošanas URL ar `--share`. Ikviens, kam ir saite, var apskatīt sesijas norakstu pārlūkā:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Sesiju pārvaldības komandas
+
+### Uzskaitiet sesijas
+
+```bash
+bolt session list
+```
+
+Izvada formatētu tabulu ar visām sesijām, to ID, nosaukumu un pēdējās atjaunināšanas laiku. Pievienojiet `--format json`, lai iegūtu mašīnlasāmu izvadi, vai `-n <N>`, lai ierobežotu līdz jaunākajām N sesijām:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Dzēst sesiju
+
+```bash
+bolt session delete <sessionID>
+```
+
+Neatgriezeniski noņem sesiju un visus tās ziņojumus no lokālās datubāzes.
+
+## Palaišanas karogi sesijas kontrolei
+
+Šie karogi ir pieejami komandā `bolt run`:
+
+| Karogs | Aizstājējs | Apraksts |
+|------|-------|-------------|
+| `--continue` | `-c` | Turpina jaunāko sesiju |
+| `--session <id>` | `-s` | Turpina konkrētu sesiju pēc ID |
+| `--fork` | | Dakšo sesiju pirms turpināšanas (nepieciešams `--continue` vai `--session`) |
+| `--share` | | Ģenerē sesijas kopīgošanas URL |
+| `--title <title>` | | Iestata vai ignorē sesijas nosaukumu |
+
+## Sesiju eksportēšana
+
+Eksportējiet sesijas pilnu norakstu kā JSON:
+
+```bash
+# Eksportēt jaunāko sesiju
+bolt export
+
+# Eksportēt konkrētu sesiju
+bolt export <sessionID>
+
+# Eksportēt ar sensitīvu datu rediģēšanu
+bolt export --sanitize > transcript.json
+```
+
+Karogs `--sanitize` aizstāj failu ceļus, koda saturu, rīku ievadi un izvadi un citus potenciāli sensitīvus laukus ar `[redacted:kind:id]` vietturiem — noderīgi norakstu koplietošanai ar komandas biedriem vai kļūdu ziņojumu iesniegšanai.
+
+## Sesiju importēšana
+
+Importējiet sesiju no lokāla JSON faila vai tieši no kopīgošanas URL:
+
+```bash
+# No lokāla faila
+bolt import ./transcript.json
+
+# No kopīgošanas URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Importētās sesijas parādās jūsu lokālajā sesiju sarakstā un ir pilnībā atsākamas.
+
+## Sesiju datubāzes vaicāšana
+
+Bolt tieši atklāj pamatā esošo SQLite datubāzi pieredzējušiem lietotājiem.
+
+```bash
+# Izdrukāt datubāzes faila ceļu
+bolt db path
+
+# Atvērt interaktīvu SQLite čaulu
+bolt db
+
+# Palaist ad hoc vaicājumu
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Izvades formāts pēc noklusējuma ir tabulēšanas zīmēm atdalītas vērtības; pievienojiet `--format json` JSON izvadei.
+
+## Žetonu izmantošanas un izmaksu statistika
+
+`bolt stats` apkopo žetonu izmantošanas un izmaksu datus par visām jūsu sesijām:
+
+```bash
+# Visu laiku statistika
+bolt stats
+
+# Pēdējās 7 dienas
+bolt stats --days 7
+
+# Tikai pašreizējais projekts
+bolt stats --project ""
+
+# Parādiet sadalījumu pa modeļiem (top 5 modeļi)
+bolt stats --models 5
+
+# Ierobežojiet rīku izmantošanas tabulu līdz 10 populārākajiem rīkiem
+bolt stats --tools 10
+```
+
+Izvade ietver kopējo sesiju skaitu, ziņojumus, ievades/izvades/spriešanas/kešatmiņas žetonus, kopējās izmaksas, vidējās izmaksas dienā, vidējos un mediānas žetonus vienā sesijā un rīku izmantošanas sadalījumu. Nododiet `--models`, lai parādītu arī sadalījumu pa modeļiem — ziņas, žetonus un izmaksas.
+
+## Dakšošanas un kopīgošanas darbplūsma
+
+Šeit ir pilns piemērs sesijas dakšošanai un rezultāta kopīgošanai:
+
+<Steps>
+  <Step title="Sāciet darbu jaunā sesijā">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Dakšojiet pirms riskantā nākamā soļa">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Dakšotās sesijas ID tiek izdrukāts konsolē. Sākotnējā sesija netiek aiztikta.
+  </Step>
+  <Step title="Kopīgojiet dakšu pārskatīšanai">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Kopīgošanas URL tiek izdrukāts, kad sesija kļūst dīkstāvē.
+  </Step>
+  <Step title="Importējiet citā iekārtā">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

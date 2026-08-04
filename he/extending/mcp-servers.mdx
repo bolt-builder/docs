@@ -1,0 +1,215 @@
+---
+title: "הוסף כלים ל-Bolt עם שרתי MCP"
+sidebarTitle: "שרתי MCP"
+description: "חבר כלים ומשאבים חיצוניים ל-Bolt באמצעות Model Context Protocol. הוסף, אמת ונפה שרתי MCP מה-CLI."
+url: "extending/mcp-servers"
+---
+
+ה-Model Context Protocol (MCP) הוא סטנדרט פתוח שמאפשר לסוכני AI לתקשר עם כלים ומקורות נתונים חיצוניים דרך ממשק משותף. Bolt משתמש ב-MCP כדי להרחיב את מה שהסוכנים יכולים לעשות — שרת MCP מחובר יכול לחשוף כל דבר מכלי שאילתת מסד נתונים ועד ממשק API מלא של חיפוש באינטרנט. Bolt מנהל את מחזור החיים המלא: הוספת שרתים, הפעלת זרימות OAuth, רענון טוקנים ובדיקת קישוריות.
+
+## סוגי שרתים
+
+Bolt תומך בשני סוגי שרתי MCP.
+
+| סוג | תעבורה | תיאור |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | שרת שרץ בכתובת URL שתוכל להגיע אליה דרך הרשת |
+| `local` | stdio | פקודה מקומית ש-Bolt מפעיל כתהליך ילד |
+
+שרתים מרוחקים תומכים באימות OAuth מהקופסה. Bolt מטפל ברכישת טוקן, אחסון ורענון אוטומטי — אתה אף פעם לא מנהל טוקנים ידנית.
+
+---
+
+## פקודות
+
+### `bolt mcp add`
+
+הוסף שרת MCP חדש באופן אינטראקטיבי או בפעולה אחת.
+
+**אינטראקטיבי** — הרץ `bolt mcp add` ללא ארגומנטים כדי לעבור באשף מונחה הנחיות ששואל על השם, ההיקף (פרויקט או גלובלי), הסוג, ה-URL או הפקודה, והאם השרת משתמש ב-OAuth.
+
+**לא אינטראקטיבי** — ספק שם בתוספת `--url` עבור שרת מרוחק או פקודה אחרי `--` עבור מקומי:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**דגלים עבור `bolt mcp add`**
+
+| דגל | תיאור |
+|------|-------------|
+| `--url <url>` | URL של שרת MCP מרוחק |
+| `--header <KEY=VALUE>` | כותרת HTTP לשליחה לשרת מרוחק (ניתן לחזור) |
+| `--env <KEY=VALUE>` | משתנה סביבה עבור שרת מקומי (ניתן לחזור) |
+
+---
+
+### `bolt mcp list`
+
+הצג כל שרת MCP מוגדר יחד עם סטטוס החיבור והאימות שלו.
+
+```bash
+bolt mcp list
+```
+
+כל רשומה מציגה סמל סטטוס:
+
+| סמל | משמעות |
+|------|---------|
+| `✓` | מחובר (ומאומת אם OAuth בשימוש) |
+| `⚠` | דורש אימות או שהאישורים פגו |
+| `✗` | נכשל בחיבור או שנדרש רישום לקוח |
+| `○` | לא אותחל עדיין או מושבת |
+
+---
+
+### `bolt mcp auth <name>`
+
+אמת עם שרת MCP מרוחק מאופשר OAuth. אם תשמיט את השם, Bolt יציג בורר אינטראקטיבי שמפרט את כל השרתים בעלי יכולת OAuth יחד עם סטטוס האימות הנוכחי שלהם (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+Bolt פותח את הדפדפן שלך בכתובת ההרשאה של הספק וממתין ל-callback — לחיצת היד המלאה של OAuth, כולל רישום לקוח דינמי כאשר נדרש, מתרחשת אוטומטית.
+
+<Note>
+  Bolt מטפל בזרימת ה-OAuth המלאה, כולל אחסון טוקן ורענון טוקן אוטומטי. אתה לא צריך להעתיק טוקנים או לנהל תפוגה ידנית. אם שרת דורש מזהה לקוח שנרשם מראש, הוסף `oauth.clientId` (ואופציונלית `oauth.clientSecret`) לרשומת התצורה של השרת ב-`.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+הסר אישורי OAuth מאוחסנים עבור שרת. אם תשמיט את השם, Bolt יבקש ממך לבחור מרשימת שרתים שיש להם טוקנים מאוחסנים.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+בדוק את קישוריות השרת המרוחק ובדוק את מצב ה-OAuth שלו מבלי להתחיל סשן מלא. זהו הכלי הראשון להזדקק אליו כששרת מציג `✗ failed` או `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` מדווח:
+- כתובת ה-URL של השרת וסטטוס האימות הנוכחי
+- פרטי טוקן גישה (ממוסך) וחותמת זמן תפוגה
+- האם קיים refresh token
+- קוד תגובת HTTP גולמי מהשרת
+- תוכן כותרת `WWW-Authenticate`
+- תוצאת בדיקת גילוי OAuth (מבלי להשלים את הזרימה)
+
+---
+
+## תצורה ידנית
+
+תוכל להוסיף או לערוך שרתי MCP ישירות ב-`.bolt/bolt.jsonc` מבלי להשתמש בפקודות ה-CLI. Bolt קולט שינויים בהתחלת הסשן הבא.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+שרת stdio מקומי נראה כך:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+כדי לספק כותרות HTTP מותאמות אישית או להשבית OAuth בשרת מרוחק:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## הוסף ואמת שרת MCP מרוחק
+
+<Steps>
+  <Step title="הוסף את השרת">
+    הרץ `bolt mcp add` ועקוב אחר ההנחיות, או השתמש בטופס הלא-אינטראקטיבי:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt כותב את הרשומה ל-`.bolt/bolt.jsonc` (היקף פרויקט) או לתצורה הגלובלית שלך.
+  </Step>
+
+  <Step title="בדוק את סטטוס החיבור">
+    ```bash
+    bolt mcp list
+    ```
+
+    אם השרת דורש אימות תראה `⚠ needs authentication` לצד שמו.
+  </Step>
+
+  <Step title="אמת עם OAuth">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt פותח את הדפדפן שלך. לאחר שאתה מאשר גישה, המסוף מאשר שהאימות הצליח וסטטוס השרת משתנה ל-`✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="ודא שכלים זמינים">
+    התחל סשן Bolt. הכלים שנחשפים על ידי השרת זמינים כעת לכל הסוכנים. תוכל לבדוק אותם בכל עת:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

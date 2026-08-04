@@ -1,0 +1,142 @@
+---
+title: "Bolt bilan bir daqiqadan kamroq vaqt ichida boshlash"
+sidebarTitle: "Tez boshlash"
+description: "Bolt'ni o'rnating, loyihangizni oching, provayderni ulang va birinchi AI promptingizni ishga tushiring — hammasi 60 soniyadan kam vaqt ichida bu bosqichma-bosqich qo'llanma bilan."
+---
+
+Bu qo'llanma sizni Bolt'ni o'rnatish, uni loyihada ishga tushirish, AI provayderni ulash va birinchi promptni ishga tushirish orqali olib boradi. Butun oqim bir daqiqadan kam vaqt oladi.
+
+<Steps>
+  <Step title="Bolt'ni o'rnating">
+    Eng tez yo'l — macOS va Linux'da ishlaydigan rasmiy o'rnatish skripti:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Paket menejerini afzal ko'rasizmi? npm, bun, pnpm yoki yarn bilan global tarzda o'rnating:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    macOS'da desktop ilova uchun (Gatekeeper aylanishisiz):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Homebrew, Chocolatey, Scoop va Windows'ga xos yozuvlar ham kiritilgan barcha usullar uchun [O'rnatish qo'llanmasi](/installation) ga qarang.
+  </Step>
+  <Step title="Loyihangizni oching">
+    Har qanday loyiha katalogiga o'ting va interaktiv TUI ni ishga tushiring:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt loyiha kontekstingizni avtomatik oladi — fayl daraxtingizni o'qiydi, stack'ni tushunadi va uni ochish paytidan boshlab har bir agent uchun mavjud qiladi.
+  </Step>
+  <Step title="AI provayderni sozlang">
+    Birinchi ishga tushirishda, agar hech qanday narsa o'rnatilmagan bo'lsa, Bolt sizdan provayderni sozlashni so'raydi. Buni istalgan vaqtda ham ishga tushirishingiz mumkin:
+
+    ```bash
+    bolt providers
+    ```
+
+    Bu OpenAI, Anthropic va boshqa qo'llab-quvvatlanadigan LLM provayderlari uchun API kalitlarini qo'shishingiz mumkin bo'lgan provayder boshqaruv oqimini ochadi. Konfiguratsiya sizning loyihangiz ildizidagi `.bolt/bolt.jsonc` da saqlanadi.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Promptni yozing va agentlarni o'rganing">
+    TUI ichida bo'lganingizdan so'ng, promptni yozing va Enter'ni bosing. Istalgan vaqtda Bolt'ning o'nta o'rnatilgan agenti orasida almashish uchun **Tab** dan foydalaning — joriy agent status barida ko'rsatiladi.
+
+    TUI ni ochmasdan promptlarni to'g'ridan-to'g'ri buyruq qatorida ham ishga tushirishingiz mumkin:
+
+    ```bash
+    # Standart agent yordamida interaktiv bo'lmagan prompt
+    bolt run "explain this codebase"
+    
+    # Muayyan agentdan foydalanish
+    bolt run --agent ask "what does this project do?"
+    
+    # TUI ni ishlayotgan serverga biriktirish (mahalliy yoki remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## O'rnatilgan agentlar
+
+TUI da agentlarni `Tab` bilan almashtiring yoki `bolt run` ga `--agent <name>` uzating. Har bir agent o'z maqsadiga mos keladigan aniq belgilangan kirish darajasiga ega.
+
+| Agent | Kirish | Tavsif |
+| --- | --- | --- |
+| `code` | Full | Standart: kodni o'qiydi, yozadi va bajaradi |
+| `plan` | Read | Kodbazani o'rganadi va fayllarni o'zgartirmasdan reja ishlab chiqadi |
+| `ask` | Read | Savollar va tadqiqot — fayl tahrirlashsiz |
+| `code-review` | Read | O'zgarishlarni to'g'rilik, uslub va xavfsizlik uchun ko'rib chiqadi |
+| `debug` | Full | Ishlamay qolgan testlar, halokatlar va mantiq xatolarini debug qiladi |
+| `refactor` | Full | Har bir bosqichda testlar bilan tekshiruvli xavfsiz refactoring |
+| `docs` | Edit | Hujjatlar va izohlarni yozadi va yangilaydi |
+| `security` | Read | Xavfsizlik auditi: zaifliklar, sirlar, shakllar |
+| `migrate` | Full | Framework yangilanishlari va bog'liqliklarni ko'chirish |
+| `perf` | Full | Ishlash tahlili va optimallashtirish |
+
+Topshiriq berish uchun ikkita o'rnatilgan subagent ham mavjud: murakkab ko'p bosqichli vazifalar uchun `@general` va tez faqat o'qish uchun kodbaza tadqiqoti uchun `@explore`. O'z agentlaringizni Markdown fayllar sifatida aniqlashingiz yoki `bolt agent create` bilan yaratishingiz mumkin.
+
+## Keyingi sinash uchun umumiy buyruqlar
+
+```bash
+# Pass/fail exit kodi bilan staged o'zgarishlarni ko'rib chiqing
+bolt review --staged
+
+# Staged o'zgarishlar uchun commit xabarini yarating
+bolt commit
+
+# Sessiyalarni ro'yxatga oling va boshqaring
+bolt session list
+
+# Token foydalanishi va xarajat statistikasini ko'ring
+bolt stats
+
+# Mahalliy sessiya ma'lumotlar bazasini so'rang
+bolt db
+```
+
+<Tip>
+  `bolt` yoki `bolt attach` ga `--mini` ni uzatib kamroq terminal joyini egallaydigan kompakt UI oling — kichikroq oynalar yoki split-panel tartiblari uchun ajoyib.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` `--auto`, `--yolo` va `--dangerously-skip-permissions` bayroqlarini qabul qiladi, ular so'ramasdan barcha ruxsat so'rovlarini avtomatik tasdiqlaydi. Ulardan faqat ishonchli muhitlarda foydalaning — ular agentga tasdiqlashsiz o'qish, yozish va bajarish imkonini beradi.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt bash, zsh, fish va boshqa shell'lar uchun shell completion'larni qo'llab-quvvatlaydi. Completion'larni yarating va o'rnating:
+
+  ```bash
+  bolt completion
+  ```
+
+  Completion skriptini shell konfiguratsiyangizga manba qilish uchun chop etilgan ko'rsatmalarga rioya qiling.
+</Note>

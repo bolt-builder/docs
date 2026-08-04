@@ -1,0 +1,395 @@
+---
+title: "Umumiy Bolt muammolarini troubleshoot qiling"
+sidebarTitle: "Troubleshooting"
+description: "Eng keng tarqalgan Bolt muammolari uchun yechimlar: ishga tushirishdagi muvaffaqiyatsizliklar, provayder auth xatolari, MCP ulanishi, sessiya muammolari, ruxsatlar, xarajat va boshqalar."
+---
+
+Bolt bilan bog'liq muammolarning aksariyati oz sonli toifalarga tushadi. Quyidagi tegishli akkordeon orqali ishlang va kutilmagan narsa yuz berganda `bolt logs` bilan log chiqishni tekshiring.
+
+<Note>
+  Bu yerda javob berilmagan savollar uchun [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) da qidiring yoki muhokama boshlang. Postingizga `bolt debug info` va `bolt logs --tail 50` chiqishini kiriting, shunda jamoa tezroq yordam berishi mumkin.
+</Note>
+
+## Avval sinash kerak bo'lgan narsalar
+
+Muayyan bo'limga sho'ng'ishdan oldin, bu to'rt buyruq ko'p muammolarni hal qiladi:
+
+| Simptom | Birinchi buyruq | Nima uchun |
+| --- | --- | --- |
+| Har qanday g'alati narsa | `bolt debug info` | Bir zarbda tizim \+ plagin xulosasi. |
+| Ilgari ishlagan, endi ishlamayapti | `bolt logs --tail 100` | So'nggi xatolar, odatda yuqori qismida. |
+| Plaginga shubha | `bolt --pure` | Barcha plaginlar o'chirilgan holda boshlash. |
+| Konfiguratsiya olinmayapti | `bolt debug config` | To'liq hal qilingan konfiguratsiyani chop etadi. |
+
+<Tip>
+  `bolt debug` oilasi har qanday sirli xatti-harakat uchun birinchi to'xtash. Tizim xulosasi uchun `bolt debug info`, hal qilingan konfiguratsiya uchun `bolt debug config`, diskdagi joylar uchun `bolt debug paths` va sessiya holatini tekshirish uchun `bolt debug snapshot`.
+</Tip>
+
+<Accordion title="Bolt ishga tushmaydi / ishga tushirishda halok bo'ladi">
+  **Simptomlar:** Terminal chaqnaydi va darhol chiqadi, yoki TUI render qilishdan oldin stack trace ko'rasiz.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Tizim ma'lumotlarini yig'ing">
+      ```bash
+      bolt debug info
+      ```
+
+      Bu sizning Bolt versiyangizni, OS'ingizni, terminal emulyatoringizni va yuklangan plaginlaringizni chop etadi. Xato haqida hisobot topshirganda bu chiqishni nusxa oling.
+    </Step>
+    <Step title="So'nggi log chiqishini tekshiring">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      `ERROR` qatorlarini qidiring. Umumiy sabab — yuklanmagan plagin — bu holda plagin nomini eslatuvchi xatolikni ko'rasiz.
+    </Step>
+    <Step title="Muammoni izolyatsiya qilish uchun plaginlarni o'chirib qo'ying">
+      ```bash
+      bolt --pure
+      ```
+
+      Agar Bolt `--pure` bilan toza ishga tushsa, plagin halokatga sabab bo'lmoqda. Nosozliklardan holi plaginni konfiguratsiyangizdan olib tashlang yoki plagin muallifiga xabar bering.
+    </Step>
+    <Step title="Buzuq konfiguratsiyani tekshiring">
+      ```bash
+      bolt debug config
+      ```
+
+      Agar u noto'g'ri JSON haqida xatolikni chop etsa, u eslatgan konfiguratsiya faylini oching va sintaksisni tuzating. Ma'lumotlar bazasi yo'li mavjudligini tasdiqlash uchun `bolt db path` ni ishga tushiring.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Provayder autentifikatsiyasi muvaffaqiyatsiz">
+  **Simptomlar:** Bolt "No providers configured" ko'rsatadi, API so'rovlari 401 xato bilan muvaffaqiyatsiz bo'ladi, yoki `bolt run` hech qanday chiqish ishlab chiqarmasdan darhol chiqadi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Provayder login oqimini qayta ishga tushiring">
+      ```bash
+      bolt providers login
+      ```
+
+      Provayderingizni tanlang va so'rovlarga rioya qiling. Bolt sizni API kalitini kiritish yoki OAuth orqali olib boradi.
+    </Step>
+    <Step title="API kalit environment variable'ini tekshiring">
+      Agar env var (masalan, `ANTHROPIC_API_KEY`) dan foydalansangiz, u joriy shellda haqiqatan ham o'rnatilganligini tasdiqlang:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Agar u bo'sh bo'lsa, uni shell profilingizga qo'shing va terminalingizni qayta oching.
+    </Step>
+    <Step title="Hal qilingan konfiguratsiyani tekshiring">
+      ```bash
+      bolt debug config
+      ```
+
+      `provider` bo'limiga qarang. Agar provayderingiz bo'sh `apiKey` bilan paydo bo'lsa, konfiguratsiya faylingizdagi environment variable havolasi kengaytirilmayapti.
+    </Step>
+    <Step title="Saqlangan hisob ma'lumotlarini ro'yxatga oling">
+      ```bash
+      bolt providers list
+      ```
+
+      Bu `auth.json` da saqlangan barcha hisob ma'lumotlarini va Bolt aniqlagan barcha provayder-aloqador environment variable'larini ko'rsatadi.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP server ulanmaydi">
+  **Simptomlar:** `bolt mcp list` serverni `failed` yoki `needs authentication` sifatida ko'rsatadi, yoki agent bu serverdan hech qanday asbob ishlata olmaydi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="MCP debug probe'ni ishga tushiring">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Bu asosiy HTTP ulanishini sinaydi, `WWW-Authenticate` header'ni tekshiradi va agar tegishli bo'lsa OAuth discovery oqimini bosib o'tadi. Chiqish sizga server erishilishi mumkinligini va auth talab qilinishini aytadi.
+    </Step>
+    <Step title="Server URL'ini tekshiring">
+      `.bolt/bolt.jsonc` dagi URL ni tekshiring. Remote serverlar uchun URL faqat xost emas, MCP yo'li bilan tugashini tekshiring (masalan, `/mcp` yoki `/tools`).
+    </Step>
+    <Step title="OAuth serverlar uchun qayta autentifikatsiya qiling">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Brauzer oqimiga rioya qiling. Agar server oldindan ro'yxatga olingan mijoz ID ni talab qilsa, uni konfiguratsiyaga qo'shing:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Mahalliy server buyrug'ini tekshiring">
+      `local` serverlar uchun buyruqni terminalda qo'lda ishga tushirib, u xatolarsiz boshlanishini tasdiqlang:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sessiya topilmadi">
+  **Simptomlar:** `bolt run --session <id>` "Session not found" bilan chiqadi, yoki siz ishlaganingizni eslagan sessiya g'oyib bo'ldi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Barcha mavjud sessiyalarni ro'yxatga oling">
+      ```bash
+      bolt session list
+      ```
+
+      Sessiyalar avval eng so'nggi yangilanganlar bo'yicha tartiblanadi. Agar sessiyangiz o'chirilgan yoki ma'lumotlar bazasi ko'chirilgan bo'lsa, u bu yerda paydo bo'lmaydi.
+    </Step>
+    <Step title="Ma'lumotlar bazasi yo'lini toping">
+      ```bash
+      bolt db path
+      ```
+
+      Bu SQLite fayliga to'liq yo'lni chop etadi. Fayl mavjudligini va bo'sh emasligini tekshiring.
+    </Step>
+    <Step title="Ma'lumotlar bazasini to'g'ridan-to'g'ri so'rang">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Agar sessiyangiz ma'lumotlar bazasida ko'rinsa lekin `bolt session list` da yo'q bo'lsa, loyiha ID mos kelmasligi bo'lishi mumkin — sessiyalar loyihalar bilan chegaralangan.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="TUI da ruxsat xatolari">
+  **Simptomlar:** Agent qayta-qayta ruxsat so'raydi, fayllarni yozishdan bosh tortadi yoki "Permission denied" bannerlarini ko'rasiz.
+
+  **Kirish darajalarini tushunish:**
+
+  Har bir o'rnatilgan agent so'ramasdan nima qila olishini boshqaradigan e'lon qilingan kirish darajasiga ega:
+
+  | Kirish darajasi | Nimaga ruxsat beradi |
+  | --- | --- |
+  | **Full** | Fayllarni o'qish, fayllarni yozish, shell buyruqlarini bajarish |
+  | **Edit** | Fayllarni o'qish va yozish, shell buyruqlari yo'q |
+  | **Read** | Faqat fayllarni o'qish, yozish yoki buyruqlar yo'q |
+
+  `code`, `debug`, `refactor`, `migrate` va `perf` agentlari **Full** kirishga ega. `docs` **Edit** kirishga ega. `plan`, `ask`, `code-review` va `security` **Read** kirishga ega.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Full kirishga ega agentga o'ting">
+      Agar fayl yozishlar kerak bo'lsa, `code` agentidan foydalaning:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Yoki agentlar orasida aylanish uchun TUI da `Tab` ni bosing.
+    </Step>
+    <Step title="So'rovlarni interaktiv bo'lmagan tarzda tasdiqlash uchun --auto dan foydalaning">
+      CI yoki skriptli kontekstlarda konfiguratsiyada aniq rad etilmagan ruxsatlarni avtomatik tasdiqlash uchun `bolt run` ga `--auto` ni uzating.
+    </Step>
+    <Step title="Konfiguratsiya faylida ruxsatlarni sozlang">
+      `.bolt/bolt.jsonc` ga `permission` bloki qo'shib loyihadagi barcha sessiyalar uchun ma'lum asboblarni rad etishingiz mumkin.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Yuqori token foydalanishi yoki kutilmagan xarajatlar">
+  **Simptomlar:** `bolt stats` kutilganidan yuqori token sonlarini ko'rsatadi yoki API hisob-kitobingiz kutilganidan tezroq o'sadi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Foydalanish statistikangizni ko'rib chiqing">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Chiqish kunlik xarajatni, sessiyaga o'rtacha tokenlarni va model bo'yicha foydalanishni taqsimlaydi.
+    </Step>
+    <Step title="Reasoning effort'ni pasaytiring">
+      Uni qo'llab-quvvatlaydigan modellar uchun `--variant` bilan reasoning effort'ni pasaytiring:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Qo'llab-quvvatlanadigan qiymatlar provayderga xos (masalan, `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Arzonroq modelga o'ting">
+      Kichikroq modelni topish uchun `bolt models` dan foydalaning. Kichikroq modellar (masalan, `claude-haiku`, `gpt-4o-mini`) token bo'yicha ancha kam turadi va ko'p vazifalar uchun yaxshi ishlaydi.
+    </Step>
+    <Step title="Tadqiqot uchun ask yoki plan agentidan foydalaning">
+      `ask` va `plan` agentlari **Read** kirishga ega va write asboblarini chaqirmaydi, bu ular katta output tokenlarni yaratadigan asbob-og'ir loop'lardan qochishini anglatadi.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Plagin nizolari yoki kutilmagan xatti-harakat">
+  **Simptomlar:** Slash-buyruq kutilmagan tarzda ishlaydi, TUI noto'g'ri render qilinadi yoki plaginni o'rnatgandan keyin biror narsa o'zgardi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Baselineni o'rnatish uchun barcha plaginlarni o'chirib qo'ying">
+      ```bash
+      bolt --pure
+      ```
+
+      Agar muammo yo'qolsa, plagin javobgar.
+    </Step>
+    <Step title="Nosozliklardan holi plaginni aniqlang">
+      ```bash
+      bolt debug info
+      ```
+
+      Chiqish barcha yuklangan plaginlarni ro'yxatga oladi. Ularni konfiguratsiyangizdan bir-birdan vaqtincha olib tashlang va muammo yo'qolguncha Bolt'ni qayta ishga tushiring.
+    </Step>
+    <Step title="Versiya mos kelmasligini tekshiring">
+      ```bash
+      bolt upgrade
+      ```
+
+      Plaginlar mos keladigan Bolt versiya diapazonini e'lon qiladi. Agar siz yaqinda Bolt'ni yangilagan bo'lsangiz, plagin ham yangilanishi kerak bo'lishi mumkin.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows yo'l muammolari">
+  **Simptomlar:** WSL bilan Windows'da Bolt `less` ni topa olmaydi, fayl yo'llarida kutilmagan orqaga chiziqlar bor yoki `bolt session list` uchun pager ishga tushmaydi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="Git Bash yo'lini o'rnating">
+      Bolt Windows uchun Git o'rnatilishiga nisbatan Unix utilitalarini (jumladan `less`) izlaydi. Environment variable'ni Git Bash katalogingizga o'rnating:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Uni saqlab qolish uchun PowerShell profilingizga (`$PROFILE`) qo'shing.
+    </Step>
+    <Step title="Debug info bilan tekshiring">
+      ```bash
+      bolt debug info
+      ```
+
+      OS aniqlashni va Bolt qaysi yo'llarni ishlatayotganini tasdiqlaydi.
+    </Step>
+    <Step title="Bolt'ni to'g'ridan-to'g'ri WSL ichida ishga tushiring">
+      Windows'da eng yaxshi tajriba uchun `bolt` ni PowerShell yoki Command Prompt'dan emas, balki WSL terminali ichidan ishga tushiring.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Bolt'ni yangilay olmayapman">
+  **Simptomlar:** `bolt upgrade` xatolikni xabar qiladi yoki jimgina hech narsa qilmaydi, yoki uni ishga tushirgandan keyin versiya raqami o'zgarmaydi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title="O'rnatish usulini aniq belgilang">
+      Bolt qanday o'rnatilganini aniqlashga harakat qiladi. Aniqlash muvaffaqiyatsiz bo'lsa, uni override qiling:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="O'rnatish skripti orqali qayta o'rnating">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: Chocolatey uchun Administrator sifatida ishga tushiring">
+      Agar `choco` orqali o'rnatgan bo'lsangiz, yangilanishlar yuqoriroq terminalni talab qiladi. `bolt upgrade` ni ishga tushirishdan oldin PowerShell'ni Administrator sifatida oching.
+    </Step>
+    <Step title="Yangi versiya faol ekanligini tasdiqlang">
+      ```bash
+      bolt --version
+      which bolt    # PATH to'g'ri binaryni olayotganini tekshirish
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agent fayllarni topa olmayapti (yoki juda ko'p topmoqda)">
+  **Simptomlar:** Agent mavjud fayllarni ko'ra olmasligidan shikoyat qiladi, yoki tegishini istamaydigan fayllarni (masalan, `node_modules`, build output yoki sirlar) qayta-qayta oladi.
+
+  **Qadamlar:**
+
+  <Steps>
+    <Step title=".boltignore ni tekshiring">
+      Bolt loyiha ildizidagi `.boltignore` faylini hurmat qiladi, u agentning fayl-qidirish asboblari qaysi fayllarni ko'rishi mumkinligini boshqaradi. U `.gitignore` bilan bir xil sintaksisdan foydalanadi.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Ish katalogini tasdiqlang">
+      ```bash
+      bolt debug info
+      ```
+
+      `cwd` loyiha ildizi bilan mos kelishini tekshiring. Agar Bolt'ni subkatalogdan ishga tushirgan bo'lsangiz, agentning fayl qidiruvi u yerda joylashgan.
+    </Step>
+    <Step title="Agentdan taxmin qilishni emas, grep qilishni so'rang">
+      Agar agent fayl mavjud emasligini da'vo qilsa, undan `grep` yoki `glob` ni aniq ishga tushirishni so'rang. Bu har qanday eskirgan ichki taxminni chetlab o'tadi.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Xato hisoboti uchun debug ma'lumotlarini olish">
+  Muammoni ochganda, quyidagi ma'lumotlar maintainerlar uchun eng foydali:
+
+  <Steps>
+    <Step title="Tizim va plagin ma'lumotlarini yig'ing">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="So'nggi log chiqishini yig'ing">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Tegishli sessiyani eksport qiling (sanitizatsiyalangan)">
+      Agar muammo muayyan sessiya paytida sodir bo'lsa, sirlarni tuzatgan holda uni eksport qiling:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      `session-debug.json` ni muammoga biriktiring.
+    </Step>
+    <Step title="Muammo yoki muhokamani oching">
+      [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) ga o'ting va `bolt debug info` chiqishingizni hamda takrorlash uchun qadamlar tavsifini joylashtiring.
+    </Step>
+  </Steps>
+</Accordion>

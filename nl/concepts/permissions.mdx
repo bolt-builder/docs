@@ -1,0 +1,53 @@
+---
+title: "Permissies: bepalen wat Bolt-agents mogen doen"
+sidebarTitle: "Permissies"
+description: "Hoe Bolts per-agent toegangsniveaus, permissieprompts en allow/deny-regels op configniveau ervoor zorgen dat de agent niets doet wat je niet hebt goedgekeurd."
+---
+
+Bolt-agents kunnen bestanden lezen, bestanden schrijven en shell-commando's uitvoeren. Die kracht is afgeschermd via twee lagen: een per-agent toegangsniveau en interactieve permissieprompts die je kunt goedkeuren, afwijzen of vooraf kunt configureren.
+
+## Toegangsniveaus van agents
+
+Elke ingebouwde agent heeft een gedeclareerd toegangsniveau:
+
+| Toegangsniveau | Bestanden lezen | Bestanden schrijven | Shell-commando's uitvoeren |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Ingebouwde toewijzingen:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Wissel van agent met `Tab` in de TUI, of geef `--agent <name>` mee aan `bolt run`.
+
+## Interactieve prompts
+
+Binnen het toegangsniveau van een agent vragen potentieel destructieve acties nog steeds om bevestiging. Je kunt eenmalig goedkeuren, voor de sessie goedkeuren, of weigeren. Geweigerde aanroepen geven een fout terug aan de agent en die gaat verder.
+
+## Niet-interactieve goedkeuring
+
+Voor CI, scripts of vertrouwde lokale workflows ondersteunt `bolt run` flags die prompts overslaan:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  Met `--auto`, `--yolo` en `--dangerously-skip-permissions` kan de agent lezen, schrijven en uitvoeren zonder te vragen. Gebruik ze alleen in vertrouwde omgevingen.
+</Warning>
+
+## Regels op configniveau
+
+Je kunt specifieke tools voor het hele project vooraf weigeren (of vooraf toestaan) door een `permission`-blok toe te voegen aan `.bolt/bolt.jsonc`. Dit geldt voor elke sessie in het project, inclusief niet-interactieve `bolt run`-aanroepen. Zie [Configuratie](/concepts/configuration) voor het schema.
+
+## Gerelateerd
+
+- [Agents](/concepts/agents) — welke agents welke toegangsniveaus hebben.
+- [Tools](/concepts/tools) — de volledige lijst van tools die permissies afschermen.
+- [Configuratie](/concepts/configuration) — duurzame permissieregels instellen.

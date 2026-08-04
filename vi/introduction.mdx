@@ -1,0 +1,107 @@
+---
+title: "Giới thiệu Bolt: agent AI terminal mã nguồn mở"
+sidebarTitle: "Giới thiệu"
+description: "Gặp Bolt: một agent lập trình AI terminal mã nguồn mở với mười agent, phiên bền vững, bộ nhớ dự án, MCP, 75+ nhà cung cấp LLM, TUI và ứng dụng desktop."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Terminal của bạn, giờ đây với cả một đội kỹ sư AI bên trong.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt là một agent lập trình AI ưu tiên terminal được xây dựng trên [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) và [SolidJS](https://www.solidjs.com). Trỏ nó vào bất kỳ dự án nào và nó tự động lấy ngữ cảnh: nó khám phá code của bạn, tuân theo quy ước của bạn, thực thi lệnh shell, chỉnh sửa tệp, chạy test và ship các thay đổi.
+
+Mười agent tích hợp sẵn (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) cộng với các subagent `@general` và `@explore` bao phủ toàn bộ vòng lặp kỹ thuật. Các phiên là bền vững: tách, gắn lại (kể cả tới một server từ xa), fork, chia sẻ, xuất và nhập bất kỳ lúc nào. Bộ nhớ dự án lưu giữ những gì agent học được giữa các phiên. Có thể mở rộng qua MCP server (với OAuth), plugin, agent tùy chỉnh và công cụ tùy chỉnh.
+
+Bolt là mã nguồn mở dưới giấy phép PolyForm Noncommercial 1.0.0.
+
+## Vì sao chọn Bolt?
+
+Bolt được thiết kế xoay quanh cách mà các nhà phát triển thực sự làm việc: trong terminal, qua nhiều phiên, trên các codebase thực. Đây là những gì tạo nên sự khác biệt:
+
+- **TUI ưu tiên terminal.** Một giao diện nhanh, điều khiển bằng bàn phím được xây bằng [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) và [SolidJS](https://www.solidjs.com). Nó có cảm giác gốc vì nó là gốc.
+- **Cả một đội agent.** Mười agent chuyên biệt — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` và `perf` — cộng với các subagent cho nghiên cứu và ủy thác nhiều bước. Chuyển giữa chúng bằng `Tab`.
+- **Các phiên bạn có thể rời và tham gia lại.** Tách khỏi phiên và gắn lại sau, kể cả trên server từ xa. Fork, chia sẻ, xuất và nhập công việc bất kỳ lúc nào. Phiên được lưu trong SQLite và hoàn toàn có thể kiểm tra được với `bolt db`.
+- **Mở rộng theo thiết kế.** MCP server với hỗ trợ OAuth đầy đủ, hệ thống plugin, tích hợp GitHub, server API tích hợp sẵn và giao diện web.
+- **Ứng dụng desktop.** Cùng một engine được đóng gói trong trải nghiệm desktop đa cửa sổ, đa tab — với terminal tích hợp, cây tệp, command palette, 28 ngôn ngữ giao diện và tự động cập nhật.
+
+## Agent tích hợp sẵn
+
+Bolt được trang bị sẵn mười agent chuyên biệt. Mỗi agent có mức truy cập hệ thống tệp được xác định để phù hợp với mục đích của nó.
+
+| Agent | Truy cập | Mô tả |
+| --- | --- | --- |
+| `code` | Full | Mặc định: đọc, ghi và chạy code |
+| `plan` | Read | Khám phá codebase và tạo ra kế hoạch mà không thay đổi tệp |
+| `ask` | Read | Câu hỏi và nghiên cứu — không chỉnh sửa tệp |
+| `code-review` | Read | Review các thay đổi về tính đúng đắn, phong cách và bảo mật |
+| `debug` | Full | Gỡ lỗi các test thất bại, crash và lỗi logic |
+| `refactor` | Full | Refactor an toàn với xác minh test ở mỗi bước |
+| `docs` | Edit | Viết và cập nhật tài liệu và bình luận |
+| `security` | Read | Kiểm toán bảo mật: lỗ hổng, bí mật, các mẫu |
+| `migrate` | Full | Nâng cấp framework và di chuyển dependency |
+| `perf` | Full | Phân tích và tối ưu hóa hiệu năng |
+
+Bạn cũng có thể định nghĩa agent của riêng mình dưới dạng tệp Markdown hoặc tạo một cái với `bolt agent create`.
+
+## Ứng dụng desktop
+
+Bolt cũng có sẵn dưới dạng ứng dụng desktop độc lập với quản lý phiên đa cửa sổ và đa tab, prompt composer với hỗ trợ tệp đính kèm và dán ảnh từ clipboard, terminal tích hợp và cây tệp, command palette, cài đặt đầy đủ cho phím tắt, mô hình, provider và server, thông báo gốc, deep link, tích hợp WSL trên Windows và tự động cập nhật qua các kênh dev, beta và production.
+
+Tải ứng dụng desktop từ [trang releases](https://github.com/Bolt-builder/bolt-cli/releases), hoặc cài đặt bằng một dòng lệnh trên macOS mà không cần đi vòng qua Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Khám phá tài liệu
+
+<CardGroup cols={2}>
+  <Card title="Cài đặt" icon="download" href="/installation">
+    Cài đặt Bolt qua curl, npm hoặc trình quản lý gói hệ thống của bạn trên macOS, Linux và Windows.
+  </Card>
+
+  <Card title="Bắt đầu nhanh" icon="rocket" href="/quickstart">
+    Mở TUI, chạy prompt đầu tiên và ship một commit do AI tạo trong chưa đầy một phút.
+  </Card>
+
+  <Card title="Agent" icon="users" href="/concepts/agents">
+    Mười agent tích hợp sẵn cộng với các subagent. Tìm hiểu từng agent làm gì và cách viết agent của riêng bạn.
+  </Card>
+
+  <Card title="Bộ nhớ dự án" icon="brain" href="/concepts/project-memory">
+    Cách Bolt nhớ dự án của bạn qua các phiên và cách kiểm soát những gì được ghi lại.
+  </Card>
+
+  <Card title="MCP server" icon="plug" href="/extending/mcp-servers">
+    Kết nối công cụ và nguồn dữ liệu bên ngoài với Bolt qua Model Context Protocol.
+  </Card>
+
+  <Card title="Server headless" icon="server" href="/server/headless-server">
+    Chạy `bolt serve`, gắn một TUI từ bất kỳ máy nào và điều khiển Bolt từ API.
+  </Card>
+</CardGroup>

@@ -1,0 +1,22 @@
+---
+title: "Skillek: újrahasznosítható ügynök-forgatókönyvek"
+sidebarTitle: "Skillek"
+description: "A skillek elnevezett, újrahasznosítható forgatókönyvek, amelyeket a Bolt-ügynök a skill eszközön keresztül hív meg — hasznosak kész munkafolyamatokhoz, például kiadások szállításához vagy lint-készletek futtatásához."
+---
+
+A skillek elnevezett, újrahasznosítható forgatókönyvek, amelyek a projekted mellett élnek, és a `skill` eszközön keresztül hívhatók meg. Míg egy egyedi eszköz egyetlen végrehajtható művelet, a skill egy szkriptelt munkafolyamat, amelyet az ügynök lépésről lépésre követhet: gyűjtsd össze ezeket a fájlokat, futtasd ezeket a parancsokat, döntsd el a következő lépést a kimenet alapján.
+
+Használj skilleket, ha:
+
+- Van egy munkafolyamatod, amit folyamatosan újra elmagyarázol a promptokban („először futtasd a lintert, aztán…").
+- Azt akarod, hogy az ügynök egy adott döntési fát kövessen.
+- Ugyanazt a munkafolyamatot minden munkamenetnél és minden ügynöknél elérhetővé akarod tenni a projektben.
+
+## Hol élnek
+
+A skillek fájlok a projekt gyökerében lévő `.opencode/skill/` (vagy `.opencode/skills/`) mappa alatt. Minden fájl leírja a trigger nevét, mikor használja az ügynök, és a folyamat lépéseit. A `skill` [eszköz](/concepts/tools) elérhetővé teszi őket a modell számára.
+
+## Kapcsolódó
+
+- [Egyedi eszközök](/extending/custom-tools) — alacsonyabb szintű, egyetlen műveletes bővítés.
+- [Egyedi ügynökök](/extending/custom-agents) — süsd bele az utasításokat egy ügynökbe helyette.

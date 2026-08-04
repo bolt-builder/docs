@@ -1,0 +1,116 @@
+---
+title: "Bolt desktop ilova: ko'p oynali AI kodlash sessiyalari"
+sidebarTitle: "O'rnatish"
+description: "Ko'p oynali sessiyalar, integratsiyalashgan terminal, rasm joylash bilan prompt kompozitori, avtomatik yangilanishlar va 28 ta UI tili uchun Bolt desktop ilovani o'rnating."
+url: "desktop/install"
+---
+
+Bolt desktop ilovasi CLI bilan bir xil dvigatel'ni to'liq Electron shell'ga o'raydi. Terminalda mavjud har bir imkoniyat — agentlar, MCP serverlari, plaginlar, remote sessiyalar, fork qilish va bo'lishish mumkin bo'lgan sessiyalar — desktop ilovada bir xil ishlaydi, ko'p oynali va ko'p tabli tajriba, grafik sozlamalar UI, native bildirishnomalar va avtomatik yangilanishlar qo'shilgan holda. Agar siz allaqachon CLI dan foydalansangiz, desktop ilova almashtirish emas, balki drop-in to'ldiruvchi hisoblanadi.
+
+---
+
+## O'rnatish
+
+### macOS
+
+<Steps>
+  <Step title="Bir qatorli buyruq bilan o'rnatish (tavsiya etiladi)">
+    Terminalni oching va ishga tushiring:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skript so'nggi reliz'ni yuklab oladi, uni tekshiradi va ilovani `/Applications` ga joylashtiradi. Gatekeeper pop-up yo'q.
+  </Step>
+
+  <Step title="Ilovani ishga tushiring">
+    **Bolt** ni `/Applications` yoki Spotlight'dan oching. Birinchi ishga tushirishda Bolt sizdan standart LLM provayderni tanlashni so'raydi va global konfiguratsiya fayl yaratadi.
+  </Step>
+</Steps>
+
+<Tip>
+  Bir qatorli buyruq macOS Gatekeeper'ning "unidentified developer" dialogini chetlab o'tadigan tarzda ilovani o'rnatadi, shuning uchun qo'shimcha xavfsizlik so'rovlarisiz to'g'ridan-to'g'ri kodlashga o'tasiz.
+</Tip>
+
+### Barcha platformalar — reliz'lardan yuklab olish
+
+Platformangiz uchun so'nggi o'rnatgichni [Bolt releases sahifasi](https://github.com/Bolt-builder/bolt-cli/releases) dan yuklab oling.
+
+| Platforma | O'rnatgich turi |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` o'rnatgich |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Windows'da Bolt WSL (Windows Subsystem for Linux) integratsiyasini o'z ichiga oladi. WSL mavjud bo'lganda, Bolt sessiyalarni to'g'ridan-to'g'ri WSL distribyutivi ichida ochishi mumkin — sizga native Windows UI bilan Linux-native agent muhitini beradi.
+</Note>
+
+---
+
+## Imkoniyatlar
+
+### Ko'p oynali va ko'p tabli sessiya boshqaruvi
+
+Xohlagancha ko'p oyna oching, har biri o'z tablar to'plamiga ega. Tablar to'g'ridan-to'g'ri Bolt sessiyalariga xaritalanadi, shuning uchun bir tabda refactor uchun agentni ishga tushirishingiz, boshqasida savol berishingiz va uchinchisida fon vazifasini ishga tushirishingiz mumkin — hammasi bir vaqtning o'zida.
+
+### Prompt kompozitori
+
+Prompt kompozitori boy kiritishni qo'llab-quvvatlaydi: matn joylash, fayllarni biriktirma sifatida sudrab olib kelish yoki to'g'ridan-to'g'ri clipboard'dan rasm joylash. Bolt rasmni kodlaydi va uni har qanday vision-qobiliyatli modelga avtomatik yuboradi.
+
+### Integratsiyalashgan terminal va fayl daraxti
+
+Split-panel tartib sizga bir tomonda agent suhbatini va boshqa tomonda jonli terminal va loyiha fayl daraxtini beradi. Ilovalarni almashtirmasdan buyruqlarni ishga tushirishingiz, chiqishni tekshirishingiz va natijalarni agentga qaytarib berishingiz mumkin.
+
+### Buyruqlar paletasi
+
+Buyruqlar paletasini ochish uchun `Cmd/Ctrl+K` ni bosing. Bu yerdan sessiyalarni almashtirishingiz, agentlarni o'zgartirishingiz, sozlamalarni ochishingiz yoki sichqonchani ishlatmasdan har qanday harakatni ishga tushirishingiz mumkin.
+
+### To'liq sozlamalar UI
+
+Sozlamalar paneli `.bolt/bolt.jsonc` da yashaydigan har bir opsiyani qamrab oladi — keybindings, model tanlash, LLM provayderlari, MCP serverlari va auth — dropdown'lar, togglelar va inline tekshirish bilan. Konfiguratsiya faylini qo'lda tahrirlashga kamdan-kam ehtiyoj sezasiz.
+
+### Native bildirishnomalar
+
+Bolt uzoq davom etadigan vazifa tugagach native OS bildirishnomasini ishga tushiradi. To'g'ridan-to'g'ri sessiyaga sakrash uchun bildirishnoma ustiga bosing.
+
+### Deep havolalar
+
+`bolt://` URL ga o'tish orqali muayyan sessiyani oching. Sessiya havolalarini jamoadoshlar bilan bo'lishish yoki ishdagi progress'ni bookmark qilish uchun foydali.
+
+### Avtomatik yangilanishlar
+
+Desktop ilova o'zini uchta kanal bo'ylab yangilaydi:
+
+| Kanal | Tavsif |
+|---------|-------------|
+| `prod` | Barqaror reliz'lar, har bir production tag'da yangilanadi |
+| `beta` | Yangi imkoniyatlarga erta kirish uchun pre-release build'lar |
+| `dev` | `dev` branch'idan nightly build'lar |
+
+Kanallarni **Settings → About** da almashtiring.
+
+### 28 ta UI tili
+
+Bolt interfeysi 28 ta tilga mahalliylashtirilgan. Ekran tilini **Settings → Appearance → Language** da o'zgartiring.
+
+---
+
+## Aloqador hujjatlar
+
+<CardGroup cols={2}>
+  <Card title="Remote sessions" icon="server" href="/server/remote-sessions">
+    Remote mashinada headless server ishga tushiring va desktop ilova yoki CLI dan biriktiring.
+  </Card>
+  <Card title="MCP servers" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol yordamida agentlaringizga tashqi asboblar va API'larni qo'shing.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Bolt'ni custom provayderlar, auth usullari va workspace adapterlari bilan kengaytiring.
+  </Card>
+  <Card title="GitHub integration" icon="github" href="/server/github-actions">
+    Desktop ilova yoki CI dan PR'lar, commit xabarlari va kod ko'rib chiqishni avtomatlashtiring.
+  </Card>
+</CardGroup>

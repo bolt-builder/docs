@@ -1,0 +1,46 @@
+---
+title: "Projektminne: Beständig kontext mellan Bolt-sessioner"
+sidebarTitle: "Projektminne"
+description: "Bolt fångar upp vad den lär sig om ditt projekt i slutet av varje tur och injicerar det i nya sessioner så att agenten inte behöver lära om din kodbas varje gång."
+---
+
+Projektminne är det som får Bolt att kännas som att den redan känner till ditt projekt. När en session avslutar sin tur destillerar Bolt det som var användbart och skriver det till ett minneslager per projekt. När du öppnar en ny session injicerar Bolt ett minnesindex plus den senaste sessionssammanfattningen i systemprompten så att agenten startar med verklig kontext istället för ett tomt blad.
+
+## Hur uppfångning fungerar
+
+Vid slutet av varje konversationstur ber Bolt modellen att sammanfatta bestående fakta som kommer vara användbara nästa gång: konventioner, arkitekturanteckningar, filstruktur, build/test-kommandon, fallgropar och öppna trådar. Dessa skrivs till disk under projektets minneskatalog, tillsammans med en löpande sammanfattning av den senaste sessionen.
+
+Minne är per projekt. Två utcheckningar av samma repo på samma maskin delar minne; orelaterade projekt ser aldrig varandras minne.
+
+## Explicita verktyg
+
+Agenter kan även läsa och skriva minne direkt under en session:
+
+- `memory_save` — registrera ett specifikt faktum som agenten ska komma ihåg nästa gång.
+- `memory_recall` — slå upp något som agenten (eller du) fångat tidigare.
+
+Du kan be agenten att "komma ihåg att vi använder pnpm, inte npm" och den kommer att anropa `memory_save` åt dig.
+
+## Sessionsvis kontroll
+
+Inuti TUI:n kan du växla minnesbeteende för den aktuella sessionen med slash-kommandon:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Detta är användbart när du vill ha en utforskande engångssession som inte förorenar ditt minne, eller en skrivskyddad session som ändå drar nytta av tidigare kontext.
+
+## Inspektera och redigera minne
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Minne lagras som vanliga filer på disk under projektets Bolt-datakatalog, så du kan grepa, redigera eller ta bort poster direkt. För att hitta den exakta sökvägen på din maskin, kör `bolt debug paths`.
+
+## Relaterat
+
+- [Sessioner](/concepts/sessions) — de beständiga konversationerna som producerar minnesposter.
+- [Konfiguration](/concepts/configuration) — var minne lagras och hur du åsidosätter sökvägen.

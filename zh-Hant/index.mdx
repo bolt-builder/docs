@@ -1,0 +1,78 @@
+---
+title: "Bolt:你終端機中的 AI 編程代理"
+sidebarTitle: "首頁"
+description: "Bolt 是一款以終端機為先的 AI 編程代理,具備十個專業化代理、持久工作階段、MCP 支援與桌面應用——由任何 LLM 供應商驅動。"
+---
+
+Bolt 將一支完整的 AI 工程團隊直接放進你的終端機。它以快速、鍵盤驅動的 TUI 與原生桌面應用的形式發佈,兩者背後是同一個引擎:十個專業化代理、持久耐用的工作階段、支援 OAuth 的 MCP 伺服器管理、外掛系統,以及對所有主流 LLM 供應商的支援。
+
+<CardGroup cols={2}>
+  <Card title="安裝" icon="download" href="/installation">
+    透過 curl、npm、bun 或你喜愛的套件管理工具,幾秒鐘即可安裝 Bolt。
+  </Card>
+  <Card title="快速開始" icon="rocket" href="/quickstart">
+    在一分鐘內執行你的第一個 AI 編程工作階段。
+  </Card>
+  <Card title="代理" icon="robot" href="/concepts/agents">
+    認識十個內建代理:code、plan、ask、review、debug、refactor、docs、security、migrate 與 perf。
+  </Card>
+  <Card title="命令參考" icon="terminal" href="/reference/commands">
+    完整記錄每個 CLI 命令、子命令與旗標。
+  </Card>
+</CardGroup>
+
+## Bolt 能做什麼
+
+Bolt 讀取你的程式碼庫,理解你正在建構的內容,並與你一起交付程式碼 — 在終端機或桌面應用中。每個工作階段都是持久的:可卸離、從另一台機器重新連接、分叉出對話的分支、分享連結,或匯出一份脫敏的記錄。
+
+<CardGroup cols={3}>
+  <Card title="工作階段" icon="clock-rotate-left" href="/concepts/sessions">
+    持久、可分叉的工作階段,儲存在本機 SQLite 中。
+  </Card>
+  <Card title="供應商與模型" icon="microchip" href="/concepts/providers-and-models">
+    為任何主流 LLM 供應商自帶 API 金鑰。
+  </Card>
+  <Card title="設定" icon="sliders" href="/concepts/configuration">
+    每個專案的 `.bolt/bolt.jsonc`,具備完整的 schema 支援。
+  </Card>
+  <Card title="MCP 伺服器" icon="plug" href="/extending/mcp-servers">
+    透過 Model Context Protocol 新增工具,包含 OAuth 流程。
+  </Card>
+  <Card title="外掛" icon="puzzle-piece" href="/extending/plugins">
+    以自訂供應商、工具與驗證方法擴充 Bolt。
+  </Card>
+  <Card title="GitHub 整合" icon="github" href="/server/github-actions">
+    由 AI 驅動的提交訊息、程式碼審查以及 GitHub Actions。
+  </Card>
+</CardGroup>
+
+## 上手運行
+
+<Steps>
+  <Step title="安裝 Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    或透過 npm 安裝:`npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="開啟你的專案">
+    進入任一專案目錄並啟動 TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="設定供應商">
+    首次啟動時 Bolt 會提示你新增 LLM 供應商。你也可以執行:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="開始與 AI 一同編寫程式碼">
+    在 TUI 頁尾輸入你的提示,按 Enter,讓 Bolt 的代理開始工作。使用 `Tab` 切換代理。
+  </Step>
+</Steps>
+
+<Tip>
+  使用 `bolt run "explain this codebase"` 無需開啟完整 TUI 就能快速取得非互動式答案。
+</Tip>

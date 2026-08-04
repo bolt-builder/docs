@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI Keybinds"
+sidebarTitle: "Keybinds"
+description: "आवश्यक Bolt TUI शॉर्टकट: Tab से agents बदलना, mini mode, push-to-talk voice, और वह सब कुछ जो आप कीबोर्ड से चला सकते हैं।"
+---
+
+Bolt TUI को end-to-end कीबोर्ड से चलाने के लिए डिज़ाइन किया गया है। यह page उन शॉर्टकट्स को सूचीबद्ध करता है जिन तक आप सबसे अधिक बार पहुँचेंगे। संपूर्ण सूची के लिए, `bolt` चलाएँ और in-app help खोलें।
+
+## आवश्यकताएँ
+
+| Keys | Action |
+| --- | --- |
+| `Tab` | अगले agent में साइकिल करें (`code`, `plan`, `ask`, ...)। वर्तमान agent status bar में दिखाया गया है। |
+| `Shift+Tab` | पिछले agent में साइकिल करें। |
+| `Enter` | वर्तमान संदेश भेजें। |
+| `Esc` | in-flight turn रद्द करें। |
+| `Ctrl+C` | वर्तमान tool call बाधित करें। |
+| `Ctrl+D` | session से detach करें (इसे सर्वर पर चलता छोड़ देता है)। |
+
+## Modes
+
+### `--mini` mode
+
+Bolt को एक compact split-footer लेआउट के साथ शुरू करें जो कम टर्मिनल स्थान लेता है, split panes के लिए बढ़िया:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk voice
+
+Speech-to-text का उपयोग करके एक prompt dictate करने के लिए कॉन्फ़िगर किए गए push-to-talk key को दबाए रखें, फिर भेजने के लिए release करें। `.bolt/bolt.jsonc` में key और STT provider को कॉन्फ़िगर करें।
+
+## संबंधित
+
+- [Slash commands](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw`, और मित्र।
+- [Sessions](/concepts/sessions) — कीबोर्ड से detach, resume, fork, और share।

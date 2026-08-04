@@ -1,0 +1,33 @@
+---
+title: "Tuần lễ ngày 4 tháng 8, 2026"
+description: "Changelog Bolt hàng tuần: 11 ngôn ngữ giao diện mới, bố cục phải-sang-trái, bản dịch desktop gốc, nhà cung cấp Poolside, hoàn thiện GPT-5 và sửa lỗi."
+---
+
+## Tính năng mới
+
+- **11 ngôn ngữ giao diện mới** — Ứng dụng desktop và TUI hiện có sẵn bản dịch cho tiếng Hindi, Hà Lan, Indonesia, Việt Nam, Ý, Urdu, Punjabi, Azerbaijan, Phần Lan, Thụy Điển và Thái, nâng tổng số lên 28 ngôn ngữ được hỗ trợ. Chuyển ngôn ngữ trong **Settings → Appearance → Language**. Xem [Tính năng desktop](/desktop/features) và [Cài đặt](/desktop/install#28-ui-languages).
+- **Hỗ trợ bố cục phải-sang-trái** — Điều hướng, trình soạn thảo, hộp thoại, điều khiển và hiển thị văn bản giờ được đảo chiều đúng cho các ngôn ngữ phải-sang-trái như tiếng Ả Rập, Do Thái và Urdu, nên toàn bộ giao diện đọc tự nhiên trong các ngôn ngữ đó.
+- **Bản dịch desktop gốc** — Menu cấp hệ điều hành, hộp thoại cập nhật, luồng khôi phục, quá trình giới thiệu WSL và bộ chọn tệp gốc giờ được bản địa hóa cùng với giao diện ứng dụng, nên toàn bộ trải nghiệm desktop tuân theo cài đặt ngôn ngữ của bạn.
+- **Mở rộng phạm vi bản địa hóa** — Menu, hộp thoại, lời nhắc, nội dung trợ giúp, thông báo lỗi và nhãn trợ năng hiện được dịch trong mọi ngôn ngữ được hỗ trợ, thu hẹp khoảng trống nơi chuỗi trước đây quay về tiếng Anh.
+- **Nhà cung cấp Poolside** — Bolt hiện kết nối tới [Poolside](https://poolside.ai) thông qua API tương thích với OpenAI của họ. Chạy `/connect`, chọn **Poolside** và dán API key của bạn từ [platform.poolside.ai](https://platform.poolside.ai). Các triển khai Poolside tự lưu trữ cũng có thể được cấu hình làm nhà cung cấp tùy chỉnh. Xem [Nhà cung cấp và mô hình](/concepts/providers-and-models).
+- **Số nhiều theo ngôn ngữ** — Số đếm, trạng thái, tệp và các mục trong danh sách phiên hiện được chuyển sang số nhiều đúng theo từng ngôn ngữ, nên văn bản timeline và trạng thái đọc tự nhiên qua mọi ngôn ngữ được hỗ trợ.
+- **Hiển thị Markdown phong phú hơn** — Tin nhắn của trợ lý được cải thiện định dạng Markdown, cập nhật streaming mượt mà hơn, đánh dấu cú pháp tốt hơn và hỗ trợ nội dung toán học, giúp các phản hồi dài và mang tính kỹ thuật dễ đọc hơn.
+
+## Cập nhật
+
+- **Mức độ suy luận GPT-5 khớp với phiên bản mô hình** — Các bậc effort suy luận (bao gồm `none` và `xhigh`) giờ chỉ được cung cấp cho các biến thể GPT-5 hỗ trợ chúng, nên `--variant` không còn hiển thị các tùy chọn mà một mô hình nhất định sẽ từ chối. Xem [Điều khiển mức độ suy luận](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Hoàn thiện chú thích diff** — Trình xem diff trong giao diện phiên tinh chỉnh các chỉ báo bình luận, hành vi gutter và màu cú pháp sáng/tối cho khả năng đọc tốt hơn.
+- **Tinh chỉnh các bản dịch hiện có** — Các ngôn ngữ hiện có được cải thiện thuật ngữ rõ ràng hơn và mở rộng nhãn UI cho trải nghiệm nhất quán hơn trên toàn ứng dụng.
+
+## Sửa lỗi
+
+- **Thời gian hành động phiên** — Các hành động phiên giờ ghi lại và báo cáo thời gian chính xác hơn, nên timeline phản ánh khi công việc thực sự bắt đầu và kết thúc.
+- **Lỗi workspace từ xa rõ ràng hơn** — Các thất bại khi kết nối hoặc chạy lệnh trong workspace từ xa giờ hiển thị thông báo lỗi mô tả rõ hơn thay vì thông báo chung chung.
+- **Proxy workspace không còn rò rỉ thư mục làm việc** — Các yêu cầu được định tuyến qua proxy workspace không còn bao gồm chi tiết thư mục làm việc, giữ các đường dẫn cục bộ không lộ ra ngoài.
+- **Bản đồ lấp đầy các vùng trống** — Bản đồ hoạt động giờ vẫn hiển thị trong các vùng không có hoạt động được ghi lại thay vì thu lại thành khu vực trống.
+- **Sửa phát hiện ngôn ngữ** — Bolt giờ chọn ngôn ngữ hệ thống của bạn một cách đáng tin cậy khi khởi động, nên giao diện mở với ngôn ngữ đúng trên nhiều nền tảng hơn.
+- **Sửa bản dịch timeline tiếng Đức** — Các mục timeline bằng tiếng Đức giờ hiển thị với các chuỗi đúng thay vì quay về tiếng Anh hoặc văn bản định dạng sai.
+- **Bật/tắt lựa chọn tệp** — Nhấp vào lựa chọn tệp lần thứ hai giờ xóa nó, nên bạn có thể hoàn tác lựa chọn mà không cần chọn tệp khác trước.
+- **Tương tác nháp bình luận sạch hơn** — Bắt đầu hoặc bỏ qua bình luận nháp giờ xóa lựa chọn nền một cách nhất quán và không còn cạnh tranh với trạng thái hover.
+- **Khôi phục header suy luận có hoạt ảnh** — Header suy luận trong TUI hiển thị lại spinner hoạt hình khi đang suy nghĩ, và gradient của nó mờ đi khi mở rộng để dễ phân biệt trạng thái thu gọn và mở.
+- **Khôi phục công cụ tiến trình nền và kiểm thử** — `bash_background`, `process_output`, `list_processes`, `kill_process`, và `test_run` lại có sẵn cho các agent sau khi bị bỏ trong một lần merge trước đó. Các agent có thể khởi chạy các lệnh chạy lâu như dev server và watcher, đọc đầu ra của chúng và chạy các bài kiểm tra của dự án với kết quả pass/fail có cấu trúc. Xem [Công cụ tích hợp sẵn](/concepts/tools#built-in-tools).

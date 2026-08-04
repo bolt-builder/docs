@@ -1,0 +1,142 @@
+---
+title: "Začni s Boltem za méně než minutu"
+sidebarTitle: "Rychlý start"
+description: "Nainstaluj Bolt, otevři svůj projekt, připoj providera a spusť svůj první AI prompt — vše pod 60 sekund s tímto krok-za-krokem průvodcem."
+---
+
+Tento průvodce tě provede instalací Boltu, jeho spuštěním v projektu, připojením AI providera a spuštěním prvního promptu. Celý tok trvá pod jednu minutu.
+
+<Steps>
+  <Step title="Nainstaluj Bolt">
+    Nejrychlejší cestou je oficiální instalační skript, který funguje na macOS a Linuxu:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Preferuješ správce balíčků? Nainstaluj globálně přes npm, bun, pnpm nebo yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Pro desktopovou aplikaci na macOS (bez zajížďky přes Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Všechny metody, včetně Homebrew, Chocolatey, Scoop a Windows-specifických poznámek, najdeš v [průvodci instalací](/installation).
+  </Step>
+  <Step title="Otevři svůj projekt">
+    Přejdi do libovolného adresáře projektu a spusť interaktivní TUI:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt si automaticky vezme kontext projektu — čte tvůj strom souborů, chápe stack a zpřístupní ho každému agentovi od okamžiku, kdy ho otevřeš.
+  </Step>
+  <Step title="Nakonfiguruj AI providera">
+    Při prvním spuštění tě Bolt vyzve k nakonfigurování providera, pokud žádný není nastavený. Můžeš to spustit i kdykoliv:
+
+    ```bash
+    bolt providers
+    ```
+
+    Otevře se tok správy providerů, kde můžeš přidat API klíče pro OpenAI, Anthropic a další podporované LLM providery. Konfigurace je uložena do `.bolt/bolt.jsonc` v kořeni tvého projektu.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Napiš prompt a prozkoumej agenty">
+    Jakmile jsi uvnitř TUI, napiš prompt a stiskni Enter. Klávesou **Tab** kdykoliv přepneš mezi deseti vestavěnými agenty Boltu — aktuální agent je zobrazen ve stavovém řádku.
+
+    Prompty můžeš také spouštět přímo z příkazové řádky bez otevírání TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Vestavění agenti
+
+Mezi agenty přepínej klávesou `Tab` v TUI, nebo předej `--agent <name>` do `bolt run`. Každý agent má definovanou úroveň přístupu odpovídající jeho účelu.
+
+| Agent | Přístup | Popis |
+| --- | --- | --- |
+| `code` | Full | Výchozí: čte, píše a spouští kód |
+| `plan` | Read | Prozkoumává kódovou základnu a vytváří plán bez změn souborů |
+| `ask` | Read | Otázky a výzkum — žádné úpravy souborů |
+| `code-review` | Read | Reviewuje změny na správnost, styl a bezpečnost |
+| `debug` | Full | Ladí padající testy, pády a logické chyby |
+| `refactor` | Full | Bezpečný refaktoring s ověřením testy v každém kroku |
+| `docs` | Edit | Píše a aktualizuje dokumentaci a komentáře |
+| `security` | Read | Bezpečnostní audit: zranitelnosti, tajné klíče, vzory |
+| `migrate` | Full | Upgrady frameworků a migrace závislostí |
+| `perf` | Full | Analýza výkonu a optimalizace |
+
+K dispozici jsou také dva vestavění subagenti pro delegování: `@general` pro komplexní vícekrokové úlohy a `@explore` pro rychlý průzkum kódové základny pouze pro čtení. Vlastní agenty si můžeš definovat jako Markdown soubory nebo vygenerovat pomocí `bolt agent create`.
+
+## Běžné příkazy k vyzkoušení
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Předej `--mini` do `bolt` nebo `bolt attach` pro kompaktní UI, které zabírá méně místa v terminálu — skvělé pro menší okna nebo rozdělené rozvržení.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` přijímá přepínače `--auto`, `--yolo` a `--dangerously-skip-permissions`, které automaticky schvalují všechny prompty oprávnění bez dotazování. Používej je pouze v důvěryhodných prostředích — umožňují agentovi číst, zapisovat a spouštět bez potvrzení.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt podporuje shellové doplňování pro bash, zsh, fish a další shelly. Doplňování vygeneruješ a nainstaluješ pomocí:
+
+  ```bash
+  bolt completion
+  ```
+
+  Následuj vytištěné instrukce, abys doplňovací skript načetl(a) v konfiguraci svého shellu.
+</Note>

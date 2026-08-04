@@ -1,0 +1,193 @@
+---
+title: "Yapılandırma — bolt.jsonc Ayarları ve Global Geçersiz Kılmalar"
+sidebarTitle: "Yapılandırma"
+description: "Bolt, projenizden ve OS yapılandırma dizinlerinden katmanlı JSONC yapılandırma dosyalarını okur. Sağlayıcılar, MCP sunucuları, talimatlar, eklentiler ve ortam geçersiz kılmalarını ayarlayın."
+---
+
+Bolt katmanlı bir yapılandırma sistemi kullanır: kullanıcı genelindeki varsayılanlar için **global** bir yapılandırma dosyası ve depo özelindeki ayarlar için **proje başına** bir yapılandırma dosyası. Her iki dosya da JSONC biçimini (yorumlu JSON) kullanır ve her ikisi de editör otomatik tamamlamayı etkinleştiren bir `$schema` işaretçisiyle otomatik olarak oluşturulur.
+
+## Yapılandırma dosyası konumları
+
+### Proje başına yapılandırma
+
+Projenizin içinde ilk çalıştırmada otomatik olarak oluşturulur:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Sağlayıcı yapılandırmasını, MCP sunucularını ve özel talimatları ekibinizle paylaşmak için bu dosyayı işleyin. Hassas kimlik bilgileri asla buraya girmemelidir — bunun yerine ortam değişkenlerini veya global yapılandırmayı kullanın.
+
+### Global yapılandırma
+
+Makinenizdeki tüm projelere uygulanır. Bolt, OS yapılandırma dizininizde ilk eşleşen dosyayı arar:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (tercih edilen)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Global yapılandırma dizini nerede?">
+  Bolt, Linux ve macOS'ta XDG Base Directory Specification'ı (`~/.config/bolt/`) ve Windows'ta `%APPDATA%\bolt\` yolunu izler. Makinenizdeki tam çözümlenmiş yapılandırmayı yazdırmak için `bolt debug config` komutunu çalıştırın.
+</Accordion>
+
+## Minimal yapılandırma örneği
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` alanı, JSON Schema'yı destekleyen editörlerde IntelliSense ve doğrulamayı etkinleştirir. Bolt, eksikse bu alanı otomatik olarak yazar.
+
+## Yapılandırma referansı
+
+### `provider`
+
+Özel taban URL'ler, bölge ayarları veya adlandırılmış kimlik bilgileri gibi sağlayıcıya özel seçenekleri yapılandırın:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Ajanın araç olarak çağırabileceği [Model Context Protocol](https://modelcontextprotocol.io) sunucularını kaydedin:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+MCP sunucularını `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` ve `bolt mcp debug` ile etkileşimli olarak yönetin.
+
+### `instructions`
+
+Her oturuma enjekte edilen özel sistem talimatları ekleyin. Kodlama kurallarını, stil kılavuzlarını veya projeye özel kuralları uygulamak için kullanışlıdır:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Birden çok yapılandırma dosyasından gelen talimatlar (global \+ proje) otomatik olarak birleştirilir ve tekilleştirilir.
+
+### `plugin`
+
+Bolt eklentilerini yükleyin. Eklentiler yeni araçlar, sağlayıcılar, bağlam kaynakları ve kancalar ekleyebilir:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### `url` ile uzak yapılandırma
+
+Başlangıçta uzak bir URL'den yapılandırmayı çekin. Merkezi ekip yapılandırması için kullanışlıdır:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Değişken ikamesi
+
+Yapılandırma değerleri, `$VAR_NAME` veya `${VAR_NAME}` söz dizimi kullanarak ortam değişkenlerine başvurabilir. İkame, yapılandırma ayrıştırılmadan önce yükleme sırasında gerçekleşir:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Yapılandırmada ortam değişkenlerini nasıl kullanırım?">
+  Herhangi bir dize yapılandırma değeri içinde `$VAR_NAME` veya `${VAR_NAME}` ile herhangi bir ortam değişkenine başvurun. Bolt, değeri yükleme sırasında ikame eder. Değişken ayarlanmamışsa, `$VAR_NAME` gerçek dizesi kullanılır — Bolt eksik ikameler için sessizce başarısız olmaz veya hata fırlatmaz.
+</Accordion>
+
+## Ortam değişkeni geçersiz kılmaları
+
+Bu ortam değişkenleri yapılandırmayı tamamen yeniden yönlendirmenize veya geçersiz kılmanıza olanak tanır; bu CI, konteynerler ve test için kullanışlıdır:
+
+| Değişken | Açıklama |
+| --- | --- |
+| `BOLT_CONFIG` | Proje yerel yerine yüklenecek bir yapılandırma dosyasının mutlak yolu |
+| `BOLT_CONFIG_DIR` | Bolt'un yapılandırma dosyaları için aradığı dizini geçersiz kılar |
+| `BOLT_CONFIG_CONTENT` | Ham JSONC yapılandırma içeriğini dize olarak sağlar — dosyaya gerek yoktur |
+
+`BOLT_CONFIG_CONTENT`, dosya bağlamanın uygun olmadığı konteynerleştirilmiş ortamlarda özellikle kullanışlıdır:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Birden fazla kaynak etkin olduğunda hangi yapılandırma önceliklidir?">
+  Bolt yapılandırmaları şu sırayla birleştirir (sonraki girişler kazanır):
+
+  1. Global yapılandırma dosyası (OS yapılandırma dizinindeki `bolt.jsonc` / `bolt.json`)
+  2. Global yapılandırmadaki `url` girişlerinden çekilen uzak yapılandırmalar
+  3. Proje başına yapılandırma dosyaları (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` dosyası (ayarlanmışsa)
+  5. `BOLT_CONFIG_CONTENT` (ayarlanmışsa)
+
+  `instructions` gibi dizi alanları değiştirilmek yerine kaynaklar arasında birleştirilir. Nesne alanları derinlemesine birleştirilir; çakışmalarda sonraki değerler kazanır.
+</Accordion>

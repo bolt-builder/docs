@@ -1,0 +1,179 @@
+---
+title: "Интеграция с GitHub: Actions, PR и AI-ревью"
+sidebarTitle: "GitHub Actions"
+description: "Запускайте Bolt внутри GitHub Actions, забирайте PR локально, генерируйте AI-сообщения коммитов и блокируйте слияния AI-ревью с кодами выхода."
+url: "server/github-actions"
+---
+
+Bolt поставляется с четырьмя командами, соединяющими ваш повседневный Git-процесс с AI: агентом GitHub Actions, который устанавливается одной командой, ярлыком для checkout pull requests, AI-генератором сообщений коммитов и AI-ревьюером кода с машиночитаемыми кодами выхода. Вместе они позволяют внедрить Bolt на каждом этапе разработки — локальном программировании, ревью PR и CI.
+
+---
+
+## `bolt github`
+
+Управляйте агентом GitHub Actions, который запускает Bolt на CI-событиях.
+
+### `bolt github install`
+
+Установить workflow GitHub Actions в текущий репозиторий. Это записывает YAML в `.github/workflows/`, чтобы Bolt автоматически запускался при комментариях в issue, новых pull requests или других настраиваемых событиях.
+
+```bash
+bolt github install
+```
+
+Запускайте из корня git-репозитория. Вам потребуется доступ на запись в `.github/workflows/`.
+
+### `bolt github run`
+
+Запустить GitHub-агент локально или в CI-шаге, воспроизведя конкретный payload события GitHub.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Флаг | Описание |
+|------|-------------|
+| `--event <event>` | Имя события GitHub или путь к JSON-файлу payload |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) для публикации комментариев и получения контекста |
+
+---
+
+## Настройка агента GitHub Actions
+
+<Steps>
+  <Step title="Установите workflow">
+    Из корня вашего репозитория:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt записывает файл GitHub Actions workflow в `.github/workflows/`. Закоммитьте и запушьте файл.
+  </Step>
+
+  <Step title="Добавьте API-ключ как секрет">
+    В настройках репозитория добавьте API-ключ вашего предпочтительного LLM-провайдера как секрет репозитория (например, `ANTHROPIC_API_KEY`). Workflow автоматически его подхватит.
+  </Step>
+
+  <Step title="Запустите агент">
+    Прокомментируйте `/bolt <ваш запрос>` в любом issue или pull request. Workflow срабатывает, Bolt читает payload события и публикует ответ с результатом.
+  </Step>
+
+  <Step title="Запуск локально для отладки">
+    Воспроизведите живой payload события из предыдущего запуска workflow:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Забрать pull request с GitHub в локальную ветку и запустить Bolt в ней — готовым к ревью, отладке или продолжению работы с того места, где остановился автор PR.
+
+```bash
+bolt pr 42
+```
+
+Bolt использует `gh` CLI, чтобы получить PR, создаёт ветку с именем `pr/<number>` и подключает upstream tracking ref. Для межрепозиторных (fork) PR он автоматически добавляет fork как remote. Если описание PR содержит URL общей сессии Bolt (`opncd.ai/s/…`), сессия импортируется, чтобы вы могли продолжить разговор автора.
+
+> Требует установленного и аутентифицированного [GitHub CLI (`gh`)](https://cli.github.com/).
+
+---
+
+## `bolt commit`
+
+Сгенерировать сообщение коммита из ваших staged (или всех отслеживаемых) изменений и закоммитить одним шагом.
+
+```bash
+bolt commit
+```
+
+Bolt снимает дифф ваших изменений, передаёт его агенту `commit` вместе с недавними темами коммитов для контекста стиля и выполняет `git commit -m <message>` с результатом.
+
+### Флаги
+
+| Флаг | Синоним | Описание |
+|------|-------|-------------|
+| `--all` | `-a` | Закоммитить все отслеживаемые изменения, а не только staged (эквивалент `git commit -a`) |
+| `--dry-run` | | Вывести сгенерированное сообщение без коммита |
+| `--model <provider/model>` | `-m` | Переопределить модель, используемую для генерации сообщения |
+
+```bash
+# Заcтейджить всё и закоммитить
+bolt commit --all
+
+# Предпросмотр сообщения без коммита
+bolt commit --dry-run
+
+# Использовать конкретную модель
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Используйте `bolt commit --dry-run` для предпросмотра сгенерированного сообщения до коммита. Если хотите отредактировать, скопируйте вывод и запустите `git commit -m "…"` с исправленным вариантом.
+</Tip>
+
+---
+
+## `bolt review`
+
+Запустить агента `code-review` против диффа и выйти с машиночитаемым вердиктом. Последняя строка ревью — всегда `Verdict: PASS` или `Verdict: FAIL`, что делает `bolt review` готовым для CI-пайплайнов.
+
+```bash
+bolt review
+```
+
+По умолчанию `bolt review` снимает дифф `HEAD` с рабочим деревом. Используйте флаги ниже, чтобы ограничить дифф.
+
+### Флаги
+
+| Флаг | Синоним | Описание |
+|------|-------|-------------|
+| `--staged` | | Ревью только staged-изменений |
+| `--branch <name>` | | Ревью изменений с базы слияния с указанной веткой (по умолчанию — дефолтная ветка репозитория) |
+| `--model <provider/model>` | `-m` | Модель для ревью |
+
+### Коды выхода
+
+| Код | Значение |
+|------|---------|
+| `0` | `Verdict: PASS` — нет критичных или крупных проблем |
+| `1` | `Verdict: FAIL` — найдены одна или несколько критичных или крупных проблем |
+| `2` | Вердикт не удалось определить из ответа |
+
+### Использование в GitHub Actions workflow
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Ненулевой код выхода валит проверку, блокируя слияние до устранения проблем.
+
+<Tip>
+  Запускайте `bolt review --staged` перед коммитом, чтобы ловить проблемы, пока их легко исправить — ещё до того, как они попадут в pull request.
+</Tip>

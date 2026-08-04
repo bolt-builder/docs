@@ -1,0 +1,193 @@
+---
+title: "Konfigurointi — bolt.jsonc-asetukset ja globaalit ohitukset"
+sidebarTitle: "Konfigurointi"
+description: "Bolt lukee kerrostetut JSONC-konfigurointitiedostot projektistasi ja käyttöjärjestelmän konfigurointihakemistoista. Määritä tarjoajat, MCP-palvelimet, ohjeet, laajennukset ja ympäristöohitukset."
+---
+
+Bolt käyttää kerrostettua konfigurointijärjestelmää: **globaali** konfigurointitiedosto käyttäjän laajuisia oletuksia varten ja **projektikohtainen** konfigurointitiedosto arkistokohtaisia asetuksia varten. Molemmat tiedostot käyttävät JSONC-muotoa (JSON kommenteilla), ja molemmat luodaan automaattisesti `$schema`-osoittimella, joka mahdollistaa editorin automaattitäydennyksen.
+
+## Konfigurointitiedostojen sijainnit
+
+### Projektikohtainen konfigurointi
+
+Luodaan automaattisesti ensimmäisellä suorituksella projektisi sisällä:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Sitouta tämä tiedosto jakaaksesi tarjoajakonfiguraatiot, MCP-palvelimet ja mukautetut ohjeet tiimisi kanssa. Arkaluontoisia tunnistetietoja ei koskaan pitäisi laittaa tänne — käytä ympäristömuuttujia tai globaalia konfiguraatiota sen sijaan.
+
+### Globaali konfigurointi
+
+Koskee kaikkia koneellasi olevia projekteja. Bolt etsii ensimmäistä vastaavaa tiedostoa käyttöjärjestelmäsi konfigurointihakemistosta:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (suositeltu)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Missä on globaali konfigurointihakemisto?">
+  Bolt noudattaa XDG Base Directory Specification -määrittelyä Linuxissa ja macOS:ssä (`~/.config/bolt/`) ja `%APPDATA%\bolt\` Windowsissa. Suorita `bolt debug config` tulostaaksesi täydellisen ratkaistun konfiguraation koneellasi.
+</Accordion>
+
+## Minimaalinen konfigurointiesimerkki
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema`-kenttä mahdollistaa IntelliSensen ja validoinnin editoreissa, jotka tukevat JSON Schemaa. Bolt kirjoittaa tämän kentän automaattisesti, jos se puuttuu.
+
+## Konfigurointiviite
+
+### `provider`
+
+Määritä tarjoajakohtaiset asetukset, kuten mukautetut base URL:t, alueasetukset tai nimetyt tunnistetiedot:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Rekisteröi [Model Context Protocol](https://modelcontextprotocol.io) -palvelimet, joita agentti voi kutsua työkaluina:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Hallitse MCP-palvelimia interaktiivisesti komennoilla `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` ja `bolt mcp debug`.
+
+### `instructions`
+
+Lisää mukautettuja järjestelmäohjeita, jotka syötetään jokaiseen istuntoon. Hyödyllinen koodauskäytäntöjen, tyylioppaiden tai projektikohtaisten sääntöjen noudattamisen varmistamisessa:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Useiden konfigurointitiedostojen (globaali \+ projekti) ohjeet yhdistetään ja niistä poistetaan päällekkäisyydet automaattisesti.
+
+### `plugin`
+
+Lataa Bolt-laajennuksia. Laajennukset voivat lisätä uusia työkaluja, tarjoajia, kontekstilähteitä ja hookkeja:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Etäkonfiguraatio `url`-avaimella
+
+Nouda konfiguraatio etä-URL:sta käynnistyksessä. Hyödyllinen keskitettyä tiimikonfiguraatiota varten:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Muuttujien korvaus
+
+Konfiguraatioarvot voivat viitata ympäristömuuttujiin käyttäen syntaksia `$VAR_NAME` tai `${VAR_NAME}`. Korvaus tapahtuu latausaikana, ennen kuin konfiguraatio jäsennetään:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Miten käytän ympäristömuuttujia konfiguraatiossa?">
+  Viittaa mihin tahansa ympäristömuuttujaan syntaksilla `$VAR_NAME` tai `${VAR_NAME}` missä tahansa merkkijonoarvossa konfiguraatiossa. Bolt korvaa arvon latausaikana. Jos muuttujaa ei ole asetettu, käytetään kirjaimellista merkkijonoa `$VAR_NAME` — Bolt ei epäonnistu hiljaa tai heitä virhettä puuttuvista korvauksista.
+</Accordion>
+
+## Ympäristömuuttujaohitukset
+
+Nämä ympäristömuuttujat mahdollistavat konfiguraation uudelleenohjauksen tai kokonaan ohittamisen, mikä on hyödyllistä CI:ssä, konteissa ja testauksessa:
+
+| Muuttuja | Kuvaus |
+| --- | --- |
+| `BOLT_CONFIG` | Absoluuttinen polku ladattavaan konfigurointitiedostoon projektikohtaisen sijaan |
+| `BOLT_CONFIG_DIR` | Ohita hakemisto, josta Bolt etsii konfigurointitiedostoja |
+| `BOLT_CONFIG_CONTENT` | Anna raaka JSONC-konfigurointisisältö merkkijonona — tiedostoa ei tarvita |
+
+`BOLT_CONFIG_CONTENT` on erityisen kätevä konttiympäristöissä, joissa tiedoston liittäminen on hankalaa:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Millä konfiguraatiolla on etusija useiden lähteiden ollessa aktiivisia?">
+  Bolt yhdistää konfiguraatiot tässä järjestyksessä (myöhemmät voittavat):
+
+  1. Globaali konfigurointitiedosto (`bolt.jsonc` / `bolt.json` käyttöjärjestelmän konfigurointihakemistossa)
+  2. Etäkonfiguraatiot, jotka on noudettu globaalin konfiguraation `url`-kirjauksista
+  3. Projektikohtaiset konfigurointitiedostot (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG`-tiedosto (jos asetettu)
+  5. `BOLT_CONFIG_CONTENT` (jos asetettu)
+
+  Taulukkokentät, kuten `instructions`, ketjutetaan lähteiden välillä sen sijaan, että ne korvattaisiin. Objektikentät yhdistetään syvästi siten, että myöhemmät arvot voittavat ristiriitatilanteissa.
+</Accordion>

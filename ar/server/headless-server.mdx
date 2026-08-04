@@ -1,0 +1,52 @@
+---
+title: "شغّل Bolt كخادم بدون واجهة"
+sidebarTitle: "الخادم بدون واجهة"
+description: "bolt serve يعرض وقت تشغيل Bolt الكامل عبر HTTP بحيث يمكن لأي TUI أو واجهة ويب أو تكامل محرّر أو سكربت الاتصال به محليًا أو عبر الشبكة."
+---
+
+يشغّل `bolt serve` خادم Bolt بدون واجهة يعرض المحرّك الكامل عبر HTTP: الجلسات، الوكلاء، الأدوات، الوصول إلى المزوّد، MCP، والأحداث المتدفّقة. أي شيء يمكن لـ Bolt فعله تفاعليًا، يمكنه فعله عبر API.
+
+## ابدأ خادمًا
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  الربط بـ `0.0.0.0` يعرض Bolt على شبكتك. اضبط دائمًا `BOLT_SERVER_USERNAME` و`BOLT_SERVER_PASSWORD` قبل القيام بذلك.
+</Warning>
+
+## أرفق TUI
+
+من أي جهاز يمكنه الوصول إلى الخادم:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+أو شغّل موجّهًا لمرة واحدة مقابل خادم بعيد:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## المصادقة الأساسية
+
+اضبط بيانات الاعتماد عبر متغيرات البيئة (راجع [متغيرات البيئة](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+يجب على جميع العملاء إرسال بيانات اعتماد مطابقة.
+
+## ذات صلة
+
+- [الجلسات البعيدة](/server/remote-sessions) — الإرفاق، اكتشاف mDNS، والخوادم المشتركة.
+- [واجهة الويب](/server/web-ui) — الواجهة الأمامية للمتصفح.
+- [ACP](/server/acp) — قيادة Bolt من Zed ومحرّرات أخرى.

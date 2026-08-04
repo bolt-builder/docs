@@ -1,0 +1,78 @@
+---
+title: "Bolt: סוכן קידוד AI למסוף שלך"
+sidebarTitle: "בית"
+description: "Bolt הוא סוכן קידוד AI שמכוון למסוף, עם עשרה סוכנים מתמחים, סשנים מתמשכים, תמיכת MCP ויישום שולחן עבודה—מופעל על ידי כל ספק LLM."
+---
+
+Bolt מכניס צוות הנדסת AI מלא ישירות למסוף שלך. הוא מגיע כ-TUI מהיר, מונחה מקלדת ויישום שולחן עבודה ילידי, שניהם נתמכים על ידי אותו מנוע: עשרה סוכנים מתמחים, סשנים עמידים ומתמשכים, ניהול שרתי MCP עם OAuth, מערכת תוספים, ותמיכה בכל ספק LLM עיקרי.
+
+<CardGroup cols={2}>
+  <Card title="התקנה" icon="download" href="/installation">
+    התקן את Bolt בשניות דרך curl, npm, bun או מנהל החבילות שאתה מעדיף.
+  </Card>
+  <Card title="התחלה מהירה" icon="rocket" href="/quickstart">
+    הרץ את סשן הקידוד AI הראשון שלך תוך פחות מדקה.
+  </Card>
+  <Card title="סוכנים" icon="robot" href="/concepts/agents">
+    הכר את עשרת הסוכנים המובנים: code, plan, ask, review, debug, refactor, docs, security, migrate ו-perf.
+  </Card>
+  <Card title="הפניית פקודות" icon="terminal" href="/reference/commands">
+    כל פקודת CLI, תת-פקודה ודגל מתועדים במלואם.
+  </Card>
+</CardGroup>
+
+## מה Bolt עושה
+
+Bolt קורא את בסיס הקוד שלך, מבין מה אתה בונה, ומשחרר קוד איתך—במסוף או כיישום שולחן עבודה. כל סשן הוא עמיד: נתק, חבר מחדש ממכונה אחרת, פצל ענף של השיחה, שתף קישור, או ייצא תמליל מנוקה.
+
+<CardGroup cols={3}>
+  <Card title="סשנים" icon="clock-rotate-left" href="/concepts/sessions">
+    סשנים מתמשכים וניתנים לפיצול שמאוחסנים ב-SQLite מקומי.
+  </Card>
+  <Card title="ספקים ומודלים" icon="microchip" href="/concepts/providers-and-models">
+    הבא את מפתח ה-API שלך לכל ספק LLM עיקרי.
+  </Card>
+  <Card title="תצורה" icon="sliders" href="/concepts/configuration">
+    `.bolt/bolt.jsonc` לכל פרויקט עם תמיכה מלאה בסכמה.
+  </Card>
+  <Card title="שרתי MCP" icon="plug" href="/extending/mcp-servers">
+    הוסף כלים דרך Model Context Protocol, כולל זרימות OAuth.
+  </Card>
+  <Card title="תוספים" icon="puzzle-piece" href="/extending/plugins">
+    הרחב את Bolt עם ספקים מותאמים אישית, כלים ושיטות אימות.
+  </Card>
+  <Card title="אינטגרציית GitHub" icon="github" href="/server/github-actions">
+    הודעות commit מונעות AI, סקירת קוד ו-GitHub Actions.
+  </Card>
+</CardGroup>
+
+## התחל לרוץ
+
+<Steps>
+  <Step title="התקן את Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    או התקן דרך npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="פתח את הפרויקט שלך">
+    נווט לכל ספריית פרויקט והשק את ה-TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="הגדר ספק">
+    בהשקה הראשונה Bolt מבקש ממך להוסיף ספק LLM. תוכל גם להריץ:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="התחל לקודד עם AI">
+    הקלד את ההנחיה שלך בכותרת התחתונה של ה-TUI, לחץ Enter, ותן לסוכני Bolt להתחיל לעבוד. החלף סוכנים עם `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  השתמש ב-`bolt run "explain this codebase"` לתשובה לא-אינטראקטיבית מהירה מבלי לפתוח את ה-TUI המלא.
+</Tip>

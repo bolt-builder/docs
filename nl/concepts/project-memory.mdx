@@ -1,0 +1,46 @@
+---
+title: "Projectgeheugen: aanhoudende context tussen Bolt-sessies"
+sidebarTitle: "Projectgeheugen"
+description: "Bolt legt vast wat het leert over je project aan het einde van elke beurt en injecteert het in nieuwe sessies zodat de agent je codebase niet elke keer opnieuw hoeft te leren."
+---
+
+Projectgeheugen is wat Bolt het gevoel geeft dat het je project al kent. Wanneer een sessie een beurt afsluit, distilleert Bolt wat nuttig was en schrijft het weg naar een per-project geheugenopslag. Wanneer je een nieuwe sessie opent, injecteert Bolt een geheugenindex plus de meest recente sessiesamenvatting in de systeemprompt zodat de agent begint met echte context in plaats van een leeg vel.
+
+## Hoe vastleggen werkt
+
+Aan het einde van elke conversatie-beurt vraagt Bolt het model om duurzame feiten samen te vatten die de volgende keer nuttig zijn: conventies, architectuurnotities, bestandsindeling, build/test-commando's, valkuilen en openstaande punten. Deze worden naar schijf geschreven onder de geheugenmap van het project, samen met een rollende samenvatting van de meest recente sessie.
+
+Geheugen is per project. Twee checkouts van dezelfde repo op dezelfde machine delen geheugen; niet-gerelateerde projecten zien elkaars geheugen nooit.
+
+## Expliciete tools
+
+Agents kunnen tijdens een sessie ook direct geheugen lezen en schrijven:
+
+- `memory_save` — leg een specifiek feit vast dat de agent volgende keer moet onthouden.
+- `memory_recall` — zoek iets op dat de agent (of jij) eerder hebt vastgelegd.
+
+Je kunt de agent vragen om te "remember that we use pnpm, not npm" en die roept dan voor jou `memory_save` aan.
+
+## Per-sessie besturing
+
+In de TUI kun je het geheugengedrag voor de huidige sessie omschakelen met slash-commando's:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Dit is handig wanneer je een wegwerp-verkennende sessie wilt die je geheugen niet vervuilt, of een alleen-lezen sessie die toch profiteert van eerdere context.
+
+## Geheugen inspecteren en bewerken
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Geheugen wordt opgeslagen als platte bestanden op schijf onder de Bolt-datamap van het project, zodat je entries direct kunt grep'en, bewerken of verwijderen. Om het exacte pad op je machine te vinden, voer je `bolt debug paths` uit.
+
+## Gerelateerd
+
+- [Sessies](/concepts/sessions) — de duurzame gesprekken die geheugenentries produceren.
+- [Configuratie](/concepts/configuration) — waar geheugen wordt opgeslagen en hoe je het pad overschrijft.

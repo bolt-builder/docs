@@ -1,0 +1,31 @@
+---
+title: "Slash příkazy TUI Boltu"
+sidebarTitle: "Slash příkazy"
+description: "Slash příkazy, které můžeš spouštět v TUI Boltu — /memory, /plan, /todos, /btw — a jak mění chování aktuálního sezení."
+---
+
+Slash příkazy zadáváš do promptu TUI a mění chování aktuálního sezení. Neposílají nic modelu; běží lokálně proti samotnému Boltu.
+
+## Reference
+
+| Příkaz | Co dělá |
+| --- | --- |
+| `/memory` | Zobrazit stav paměti projektu pro toto sezení. |
+| \`/memory use on | off\` | Zda toto sezení čte z [paměti projektu](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Zda toto sezení zapisuje zpět do paměti projektu, když se tah uzavře. |
+| `/plan` | Přepne aktuální sezení do plánovacího režimu (pouze pro čtení, produkuje plán). |
+| `/todos` | Zobrazí aktuální strukturovaný seznam úkolů agenta. |
+| `/btw` | Vloží out-of-band poznámku („mimochodem…“), kterou agent uvidí ve svém dalším tahu, aniž by vyvolala plnou odpověď. |
+
+<Tip>
+  Slash příkazy platí pro dané sezení. Chceš-li předvolbu trvalou, nastav ji místo toho v `.bolt/bolt.jsonc`. Viz [Konfigurace](/concepts/configuration).
+</Tip>
+
+## Přidávání vlastních
+
+Vlastní slash příkazy mohou přispívat [pluginy](/extending/plugins) a soubory v `.opencode/command/`. Každý příkaz je Markdown soubor, jehož frontmatter popisuje trigger a chování.
+
+## Související
+
+- [Klávesové zkratky](/tui/keybinds) — klávesové zkratky pro TUI.
+- [Paměť projektu](/concepts/project-memory) — co `/memory` přepíná.

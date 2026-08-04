@@ -1,0 +1,53 @@
+---
+title: "Permissions : contrôler ce que peuvent faire les agents Bolt"
+sidebarTitle: "Permissions"
+description: "Comment les niveaux d'accès par agent de Bolt, les invites de permission et les règles allow/deny au niveau de la configuration empêchent l'agent de faire des choses que vous n'avez pas approuvées."
+---
+
+Les agents Bolt peuvent lire des fichiers, écrire des fichiers et exécuter des commandes shell. Ce pouvoir est délimité par deux couches : un niveau d'accès par agent, et des invites de permission interactives que vous pouvez approuver, refuser ou configurer à l'avance.
+
+## Niveaux d'accès des agents
+
+Chaque agent intégré possède un niveau d'accès déclaré :
+
+| Niveau d'accès | Lire des fichiers | Écrire des fichiers | Exécuter des commandes shell |
+| --- | --- | --- | --- |
+| **Complet** | ✓ | ✓ | ✓ |
+| **Édition** | ✓ | ✓ | ✗ |
+| **Lecture** | ✓ | ✗ | ✗ |
+
+Correspondances intégrées :
+
+- **Complet** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Édition** — `docs`
+- **Lecture** — `plan`, `ask`, `code-review`, `security`
+
+Changez d'agent avec `Tab` dans le TUI, ou passez `--agent <name>` à `bolt run`.
+
+## Invites interactives
+
+Dans les limites du niveau d'accès d'un agent, les actions potentiellement destructrices demandent tout de même confirmation. Vous pouvez approuver une fois, approuver pour la session ou refuser. Les appels refusés renvoient une erreur à l'agent, qui poursuit son travail.
+
+## Approbation non interactive
+
+Pour la CI, les scripts ou les workflows locaux de confiance, `bolt run` prend en charge des options qui court-circuitent les invites :
+
+```bash
+bolt run --auto "tidy up imports"                   # approuve automatiquement tout ce qui n'est pas explicitement refusé
+bolt run --yolo "tidy up imports"                   # alias de --auto
+bolt run --dangerously-skip-permissions "..."       # contourne toutes les invites
+```
+
+<Warning>
+  `--auto`, `--yolo` et `--dangerously-skip-permissions` permettent à l'agent de lire, d'écrire et d'exécuter sans demander. À utiliser uniquement dans des environnements de confiance.
+</Warning>
+
+## Règles au niveau de la configuration
+
+Vous pouvez pré-refuser (ou pré-autoriser) des outils précis pour l'ensemble du projet en ajoutant un bloc `permission` à `.bolt/bolt.jsonc`. Cela s'applique à chaque session du projet, y compris aux appels non interactifs `bolt run`. Voir [Configuration](/concepts/configuration) pour le schéma.
+
+## Voir aussi
+
+- [Agents](/concepts/agents) — quels agents ont quels niveaux d'accès.
+- [Outils](/concepts/tools) — la liste complète des outils que les permissions contrôlent.
+- [Configuration](/concepts/configuration) — définir des règles de permission durables.

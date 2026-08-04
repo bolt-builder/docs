@@ -1,0 +1,58 @@
+---
+title: "Verktøy: Hva Bolt-agenter faktisk kan gjøre"
+sidebarTitle: "Verktøy"
+description: "Den komplette listen over innebygde verktøy tilgjengelig for Bolt-agenter, pluss hvordan du legger til dine egne verktøy via plugins, MCP-servere eller .opencode/tool-mappen."
+---
+
+Agenter i Bolt gjør arbeid ved å kalle verktøy. Hver handling du ser i TUI-en (lese en fil, kjøre tester, søke på nettet) er modellen som velger et verktøy og Bolt som kjører det. Hver agent har et deklarert tilgangsnivå som avgjør hvilke verktøy den kan kalle uten å spørre deg først (se [Tillatelser](/concepts/permissions)).
+
+## Innebygde verktøy
+
+| Verktøy | Hva det gjør |
+| --- | --- |
+| `read` | Les en fil fra disk. |
+| `write` | Opprett en ny fil eller overskriv en eksisterende. |
+| `edit` | Utfør en målrettet redigering (finn/erstatt) i en fil. |
+| `apply_patch` | Anvend en unified-diff-lignende patch på tvers av én eller flere filer. |
+| `glob` | List filer som matcher et glob-mønster. |
+| `grep` | Søk i filinnhold etter regex/tekst. |
+| `bash` | Kjør en shell-kommando. |
+| `task` | Deleger en underoppgave til en underagent (`@general`, `@explore` eller en egendefinert underagent). |
+| `todowrite` | Vedlikehold agentens strukturerte oppgaveliste for flertrinnsarbeid. |
+| `webfetch` | Hent en URL og returner innholdet. |
+| `websearch` | Søk på nettet. |
+| `skill` | Påkall en navngitt ferdighet (se [Skills](/extending/skills)). |
+| `memory_save` | Lagre et faktum i [prosjektminnet](/concepts/project-memory). |
+| `memory_recall` | Slå opp et tidligere lagret minne. |
+| `question` | Still et oppklarende spørsmål til deg og vent på svar. |
+| `bash_background` | Start en shell-kommando som en administrert bakgrunnsprosess (utviklerservere, watchers, lange bygg). |
+| `process_output` | Les akkumulert utdata og status for en bakgrunnsprosess, valgfritt vent til den er ferdig. |
+| `list_processes` | List bakgrunnsprosesser med deres id, status og kommando. |
+| `kill_process` | Avslutt en bakgrunnsprosess (og prosesstreet dens) via id. |
+| `test_run` | Oppdag og kjør prosjektets tester, og returner strukturerte bestått/ikke-bestått-resultater og feildetaljer. |
+
+### Eksperimentelle
+
+| Verktøy | Hva det gjør |
+| --- | --- |
+| `lsp` | Spør en språkserver om definisjoner, referanser og diagnostikk. |
+| `execute` | Kjør kode i en isolert code-mode-sandbox. |
+| `plan` | Produser en strukturert plan før endringer utføres. |
+
+Eksperimentelle verktøy kan endres eller få nytt navn mellom utgivelser.
+
+## Utvide verktøysettet
+
+Utover de innebygde kan Bolt kalle verktøy fra tre kilder:
+
+- **Egendefinerte verktøy** i `.opencode/tool/` (eller `.opencode/tools/`) i prosjektroten. Se [Egendefinerte verktøy](/extending/custom-tools).
+- **Plugin-verktøy** bidratt av en installert [plugin](/extending/plugins).
+- **MCP-verktøy** fra en [MCP-server](/extending/mcp-servers) som er konfigurert for prosjektet.
+
+Alle tre føles identiske fra agentens perspektiv: de dukker opp i verktøylisten, respekterer agentens tilgangsnivå og vises i TUI-ens verktøykall-utdata.
+
+## Relatert
+
+- [Agenter](/concepts/agents) — hvilke agenter som kan kalle hvilke verktøy.
+- [Tillatelser](/concepts/permissions) — hvordan verktøytilgang styres per agent.
+- [MCP-servere](/extending/mcp-servers) — den vanligste måten å legge til verktøy fra den virkelige verden på.

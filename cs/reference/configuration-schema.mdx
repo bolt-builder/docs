@@ -1,0 +1,192 @@
+---
+title: "Reference konfiguračního souboru Boltu"
+sidebarTitle: "Schéma konfigurace"
+description: "Kompletní reference schématu konfiguračního souboru Boltu — umístění, všechna top-level pole, typy MCP serverů, provider overrides a plný příklad."
+---
+
+Bolt používá pro konfiguraci projektu a globální konfiguraci soubor typu JSON s komentáři (`.jsonc`). Schéma je verzované a publikované na `https://opencode.ai/config.json`, editory ho mohou použít pro autocompletion a validaci.
+
+## Umístění konfiguračních souborů
+
+Bolt spojuje konfiguraci ze dvou umístění. Nastavení na úrovni projektu vítězí nad globálním, když se stejný klíč objeví v obou.
+
+| Rozsah | Cesta |
+|---|---|
+| **Per-project** | `.bolt/bolt.jsonc` (nebo `.bolt/bolt.json`) v kořeni tvého projektu |
+| **Globální** | `bolt.jsonc` (nebo `bolt.json`) v OS konfiguračním adresáři |
+
+OS konfigurační adresář je:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt také čte starší soubory `opencode.jsonc` / `opencode.json` ve stejných umístěních. Nové projekty by měly používat konvenci pojmenování `bolt.jsonc`, která má přednost před staršími názvy.
+</Note>
+
+Bolt při prvním spuštění vytvoří minimální globální konfigurační soubor s řádkem `$schema` a při prvním otevření TUI v daném adresáři vytvoří `.bolt/bolt.jsonc` v kořeni projektu.
+
+## Pole schématu
+
+<ParamField body="$schema" type="string">
+  URL směřující na JSON schéma pro tento konfigurační soubor. Zapíná autocompletion a inline validaci v editorech, které podporují JSON Schema (VS Code, Zed, JetBrains IDE atd.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Výchozí model pro všechna sezení, vyjádřený jako `provider/model`. Lze přepsat pro dané sezení pomocí `bolt run --model` nebo v TUI pickeru modelu.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Spusť `bolt models` pro zobrazení všech dostupných řetězců `provider/model` pro tvé nakonfigurované providery.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Provider-specifické overrides přihlašovacích údajů a nastavení. Každý klíč je ID providera (např. `anthropic`, `openai`, `google`). Nejčastější použití je nastavení API klíče přes referenci na proměnnou prostředí, aby klíč nikdy nebyl uložen v plaintextu.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Hodnoty začínající `${` a končící `}` jsou považovány za reference na proměnné prostředí a expandují se za běhu.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Konfigurace MCP serverů, klíčované jménem, které vybereš. Bolt podporuje dva typy serverů:
+
+  **Vzdálený server** — spojení přes HTTP/SSE, s volitelným OAuth:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Pole | Typ | Popis |
+  |---|---|---|
+  | `type` | `"remote"` | Označuje tento server jako vzdálený HTTP server |
+  | `url` | string | Plná URL MCP endpointu |
+  | `oauth` | object \| `false` | Konfigurační objekt OAuth (s volitelnými `clientId`, `clientSecret`, `scope`, `redirectUri`). Nastav na `false` pro zákaz auto-detekce OAuth. |
+  | `headers` | object | HTTP hlavičky odesílané s každým požadavkem (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Povolit nebo zakázat tento server při startu |
+  | `timeout` | number | Timeout požadavku v milisekundách (výchozí: 5000) |
+
+  **Lokální server** — spouští podproces přes stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Pole | Typ | Popis |
+  |---|---|---|
+  | `type` | `"local"` | Označuje tento server jako lokální stdio server |
+  | `command` | string[] | Příkaz a všechny argumenty ke spuštění |
+  | `cwd` | string | Pracovní adresář pro proces serveru (relativní cesty se řeší z adresáře workspace) |
+  | `environment` | object | Další proměnné prostředí předávané podprocesu |
+  | `enabled` | boolean | Povolit nebo zakázat tento server při startu |
+  | `timeout` | number | Timeout požadavku v milisekundách (výchozí: 5000) |
+
+  Použij `bolt mcp add` pro interaktivního průvodce, nebo `bolt mcp list` pro prohlídnutí aktuálního stavu serverů.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Další systémové instrukce připojené ke každému sezení v tomto projektu nebo globálně. Instrukce z více konfiguračních souborů se spojí (odstraní se duplicity). Použij toto pole k vložení konvencí specifických pro projekt, pravidel stylu nebo omezení, kterými by se měl řídit každý agent.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Specifikace pluginů k načtení. Každá položka je název npm balíčku, cesta k lokálnímu souboru nebo URL. Pluginy mohou rozšířit TUI, přidat slash-commandy nebo registrovat další providery. Použij `bolt plugin install <spec>` k instalaci pluginu a jeho automatickému přidání do tohoto pole.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Kompletní příklad
+
+Následující `.bolt/bolt.jsonc` ukazuje reálnou konfiguraci projektu:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Spusť `bolt debug config` pro zobrazení plně vyřešené konfigurace po sloučení všech souborů. Toto je nejrychlejší způsob, jak potvrdit, že se tvé projektové a globální konfigurace kombinují správně.
+</Tip>

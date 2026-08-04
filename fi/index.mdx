@@ -1,0 +1,78 @@
+---
+title: "Bolt: AI-koodausagentti terminaalillesi"
+sidebarTitle: "Etusivu"
+description: "Bolt on terminaalilähtöinen AI-koodausagentti, jossa on kymmenen erikoistunutta agenttia, pysyvät istunnot, MCP-tuki ja työpöytäsovellus — mikä tahansa LLM-tarjoaja käyttövoimana."
+---
+
+Bolt tuo täyden AI-insinööritiimin suoraan terminaaliisi. Se toimitetaan nopeana, näppäimistövetoisena TUI:na ja natiivina työpöytäsovelluksena, joita molempia tukee sama moottori: kymmenen erikoistunutta agenttia, pysyvät kestävät istunnot, MCP-palvelimien hallinta OAuthilla, laajennusjärjestelmä ja tuki jokaiselle suurelle LLM-tarjoajalle.
+
+<CardGroup cols={2}>
+  <Card title="Asennus" icon="download" href="/installation">
+    Asenna Bolt sekunneissa curlin, npm:n, bunin tai valitsemasi paketinhallinnan kautta.
+  </Card>
+  <Card title="Pikaopas" icon="rocket" href="/quickstart">
+    Suorita ensimmäinen AI-koodausistuntosi alle minuutissa.
+  </Card>
+  <Card title="Agentit" icon="robot" href="/concepts/agents">
+    Tutustu kymmeneen sisäänrakennettuun agenttiin: code, plan, ask, review, debug, refactor, docs, security, migrate ja perf.
+  </Card>
+  <Card title="Komentoviite" icon="terminal" href="/reference/commands">
+    Jokainen CLI-komento, alikomento ja lippu dokumentoituna täysin.
+  </Card>
+</CardGroup>
+
+## Mitä Bolt tekee
+
+Bolt lukee koodikantasi, ymmärtää mitä olet rakentamassa ja toimittaa koodia kanssasi — terminaalissa tai työpöytäsovelluksena. Jokainen istunto on kestävä: irrottaudu, liity takaisin toiselta koneelta, haaraudu keskustelun haaraan, jaa linkki tai vie siivottu transkripti.
+
+<CardGroup cols={3}>
+  <Card title="Istunnot" icon="clock-rotate-left" href="/concepts/sessions">
+    Pysyvät, haaroittuvat istunnot tallennettuina paikalliseen SQLiteen.
+  </Card>
+  <Card title="Tarjoajat ja mallit" icon="microchip" href="/concepts/providers-and-models">
+    Tuo oma API-avaimesi mille tahansa suurelle LLM-tarjoajalle.
+  </Card>
+  <Card title="Konfigurointi" icon="sliders" href="/concepts/configuration">
+    Projektikohtainen `.bolt/bolt.jsonc` täydellä skeeman tuella.
+  </Card>
+  <Card title="MCP-palvelimet" icon="plug" href="/extending/mcp-servers">
+    Lisää työkaluja Model Context Protocolin kautta, mukaan lukien OAuth-virrat.
+  </Card>
+  <Card title="Laajennukset" icon="puzzle-piece" href="/extending/plugins">
+    Laajenna Boltia mukautetuilla tarjoajilla, työkaluilla ja todennusmenetelmillä.
+  </Card>
+  <Card title="GitHub-integraatio" icon="github" href="/server/github-actions">
+    AI-pohjaiset commit-viestit, koodikatselmointi ja GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Käyttöönotto
+
+<Steps>
+  <Step title="Asenna Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Tai asenna npm:n kautta: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Avaa projektisi">
+    Siirry mihin tahansa projektihakemistoon ja käynnistä TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Määritä tarjoaja">
+    Ensimmäisellä käynnistyksellä Bolt kehottaa sinua lisäämään LLM-tarjoajan. Voit myös suorittaa:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Aloita koodaus AI:n kanssa">
+    Kirjoita kehotteesi TUI:n alatunnisteessa, paina Enter ja anna Boltin agenttien ryhtyä töihin. Vaihda agentteja `Tab`illa.
+  </Step>
+</Steps>
+
+<Tip>
+  Käytä `bolt run "explain this codebase"` nopeaan ei-interaktiiviseen vastaukseen ilman koko TUI:n avaamista.
+</Tip>

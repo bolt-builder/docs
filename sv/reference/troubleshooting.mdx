@@ -1,0 +1,395 @@
+---
+title: "Felsöka vanliga Bolt-problem"
+sidebarTitle: "Felsökning"
+description: "Lösningar på de vanligaste Bolt-problemen: startfel, leverantörs-auth-fel, MCP-anslutning, sessionsproblem, behörigheter, kostnad med mera."
+---
+
+De flesta Bolt-problem faller i ett litet antal kategorier. Arbeta dig genom den relevanta accordionen nedan, och kolla loggutdata med `bolt logs` när något oväntat händer.
+
+<Note>
+  För frågor som inte besvaras här, sök eller starta en diskussion i [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Inkludera utdatan från `bolt debug info` och `bolt logs --tail 50` i ditt inlägg så att communityn kan hjälpa snabbare.
+</Note>
+
+## De första sakerna att prova
+
+Innan du dyker in i en specifik sektion, dessa fyra kommandon löser de flesta problem:
+
+| Symptom | Första kommandot | Varför |
+| --- | --- | --- |
+| Något konstigt | `bolt debug info` | Enkel system \+ pluginsammanfattning. |
+| Något fungerade tidigare, nu gör det inte det | `bolt logs --tail 100` | Senaste fel, vanligtvis nära toppen. |
+| Misstänker ett plugin | `bolt --pure` | Starta med alla plugins inaktiverade. |
+| Konfiguration hämtas inte upp | `bolt debug config` | Skriver ut den fullständigt upplösta konfigurationen. |
+
+<Tip>
+  Familjen `bolt debug` är ditt första stopp för alla mystiska beteenden. `bolt debug info` för en systemsammanfattning, `bolt debug config` för den upplösta konfigurationen, `bolt debug paths` för platser på disk och `bolt debug snapshot` för att inspektera sessionstillstånd.
+</Tip>
+
+<Accordion title="Bolt startar inte / kraschar vid start">
+  **Symptom:** Terminalen blinkar och avslutas omedelbart, eller så ser du en stack trace innan TUI:n renderas.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Samla systeminformation">
+      ```bash
+      bolt debug info
+      ```
+
+      Detta skriver ut din Bolt-version, OS, terminalemulator och laddade plugins. Kopiera denna utdata när du rapporterar en bugg.
+    </Step>
+    <Step title="Kolla senaste loggutdata">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Leta efter `ERROR`-rader. En vanlig orsak är ett plugin som misslyckas att laddas — i så fall ser du ett fel som nämner pluginets namn.
+    </Step>
+    <Step title="Inaktivera plugins för att isolera problemet">
+      ```bash
+      bolt --pure
+      ```
+
+      Om Bolt startar rent med `--pure` orsakar ett plugin kraschen. Ta bort det problematiska pluginet från din konfiguration, eller rapportera det till pluginets författare.
+    </Step>
+    <Step title="Kontrollera efter korrupt konfiguration">
+      ```bash
+      bolt debug config
+      ```
+
+      Om detta skriver ut ett fel om ogiltig JSON, öppna konfigurationsfilen den nämner och fixa syntaxen. Kör `bolt db path` för att bekräfta att databasens sökväg är åtkomlig.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Leverantörsautentisering misslyckas">
+  **Symptom:** Bolt visar "No providers configured", API-förfrågningar misslyckas med 401-fel, eller `bolt run` avslutas omedelbart utan att producera någon utdata.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Kör om leverantörsinloggningsflödet">
+      ```bash
+      bolt providers login
+      ```
+
+      Välj din leverantör och följ prompterna. Bolt går dig igenom API-nyckelinmatning eller OAuth.
+    </Step>
+    <Step title="Verifiera miljövariabeln för API-nyckeln">
+      Om du använder en env-var (t.ex. `ANTHROPIC_API_KEY`), bekräfta att den faktiskt är satt i det aktuella skalet:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Om den är tom, lägg till den i din shell-profil och öppna om din terminal.
+    </Step>
+    <Step title="Inspektera den upplösta konfigurationen">
+      ```bash
+      bolt debug config
+      ```
+
+      Titta på `provider`-sektionen. Om din leverantör visas med en tom `apiKey` expanderas inte miljövariabelreferensen i din konfigurationsfil.
+    </Step>
+    <Step title="Lista lagrade inloggningsuppgifter">
+      ```bash
+      bolt providers list
+      ```
+
+      Detta visar alla inloggningsuppgifter lagrade i `auth.json` och alla leverantörsrelaterade miljövariabler som Bolt upptäckte.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP-server ansluter inte">
+  **Symptom:** `bolt mcp list` visar en server som `failed` eller `needs authentication`, eller så kan agenten inte använda några verktyg från den servern.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Kör MCP-debug-sonden">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Detta testar grundläggande HTTP-anslutning, inspekterar `WWW-Authenticate`-headern och går igenom OAuth-upptäcktsflödet om tillämpligt. Utdatan berättar för dig om servern är nåbar och om auth krävs.
+    </Step>
+    <Step title="Kontrollera serverns URL">
+      Verifiera URL:en i din `.bolt/bolt.jsonc`. För fjärrservrar, se till att URL:en slutar med MCP-sökvägen (t.ex. `/mcp` eller `/tools`), inte bara värden.
+    </Step>
+    <Step title="Autentisera om för OAuth-servrar">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Följ webbläsarflödet. Om servern kräver ett förregistrerat klient-ID, lägg till det i konfigurationen:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Kolla lokalt serverkommando">
+      För `local`-servrar, kör kommandot manuellt i din terminal för att bekräfta att det startar utan fel:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Session hittas inte">
+  **Symptom:** `bolt run --session <id>` avslutas med "Session not found", eller en session du minns att du jobbade med har försvunnit.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Lista alla tillgängliga sessioner">
+      ```bash
+      bolt session list
+      ```
+
+      Sessioner sorteras med senast uppdaterade först. Om din session raderades eller databasen migrerades kommer den inte att visas här.
+    </Step>
+    <Step title="Hitta databasens sökväg">
+      ```bash
+      bolt db path
+      ```
+
+      Detta skriver ut den fullständiga sökvägen till SQLite-filen. Verifiera att filen finns och inte är tom.
+    </Step>
+    <Step title="Fråga databasen direkt">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Om din session finns i databasen men inte i `bolt session list` kan det finnas en projekt-ID-mismatch — sessioner är scopade till projekt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Behörighetsfel i TUI:n">
+  **Symptom:** Agenten frågar efter behörighet upprepade gånger, vägrar skriva filer eller så ser du "Permission denied"-banners.
+
+  **Förstå åtkomstnivåer:**
+
+  Varje inbyggd agent har en deklarerad åtkomstnivå som styr vad den kan göra utan att fråga:
+
+  | Åtkomstnivå | Vad den tillåter |
+  | --- | --- |
+  | **Full** | Läsa filer, skriva filer, köra skalkommandon |
+  | **Redigera** | Läsa och skriva filer, inga skalkommandon |
+  | **Läs** | Enbart läsa filer, inga skrivningar eller kommandon |
+
+  Agenterna `code`, `debug`, `refactor`, `migrate` och `perf` har **Full** åtkomst. `docs` har **Redigera** åtkomst. `plan`, `ask`, `code-review` och `security` har **Läs** åtkomst.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Byt till en agent med Full åtkomst">
+      Om du behöver skriva filer, använd agenten `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Eller tryck `Tab` i TUI:n för att cykla genom agenter.
+    </Step>
+    <Step title="Använd --auto för att godkänna prompter icke-interaktivt">
+      I CI- eller skriptade kontexter, skicka `--auto` till `bolt run` för att auto-godkänna behörigheter som inte uttryckligen nekas i konfigurationen.
+    </Step>
+    <Step title="Konfigurera behörigheter i konfigurationsfilen">
+      Du kan neka specifika verktyg för alla sessioner i ett projekt genom att lägga till ett `permission`-block i `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Hög tokenanvändning eller oväntade kostnader">
+  **Symptom:** `bolt stats` visar högre tokenantal än förväntat, eller din API-räkning växer snabbare än förväntat.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Granska din användningsstatistik">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Utdatan bryter ner kostnad per dag, genomsnittliga tokens per session och användning per modell.
+    </Step>
+    <Step title="Sänk reasoning-effort">
+      För modeller som stöder det, minska reasoning-effort med `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Stödda värden är leverantörsspecifika (t.ex. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Byt till en billigare modell">
+      Använd `bolt models` för att hitta en mindre modell. Mindre modeller (t.ex. `claude-haiku`, `gpt-4o-mini`) kostar betydligt mindre per token och fungerar bra för många uppgifter.
+    </Step>
+    <Step title="Använd ask- eller plan-agenten för utforskning">
+      Agenterna `ask` och `plan` har **Läs**-åtkomst och anropar inte skrivverktyg, vilket innebär att de undviker verktygstunga loopar som genererar stora output-tokens.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Plugin-konflikter eller oväntat beteende">
+  **Symptom:** Ett slash-kommando beter sig oväntat, TUI:n renderas felaktigt, eller något ändrades efter att ett plugin installerades.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Inaktivera alla plugins för att etablera en baslinje">
+      ```bash
+      bolt --pure
+      ```
+
+      Om problemet försvinner är ett plugin ansvarigt.
+    </Step>
+    <Step title="Identifiera det problematiska pluginet">
+      ```bash
+      bolt debug info
+      ```
+
+      Utdatan listar alla laddade plugins. Ta tillfälligt bort dem en i taget från din konfiguration och starta om Bolt tills problemet är borta.
+    </Step>
+    <Step title="Kolla efter versionsinkompatibilitet">
+      ```bash
+      bolt upgrade
+      ```
+
+      Plugins deklarerar ett kompatibelt Bolt-versionsintervall. Om du nyligen uppgraderade Bolt kan ett plugin behöva uppdateras också.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows-sökvägsproblem">
+  **Symptom:** På Windows med WSL kan Bolt inte hitta `less`, filsökvägar innehåller oväntade bakåtstreck, eller så startar inte pagern för `bolt session list`.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Sätt Git Bash-sökvägen">
+      Bolt letar efter Unix-verktyg (inklusive `less`) relativt till Git för Windows-installationen. Sätt miljövariabeln till din Git Bash-katalog:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Lägg till detta i din PowerShell-profil (`$PROFILE`) för att göra det bestående.
+    </Step>
+    <Step title="Verifiera med debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Bekräftar OS-detektering och vilka sökvägar Bolt använder.
+    </Step>
+    <Step title="Kör Bolt inuti WSL direkt">
+      För bästa upplevelsen på Windows, kör `bolt` inifrån en WSL-terminal snarare än från PowerShell eller Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Kan inte uppgradera Bolt">
+  **Symptom:** `bolt upgrade` rapporterar ett fel eller gör tyst ingenting, eller versionsnumret ändras inte efter att du kör det.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Ange installationsmetoden explicit">
+      Bolt försöker upptäcka hur den installerades. Om detektering misslyckas, åsidosätt den:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Ominstallera via installationsskriptet">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: kör som administratör för Chocolatey">
+      Om du installerade via `choco` kräver uppgraderingar en förhöjd terminal. Öppna PowerShell som administratör innan du kör `bolt upgrade`.
+    </Step>
+    <Step title="Bekräfta att den nya versionen är aktiv">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agenten hittar inte filer (eller hittar för många)">
+  **Symptom:** Agenten klagar att den inte kan se filer som finns, eller plockar upp filer du inte vill att den ska röra (som `node_modules`, build-output eller hemligheter) upprepade gånger.
+
+  **Steg:**
+
+  <Steps>
+    <Step title="Kolla efter en .boltignore">
+      Bolt respekterar en `.boltignore`-fil i projektroten som styr vilka filer agentens filsökverktyg kan se. Den använder samma syntax som `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Bekräfta arbetskatalogen">
+      ```bash
+      bolt debug info
+      ```
+
+      Verifiera att `cwd` matchar projektroten. Om du startade Bolt från en underkatalog är agentens filsökning rotad där.
+    </Step>
+    <Step title="Be agenten grepa, inte gissa">
+      Om agenten hävdar att en fil inte finns, be den köra `grep` eller `glob` explicit. Detta kringgår alla inaktuella interna antaganden.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Samla in debug-info för en buggrapport">
+  När du rapporterar ett problem är följande information mest användbar för underhållare:
+
+  <Steps>
+    <Step title="Samla in system- och plugininfo">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Samla in senaste loggutdata">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Exportera den relevanta sessionen (sanerad)">
+      Om problemet hände under en specifik session, exportera den med hemligheter borttagna:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Bifoga `session-debug.json` till problemet.
+    </Step>
+    <Step title="Öppna ett problem eller en diskussion">
+      Gå till [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) och klistra in din `bolt debug info`-utdata plus en beskrivning av stegen för att återskapa.
+    </Step>
+  </Steps>
+</Accordion>

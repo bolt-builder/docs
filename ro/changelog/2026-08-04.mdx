@@ -1,0 +1,33 @@
+---
+title: "Săptămâna din 4 august 2026"
+description: "Jurnal săptămânal Bolt: 11 limbi noi de interfață, aspecte de la dreapta la stânga, traduceri native pe desktop, furnizor Poolside, șlefuiri pentru GPT-5 și corectări de erori."
+---
+
+## Funcționalități noi
+
+- **11 limbi noi de interfață** — Aplicația desktop și TUI includ acum traduceri pentru hindi, olandeză, indoneziană, vietnameză, italiană, urdu, punjabi, azeră, finlandeză, suedeză și thailandeză, aducând totalul la 28 de limbi acceptate. Schimbă limba din **Settings → Appearance → Language**. Consultă [Funcții desktop](/desktop/features) și [Instalare](/desktop/install#28-ui-languages).
+- **Suport pentru aspecte de la dreapta la stânga** — Navigarea, editoarele, casetele de dialog, controalele și redarea textului se oglindesc acum corect pentru limbile care se citesc de la dreapta la stânga, precum araba, ebraica și urdu, astfel încât întreaga interfață se citește natural în acele localizări.
+- **Traduceri native pe desktop** — Meniurile la nivel de sistem de operare, casetele de dialog ale actualizatorului, fluxul de recuperare, integrarea WSL și selectoarele native de fișiere sunt acum localizate alături de interfața din aplicație, astfel încât întreaga experiență desktop respectă setarea ta de limbă.
+- **Acoperire extinsă a localizării** — Meniurile, casetele de dialog, indicațiile, conținutul de ajutor, mesajele de eroare și etichetele de accesibilitate sunt acum traduse în fiecare limbă acceptată, acoperind lacunele în care șirurile reveneau anterior la engleză.
+- **Furnizor Poolside** — Bolt se conectează acum la [Poolside](https://poolside.ai) prin API-ul său compatibil cu OpenAI. Execută `/connect`, alege **Poolside** și lipește cheia ta de API din [platform.poolside.ai](https://platform.poolside.ai). Implementările Poolside găzduite pe cont propriu pot fi de asemenea configurate ca furnizor personalizat. Consultă [Furnizori și modele](/concepts/providers-and-models).
+- **Pluralizare adaptată la limbă** — Numărările, stările, fișierele și elementele din lista de sesiuni se pluralizează acum corect în funcție de limbă, astfel încât textele din cronologie și de stare se citesc natural în toate localizările acceptate.
+- **Randare Markdown mai bogată** — Mesajele asistentului beneficiază de o formatare Markdown îmbunătățită, actualizări de streaming mai fluide, o evidențiere a sintaxei mai bună și suport pentru conținut matematic, făcând răspunsurile lungi și tehnice mai ușor de citit.
+
+## Actualizări
+
+- **Efortul de raționament GPT-5 corespunde versiunii modelului** — Nivelurile efortului de raționament (inclusiv `none` și `xhigh`) sunt acum oferite doar pentru variantele GPT-5 care le suportă, astfel încât `--variant` nu mai afișează opțiuni pe care un anumit model le-ar respinge. Consultă [Controlul efortului de raționament](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Șlefuire a adnotării diff-ului** — Vizualizarea diff din UI-ul sesiunii strânge indicatorii de comentariu, comportamentul marginii și culorile de sintaxă pentru modurile luminos/întunecat pentru o lizibilitate mai bună.
+- **Traduceri existente rafinate** — Limbile existente primesc o terminologie mai clară și etichete UI extinse pentru o experiență mai consistentă în întreaga aplicație.
+
+## Corectări de erori
+
+- **Sincronizarea acțiunilor din sesiune** — Acțiunile din sesiune își înregistrează și raportează acum sincronizarea mai precis, astfel încât cronologia reflectă când a început și s-a terminat efectiv lucrul.
+- **Erori mai clare pentru spațiul de lucru la distanță** — Eșecurile la conectarea sau executarea comenzilor într-un spațiu de lucru la distanță afișează acum mesaje de eroare mai descriptive în loc de unele generice.
+- **Proxy-ul de spațiu de lucru nu mai scurge directorul de lucru** — Cererile direcționate prin proxy-ul spațiului de lucru nu mai includ detalii despre directorul de lucru, păstrând căile locale departe de rețea.
+- **Harta completează regiunile goale** — Harta activității rămâne acum vizibilă în regiunile fără activitate înregistrată, în loc să se prăbușească într-o zonă goală.
+- **Detectarea localizării a fost corectată** — Bolt preia acum în mod fiabil localizarea sistemului tău la pornire, astfel încât interfața se deschide în limba corectă pe mai multe platforme.
+- **Traducerea cronologiei în germană a fost corectată** — Intrările din cronologie în germană se afișează acum cu șirurile corecte, în loc să revină la engleză sau la un text formatat greșit.
+- **Anularea selecțiilor de fișiere** — Făcând clic a doua oară pe o selecție de fișier o șterge acum, astfel încât să poți anula o selecție fără a alege mai întâi alta.
+- **Interacțiuni mai curate cu comentariile ciornă** — Începerea sau respingerea unui comentariu ciornă șterge acum consecvent selecția subiacentă și nu mai concurează cu starea de hover.
+- **Antetul animat de raționament a fost restaurat** — Antetul de raționament din TUI afișează din nou un indicator animat în timp ce gândește, iar gradientul său se estompează când este extins, astfel încât stările restrânse și deschise sunt mai ușor de deosebit.
+- **Instrumentele de proces în fundal și de testare restaurate** — `bash_background`, `process_output`, `list_processes`, `kill_process` și `test_run` sunt disponibile din nou pentru agenți, după ce au fost eliminate într-un merge anterior. Agenții pot porni comenzi de lungă durată precum servere de dezvoltare și watchers, pot citi ieșirea lor și pot rula testele proiectului cu rezultate structurate pass/fail. Consultă [Instrumente încorporate](/concepts/tools#built-in-tools).

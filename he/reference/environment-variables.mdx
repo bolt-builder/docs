@@ -1,0 +1,61 @@
+---
+title: "הפניית משתני סביבה של Bolt"
+sidebarTitle: "משתני סביבה"
+description: "כל משתנה סביבה שמזוהה על ידי Bolt, כולל בקרת לוג, אימות שרת, דריסות תצורה ומוסכמות מפתחות API של ספקים."
+---
+
+משתני סביבה מאפשרים לך להגדיר את Bolt מבלי לגעת בקבצי תצורה — שימושי בצינורות CI, קונטיינרי Docker וסביבות משותפות שבהן אינך יכול לבצע commit לאישורים. הם נקראים פעם אחת בהפעלה ואינם ניתנים לשינוי בזמן ש-Bolt רץ.
+
+## הפניה
+
+| משתנה | תיאור |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | הגדר את ורבוזיות הלוג. ערכים מקובלים: `DEBUG`, `INFO`, `WARN`, `ERROR`. שווה ערך לדגל `--log-level`. |
+| `BOLT_PRINT_LOGS` | הגדר לכל ערך לא ריק כדי להדפיס פלט לוג ל-stderr. שווה ערך ל-`--print-logs`. |
+| `BOLT_PURE` | הגדר לכל ערך לא ריק כדי להשבית את כל התוספים החיצוניים. שווה ערך ל-`--pure`. |
+| `BOLT_SERVER_USERNAME` | שם משתמש אימות בסיסי עבור `bolt serve` ו-`bolt web`. |
+| `BOLT_SERVER_PASSWORD` | סיסמת אימות בסיסי עבור `bolt serve` ו-`bolt web`. כל הלקוחות המתחברים חייבים לספק סיסמה זו. |
+| `BOLT_CONFIG` | דרוס את הנתיב לקובץ התצורה ש-Bolt טוען. Bolt לא יחפש במיקומי ברירת המחדל כאשר זה מוגדר. |
+| `BOLT_CONFIG_DIR` | דרוס את ספריית התצורה. Bolt יחפש קבצי תצורה בספרייה זו במקום בספריית התצורה של מערכת ההפעלה כברירת מחדל. |
+| `BOLT_CONFIG_CONTENT` | ספק את התצורה כולה כמחרוזת JSON inline. שימושי ב-CI שבו כתיבת קבצים אינה מעשית. גובר על עדיפות בין מקורות תצורה. |
+| `BOLT_GIT_BASH_PATH` | נתיב לספריית `bin` של Git Bash ב-Windows, המשמש למציאת כלים של Unix כמו `less`. |
+
+## מפתחות API של ספקים
+
+Bolt מגלה אישורי ספקים ממשתני סביבה אוטומטית — אין צורך בשלב `bolt providers login`. כל ספק מחפש משתנה סביבה ספציפי, ו-Bolt ישתמש בו אם המשתנה מוגדר, ללא קשר למה שמאוחסן ב-`auth.json`.
+
+<Tip>
+  הגדר מפתחות API של ספקים בפרופיל המעטפת שלך (למשל `~/.zshrc`, `~/.bashrc`) או בקובץ `.env` שנטען על ידי המעטפת שלך. תוכל גם להתייחס אליהם מקובץ התצורה באמצעות תחביר `${VAR_NAME}` בשדה `provider.*.apiKey` כך שהמפתחות לא יאוחסנו לעולם ב-plaintext.
+</Tip>
+
+משתני ספקים נפוצים:
+
+| משתנה | ספק |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+הרץ `bolt models --verbose` כדי לראות איזה משתנה סביבה כל ספק מוגדר מצפה לו.
+
+## דוגמאות שימוש
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

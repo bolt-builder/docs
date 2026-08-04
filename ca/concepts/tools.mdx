@@ -1,0 +1,58 @@
+---
+title: "Eines: què poden fer realment els agents de Bolt"
+sidebarTitle: "Eines"
+description: "La llista completa d'eines integrades disponibles per als agents de Bolt, més com afegir-ne de pròpies mitjançant plugins, servidors MCP o el directori .opencode/tool."
+---
+
+Els agents a Bolt fan el seu treball cridant eines. Cada acció que veus al TUI (llegir un fitxer, executar proves, cercar al web) és el model triant una eina i Bolt executant-la. Cada agent té un nivell d'accés declarat que determina quines eines pot cridar sense preguntar-t'ho primer (vegeu [Permisos](/concepts/permissions)).
+
+## Eines integrades
+
+| Eina | Què fa |
+| --- | --- |
+| `read` | Llegeix un fitxer del disc. |
+| `write` | Crea un fitxer nou o sobreescriu un d'existent. |
+| `edit` | Aplica una edició dirigida (cerca/reemplaça) a un fitxer. |
+| `apply_patch` | Aplica un pedaç de tipus diff unificat a un o més fitxers. |
+| `glob` | Llista fitxers que coincideixen amb un patró glob. |
+| `grep` | Cerca contingut de fitxers per regex/text. |
+| `bash` | Executa una ordre de shell. |
+| `task` | Delega una subtasca a un subagent (`@general`, `@explore` o un subagent personalitzat). |
+| `todowrite` | Manté la llista estructurada de tasques de l'agent per a treball de múltiples passos. |
+| `webfetch` | Recupera una URL i retorna el seu contingut. |
+| `websearch` | Cerca al web. |
+| `skill` | Invoca una habilitat amb nom (vegeu [Habilitats](/extending/skills)). |
+| `memory_save` | Persisteix un fet a la [memòria del projecte](/concepts/project-memory). |
+| `memory_recall` | Cerca una memòria desada prèviament. |
+| `question` | Fa una pregunta aclaridora i espera una resposta. |
+| `bash_background` | Inicia una ordre de shell com a procés gestionat en segon pla (servidors de desenvolupament, watchers, compilacions llargues). |
+| `process_output` | Llegeix la sortida acumulada i l'estat d'un procés en segon pla, opcionalment esperant que acabi. |
+| `list_processes` | Llista els processos en segon pla amb el seu id, estat i ordre. |
+| `kill_process` | Termina un procés en segon pla (i el seu arbre de processos) per id. |
+| `test_run` | Detecta i executa les proves del projecte, retornant resultats estructurats d'èxit/error i detalls de fallades. |
+
+### Experimentals
+
+| Eina | Què fa |
+| --- | --- |
+| `lsp` | Consulta un servidor de llenguatge per a definicions, referències i diagnòstics. |
+| `execute` | Executa codi en un sandbox aïllat de mode de codi. |
+| `plan` | Produeix un pla estructurat abans de fer canvis. |
+
+Les eines experimentals poden canviar o ser renombrades entre versions.
+
+## Ampliar el conjunt d'eines
+
+Més enllà de les integrades, Bolt pot cridar eines de tres fonts:
+
+- **Eines personalitzades** a `.opencode/tool/` (o `.opencode/tools/`) a l'arrel del projecte. Vegeu [Eines personalitzades](/extending/custom-tools).
+- **Eines de plugin** aportades per qualsevol [plugin](/extending/plugins) instal·lat.
+- **Eines MCP** de qualsevol [servidor MCP](/extending/mcp-servers) configurat per al projecte.
+
+Les tres se senten idèntiques des del punt de vista de l'agent: apareixen a la llista d'eines, respecten el nivell d'accés de l'agent i apareixen a la sortida de crides d'eines del TUI.
+
+## Relacionat
+
+- [Agents](/concepts/agents) — quins agents poden cridar quines eines.
+- [Permisos](/concepts/permissions) — com es controla l'accés a les eines per agent.
+- [Servidors MCP](/extending/mcp-servers) — la manera més comuna d'afegir eines del món real.

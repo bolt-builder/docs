@@ -1,0 +1,33 @@
+---
+title: "Settimana del 4 agosto 2026"
+description: "Changelog settimanale di Bolt: 11 nuove lingue dell'interfaccia, layout da destra a sinistra, traduzioni native del desktop, provider Poolside, rifiniture per GPT-5 e correzioni di bug."
+---
+
+## Nuove funzionalità
+
+- **11 nuove lingue dell'interfaccia** — L'app desktop e il TUI ora includono le traduzioni per hindi, olandese, indonesiano, vietnamita, italiano, urdu, punjabi, azero, finlandese, svedese e thailandese, portando il totale a 28 lingue supportate. Cambia lingua in **Impostazioni → Aspetto → Lingua**. Vedi [Funzionalità desktop](/desktop/features) e [Installa](/desktop/install#28-ui-languages).
+- **Supporto per layout da destra a sinistra** — Navigazione, editor, finestre di dialogo, controlli e rendering del testo ora si riflettono correttamente per lingue da destra a sinistra come arabo, ebraico e urdu, così che l'intera interfaccia si legga in modo naturale in quelle localizzazioni.
+- **Traduzioni native del desktop** — I menu a livello di sistema operativo, le finestre di dialogo dell'updater, il flusso di ripristino, l'onboarding WSL e i selettori di file nativi sono ora localizzati insieme all'interfaccia in-app, così l'intera esperienza desktop segue le tue impostazioni di lingua.
+- **Copertura di localizzazione estesa** — Menu, finestre di dialogo, prompt, contenuti di aiuto, messaggi di errore ed etichette di accessibilità sono ora tradotti in ogni lingua supportata, colmando le lacune in cui le stringhe in precedenza tornavano all'inglese.
+- **Provider Poolside** — Bolt ora si connette a [Poolside](https://poolside.ai) tramite la sua API compatibile con OpenAI. Esegui `/connect`, scegli **Poolside** e incolla la tua chiave API da [platform.poolside.ai](https://platform.poolside.ai). Le distribuzioni self-hosted di Poolside possono essere configurate anche come provider personalizzato. Vedi [Provider e modelli](/concepts/providers-and-models).
+- **Pluralizzazione consapevole della localizzazione** — Conteggi, stati, file e voci dell'elenco delle sessioni ora si pluralizzano correttamente per lingua, così che il testo di timeline e stato si legga in modo naturale in tutte le localizzazioni supportate.
+- **Rendering Markdown più ricco** — I messaggi dell'assistente ottengono una formattazione Markdown migliorata, aggiornamenti in streaming più fluidi, un miglior evidenziamento della sintassi e supporto per contenuti matematici, rendendo più facili da leggere le risposte lunghe e tecniche.
+
+## Aggiornamenti
+
+- **L'impegno di ragionamento di GPT-5 corrisponde alla versione del modello** — I livelli di impegno di ragionamento (inclusi `none` e `xhigh`) vengono ora offerti solo per le varianti di GPT-5 che li supportano, quindi `--variant` non mostra più opzioni che un determinato modello rifiuterebbe. Vedi [Controllo dell'impegno di ragionamento](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Rifiniture nelle annotazioni diff** — La vista diff dell'interfaccia della sessione affina gli indicatori dei commenti, il comportamento della gutter e i colori della sintassi chiara/scura per una migliore leggibilità.
+- **Traduzioni esistenti perfezionate** — Le lingue esistenti ottengono terminologia più chiara ed etichette dell'interfaccia estese per un'esperienza più coerente nell'app.
+
+## Correzioni di bug
+
+- **Tempistica delle azioni di sessione** — Le azioni di sessione ora registrano e riportano i loro tempi con maggiore precisione, così la timeline riflette quando il lavoro è effettivamente iniziato e finito.
+- **Errori dei workspace remoti più chiari** — I fallimenti nella connessione o nell'esecuzione di comandi in un workspace remoto ora mostrano messaggi di errore più descrittivi invece di quelli generici.
+- **Il proxy del workspace non fa più trapelare la directory di lavoro** — Le richieste instradate attraverso il proxy del workspace non includono più dettagli sulla directory di lavoro, mantenendo i percorsi locali fuori dalla rete.
+- **La mappa riempie le regioni vuote** — La mappa delle attività ora rimane visibile nelle regioni senza attività registrata invece di collassare in un'area vuota.
+- **Rilevamento della localizzazione corretto** — Bolt ora rileva la localizzazione di sistema in modo affidabile all'avvio, così l'interfaccia si apre nella lingua corretta su più piattaforme.
+- **Traduzione della timeline in tedesco corretta** — Le voci della timeline in tedesco ora vengono visualizzate con le stringhe corrette invece di tornare all'inglese o al testo malformattato.
+- **Disattivazione delle selezioni file** — Cliccare una seconda volta su una selezione file ora la cancella, così puoi annullare una selezione senza doverne scegliere un'altra prima.
+- **Interazioni più pulite con i commenti in bozza** — Iniziare o annullare un commento in bozza ora cancella la selezione sottostante in modo coerente e non entra più in conflitto con lo stato hover.
+- **Intestazione di ragionamento animata ripristinata** — L'intestazione di ragionamento nel TUI mostra di nuovo uno spinner animato mentre pensa, e il suo gradiente si attenua quando è espanso, così gli stati collassato e aperto sono più facili da distinguere.
+- **Strumenti per processi in background e test ripristinati** — `bash_background`, `process_output`, `list_processes`, `kill_process` e `test_run` sono di nuovo disponibili per gli agenti, dopo essere stati eliminati in un merge precedente. Gli agenti possono avviare comandi a lunga esecuzione come server di sviluppo e watcher, leggere il loro output ed eseguire i test del progetto con risultati strutturati di successo/fallimento. Vedi [Strumenti integrati](/concepts/tools#built-in-tools).

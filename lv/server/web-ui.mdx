@@ -1,0 +1,33 @@
+---
+title: "Bolt tīmekļa UI"
+sidebarTitle: "Tīmekļa UI"
+description: "bolt web piedāvā pārlūkā balstītu UI virs palaista Bolt servera — noderīgi koplietotām komandas iekārtām, attālinātām iekārtām un jebkur, kur TUI nav praktisks."
+---
+
+`bolt web` palaiž Bolt serveri un piedāvā pārlūka UI tā priekšā. Tas ir tas pats dzinējs, kas TUI, tikai atveidots pārlūka cilnē.
+
+## Palaidiet to
+
+```bash
+bolt web                                # tikai localhost
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Pēc tam atveriet izdrukāto URL. Ja atklājat caur tīklu, vispirms iestatiet basic auth:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Kad izmantot tīmekļa UI
+
+- Palaišana Bolt uz spēcīgas attālinātas iekārtas, bet vadīšana no klēpjdatora.
+- Tiešraides sesijas kopīgošana ar komandas biedru pāra atkļūdošanai.
+- Vidēs, kur pilns TUI ir neērts (Chromebooks, planšetes, koplietošanas iekārtas).
+
+## Saistīts
+
+- [Bezgalvas serveris](/server/headless-server) — pamatā esošais API serveris.
+- [Attālinātās sesijas](/server/remote-sessions) — pievienojiet TUI tam pašam serverim, ko piedāvā tīmekļa UI.

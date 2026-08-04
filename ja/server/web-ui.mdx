@@ -1,0 +1,33 @@
+---
+title: "Bolt Web UI"
+sidebarTitle: "Web UI"
+description: "bolt web は稼働中の Bolt サーバの上にブラウザベースの UI を提供します — 共有チームボックス、リモートマシン、TUI が実用的でない場所に便利です。"
+---
+
+`bolt web` は Bolt サーバを起動し、その前面にブラウザ UI を提供します。TUI と同じエンジンで、単にブラウザタブでレンダリングされたものです。
+
+## 起動する
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+その後、表示された URL を開きます。ネットワーク越しに公開する場合は、先に Basic 認証を設定してください。
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Web UI を使う場面
+
+- 高性能なリモートマシンで Bolt を実行し、ラップトップから駆動する。
+- ペアデバッグのためチームメイトとライブセッションを共有する。
+- 完全な TUI が扱いにくい環境 (Chromebook、タブレット、コワーキングマシン)。
+
+## 関連
+
+- [ヘッドレスサーバ](/server/headless-server) — 基盤となる API サーバ。
+- [リモートセッション](/server/remote-sessions) — Web UI が提供するのと同じサーバに TUI をアタッチする。

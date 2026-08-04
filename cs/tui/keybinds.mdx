@@ -1,0 +1,38 @@
+---
+title: "Klávesové zkratky TUI Boltu"
+sidebarTitle: "Klávesové zkratky"
+description: "Základní zkratky TUI Boltu: přepínání agentů pomocí Tab, mini režim, push-to-talk hlasový vstup a všechno další, co lze řídit z klávesnice."
+---
+
+TUI Boltu je navrženo tak, aby se dalo řídit z klávesnice od začátku do konce. Tato stránka uvádí zkratky, po kterých budeš sahat nejčastěji. Vyčerpávající seznam získáš spuštěním `bolt` a otevřením in-app nápovědy.
+
+## Základy
+
+| Klávesy | Akce |
+| --- | --- |
+| `Tab` | Přejít na dalšího agenta (`code`, `plan`, `ask`, ...). Aktuální agent je zobrazen ve stavovém řádku. |
+| `Shift+Tab` | Přejít na předchozího agenta. |
+| `Enter` | Odeslat aktuální zprávu. |
+| `Esc` | Zrušit probíhající tah. |
+| `Ctrl+C` | Přerušit aktuální volání nástroje. |
+| `Ctrl+D` | Odpojit se od sezení (zůstane běžet na serveru). |
+
+## Režimy
+
+### Režim `--mini`
+
+Spusť Bolt s kompaktním rozvržením se split-footerem, které zabírá méně místa v terminálu, skvělé pro rozdělené panely:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk hlas
+
+Podrž nakonfigurovanou push-to-talk klávesu a nadiktuj prompt pomocí speech-to-text, poté ji pusť pro odeslání. Klávesu a STT providera nakonfiguruj v `.bolt/bolt.jsonc`.
+
+## Související
+
+- [Slash příkazy](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` a další.
+- [Sezení](/concepts/sessions) — odpojení, obnovení, rozvětvení a sdílení z klávesnice.

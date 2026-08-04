@@ -1,0 +1,142 @@
+---
+title: "ابدأ مع Bolt في أقل من دقيقة"
+sidebarTitle: "البدء السريع"
+description: "ثبّت Bolt، وافتح مشروعك، واربط مزوّدًا، وشغّل موجّهك الأول بالذكاء الاصطناعي — كل ذلك في أقل من 60 ثانية مع هذا الدليل خطوة بخطوة."
+---
+
+يرشدك هذا الدليل خلال تثبيت Bolt وتشغيله في مشروع وربط مزوّد ذكاء اصطناعي وتشغيل موجّهك الأول. تستغرق العملية بأكملها أقل من دقيقة.
+
+<Steps>
+  <Step title="ثبّت Bolt">
+    أسرع طريقة هي سكربت التثبيت الرسمي، الذي يعمل على macOS وLinux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    تفضّل مدير حزم؟ ثبّته عالميًا عبر npm أو bun أو pnpm أو yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    لتطبيق سطح المكتب على macOS (دون المرور بـ Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    راجع [دليل التثبيت](/installation) لجميع الطرق، بما في ذلك Homebrew وChocolatey وScoop وملاحظات خاصة بويندوز.
+  </Step>
+  <Step title="افتح مشروعك">
+    انتقل إلى أي مجلد مشروع وشغّل الـ TUI التفاعلي:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    يلتقط Bolt سياق مشروعك تلقائيًا — يقرأ شجرة الملفات ويفهم المكدس ويجعله متاحًا لكل وكيل منذ لحظة فتحه.
+  </Step>
+  <Step title="اضبط مزوّد ذكاء اصطناعي">
+    عند التشغيل الأول، سيطلب منك Bolt ضبط مزوّد إذا لم يكن هناك أي مزوّد مضبوط. يمكنك أيضًا تشغيل هذا في أي وقت:
+
+    ```bash
+    bolt providers
+    ```
+
+    يفتح هذا تدفق إدارة المزوّدين حيث يمكنك إضافة مفاتيح API لـ OpenAI وAnthropic وغيرها من مزوّدي LLM المدعومين. تُحفظ الإعدادات في `.bolt/bolt.jsonc` بجذر مشروعك.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="اكتب موجّهًا واستكشف الوكلاء">
+    بمجرد الدخول إلى الـ TUI، اكتب موجّهك واضغط Enter. استخدم **Tab** للتبديل بين الوكلاء العشرة المدمجين في Bolt في أي وقت — يظهر الوكيل النشط في شريط الحالة.
+
+    يمكنك أيضًا تشغيل الموجّهات مباشرة من سطر الأوامر دون فتح الـ TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## الوكلاء المدمجون
+
+بدّل بين الوكلاء عبر `Tab` في الـ TUI، أو مرّر `--agent <name>` إلى `bolt run`. لكل وكيل مستوى وصول محدّد يتناسب مع غرضه.
+
+| الوكيل | الوصول | الوصف |
+| --- | --- | --- |
+| `code` | كامل | الافتراضي: يقرأ ويكتب ويشغّل الشيفرة |
+| `plan` | قراءة | يستكشف قاعدة الشيفرة وينتج خطة دون تعديل الملفات |
+| `ask` | قراءة | أسئلة وبحث — بدون تعديل الملفات |
+| `code-review` | قراءة | يراجع التغييرات بحثًا عن الصحة والأسلوب والأمان |
+| `debug` | كامل | يصحّح الاختبارات الفاشلة والانهيارات وأخطاء المنطق |
+| `refactor` | كامل | إعادة هيكلة آمنة مع التحقق من الاختبارات في كل خطوة |
+| `docs` | تحرير | يكتب ويحدّث الوثائق والتعليقات |
+| `security` | قراءة | مراجعة أمنية: ثغرات، أسرار، أنماط |
+| `migrate` | كامل | ترقيات إطارات العمل وترحيل الاعتماديات |
+| `perf` | كامل | تحليل الأداء والتحسين |
+
+يوجد أيضًا وكيلان فرعيان مدمجان للتفويض: `@general` للمهام المعقّدة متعدّدة الخطوات، و`@explore` للبحث السريع للقراءة فقط في قاعدة الشيفرة. يمكنك تعريف وكلاء خاصّين بك كملفات Markdown أو توليد وكيل باستخدام `bolt agent create`.
+
+## أوامر شائعة لتجرّبها بعد ذلك
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  مرّر `--mini` إلى `bolt` أو `bolt attach` للحصول على واجهة مدمجة تشغل مساحة أقل من الطرفية — رائعة للنوافذ الصغيرة أو تخطيطات الأجزاء المقسّمة.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  يقبل `bolt run` الخيارات `--auto` و`--yolo` و`--dangerously-skip-permissions` التي توافق تلقائيًا على جميع طلبات الأذونات دون سؤال. استخدمها فقط في البيئات الموثوقة — فهي تسمح للوكيل بالقراءة والكتابة والتنفيذ دون تأكيد.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  يدعم Bolt الإكمال التلقائي للصدفات bash وzsh وfish وغيرها. ولّد الإكمالات وثبّتها بـ:
+
+  ```bash
+  bolt completion
+  ```
+
+  اتّبع التعليمات المطبوعة لتحميل سكربت الإكمال في إعداد صدفتك.
+</Note>

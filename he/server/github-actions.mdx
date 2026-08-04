@@ -1,0 +1,179 @@
+---
+title: "אינטגרציית GitHub: Actions, PR-ים וסקירת AI"
+sidebarTitle: "GitHub Actions"
+description: "הרץ את Bolt בתוך GitHub Actions, בצע checkout ל-PR-ים מקומית, צור הודעות commit AI ושמור על מיזוגים עם סקירת קוד מונעת AI וקודי יציאה."
+url: "server/github-actions"
+---
+
+Bolt מגיע עם ארבע פקודות שמחברות את זרימת ה-Git היומיומית שלך ל-AI: סוכן GitHub Actions שתוכל להתקין בפקודה אחת, קיצור דרך ל-checkout של בקשות משיכה, מחולל הודעות commit של AI, וסוקר קוד AI עם קודי יציאה קריאים למכונה. יחד הם מאפשרים לך להביא את Bolt לכל שלב של פיתוח — קידוד מקומי, סקירת PR ואינטגרציה מתמשכת.
+
+---
+
+## `bolt github`
+
+נהל את סוכן GitHub Actions שמריץ את Bolt על אירועי CI.
+
+### `bolt github install`
+
+התקן את זרימת העבודה של GitHub Actions למאגר הנוכחי. זה כותב את ה-YAML של זרימת העבודה ל-`.github/workflows/` כך ש-Bolt מתחיל אוטומטית על תגובות לבעיות, בקשות משיכה חדשות או אירועים אחרים שתגדיר.
+
+```bash
+bolt github install
+```
+
+הרץ זאת משורש מאגר git. תזדקק לגישת כתיבה ל-`.github/workflows/`.
+
+### `bolt github run`
+
+הרץ את סוכן GitHub באופן מקומי או בתוך שלב CI, משחזר תעולת אירוע GitHub ספציפית.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| דגל | תיאור |
+|------|-------------|
+| `--event <event>` | שם אירוע GitHub או נתיב לתעולת אירוע JSON |
+| `--token <pat>` | טוקן גישה אישי של GitHub (`github_pat_…`) המשמש לפרסום תגובות ושליפת הקשר |
+
+---
+
+## הגדר את סוכן GitHub Actions
+
+<Steps>
+  <Step title="התקן את זרימת העבודה">
+    משורש המאגר שלך:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt כותב קובץ זרימת עבודה של GitHub Actions ל-`.github/workflows/`. בצע commit ו-push לקובץ.
+  </Step>
+
+  <Step title="הוסף את מפתח ה-API שלך כסוד">
+    בהגדרות המאגר שלך, הוסף את מפתח ה-API עבור ספק ה-LLM המועדף שלך כסוד מאגר (למשל, `ANTHROPIC_API_KEY`). זרימת העבודה תקלוט אותו אוטומטית.
+  </Step>
+
+  <Step title="הפעל את הסוכן">
+    הגב `/bolt <your request>` על כל בעיה או בקשת משיכה. זרימת העבודה יורה, Bolt קורא את תעולת האירוע, ומפרסם תשובה עם התוצאה.
+  </Step>
+
+  <Step title="הרץ מקומית לניפוי שגיאות">
+    שחזר תעולת אירוע חיה מהרצת זרימת עבודה קודמת:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+בצע checkout של בקשת משיכה של GitHub לענף מקומי והשק את Bolt באותו ענף — מוכן לסקור, לנפות באגים או להמשיך עבודה מהמקום שבו מחבר ה-PR הפסיק.
+
+```bash
+bolt pr 42
+```
+
+Bolt משתמש ב-CLI של `gh` כדי לשלוף את ה-PR, יוצר ענף בשם `pr/<number>`, ומחבר את הפניית מעקב upstream. עבור PR-ים חוצי-מאגרים (fork), הוא מוסיף את ה-fork כמרוחק אוטומטית. אם תיאור ה-PR מכיל URL של סשן Bolt משותף (`opncd.ai/s/…`), הסשן מיובא כך שתוכל להמשיך את השיחה של המחבר.
+
+> דורש שה-[GitHub CLI (`gh`)](https://cli.github.com/) יהיה מותקן ומאומת.
+
+---
+
+## `bolt commit`
+
+צור הודעת commit מהשינויים המורגלים (או כל הקבצים המעקבים) שלך ובצע commit בשלב אחד.
+
+```bash
+bolt commit
+```
+
+Bolt מבצע diff על השינויים שלך, מזין את ה-diff לסוכן `commit` יחד עם נושאי commit אחרונים כהפניית סגנון, ומריץ `git commit -m <message>` עם התוצאה.
+
+### דגלים
+
+| דגל | כינוי | תיאור |
+|------|-------|-------------|
+| `--all` | `-a` | בצע commit על כל השינויים המעקבים, לא רק המורגלים (שווה ערך ל-`git commit -a`) |
+| `--dry-run` | | הדפס את ההודעה שנוצרה מבלי לבצע commit |
+| `--model <provider/model>` | `-m` | דרוס את המודל המשמש ליצירת ההודעה |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  השתמש ב-`bolt commit --dry-run` כדי לצפות בהודעה שנוצרה לפני שהיא מבוצעת commit. אם אתה רוצה לערוך אותה, העתק את הפלט והרץ `git commit -m "…"` עם הניסוח המותאם שלך.
+</Tip>
+
+---
+
+## `bolt review`
+
+הרץ את סוכן `code-review` על diff וצא עם פסק דין קריא למכונה. השורה האחרונה של הסקירה היא תמיד `Verdict: PASS` או `Verdict: FAIL`, מה שהופך את `bolt review` למוכן לצינורות CI מיד.
+
+```bash
+bolt review
+```
+
+כברירת מחדל, `bolt review` מבצע diff של `HEAD` מול עץ העבודה. השתמש בדגלים למטה כדי לתחום את ה-diff.
+
+### דגלים
+
+| דגל | כינוי | תיאור |
+|------|-------|-------------|
+| `--staged` | | סקור שינויים מורגלים בלבד |
+| `--branch <name>` | | סקור שינויים מאז ה-merge base עם הענף הנקוב (ברירת מחדל לענף ברירת המחדל של המאגר) |
+| `--model <provider/model>` | `-m` | מודל לשימוש עבור הסקירה |
+
+### קודי יציאה
+
+| קוד | משמעות |
+|------|---------|
+| `0` | `Verdict: PASS` — אין בעיות קריטיות או מהותיות |
+| `1` | `Verdict: FAIL` — נמצאה בעיה קריטית או מהותית אחת או יותר |
+| `2` | לא ניתן לקבוע פסק דין מהתגובה |
+
+### שימוש בזרימת עבודה של GitHub Actions
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+קוד יציאה שאינו אפס מכשיל את הבדיקה, וחוסם את המיזוג עד שהבעיות מטופלות.
+
+<Tip>
+  הרץ `bolt review --staged` לפני commit כדי לתפוס בעיות בזמן שהן עדיין קלות לשינוי — לפני שהן בכלל מגיעות לבקשת משיכה.
+</Tip>

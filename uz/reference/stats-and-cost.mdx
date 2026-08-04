@@ -1,0 +1,32 @@
+---
+title: "Statistika va xarajat (bolt stats)"
+sidebarTitle: "Statistika va xarajat"
+description: "bolt stats sessiyalaringiz bo'ylab token foydalanishi va xarajatlarni yig'adi, shunda siz sarfingiz qayerga ketayotganini ko'rishingiz va modellarni yoki agentlarni tegishli ravishda sozlashingiz mumkin."
+---
+
+`bolt stats` mahalliy sessiya ma'lumotlar bazasi bo'ylab token sonlari va xarajatlarni yig'adi. Har bir asbob chaqiruvi qayd etilganligi sababli ([Local Database](/reference/local-database) ga qarang), raqamlar Bolt boshqargan LLM chaqiruvlari uchun aniq.
+
+## Asosiy foydalanish
+
+```bash
+bolt stats                       # joriy loyiha uchun xulosa
+bolt stats --days 7              # so'nggi yetti kun
+bolt stats --days 7 --models     # model bo'yicha taqsimlash
+```
+
+## U nimani ko'rsatadi
+
+- Umumiy input, output va cache tokenlari.
+- Provayder bo'yicha taxmin qilingan xarajat (ishga tushirish vaqtidagi provayder narxlash jadvallaridan foydalanib).
+- Bayroqlarga qarab har bir model, har bir agent va kunlik taqsimlashlar.
+
+## Xarajatni kamaytirish
+
+- Reasoning-og'ir modellarda `--variant minimal` yoki `--variant low` dan foydalaning. [Providers & Models](/concepts/providers-and-models) ga qarang.
+- Tadqiqot uchun `ask` yoki `plan` agentini afzal ko'ring; ular faqat o'qish uchun va asbob-og'ir loop'lardan qochadi.
+- Frontier imkoniyat talab qilmaydigan vazifalar uchun `bolt models` bilan kichikroq modelga o'ting.
+
+## Aloqador
+
+- [Providers & Models](/concepts/providers-and-models) — `stats` o'lchaydigan modellarni tanlash va sozlash.
+- [Troubleshooting](/reference/troubleshooting) — kutilmagan hisob-kitob haqida nima qilish kerak.

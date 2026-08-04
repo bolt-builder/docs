@@ -1,0 +1,32 @@
+---
+title: "Statistika un izmaksas (bolt stats)"
+sidebarTitle: "Statistika un izmaksas"
+description: "bolt stats apkopo žetonu izmantošanu un izmaksas visās jūsu sesijās, lai jūs varētu redzēt, kur iet jūsu tēriņi, un atbilstoši pielāgot modeļus vai aģentus."
+---
+
+`bolt stats` apkopo žetonu skaitu un izmaksas visā lokālajā sesiju datubāzē. Tā kā katrs rīka izsaukums tiek reģistrēts (skatiet [Lokālā datubāze](/reference/local-database)), skaitļi ir precīzi LLM izsaukumiem, ko Bolt vadīja.
+
+## Pamata lietošana
+
+```bash
+bolt stats                       # kopsavilkums pašreizējam projektam
+bolt stats --days 7              # pēdējās septiņas dienas
+bolt stats --days 7 --models     # sadalīt pa modeļiem
+```
+
+## Ko tas parāda
+
+- Kopējie ievades, izvades un kešatmiņas žetoni.
+- Aptuvenās izmaksas katram sniedzējam (izmantojot sniedzēja cenu tabulas palaišanas brīdī).
+- Sadalījumi pa modeļiem, pa aģentiem un pa dienām atkarībā no karogiem.
+
+## Izmaksu samazināšana
+
+- Izmantojiet `--variant minimal` vai `--variant low` uz spriešanas smagajiem modeļiem. Skatiet [Sniedzēji un modeļi](/concepts/providers-and-models).
+- Priekšroku dodiet `ask` vai `plan` aģentam izpētei; tie ir tikai lasāmi un izvairās no rīku smagām cilpām.
+- Pārslēdzieties uz mazāku modeli ar `bolt models` uzdevumiem, kam nav nepieciešama pierobežas spēja.
+
+## Saistīts
+
+- [Sniedzēji un modeļi](/concepts/providers-and-models) — izvēlieties un pielāgojiet modeļus, ko `stats` mēra.
+- [Problēmu novēršana](/reference/troubleshooting) — ko darīt ar pārsteiguma rēķinu.

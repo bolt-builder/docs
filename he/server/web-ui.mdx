@@ -1,0 +1,33 @@
+---
+title: "ממשק ווב של Bolt"
+sidebarTitle: "ממשק ווב"
+description: "bolt web מגיש ממשק מבוסס דפדפן מעל שרת Bolt רץ — שימושי לקופסאות צוות משותפות, מכונות מרוחקות וכל מקום שבו TUI אינו מעשי."
+---
+
+`bolt web` מפעיל שרת Bolt ומגיש ממשק דפדפן לפניו. זה אותו מנוע כמו ה-TUI, רק מרונדר בלשונית דפדפן.
+
+## הפעל אותו
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+ואז פתח את ה-URL המודפס. בעת חשיפה על גבי רשת, הגדר אימות בסיסי תחילה:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## מתי להשתמש בממשק הווב
+
+- הרצת Bolt במכונה מרוחקת חזקה אבל הפעלתו מלפטופ.
+- שיתוף סשן חי עם חבר צוות לניפוי-שגיאות בזוגות.
+- סביבות שבהן TUI מלא מגושם (Chromebooks, טאבלטים, מכונות עבודה משותפות).
+
+## קשור
+
+- [שרת ללא ראש](/server/headless-server) — שרת ה-API הבסיסי.
+- [סשנים מרוחקים](/server/remote-sessions) — חבר TUI לאותו שרת שממשק הווב מגיש.

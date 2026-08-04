@@ -1,0 +1,215 @@
+---
+title: "Pievienojiet rīkus Bolt ar MCP serveriem"
+sidebarTitle: "MCP serveri"
+description: "Savienojiet ārējos rīkus un resursus ar Bolt, izmantojot Model Context Protocol. Pievienojiet, autentificējiet un atkļūdojiet MCP serverus no CLI."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) ir atvērts standarts, kas ļauj MI aģentiem sazināties ar ārējiem rīkiem un datu avotiem, izmantojot kopīgu saskarni. Bolt izmanto MCP, lai paplašinātu to, ko aģenti var darīt — pievienots MCP serveris var atklāt jebko no datubāzes vaicājumu rīka līdz pilnai tīmekļa meklēšanas API. Bolt pārvalda pilnu dzīves ciklu: serveru pievienošanu, OAuth plūsmu palaišanu, žetonu atsvaidzināšanu un savienojamības pārbaudi.
+
+## Serveru veidi
+
+Bolt atbalsta divus MCP serveru veidus.
+
+| Veids | Transports | Apraksts |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Serveris, kas darbojas URL, ko varat sasniegt caur tīklu |
+| `local` | stdio | Lokāla komanda, ko Bolt palaiž kā bērnprocesu |
+
+Attālinātie serveri atbalsta OAuth autentifikāciju jau no kastes. Bolt apstrādā žetonu iegūšanu, glabāšanu un automātisku atsvaidzināšanu — jūs nekad nepārvaldāt žetonus ar rokām.
+
+---
+
+## Komandas
+
+### `bolt mcp add`
+
+Pievienot jaunu MCP serveri interaktīvi vai vienā piegājienā.
+
+**Interaktīvi** — palaidiet `bolt mcp add` bez argumentiem, lai izietu cauri uzvedņu vadītam vednim, kas prasa vārdu, apjomu (projekts vai globāls), veidu, URL vai komandu un to, vai serveris izmanto OAuth.
+
+**Neinteraktīvi** — norādiet vārdu plus vai nu `--url` attālinātam serverim, vai komandu pēc `--` lokālam:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**Karogi komandai `bolt mcp add`**
+
+| Karogs | Apraksts |
+|------|-------------|
+| `--url <url>` | Attālināta MCP servera URL |
+| `--header <KEY=VALUE>` | HTTP galvene, ko sūtīt attālinātam serverim (var atkārtot) |
+| `--env <KEY=VALUE>` | Vides mainīgais lokālam serverim (var atkārtot) |
+
+---
+
+### `bolt mcp list`
+
+Uzskaita katru konfigurēto MCP serveri kopā ar tā savienojuma un autentifikācijas statusu.
+
+```bash
+bolt mcp list
+```
+
+Katrs ieraksts parāda statusa ikonu:
+
+| Ikona | Nozīme |
+|------|---------|
+| `✓` | Savienots (un autentificēts, ja tiek izmantots OAuth) |
+| `⚠` | Nepieciešama autentifikācija vai akreditācijas dati ir beigušies |
+| `✗` | Neizdevās savienoties vai nepieciešama klienta reģistrācija |
+| `○` | Vēl nav inicializēts vai atspējots |
+
+---
+
+### `bolt mcp auth <name>`
+
+Autentificējieties ar OAuth iespējotu attālinātu MCP serveri. Ja izlaidat vārdu, Bolt parāda interaktīvu izvēlētāju, kas uzskaita visus OAuth spējīgos serverus kopā ar to pašreizējo autentifikācijas statusu (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Autentificēt konkrētu serveri
+bolt mcp auth my-server
+
+# Izvēlēties no OAuth spējīgo serveru saraksta
+bolt mcp auth
+```
+
+Bolt atver jūsu pārlūku sniedzēja autorizācijas URL un gaida atzvanu — pilna OAuth rokspiedbrošura, ieskaitot dinamisku klienta reģistrāciju, ja nepieciešams, notiek automātiski.
+
+<Note>
+  Bolt apstrādā pilnu OAuth plūsmu, ieskaitot žetonu glabāšanu un automātisku žetonu atsvaidzināšanu. Jums nav nepieciešams kopēt žetonus vai manuāli pārvaldīt derīguma termiņu. Ja serverim nepieciešams iepriekš reģistrēts klienta ID, pievienojiet `oauth.clientId` (un pēc izvēles `oauth.clientSecret`) servera konfigurācijas ierakstam failā `.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Noņem saglabātos OAuth akreditācijas datus serverim. Ja izlaidat vārdu, Bolt aicina jūs izvēlēties no serveru saraksta, kuriem ir saglabāti žetoni.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Pārbauda attālināta servera savienojamību un pārbauda tā OAuth stāvokli, nesākot pilnu sesiju. Šis ir pirmais rīks, pie kā pievērsties, kad serveris rāda `✗ failed` vai `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` ziņo:
+- Servera URL un pašreizējo autentifikācijas statusu
+- Piekļuves žetona detaļas (maskētas) un derīguma termiņa laika zīmogu
+- Vai atsvaidzināšanas žetons ir klāt
+- Neapstrādātu HTTP atbildes kodu no servera
+- `WWW-Authenticate` galvenes saturu
+- OAuth atklāšanas pārbaudes rezultātu (nepabeidzot plūsmu)
+
+---
+
+## Manuālā konfigurācija
+
+Jūs varat pievienot vai rediģēt MCP serverus tieši failā `.bolt/bolt.jsonc`, neizmantojot CLI komandas. Bolt uzņem izmaiņas nākamās sesijas sākumā.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Lokāls stdio serveris izskatās šādi:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Lai piegādātu pielāgotas HTTP galvenes vai atspējotu OAuth attālinātā serverī:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Pievienot un autentificēt attālinātu MCP serveri
+
+<Steps>
+  <Step title="Pievienojiet serveri">
+    Palaidiet `bolt mcp add` un sekojiet uzvednēm vai izmantojiet neinteraktīvo formu:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt ieraksta ierakstu failā `.bolt/bolt.jsonc` (projekta apjoms) vai jūsu globālajā konfigurācijā.
+  </Step>
+
+  <Step title="Pārbaudiet savienojuma statusu">
+    ```bash
+    bolt mcp list
+    ```
+
+    Ja serverim nepieciešama autentifikācija, blakus tā vārdam redzēsit `⚠ needs authentication`.
+  </Step>
+
+  <Step title="Autentificējieties ar OAuth">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt atver jūsu pārlūku. Pēc piekļuves apstiprināšanas terminālis apstiprina, ka autentifikācija bija veiksmīga, un servera statuss mainās uz `✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="Pārbaudiet, vai rīki ir pieejami">
+    Sāciet Bolt sesiju. Servera atklātie rīki tagad ir pieejami visiem aģentiem. Jūs varat tos pārbaudīt jebkurā laikā:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

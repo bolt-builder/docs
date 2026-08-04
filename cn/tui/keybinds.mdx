@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI 键位"
+sidebarTitle: "键位"
+description: "Bolt TUI 必备快捷键：使用 Tab 切换代理、mini 模式、按住即说的语音输入，以及所有可通过键盘驱动的操作。"
+---
+
+Bolt TUI 的设计目标是从头到尾通过键盘驱动。本页列出你最常用到的快捷键。若需完整列表，请运行 `bolt` 并打开应用内帮助。
+
+## 必备键位
+
+| 键 | 动作 |
+| --- | --- |
+| `Tab` | 循环切换到下一个代理（`code`、`plan`、`ask`、...）。当前代理显示在状态栏中。 |
+| `Shift+Tab` | 循环切换到上一个代理。 |
+| `Enter` | 发送当前消息。 |
+| `Esc` | 取消进行中的一轮。 |
+| `Ctrl+C` | 中断当前工具调用。 |
+| `Ctrl+D` | 从会话分离（会话继续在服务器上运行）。 |
+
+## 模式
+
+### `--mini` 模式
+
+以紧凑的分屏底部布局启动 Bolt，占用更少终端空间，适合分屏：
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### 按住即说的语音输入
+
+按住已配置的按键即可通过语音转文字口述提示词，松开发送。可在 `.bolt/bolt.jsonc` 中配置按键和 STT 提供商。
+
+## 相关内容
+
+- [Slash commands](/tui/slash-commands) — `/memory`、`/plan`、`/todos`、`/btw` 等。
+- [Sessions](/concepts/sessions) — 通过键盘分离、恢复、派生和分享。

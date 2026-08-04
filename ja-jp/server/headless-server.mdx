@@ -1,0 +1,52 @@
+---
+title: "Bolt をヘッドレスサーバとして実行"
+sidebarTitle: "ヘッドレスサーバ"
+description: "bolt serve は完全な Bolt ランタイムを HTTP 経由で公開するので、任意の TUI、Web UI、エディタ統合、スクリプトがローカルまたはネットワーク越しにアタッチできます。"
+---
+
+`bolt serve` はヘッドレスの Bolt サーバを実行し、エンジン全体を HTTP 経由で公開します。セッション、エージェント、ツール、プロバイダアクセス、MCP、ストリーミングイベントすべてです。Bolt が対話的にできることはすべて API 経由でもできます。
+
+## サーバを起動する
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  `0.0.0.0` にバインドすると、Bolt がネットワーク上に公開されます。必ず先に `BOLT_SERVER_USERNAME` と `BOLT_SERVER_PASSWORD` を設定してください。
+</Warning>
+
+## TUI をアタッチする
+
+サーバに到達可能な任意のマシンから:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+またはリモートサーバに対して単発プロンプトを実行:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic 認証
+
+環境変数で認証情報を設定します ([環境変数](/reference/environment-variables) を参照)。
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+すべてのクライアントは一致する認証情報を送信する必要があります。
+
+## 関連
+
+- [リモートセッション](/server/remote-sessions) — アタッチ、mDNS 発見、共有サーバ。
+- [Web UI](/server/web-ui) — ブラウザフロントエンド。
+- [ACP](/server/acp) — Zed などのエディタから Bolt を駆動。

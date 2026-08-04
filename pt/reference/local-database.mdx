@@ -1,0 +1,38 @@
+---
+title: "Base de Dados Local (bolt db)"
+sidebarTitle: "Base de Dados Local"
+description: "O Bolt armazena todas as sessões, mensagens e chamadas de ferramenta numa base de dados SQLite local. Inspecione-a, faça backup ou consulte-a diretamente com bolt db."
+---
+
+O Bolt guarda cada sessão, mensagem e chamada de ferramenta numa base de dados SQLite local. É totalmente inspecionável e totalmente sua — nada é carregado, salvo se partilhar explicitamente uma sessão.
+
+## Operações comuns
+
+```bash
+bolt db path                        # imprime o caminho do ficheiro SQLite
+bolt db                             # abre uma shell SQL interativa
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Fazer backup
+
+Como é um único ficheiro SQLite, o backup é uma cópia:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Para armazenamento a longo prazo ou transporte, prefira `bolt export` / `bolt import` — produzem uma representação JSON portátil que sobrevive a migrações de esquema.
+
+## Esquema em resumo
+
+- `sessions` — uma linha por sessão, com título, projeto, timestamps e estado.
+- `messages` — o registo completo de turnos por sessão.
+- `tool_calls` — cada invocação com entradas, saídas e duração.
+
+As colunas exatas evoluem; utilize `PRAGMA table_info(<table>)` para ver o esquema ao vivo.
+
+## Relacionado
+
+- [Sessões](/concepts/sessions) — o que a base de dados armazena.
+- [Estatísticas e Custo](/reference/stats-and-cost) — vistas agregadas sobre os mesmos dados.

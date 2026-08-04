@@ -1,0 +1,78 @@
+---
+title: "Bolt: AI-агент для программирования в вашем терминале"
+sidebarTitle: "Главная"
+description: "Bolt — это terminal-first AI-агент для программирования с десятью специализированными агентами, устойчивыми сессиями, поддержкой MCP и настольным приложением, работающий с любым LLM-провайдером."
+---
+
+Bolt помещает полноценную AI-команду инженеров прямо в ваш терминал. Он поставляется как быстрый, управляемый с клавиатуры TUI и как нативное настольное приложение — оба построены на одном движке: десять специализированных агентов, устойчивые долгоживущие сессии, управление MCP-серверами с OAuth, система плагинов и поддержка всех крупных LLM-провайдеров.
+
+<CardGroup cols={2}>
+  <Card title="Установка" icon="download" href="/installation">
+    Установите Bolt за секунды через curl, npm, bun или любой удобный пакетный менеджер.
+  </Card>
+  <Card title="Быстрый старт" icon="rocket" href="/quickstart">
+    Запустите свою первую AI-сессию менее чем за минуту.
+  </Card>
+  <Card title="Агенты" icon="robot" href="/concepts/agents">
+    Познакомьтесь с десятью встроенными агентами: code, plan, ask, review, debug, refactor, docs, security, migrate и perf.
+  </Card>
+  <Card title="Справочник команд" icon="terminal" href="/reference/commands">
+    Все команды, подкоманды и флаги CLI задокументированы полностью.
+  </Card>
+</CardGroup>
+
+## Что делает Bolt
+
+Bolt читает вашу кодовую базу, понимает, что вы создаёте, и пишет код вместе с вами — в терминале или в настольном приложении. Каждая сессия долговечна: отсоединяйтесь, подключайтесь заново с другой машины, разветвляйте разговор, делитесь ссылкой или экспортируйте очищенную стенограмму.
+
+<CardGroup cols={3}>
+  <Card title="Сессии" icon="clock-rotate-left" href="/concepts/sessions">
+    Устойчивые сессии с возможностью форка, хранящиеся в локальной SQLite.
+  </Card>
+  <Card title="Провайдеры и модели" icon="microchip" href="/concepts/providers-and-models">
+    Используйте собственный API-ключ любого крупного LLM-провайдера.
+  </Card>
+  <Card title="Конфигурация" icon="sliders" href="/concepts/configuration">
+    Проектный `.bolt/bolt.jsonc` с полной поддержкой схемы.
+  </Card>
+  <Card title="MCP-серверы" icon="plug" href="/extending/mcp-servers">
+    Добавляйте инструменты через Model Context Protocol, включая OAuth-потоки.
+  </Card>
+  <Card title="Плагины" icon="puzzle-piece" href="/extending/plugins">
+    Расширяйте Bolt пользовательскими провайдерами, инструментами и методами аутентификации.
+  </Card>
+  <Card title="Интеграция с GitHub" icon="github" href="/server/github-actions">
+    AI-сгенерированные сообщения коммитов, ревью кода и GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Запуск и работа
+
+<Steps>
+  <Step title="Установите Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Или установите через npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Откройте свой проект">
+    Перейдите в каталог любого проекта и запустите TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Настройте провайдера">
+    При первом запуске Bolt предложит добавить LLM-провайдера. Также можно выполнить:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Начните программировать с AI">
+    Введите промпт в подвале TUI, нажмите Enter и дайте агентам Bolt приступить к работе. Переключайте агентов клавишей `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Используйте `bolt run "explain this codebase"` для быстрого неинтерактивного ответа без запуска полного TUI.
+</Tip>

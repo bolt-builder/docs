@@ -1,0 +1,28 @@
+---
+title: "ACP: Bolt'u Zed ve Diğer Editörlerden Sürün"
+sidebarTitle: "ACP (Editörler)"
+description: "Bolt, Agent Client Protocol (ACP) konuşur; bu, Zed gibi editörlerin ayrı bir uygulama veya TUI çalıştırmadan yerel bir AI kodlama arka ucu olarak onu gömmesine olanak tanır."
+---
+
+Bolt, Zed gibi editörlerin AI ajanlarıyla konuşma şekli olan Agent Client Protocol'ü (ACP) uygular. Yapılandırıldıktan sonra editör `bolt acp`'yi bir alt süreç olarak başlatır ve onu doğrudan sürer — editörünüzden çıkmadan Bolt'un ajanlarına, araçlarına, oturumlarına ve sağlayıcı yığınına erişirsiniz.
+
+## ACP'yi etkinleştirin
+
+Editörünüzün AI ayarlarında Bolt'u ACP uyumlu bir ajan olarak ekleyin ve onu şuna yönlendirin:
+
+```bash
+bolt acp
+```
+
+Editör süreç yaşam döngüsünü yönetecektir. Sağlayıcıları, modelleri ve MCP sunucularını normalde `.bolt/bolt.jsonc` içinde yaptığınız gibi yapılandırın — burada da geçerlidir.
+
+## Ne elde edersiniz
+
+- Editörün AI panelinden çağrılabilen her Bolt ajanı.
+- TUI ve web arayüzüyle paylaşılan oturumlar (yerel veritabanı aracılığıyla).
+- Diğer Bolt giriş noktalarıyla aynı araç kümesi, izinler modeli ve proje belleği.
+
+## İlgili
+
+- [Başsız Sunucu](/server/headless-server) — paralel HTTP arabirimi.
+- [Yapılandırma](/concepts/configuration) — ACP'nin devraldığı yapılandırma dosyası.

@@ -1,0 +1,22 @@
+---
+title: "Skills: Playbook Agent yang Dapat Digunakan Ulang"
+sidebarTitle: "Skills"
+description: "Skill adalah playbook bernama dan dapat digunakan ulang yang dipanggil agent Bolt via tool skill — berguna untuk alur kerja siap pakai seperti pengiriman rilis atau menjalankan suite lint."
+---
+
+Skill adalah playbook bernama dan dapat digunakan ulang yang tinggal bersama proyek kamu dan dipanggil melalui tool `skill`. Sementara custom tool adalah satu tindakan yang dapat dieksekusi, skill adalah alur kerja terskrip yang dapat diikuti agent langkah demi langkah: kumpulkan file-file ini, jalankan perintah-perintah ini, tentukan apa yang harus dilakukan selanjutnya berdasarkan output.
+
+Gunakan skill ketika:
+
+- Kamu memiliki alur kerja yang terus kamu jelaskan ulang dalam prompt ("jalankan linter dulu, kemudian …").
+- Kamu ingin agent mengikuti pohon keputusan tertentu.
+- Kamu ingin alur kerja yang sama tersedia untuk setiap sesi dan setiap agent di proyek.
+
+## Di mana mereka tinggal
+
+Skill adalah file di bawah `.opencode/skill/` (atau `.opencode/skills/`) di root proyek. Setiap file mendeskripsikan nama pemicu, kapan agent harus menggunakannya, dan langkah-langkah yang terlibat. [Tool](/concepts/tools) `skill` mengeksposnya ke model.
+
+## Terkait
+
+- [Custom Tools](/extending/custom-tools) — ekstensi tingkat lebih rendah, tindakan tunggal.
+- [Custom Agents](/extending/custom-agents) — sematkan instruksi ke dalam agent sebagai gantinya.

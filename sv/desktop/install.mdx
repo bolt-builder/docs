@@ -1,0 +1,116 @@
+---
+title: "Bolts skrivbordsapp: AI-kodningssessioner i flera fönster"
+sidebarTitle: "Installera"
+description: "Installera Bolts skrivbordsapp för sessioner i flera fönster, en integrerad terminal, promptkomponerare med bildklistring, autouppdateringar och 28 UI-språk."
+url: "desktop/install"
+---
+
+Bolts skrivbordsapp bäddar in samma motor som CLI:t i ett fullständigt Electron-skal. Varje funktion som finns i terminalen — agenter, MCP-servrar, plugins, fjärrsessioner, sessioner du kan förgrena och dela — fungerar identiskt i skrivbordsappen, med tillägget av en upplevelse med flera fönster och flikar, ett grafiskt inställnings-UI, inbyggda notiser och autouppdateringar. Om du redan använder CLI:t är skrivbordsappen ett kompletterande verktyg, inte en ersättning.
+
+---
+
+## Installation
+
+### macOS
+
+<Steps>
+  <Step title="Installera med enraden (rekommenderat)">
+    Öppna en terminal och kör:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skriptet laddar ner den senaste versionen, verifierar den och placerar appen i `/Applications`. Ingen Gatekeeper-popup.
+  </Step>
+
+  <Step title="Starta appen">
+    Öppna **Bolt** från `/Applications` eller Spotlight. Vid första starten ber Bolt dig välja en standard-LLM-leverantör och skapar en global konfigurationsfil.
+  </Step>
+</Steps>
+
+<Tip>
+  Enraden installerar appen på ett sätt som förbi går macOS Gatekeeper-dialogen "unidentified developer", så att du kommer direkt till att koda utan extra säkerhetsprompter.
+</Tip>
+
+### Alla plattformar — ladda ner från releases
+
+Ladda ner det senaste installationsprogrammet för din plattform från [Bolts releases-sida](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Plattform | Installationsprogramtyp |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe`-installationsprogram |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  På Windows inkluderar Bolt integration med WSL (Windows Subsystem for Linux). När WSL är tillgängligt kan Bolt öppna sessioner direkt inuti din WSL-distribution — vilket ger dig en Linux-inbyggd agentmiljö med ett inbyggt Windows-UI runt.
+</Note>
+
+---
+
+## Funktioner
+
+### Sessionshantering i flera fönster och flikar
+
+Öppna så många fönster du vill, var och en med sin egen uppsättning flikar. Flikar mappas direkt mot Bolt-sessioner, så du kan köra en agent på en refaktorisering i en flik, ställa en fråga i en annan och köra ett bakgrundsjobb i en tredje — allt samtidigt.
+
+### Promptkomponerare
+
+Promptkomponeraren stöder rik inmatning: klistra in text, dra in filer som bilagor eller klistra in en bild direkt från urklipp. Bolt kodar bilden och skickar den till valfri vision-kapabel modell automatiskt.
+
+### Integrerad terminal och filträd
+
+En delad panellayout ger dig agentkonversationen på ena sidan och en live-terminal och projekfilträd på den andra. Du kan köra kommandon, inspektera utdata och mata tillbaka resultaten till agenten utan att växla appar.
+
+### Kommandopalett
+
+Tryck `Cmd/Ctrl+K` för att öppna kommandopaletten. Härifrån kan du växla sessioner, byta agent, öppna inställningar eller utlösa vilken åtgärd som helst utan att sträcka efter musen.
+
+### Fullständigt inställnings-UI
+
+Inställningspanelen täcker varje alternativ som finns i `.bolt/bolt.jsonc` — tangentbindningar, modellval, LLM-leverantörer, MCP-servrar och auth — med rullgardiner, växlingsknappar och inline-validering. Du behöver sällan redigera konfigurationsfilen för hand.
+
+### Inbyggda notiser
+
+Bolt utlöser en inbyggd OS-notis när en långvarig uppgift avslutas. Klicka på notisen för att hoppa direkt till sessionen.
+
+### Djuplänkar
+
+Öppna en specifik session genom att navigera till en `bolt://`-URL. Användbart för att dela sessionslänkar med lagkamrater eller bokmärka pågående arbete.
+
+### Autouppdateringar
+
+Skrivbordsappen uppdaterar sig själv över tre kanaler:
+
+| Kanal | Beskrivning |
+|---------|-------------|
+| `prod` | Stabila releaser, uppdaterade vid varje produktionstagg |
+| `beta` | Förhandsutgåvor för tidig tillgång till nya funktioner |
+| `dev` | Nattliga byggen från `dev`-grenen |
+
+Byt kanaler i **Settings → About**.
+
+### 28 UI-språk
+
+Bolts gränssnitt är lokaliserat till 28 språk. Byt visningsspråk i **Settings → Appearance → Language**.
+
+---
+
+## Relaterade dokument
+
+<CardGroup cols={2}>
+  <Card title="Fjärrsessioner" icon="server" href="/server/remote-sessions">
+    Kör en headless-server på en fjärrmaskin och anslut från skrivbordsappen eller CLI:t.
+  </Card>
+  <Card title="MCP-servrar" icon="plug" href="/extending/mcp-servers">
+    Lägg till externa verktyg och API:er till dina agenter via Model Context Protocol.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Utöka Bolt med anpassade leverantörer, autentiseringsmetoder och arbetsyteadaptrar.
+  </Card>
+  <Card title="GitHub-integration" icon="github" href="/server/github-actions">
+    Automatisera PR:er, commit-meddelanden och kodgranskning från skrivbordsappen eller CI.
+  </Card>
+</CardGroup>

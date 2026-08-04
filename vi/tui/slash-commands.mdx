@@ -1,0 +1,31 @@
+---
+title: "Các Slash Command của Bolt TUI"
+sidebarTitle: "Slash Command"
+description: "Các slash command bạn có thể chạy bên trong Bolt TUI — /memory, /plan, /todos, /btw — và cách chúng thay đổi hành vi của phiên hiện tại."
+---
+
+Slash command được gõ vào prompt TUI và thay đổi cách phiên hiện tại hoạt động. Chúng không gửi gì tới mô hình; chúng chạy cục bộ chống lại chính Bolt.
+
+## Tham chiếu
+
+| Lệnh | Nó làm gì |
+| --- | --- |
+| `/memory` | Hiển thị trạng thái bộ nhớ dự án cho phiên này. |
+| \`/memory use on | off\` | Phiên này có đọc từ [bộ nhớ dự án](/concepts/project-memory) hay không. |
+| \`/memory contribute on | off\` | Phiên này có ghi ngược lại bộ nhớ dự án khi lượt kết thúc hay không. |
+| `/plan` | Chuyển phiên hiện tại sang chế độ lập kế hoạch (chỉ-đọc, tạo ra một kế hoạch). |
+| `/todos` | Hiển thị danh sách tác vụ có cấu trúc hiện tại của agent. |
+| `/btw` | Đưa vào một ghi chú ngoài luồng ("nhân tiện...") mà agent sẽ thấy trong lượt tiếp theo mà không kích hoạt phản hồi đầy đủ. |
+
+<Tip>
+  Slash command giới hạn theo phiên. Để làm cho một tùy chọn lâu dài, hãy đặt nó trong `.bolt/bolt.jsonc` thay vào đó. Xem [Cấu hình](/concepts/configuration).
+</Tip>
+
+## Thêm command của riêng bạn
+
+Slash command tùy chỉnh có thể được đóng góp bởi [plugin](/extending/plugins) và bởi các tệp trong `.opencode/command/`. Mỗi command là một tệp Markdown có frontmatter mô tả trigger và hành vi.
+
+## Liên quan
+
+- [Phím tắt](/tui/keybinds) — phím tắt cho TUI.
+- [Bộ nhớ dự án](/concepts/project-memory) — những gì `/memory` bật/tắt.

@@ -1,0 +1,191 @@
+---
+title: "Sessions — Riwayat Percakapan Tahan Lama di Bolt"
+sidebarTitle: "Sessions"
+description: "Sessions adalah unit kerja persisten Bolt: setiap sesi menyimpan percakapan lengkap di SQLite lokal sehingga kamu dapat detach, resume, fork, share, dan export kapan saja."
+---
+
+**Session** adalah unit kerja utama Bolt. Setiap prompt yang kamu kirim, setiap file yang dibaca atau diedit agent, dan setiap panggilan tool yang dilakukan model tercatat secara tahan lama dalam riwayat sesi tersebut. Karena sesi tinggal di database SQLite lokal, sesi selamat dari restart proses, dapat didaftar dan dikueri kapan saja, dan tidak pernah meninggalkan mesin kamu kecuali kamu secara eksplisit membagikan atau mengekspornya.
+
+<Note>
+  Semua data sesi disimpan secara lokal dalam database SQLite di mesin kamu sendiri. Tidak ada yang dikirim ke server eksternal kecuali kamu mengaktifkan sharing. Gunakan `bolt db path` untuk menemukan file database yang tepat.
+</Note>
+
+## Siklus hidup sesi
+
+Sebuah sesi dimulai saat kamu mengirim prompt pertama kamu dan berakhir hanya ketika kamu menghapusnya. Di antara dua titik itu kamu dapat bebas detach, melanjutkan, mencabangkan, atau menyerahkannya.
+
+<Steps>
+  <Step title="Create or continue a session">
+    Luncurkan TUI untuk memulai sesi baru secara interaktif, atau teruskan prompt ke `bolt run` untuk membuatnya secara non-interaktif:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Detach and come back later">
+    Tutup TUI kapan saja — sesi dipertahankan secara otomatis. Lanjutkan sesi terbaru kamu dengan `--continue`, atau targetkan sesi tertentu berdasarkan ID dengan `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Fork before experimenting">
+    Gunakan `--fork` untuk mencabangkan dari riwayat sesi saat ini sebelum mencoba perubahan berisiko. Fork adalah sesi independen yang tidak memengaruhi aslinya:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Share and collaborate">
+    Buat URL share dengan `--share`. Siapa saja yang memiliki tautan tersebut dapat melihat transkrip sesi di browser:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Perintah manajemen sesi
+
+### Menampilkan daftar sesi
+
+```bash
+bolt session list
+```
+
+Mengeluarkan tabel terformat berisi semua sesi dengan ID, judul, dan waktu pembaruan terakhir. Tambahkan `--format json` untuk mendapatkan output yang dapat dibaca mesin, atau `-n <N>` untuk membatasi ke N sesi terbaru:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Menghapus sesi
+
+```bash
+bolt session delete <sessionID>
+```
+
+Menghapus secara permanen sesi dan semua pesannya dari database lokal.
+
+## Flag run untuk kontrol sesi
+
+Flag ini tersedia di `bolt run`:
+
+| Flag | Alias | Deskripsi |
+|------|-------|-------------|
+| `--continue` | `-c` | Melanjutkan sesi terbaru |
+| `--session <id>` | `-s` | Melanjutkan sesi tertentu berdasarkan ID |
+| `--fork` | | Fork sesi sebelum melanjutkan (memerlukan `--continue` atau `--session`) |
+| `--share` | | Buat URL share untuk sesi |
+| `--title <title>` | | Atur atau override judul sesi |
+
+## Mengekspor sesi
+
+Ekspor transkrip lengkap sesi sebagai JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+Flag `--sanitize` mengganti path file, konten kode, input dan output tool, dan field yang berpotensi sensitif lainnya dengan placeholder `[redacted:kind:id]` — berguna untuk berbagi transkrip dengan rekan tim atau mengajukan laporan bug.
+
+## Mengimpor sesi
+
+Impor sesi dari file JSON lokal atau langsung dari URL share:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Sesi yang diimpor muncul dalam daftar sesi lokal kamu dan sepenuhnya dapat dilanjutkan.
+
+## Mengueri database sesi
+
+Bolt mengekspos database SQLite yang mendasarinya secara langsung untuk power user.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Format output secara default adalah nilai yang dipisahkan tab; tambahkan `--format json` untuk output JSON.
+
+## Statistik penggunaan token dan biaya
+
+`bolt stats` mengagregasi data penggunaan token dan biaya di seluruh sesi kamu:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Output mencakup total sesi, pesan, token input/output/reasoning/cache, total biaya, rata-rata biaya per hari, rata-rata dan median token per sesi, serta rincian penggunaan tool. Teruskan `--models` untuk juga menampilkan rincian per-model dari pesan, token, dan biaya.
+
+## Alur kerja fork dan share
+
+Berikut adalah contoh lengkap dari fork sebuah sesi dan berbagi hasilnya:
+
+<Steps>
+  <Step title="Start work in a new session">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Fork before the risky next step">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    ID sesi yang di-fork dicetak ke konsol. Sesi asli tidak tersentuh.
+  </Step>
+  <Step title="Share the fork for review">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    URL share dicetak setelah sesi menjadi idle.
+  </Step>
+  <Step title="Import on another machine">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,193 @@
+---
+title: "Konfigurace — nastavení bolt.jsonc a globální overrides"
+sidebarTitle: "Konfigurace"
+description: "Bolt čte vrstvené JSONC konfigurační soubory z tvého projektu a systémových konfiguračních adresářů. Nastav providery, MCP servery, instrukce, pluginy a environment overrides."
+---
+
+Bolt používá vrstvený konfigurační systém: **globální** konfigurační soubor pro výchozí hodnoty na úrovni uživatele a **per-project** konfigurační soubor pro nastavení specifická pro repozitář. Oba soubory používají formát JSONC (JSON s komentáři) a oba jsou automaticky vytvořeny s ukazatelem `$schema`, který umožňuje autocompletion v editoru.
+
+## Umístění konfiguračních souborů
+
+### Konfigurace na úrovni projektu
+
+Vytvořena automaticky při prvním spuštění uvnitř tvého projektu:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Zaevidujte tento soubor v Gitu, chcete-li sdílet konfiguraci providera, MCP servery a vlastní instrukce se zbytkem týmu. Citlivé přihlašovací údaje sem nikdy nepatří — použij proměnné prostředí nebo globální konfiguraci.
+
+### Globální konfigurace
+
+Platí pro všechny projekty na tvém stroji. Bolt hledá první odpovídající soubor v systémovém konfiguračním adresáři:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferováno)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Kde je globální konfigurační adresář?">
+  Bolt na Linuxu a macOS respektuje XDG Base Directory Specification (`~/.config/bolt/`) a na Windows používá `%APPDATA%\bolt\`. Spusť `bolt debug config` pro vypsání plné rozřešené konfigurace na tvém stroji.
+</Accordion>
+
+## Minimální příklad konfigurace
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+Pole `$schema` zapíná IntelliSense a validaci v editorech, které podporují JSON Schema. Bolt toto pole zapíše automaticky, pokud chybí.
+
+## Reference konfigurace
+
+### `provider`
+
+Nakonfiguruj provider-specifické volby jako vlastní base URL, nastavení regionu nebo pojmenované přihlašovací údaje:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Zaregistruj servery [Model Context Protocol](https://modelcontextprotocol.io), které může agent volat jako nástroje:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+MCP servery spravuj interaktivně pomocí `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` a `bolt mcp debug`.
+
+### `instructions`
+
+Přidej vlastní systémové instrukce, které se vloží do každého sezení. Užitečné pro vynucení kódovacích konvencí, style guidů nebo pravidel specifických pro projekt:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instrukce z více konfiguračních souborů (globální \+ projektová) se automaticky spojí a odstraní se duplicity.
+
+### `plugin`
+
+Načti pluginy Boltu. Pluginy mohou přidávat nové nástroje, providery, zdroje kontextu a hooky:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Vzdálená konfigurace přes `url`
+
+Načti konfiguraci ze vzdálené URL při startu. Užitečné pro centralizovanou týmovou konfiguraci:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Substituce proměnných
+
+Konfigurační hodnoty mohou odkazovat na proměnné prostředí syntaxí `$VAR_NAME` nebo `${VAR_NAME}`. Substituce probíhá při načítání, ještě před parsováním konfigurace:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Jak použít proměnné prostředí v konfiguraci?">
+  Kdekoliv v hodnotě konfiguračního řetězce lze odkázat na libovolnou proměnnou prostředí pomocí `$VAR_NAME` nebo `${VAR_NAME}`. Bolt hodnotu dosadí v době načítání. Pokud proměnná není nastavena, použije se doslovný řetězec `$VAR_NAME` — Bolt tiše neselže ani nevyhodí chybu při chybějících substitucích.
+</Accordion>
+
+## Overrides přes proměnné prostředí
+
+Tyto proměnné prostředí umožňují úplně přesměrovat nebo přepsat konfiguraci, což je užitečné v CI, kontejnerech a při testování:
+
+| Proměnná | Popis |
+| --- | --- |
+| `BOLT_CONFIG` | Absolutní cesta k souboru konfigurace, který se má načíst místo projektové |
+| `BOLT_CONFIG_DIR` | Přepiš adresář, ve kterém Bolt hledá konfigurační soubory |
+| `BOLT_CONFIG_CONTENT` | Poskytni surový JSONC obsah konfigurace jako řetězec — bez nutnosti souboru |
+
+`BOLT_CONFIG_CONTENT` je zvlášť užitečná v kontejnerizovaných prostředích, kde je připojení souboru nepohodlné:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Která konfigurace má přednost, když je aktivních více zdrojů?">
+  Bolt spojuje konfigurace v tomto pořadí (pozdější položky vyhrávají):
+
+  1. Globální konfigurační soubor (`bolt.jsonc` / `bolt.json` v systémovém konfiguračním adresáři)
+  2. Vzdálené konfigurace načtené z položek `url` v globální konfiguraci
+  3. Konfigurační soubory na úrovni projektu (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. Soubor `BOLT_CONFIG` (pokud je nastavena)
+  5. `BOLT_CONFIG_CONTENT` (pokud je nastavena)
+
+  Pole jako `instructions` se napříč zdroji zřetězí, nikoli přepíší. Objektová pole se hluboce spojí, přičemž při konfliktu vítězí pozdější hodnoty.
+</Accordion>

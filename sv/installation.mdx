@@ -1,0 +1,121 @@
+---
+title: "Installera Bolt på macOS, Linux eller Windows"
+sidebarTitle: "Installation"
+description: "Installera Bolt CLI via curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey eller Scoop. Täcker uppgradering, avinstallation och skrivbordsappen."
+---
+
+Bolt kan installeras på macOS, Linux och Windows med den metod som passar ditt arbetsflöde — ett curl-skript på en rad, valfri större Node.js-pakethanterare eller en systempakethanterare som Homebrew, Chocolatey eller Scoop.
+
+## Snabbinstallation (macOS / Linux)
+
+Snabbaste sättet att komma igång är det officiella installationsskriptet. Det upptäcker automatiskt ditt OS och arkitektur, laddar ner rätt binär till `~/.bolt/bin` och lägger till den i din `$PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Installationsprogrammet konfigurerar även valfria beroenden för röstinmatning (sox och whisper-cpp för offlinetranskription). För att hoppa över detta, skicka `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+För att fästa en specifik version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Pakethanterare
+
+Installera Bolt globalt med din valda pakethanterare:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Verifiera installationen
+
+<Steps>
+  <Step title="Kontrollera den installerade versionen">
+    Efter installation, bekräfta att `bolt` finns i din `$PATH`:
+
+    ```bash
+    bolt --version
+    ```
+
+    Om kommandot inte hittas, öppna en ny terminalsession (eller ladda om din skalkonfiguration) så att den uppdaterade `$PATH` träder i kraft.
+  </Step>
+</Steps>
+
+## Uppgradera
+
+Kör `bolt upgrade` för att uppdatera till senaste versionen:
+
+```bash
+bolt upgrade
+```
+
+Bolt upptäcker din ursprungliga installationsmetod automatiskt. Du kan åsidosätta den med flaggan `--method`:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Metoder som stöds är: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Du kan även uppgradera till en specifik version genom att skicka versionen som ett positionellt argument:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Avinstallera
+
+För att ta bort Bolt från ditt system:
+
+```bash
+bolt uninstall
+```
+
+## Miljövariabler
+
+| Variabel               | Beskrivning                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Loggnivå: `DEBUG`, `INFO`, `WARN` eller `ERROR`       |
+| `BOLT_PRINT_LOGS`      | Skriv ut loggar till stderr                           |
+| `BOLT_PURE`            | Kör utan att ladda externa plugins                    |
+| `BOLT_SERVER_PASSWORD` | Basic auth-lösenord för headless API-servern          |
+| `BOLT_SERVER_USERNAME` | Basic auth-användarnamn för headless API-servern      |
+
+<Tip>
+  Sätt `BOLT_PURE=1` när du vill ha en ren körning utan några tredjepartsplugins — användbart för felsökning eller kontrollerade CI-miljöer.
+</Tip>
+
+## Skrivbordsapp
+
+<Note>
+  Bolt levereras också som en inbyggd skrivbordsapplikation med sessionshantering i flera fönster, en integrerad terminal och filträd, en kommandopalett, 28 UI-språk och autouppdateringar. Ladda ner den senaste versionen från [releases-sidan](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  På macOS kan du installera den på en rad utan Gatekeeper-omväg:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

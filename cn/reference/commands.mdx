@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI 命令参考"
+sidebarTitle: "命令"
+description: "每个 Bolt CLI 命令的完整参考，包括 TUI、run、serve、session、agent 等的标志、参数和使用示例。"
+---
+
+Bolt 提供单一的 `bolt` 二进制以及丰富的子命令。运行 `bolt` 不带参数会打开完整终端 UI。所有其他子命令列在下方。随时可使用 `bolt <command> --help` 获取内联帮助。
+
+<Accordion title="bolt (默认 — 启动 TUI)">
+  在当前目录中打开交互式终端 UI。Bolt 会自动发现你的项目上下文、加载配置并连接到任何已配置的提供商。
+
+  ```bash
+  bolt
+  bolt --mini          # 最小化分屏底部交互模式
+  bolt --log-level DEBUG
+  ```
+
+  **全局标志** — 每个命令都可用：
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | 将日志输出打印到 stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | 设置日志详细级别 |
+  | `--pure` | boolean | 不加载任何外部插件运行 |
+  | `--help`, `-h` | boolean | 显示帮助文本 |
+  | `--version`, `-v` | boolean | 打印已安装的版本号 |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  以非交互模式运行 Bolt 并附带单条提示词。Bolt 会启动一个进程内服务器，将提示发送到活动会话，把响应流式输出到 stdout，然后退出。可通过管道输入 stdin 或传入 `--file` 以附加上下文。
+
+  ```bash
+  # 基本非交互提示
+  bolt run "explain the auth module"
+  
+  # 继续最近的会话
+  bolt run --continue "now add error handling"
+  
+  # 使用特定模型与特定代理
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # 为工具集成流式输出原始 JSON 事件
+  bolt run --format json "summarize changes"
+  
+  # 向多个模型发起同一任务并保留最佳结果
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # 将文件作为上下文附加
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # 连接远程服务器并在其上运行提示
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # 跳过所有权限提示（危险）
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | 要执行的斜杠命令；将参数作为消息传入 |
+  | `--continue` | `-c` | boolean | 继续最近的会话 |
+  | `--session` | `-s` | string | 要继续的会话 ID |
+  | `--fork` |  | boolean | 在继续之前派生会话（需要 `--continue` 或 `--session`） |
+  | `--share` |  | boolean | 完成后分享会话 |
+  | `--model` | `-m` | string | 使用的模型，格式为 `provider/model` |
+  | `--best-of` |  | string | 以英文逗号分隔的 `provider/model` 列表；并行运行任务、对结果排序、保留胜者 |
+  | `--agent` |  | string | 使用的代理（如 `code`、`ask`、`review`） |
+  | `--format` |  | `default`\|`json` | 输出格式；`json` 会流式输出以换行分隔的原始 JSON 事件 |
+  | `--file` | `-f` | string\[\] | 要作为上下文附加的文件 |
+  | `--title` |  | string | 会话标题 |
+  | `--attach` |  | string | 对远程 Bolt 服务器运行（如 `http://localhost:4096`） |
+  | `--password` | `-p` | string | 远程服务器的基本认证密码 |
+  | `--username` | `-u` | string | 远程服务器的基本认证用户名 |
+  | `--dir` |  | string | 工作目录；若设置了 `--attach`，则为远程服务器上的目录 |
+  | `--port` |  | number | 本地进程内服务器的端口（省略则随机） |
+  | `--variant` |  | string | 推理强度级别，与提供商有关（如 `high`、`max`、`minimal`） |
+  | `--thinking` |  | boolean | 在输出中显示推理/思考块 |
+  | `--mini` |  | boolean | 启动最小化分屏底部交互 UI（隐藏） |
+  | `--interactive` | `-i` | boolean | 强制直接进入交互分屏底部模式 |
+  | `--auto` |  | boolean | 自动批准未在配置中显式拒绝的权限 |
+  | `--yolo` |  | boolean | 跳过所有权限提示（`--auto` 的别名，隐藏） |
+  | `--dangerously-skip-permissions` |  | boolean | 跳过所有权限检查（隐藏） |
+  | `--demo` |  | boolean | 启用直接交互演示的斜杠命令（隐藏） |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  将完整 TUI 连接到运行中的 Bolt 服务器。服务器可本地或远程。传入 `--mini` 可使用最小化分屏底部 UI 而非完整 TUI。
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | 远程服务器上的目录 |
+  | `--continue` | `-c` | boolean | 继续远程服务器上最近的会话 |
+  | `--session` | `-s` | string | 要继续的会话 ID |
+  | `--fork` |  | boolean | 继续时派生会话 |
+  | `--password` | `-p` | string | 基本认证密码 |
+  | `--username` | `-u` | string | 基本认证用户名 |
+  | `--mini` |  | boolean | 使用最小化交互 UI |
+  | `--no-replay` |  | boolean | 恢复时和调整大小后禁用会话历史回放（需要 `--mini`） |
+  | `--replay-limit` |  | number | 将可见回放限制在最新的 N 条消息（需要 `--mini`） |
+</Accordion>
+
+<Accordion title="bolt serve">
+  启动 headless Bolt API 服务器。服务器暴露一个 REST\+SSE API，TUI、`bolt run --attach` 和 `bolt attach` 可以连接。若要绑定到 `0.0.0.0` 以便其他机器可访问——请始终设置 `BOLT_SERVER_PASSWORD`。
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--hostname` | string | 要绑定的地址（默认：`127.0.0.1`） |
+  | `--port` | number | 监听端口（省略则随机） |
+  | `--mdns` | boolean | 启用 mDNS 服务发现（默认将主机名设为 `0.0.0.0`） |
+  | `--mdns-domain` | string | mDNS 服务的自定义域名（默认：`opencode.local`） |
+  | `--cors` | string\[\] | 允许 CORS 的额外域名 |
+
+  <Warning>
+    默认未设置 `BOLT_SERVER_PASSWORD`。在你设置之前，服务器会记录警告并接受所有连接。
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  启动 Bolt 服务器并立即在你的默认浏览器中打开 Web UI。接受与 `bolt serve` 相同的网络标志。
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--hostname` | string | 要绑定的地址（默认：`127.0.0.1`） |
+  | `--port` | number | 监听端口（省略则随机） |
+  | `--mdns` | boolean | 启用 mDNS 服务发现（默认将主机名设为 `0.0.0.0`） |
+  | `--mdns-domain` | string | mDNS 服务的自定义域名（默认：`opencode.local`） |
+  | `--cors` | string\[\] | 允许 CORS 的额外域名 |
+</Accordion>
+
+<Accordion title="bolt session">
+  管理存储在本地 SQLite 数据库中的 Bolt 会话。
+
+  **子命令**
+
+  ```bash
+  bolt session list                         # 列出所有根会话
+  bolt session list --format json           # 机器可读输出
+  bolt session list -n 20                   # 显示最近的 20 个会话
+  bolt session delete <sessionID>           # 永久删除会话
+  ```
+
+  **`bolt session list` 标志**
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | 将输出限制为最近的 N 个会话 |
+  | `--format` |  | `table`\|`json` | 输出格式（默认：`table`） |
+</Accordion>
+
+<Accordion title="bolt agent">
+  列出并创建自定义代理。代理是带 YAML frontmatter 的 markdown 文件，用于定义系统提示、权限和模式。
+
+  ```bash
+  bolt agent list                           # 列出所有可用代理
+  bolt agent create                         # 交互式代理创建向导
+  
+  # 非交互式创建
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` 标志**
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | 写入代理文件的目录路径 |
+  | `--description` |  | string | 用自然语言描述代理应做什么 |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | 代理作为主代理、子代理还是二者兼有 |
+  | `--permissions` | `--tools` | string | 允许的权限，以英文逗号分隔（默认：全部） |
+  | `--model` | `-m` | string | 使用的模型，格式为 `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers（别名：auth）">
+  交互式管理 AI 提供商凭据。凭据存储在你的操作系统数据目录中（Linux 上为 `~/.local/share/bolt/auth.json`，macOS 上为 `~/Library/Application Support/bolt/auth.json`）。
+
+  ```bash
+  bolt providers             # 交互式凭据管理菜单
+  bolt auth                  # bolt providers 的别名
+  
+  bolt providers list        # 列出存储的凭据和活动的环境变量
+  bolt providers login       # 为提供商添加凭据
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # 移除存储的凭据
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  列出你已配置的提供商中所有可用的模型。
+
+  ```bash
+  bolt models                         # 列出所有提供商的所有模型
+  bolt models anthropic               # 过滤到单个提供商
+  bolt models --verbose               # 在输出中包含费用元数据
+  bolt models --refresh               # 强制刷新 models.dev 缓存
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--verbose` | boolean | 为每个模型包含 JSON 费用元数据 |
+  | `--refresh` | boolean | 从 models.dev 刷新模型缓存 |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  管理 Model Context Protocol（MCP）服务器。Bolt 同时支持带 OAuth 的远程（HTTP/SSE）服务器和本地（stdio）服务器。
+
+  ```bash
+  bolt mcp add                              # 交互式向导添加服务器
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # 显示所有已配置的服务器和状态
+  bolt mcp auth <name>                      # 为服务器运行 OAuth 流程
+  bolt mcp auth list                        # 显示所有服务器的 OAuth 状态
+  bolt mcp logout <name>                    # 移除存储的 OAuth 令牌
+  bolt mcp debug <name>                     # 探测连通性和 OAuth 配置
+  ```
+
+  **`bolt mcp add` 标志**
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--url` | string | 远程 MCP 服务器的 URL |
+  | `--env` | string\[\] | 本地服务器的环境变量（`KEY=VALUE`） |
+  | `--header` | string\[\] | 远程服务器的 HTTP 头（`KEY=VALUE`） |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  从 npm 安装 Bolt 插件并更新相关配置文件。插件可以扩展 TUI、添加新的斜杠命令或注册新的提供商。
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # 安装到全局配置
+  bolt plugin install @my-org/bolt-plugin --force        # 替换已有版本
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | 将插件添加到全局配置而非项目配置 |
+  | `--force` | `-f` | boolean | 替换已配置的插件版本 |
+</Accordion>
+
+<Accordion title="bolt github">
+  管理 Bolt 的 GitHub Actions 集成，让 Bolt 能响应拉取请求、issue 以及其他 GitHub 事件。
+
+  ```bash
+  bolt github install           # 在仓库中脚手架化 GitHub Actions 工作流
+  bolt github run               # 本地运行 GitHub 代理（用于测试）
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` 标志**
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--event` | string | 要模拟的 GitHub 事件名（如 `pull_request`） |
+  | `--token` | string | GitHub personal access token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  使用 `gh` CLI 将 GitHub 拉取请求检出为本地分支，然后在检出目录中启动 Bolt。如果 PR 描述包含会话分享链接，Bolt 会自动导入该会话。
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    此命令需要已安装并认证的 [GitHub CLI (`gh`)](https://cli.github.com/)。
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  使用 AI 模型为已暂存（或全部已跟踪）的改动生成提交信息并提交。模型会检查近期提交历史以获取风格上下文。
+
+  ```bash
+  bolt commit                        # 提交已暂存的改动
+  bolt commit --all                  # 暂存并提交所有已跟踪的改动
+  bolt commit --dry-run              # 打印生成的信息但不提交
+  bolt commit --model openai/gpt-4o  # 使用特定模型
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | 提交所有已跟踪的改动，而不仅仅是已暂存的 |
+  | `--dry-run` |  | boolean | 打印生成的信息但不提交 |
+  | `--model` | `-m` | string | 使用的模型，格式为 `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  对 diff 运行 AI 代码评审，以 `0`（通过）或 `1`（失败）退出码退出。`code-review` 代理会从正确性、风格和安全性角度检查 diff，然后输出 `Verdict: PASS` 或 `Verdict: FAIL` 行。
+
+  ```bash
+  bolt review                          # 评审未提交的改动（git diff HEAD）
+  bolt review --staged                 # 仅评审已暂存的改动
+  bolt review --branch main            # 评审自与 main 的合并基以来的改动
+  bolt review --model openai/o3        # 使用特定模型
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | 仅评审已暂存的改动 |
+  | `--branch` |  | string | 评审自与此分支合并基以来的改动 |
+  | `--model` | `-m` | string | 使用的模型，格式为 `provider/model` |
+
+  <Note>
+    退出码：`0` = PASS，`1` = FAIL，`2` = 无法确定判定结果。
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  将会话导出为 JSON 到 stdout。适用于归档、分享或供其他工具使用。公开分享前请传入 `--sanitize` 以脱敏文件路径、提示词以及其他敏感的记录内容。
+
+  ```bash
+  bolt export                          # 交互式选择会话，然后写入 stdout
+  bolt export abc123                   # 导出特定会话
+  bolt export abc123 --sanitize        # 脱敏机密与路径
+  bolt export abc123 > session.json    # 写入文件
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | 在导出前脱敏敏感数据（文件路径、提示文本、工具 I/O） |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  将先前导出的会话导入本地数据库。接受本地 JSON 文件或会话分享 URL。
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  显示所有会话的聚合 token 用量和费用统计。输出包括概览表、费用与 token 分解、模型用量以及工具使用条形图。
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # 仅最近 7 天
+  bolt stats --models             # 包含按模型的细分
+  bolt stats --models 5           # 显示前 5 个模型
+  bolt stats --tools 10           # 显示前 10 个工具
+  bolt stats --project ""         # 仅过滤到当前项目
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--days` | number | 限制为最近 N 天（默认：全部时间） |
+  | `--tools` | number | 工具使用图表中显示的工具数 |
+  | `--models` | boolean\|number | 显示模型统计；传入数字可限制列表 |
+  | `--project` | string | 按项目 ID 过滤；空字符串表示当前项目 |
+</Accordion>
+
+<Accordion title="bolt logs">
+  打印 Bolt 应用日志。日志存储在操作系统日志目录中（如 `~/.local/state/bolt/opencode.log`）。
+
+  ```bash
+  bolt logs                        # 打印最后 1000 行
+  bolt logs --tail 200             # 打印最后 200 行
+  bolt logs --follow               # 实时流式打印新写入的行
+  bolt logs -f                     # --follow 的别名
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | 要打印的末尾行数（默认：1000） |
+  | `--follow` | `-f` | boolean | 实时流式打印新日志行 |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  直接查询或检查本地 SQLite 会话数据库。
+
+  ```bash
+  bolt db path                                  # 打印数据库文件路径
+  bolt db "SELECT id, title FROM sessions"      # 运行 SQL 查询（TSV 输出）
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | 查询结果的输出格式（默认：`tsv`） |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  将 Bolt 升级到最新版本或特定版本。Bolt 会自动检测安装方式并使用对应的包管理器。
+
+  ```bash
+  bolt upgrade                         # 升级到最新版本
+  bolt upgrade 0.2.0                   # 升级（或降级）到特定版本
+  bolt upgrade --method npm            # 强制指定安装方式
+  bolt upgrade --method curl
+  ```
+
+  | 标志 | 别名 | 类型 | 说明 |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | 要使用的安装方式 |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  移除 Bolt 二进制及其所有相关数据。
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  生成用于 `bash`、`zsh` 或 `fish` 的 shell 补全脚本。
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  一组故障排查和自省子命令。适合在提交 bug 报告或诊断异常行为时使用。
+
+  ```bash
+  bolt debug info          # 打印版本、操作系统、终端和已加载的插件
+  bolt debug config        # 打印完全解析后的配置
+  bolt debug paths         # 打印所有全局数据/配置/缓存目录
+  bolt debug lsp           # 检查 LSP 状态
+  bolt debug ripgrep       # 测试 ripgrep 可用性
+  bolt debug file          # 检查文件工具行为
+  bolt debug scrap         # 用于调试的临时区
+  bolt debug skill         # 检查可用 skills
+  bolt debug snapshot      # 检查会话快照
+  bolt debug startup       # 度量启动时间
+  bolt debug agents        # 列出代理及其解析后的配置
+  bolt debug v2            # 检查 V2 会话核心状态
+  bolt debug wait          # 无限阻塞（用于进程调试）
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  启动 ACP（Agent Client Protocol）服务器。ACP 是 [Zed](https://zed.dev) 等编辑器集成通过 stdin/stdout 与 Bolt 通信所用的协议。
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | 标志 | 类型 | 说明 |
+  | --- | --- | --- |
+  | `--cwd` | string | 服务器的工作目录（默认：`process.cwd()`） |
+  | `--hostname` | string | 绑定的主机名（默认：`127.0.0.1`） |
+  | `--port` | number | 绑定端口 |
+  | `--mdns` | boolean | 启用 mDNS 服务发现 |
+  | `--mdns-domain` | string | mDNS 服务的自定义域名（默认：`opencode.local`） |
+  | `--cors` | string\[\] | 允许 CORS 的额外域名 |
+</Accordion>

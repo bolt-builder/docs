@@ -1,0 +1,215 @@
+---
+title: "Eszközök hozzáadása a Bolt-hoz MCP-szerverekkel"
+sidebarTitle: "MCP-szerverek"
+description: "Csatlakoztass külső eszközöket és erőforrásokat a Bolt-hoz a Model Context Protocol segítségével. Adj hozzá, hitelesíts és hibakeress MCP-szervereket a CLI-ből."
+url: "extending/mcp-servers"
+---
+
+A Model Context Protocol (MCP) egy nyílt szabvány, amely lehetővé teszi, hogy az MI-ügynökök közös felületen keresztül kommunikáljanak külső eszközökkel és adatforrásokkal. A Bolt az MCP-t használja az ügynökök képességeinek bővítésére — egy csatlakoztatott MCP-szerver bármit elérhetővé tehet, egy adatbázis-lekérdező eszköztől egy teljes webes kereső API-ig. A Bolt kezeli a teljes életciklust: szerverek hozzáadása, OAuth-folyamatok futtatása, tokenek frissítése és kapcsolat vizsgálata.
+
+## Szervertípusok
+
+A Bolt kétféle MCP-szervert támogat.
+
+| Típus | Átvitel | Leírás |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Egy szerver, amely egy hálózaton keresztül elérhető URL-en fut |
+| `local` | stdio | Egy helyi parancs, amelyet a Bolt gyerekfolyamatként indít |
+
+A távoli szerverek dobozon kívül támogatják az OAuth-hitelesítést. A Bolt kezeli a token megszerzését, tárolását és automatikus frissítését — soha nem kell tokent kézzel kezelned.
+
+---
+
+## Parancsok
+
+### `bolt mcp add`
+
+Új MCP-szerver hozzáadása interaktívan vagy egy lépésben.
+
+**Interaktív** — futtasd a `bolt mcp add` parancsot argumentumok nélkül, hogy végigmenj egy prompt-vezérelt varázslón, amely megkérdezi a nevet, hatókört (projekt vagy globális), típust, URL-t vagy parancsot, és hogy a szerver használ-e OAuth-t.
+
+**Nem interaktív** — adj meg egy nevet és vagy egy `--url` kapcsolót a távoli szerverhez, vagy egy parancsot a `--` után helyi szerverhez:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**A `bolt mcp add` kapcsolói**
+
+| Kapcsoló | Leírás |
+|------|-------------|
+| `--url <url>` | Egy távoli MCP-szerver URL-je |
+| `--header <KEY=VALUE>` | HTTP-fejléc, amit távoli szervernek küldünk (többször megismételhető) |
+| `--env <KEY=VALUE>` | Környezeti változó helyi szerverhez (többször megismételhető) |
+
+---
+
+### `bolt mcp list`
+
+Az összes beállított MCP-szerver felsorolása kapcsolati és hitelesítési állapotukkal együtt.
+
+```bash
+bolt mcp list
+```
+
+Minden bejegyzés egy állapotikont jelenít meg:
+
+| Ikon | Jelentés |
+|------|---------|
+| `✓` | Csatlakoztatva (és hitelesítve, ha OAuth-t használ) |
+| `⚠` | Hitelesítés szükséges vagy a hitelesítő adatok lejártak |
+| `✗` | Nem sikerült csatlakozni vagy kliensregisztráció szükséges |
+| `○` | Még nem inicializálva vagy letiltva |
+
+---
+
+### `bolt mcp auth <name>`
+
+Hitelesítés OAuth-képes távoli MCP-szerverrel. Ha kihagyod a nevet, a Bolt egy interaktív választót mutat, amely felsorolja az összes OAuth-képes szervert az aktuális hitelesítési állapotukkal (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+A Bolt megnyitja a böngésződet a szolgáltató engedélyezési URL-jén, és várja a visszahívást — a teljes OAuth-kézfogás, beleértve a dinamikus kliensregisztrációt, ha szükséges, automatikusan történik.
+
+<Note>
+  A Bolt kezeli a teljes OAuth-folyamatot, beleértve a tokentárolást és az automatikus token-frissítést. Nem kell tokent másolnod vagy a lejárattal manuálisan foglalkoznod. Ha egy szerver előre regisztrált kliensazonosítót igényel, add hozzá az `oauth.clientId` (és opcionálisan `oauth.clientSecret`) mezőt a szerver konfigurációs bejegyzéséhez a `.bolt/bolt.jsonc` fájlban.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Tárolt OAuth-hitelesítő adatok eltávolítása egy szerverről. Ha kihagyod a nevet, a Bolt megkér, hogy válassz egy listából azokból a szerverekből, amelyeknek tokenjeik vannak tárolva.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Egy távoli szerver kapcsolatának vizsgálata és OAuth-állapotának ellenőrzése teljes munkamenet indítása nélkül. Ez az első eszköz, amit elővenni érdemes, amikor egy szerver `✗ failed` vagy `⚠ needs authentication` állapotot mutat.
+
+```bash
+bolt mcp debug my-server
+```
+
+A `debug` jelenti:
+- A szerver URL-jét és az aktuális hitelesítési állapotot
+- Az access token adatait (elrejtve) és a lejárati időbélyeget
+- Van-e refresh token
+- A szerver nyers HTTP-válaszkódját
+- A `WWW-Authenticate` fejléc tartalmát
+- Egy OAuth-felderítési próba eredményét (a folyamat befejezése nélkül)
+
+---
+
+## Manuális konfiguráció
+
+MCP-szervereket közvetlenül is hozzáadhatsz vagy szerkeszthetsz a `.bolt/bolt.jsonc` fájlban a CLI-parancsok használata nélkül. A Bolt a következő munkamenet indításakor felveszi a változásokat.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Egy helyi stdio szerver így néz ki:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Egyedi HTTP-fejlécek megadásához vagy az OAuth letiltásához egy távoli szerveren:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Távoli MCP-szerver hozzáadása és hitelesítése
+
+<Steps>
+  <Step title="Add hozzá a szervert">
+    Futtasd a `bolt mcp add` parancsot, és kövesd a promptokat, vagy használd a nem interaktív formát:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    A Bolt beírja a bejegyzést a `.bolt/bolt.jsonc` fájlba (projekt hatókör) vagy a globális konfigurációdba.
+  </Step>
+
+  <Step title="Ellenőrizd a kapcsolati állapotot">
+    ```bash
+    bolt mcp list
+    ```
+
+    Ha a szerver hitelesítést igényel, `⚠ needs authentication` látszik a neve mellett.
+  </Step>
+
+  <Step title="Hitelesíts OAuth-tal">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    A Bolt megnyitja a böngésződet. Miután jóváhagyod a hozzáférést, a terminál megerősíti, hogy a hitelesítés sikeres volt, és a szerver állapota `✓ connected (OAuth)` lesz.
+  </Step>
+
+  <Step title="Ellenőrizd, hogy az eszközök elérhetők">
+    Indíts egy Bolt-munkamenetet. A szerver által megjelenített eszközök most már minden ügynök számára elérhetők. Bármikor megvizsgálhatod őket:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

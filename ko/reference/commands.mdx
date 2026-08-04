@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI 명령 레퍼런스"
+sidebarTitle: "Commands"
+description: "TUI, run, serve, session, agent 등에 대한 플래그, 인수, 사용 예제를 포함한 모든 Bolt CLI 명령의 완전한 레퍼런스."
+---
+
+Bolt는 풍부한 하위 명령 세트가 있는 단일 `bolt` 바이너리를 노출합니다. 인수 없이 `bolt`를 실행하면 완전한 터미널 UI가 열립니다. 다른 모든 하위 명령은 아래에 나열되어 있습니다. 언제든지 `bolt <command> --help`로 인라인 도움말을 사용하세요.
+
+<Accordion title="bolt (기본값 — TUI 실행)">
+  현재 디렉터리에서 대화형 터미널 UI를 엽니다. Bolt는 프로젝트 컨텍스트를 자동으로 발견하고, 구성을 로드하고, 구성된 프로바이더에 연결합니다.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **전역 플래그** — 모든 명령에서 사용 가능:
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | 로그 출력을 stderr에 인쇄 |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | 로그 상세도 수준 설정 |
+  | `--pure` | boolean | 외부 플러그인을 로드하지 않고 실행 |
+  | `--help`, `-h` | boolean | 도움말 텍스트 표시 |
+  | `--version`, `-v` | boolean | 설치된 버전 번호 인쇄 |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  비대화형 모드에서 단일 프롬프트로 Bolt를 실행합니다. Bolt는 in-process 서버를 시작하고, 프롬프트를 활성 세션에 보내고, 응답을 stdout으로 스트리밍한 다음 종료합니다. 컨텍스트를 첨부하려면 stdin으로 파이핑하거나 `--file`을 전달하세요.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | 실행할 슬래시 명령; 인수를 메시지로 전달 |
+  | `--continue` | `-c` | boolean | 가장 최근 세션 계속 |
+  | `--session` | `-s` | string | 계속할 세션 ID |
+  | `--fork` |  | boolean | 계속하기 전에 세션 포크 (`--continue` 또는 `--session` 필요) |
+  | `--share` |  | boolean | 완료 후 세션 공유 |
+  | `--model` | `-m` | string | `provider/model` 형식으로 사용할 모델 |
+  | `--best-of` |  | string | 쉼표로 구분된 `provider/model` 목록; 작업을 병렬로 실행하고 결과 순위를 매겨 승자를 유지 |
+  | `--agent` |  | string | 사용할 에이전트 (예: `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | 출력 형식; `json`은 개행으로 구분된 원시 JSON 이벤트를 스트리밍 |
+  | `--file` | `-f` | string\[\] | 컨텍스트로 첨부할 파일 |
+  | `--title` |  | string | 세션 제목 |
+  | `--attach` |  | string | 원격 Bolt 서버에 대해 실행 (예: `http://localhost:4096`) |
+  | `--password` | `-p` | string | 원격 서버용 basic auth 비밀번호 |
+  | `--username` | `-u` | string | 원격 서버용 basic auth 사용자 이름 |
+  | `--dir` |  | string | 작업 디렉터리; `--attach` 설정 시 원격 서버의 디렉터리 |
+  | `--port` |  | number | 로컬 in-process 서버 포트 (생략 시 무작위) |
+  | `--variant` |  | string | 추론 효율 수준, 프로바이더별 (예: `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | 출력에 추론/사고 블록 표시 |
+  | `--mini` |  | boolean | 미니멀 split-footer 대화형 UI 시작 (숨김) |
+  | `--interactive` | `-i` | boolean | 직접 대화형 split-footer 모드 강제 |
+  | `--auto` |  | boolean | 명시적으로 거부되지 않은 권한 자동 승인 |
+  | `--yolo` |  | boolean | 모든 권한 프롬프트 건너뛰기 (`--auto`의 별칭, 숨김) |
+  | `--dangerously-skip-permissions` |  | boolean | 모든 권한 확인 건너뛰기 (숨김) |
+  | `--demo` |  | boolean | 직접 대화형 데모 슬래시 명령 활성화 (숨김) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  실행 중인 Bolt 서버에 완전한 TUI를 연결합니다. 서버는 로컬 또는 원격일 수 있습니다. 완전한 TUI 대신 미니멀 split-footer UI를 사용하려면 `--mini`를 전달하세요.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | 원격 서버의 디렉터리 |
+  | `--continue` | `-c` | boolean | 원격 서버의 가장 최근 세션 계속 |
+  | `--session` | `-s` | string | 계속할 세션 ID |
+  | `--fork` |  | boolean | 계속할 때 세션 포크 |
+  | `--password` | `-p` | string | Basic auth 비밀번호 |
+  | `--username` | `-u` | string | Basic auth 사용자 이름 |
+  | `--mini` |  | boolean | 미니멀 대화형 UI 사용 |
+  | `--no-replay` |  | boolean | 재개 및 리사이즈 후 세션 히스토리 재생 비활성화 (`--mini` 필요) |
+  | `--replay-limit` |  | number | 표시되는 재생을 최신 N개 메시지로 제한 (`--mini` 필요) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  헤드리스 Bolt API 서버를 시작합니다. 이 서버는 TUI, `bolt run --attach`, `bolt attach`가 연결할 수 있는 REST\+SSE API를 노출합니다. 다른 머신에서 접근 가능하게 하려면 `0.0.0.0`에 바인딩하세요 — 그렇게 할 때는 항상 `BOLT_SERVER_PASSWORD`를 설정하세요.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--hostname` | string | 바인딩할 주소 (기본값: `127.0.0.1`) |
+  | `--port` | number | 수신할 포트 (생략 시 무작위) |
+  | `--mdns` | boolean | mDNS 서비스 검색 활성화 (호스트명이 기본적으로 `0.0.0.0`이 됨) |
+  | `--mdns-domain` | string | mDNS 서비스용 커스텀 도메인 이름 (기본값: `opencode.local`) |
+  | `--cors` | string\[\] | CORS로 허용할 추가 도메인 |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD`는 기본으로 설정되어 있지 않습니다. 설정할 때까지 서버는 경고를 로깅하고 모든 연결을 허용합니다.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Bolt 서버를 시작하고 즉시 기본 브라우저에서 웹 UI를 엽니다. `bolt serve`와 동일한 네트워크 플래그를 받습니다.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--hostname` | string | 바인딩할 주소 (기본값: `127.0.0.1`) |
+  | `--port` | number | 수신할 포트 (생략 시 무작위) |
+  | `--mdns` | boolean | mDNS 서비스 검색 활성화 (호스트명이 기본적으로 `0.0.0.0`이 됨) |
+  | `--mdns-domain` | string | mDNS 서비스용 커스텀 도메인 이름 (기본값: `opencode.local`) |
+  | `--cors` | string\[\] | CORS로 허용할 추가 도메인 |
+</Accordion>
+
+<Accordion title="bolt session">
+  로컬 SQLite 데이터베이스에 저장된 Bolt 세션을 관리합니다.
+
+  **하위 명령**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **`bolt session list` 플래그**
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | 출력을 가장 최근 N개 세션으로 제한 |
+  | `--format` |  | `table`\|`json` | 출력 형식 (기본값: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  커스텀 에이전트를 나열하고 생성합니다. 에이전트는 시스템 프롬프트, 권한, 모드를 정의하는 YAML 프론트매터가 있는 마크다운 파일입니다.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` 플래그**
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | 에이전트 파일을 쓸 디렉터리 경로 |
+  | `--description` |  | string | 에이전트가 해야 할 일에 대한 자연어 설명 |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | 에이전트가 기본 에이전트, 서브에이전트 또는 둘 다로 작동할지 |
+  | `--permissions` | `--tools` | string | 허용된 권한의 쉼표로 구분된 목록 (기본값: 모두) |
+  | `--model` | `-m` | string | `provider/model` 형식으로 사용할 모델 |
+</Accordion>
+
+<Accordion title="bolt providers (별칭: auth)">
+  AI 프로바이더 자격 증명을 대화형으로 관리합니다. 자격 증명은 OS 데이터 디렉터리(Linux는 `~/.local/share/bolt/auth.json`, macOS는 `~/Library/Application Support/bolt/auth.json`)에 저장됩니다.
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  구성된 프로바이더에서 사용 가능한 모든 모델을 나열합니다.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--verbose` | boolean | 각 모델의 JSON 비용 메타데이터 포함 |
+  | `--refresh` | boolean | models.dev에서 모델 캐시 새로 고침 |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Model Context Protocol(MCP) 서버를 관리합니다. Bolt는 OAuth를 갖춘 원격(HTTP/SSE) 서버와 로컬(stdio) 서버 모두를 지원합니다.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **`bolt mcp add` 플래그**
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--url` | string | 원격 MCP 서버 URL |
+  | `--env` | string\[\] | 로컬 서버의 환경 변수 (`KEY=VALUE`) |
+  | `--header` | string\[\] | 원격 서버의 HTTP 헤더 (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  npm에서 Bolt 플러그인을 설치하고 관련 설정 파일을 업데이트합니다. 플러그인은 TUI를 확장하거나, 새 슬래시 명령을 추가하거나, 새 프로바이더를 등록할 수 있습니다.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | 프로젝트 설정 대신 전역 설정에 플러그인 추가 |
+  | `--force` | `-f` | boolean | 이미 구성된 플러그인 버전 교체 |
+</Accordion>
+
+<Accordion title="bolt github">
+  Bolt가 풀 리퀘스트, 이슈 및 기타 GitHub 이벤트에 응답할 수 있게 하는 Bolt GitHub Actions 통합을 관리합니다.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` 플래그**
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--event` | string | 시뮬레이션할 GitHub 이벤트 이름 (예: `pull_request`) |
+  | `--token` | string | GitHub 개인 액세스 토큰 |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  `gh` CLI를 사용해 GitHub 풀 리퀘스트를 로컬 브랜치로 체크아웃한 다음 체크아웃된 디렉터리에서 Bolt를 시작합니다. PR 설명에 세션 공유 링크가 포함된 경우 Bolt는 해당 세션을 자동으로 가져옵니다.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    이 명령은 [GitHub CLI (`gh`)](https://cli.github.com/)가 설치되고 인증되어 있어야 합니다.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  AI 모델을 사용해 스테이지된(또는 모든 추적된) 변경에 대한 커밋 메시지를 생성한 다음 커밋합니다. 모델은 스타일 컨텍스트를 위해 최근 커밋 히스토리를 검사합니다.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | 스테이지된 것뿐만 아니라 모든 추적된 변경 커밋 |
+  | `--dry-run` |  | boolean | 커밋하지 않고 생성된 메시지 인쇄 |
+  | `--model` | `-m` | string | `provider/model` 형식으로 사용할 모델 |
+</Accordion>
+
+<Accordion title="bolt review">
+  diff에 대해 AI 코드 리뷰를 실행하고 코드 `0`(통과) 또는 `1`(실패)로 종료합니다. `code-review` 에이전트는 정확성, 스타일, 보안 문제에 대해 diff를 검사한 다음 `Verdict: PASS` 또는 `Verdict: FAIL` 줄을 출력합니다.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | 스테이지된 변경만 검토 |
+  | `--branch` |  | string | 이 브랜치와의 머지 베이스 이후 변경 검토 |
+  | `--model` | `-m` | string | `provider/model` 형식으로 사용할 모델 |
+
+  <Note>
+    종료 코드: `0` = PASS, `1` = FAIL, `2` = 판정을 확인할 수 없음.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  세션을 JSON으로 stdout에 내보냅니다. 아카이빙, 공유, 다른 도구에 공급하는 데 유용합니다. 공개적으로 공유하기 전에 파일 경로, 프롬프트 및 기타 민감한 기록 콘텐츠를 마스킹하려면 `--sanitize`를 전달하세요.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | 내보내기 전에 민감한 데이터(파일 경로, 프롬프트 텍스트, 도구 I/O) 마스킹 |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  이전에 내보낸 세션을 로컬 데이터베이스로 가져옵니다. 로컬 JSON 파일이나 세션 공유 URL을 받습니다.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  모든 세션에 걸친 집계 토큰 사용량 및 비용 통계를 표시합니다. 출력에는 개요 표, 비용 및 토큰 분석, 모델 사용량, 도구 사용량 막대 차트가 포함됩니다.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--days` | number | 최근 N일로 제한 (기본값: 전체 기간) |
+  | `--tools` | number | 도구 사용량 차트에 표시할 도구 수 |
+  | `--models` | boolean\|number | 모델 통계 표시; 숫자를 전달하면 목록 상한 설정 |
+  | `--project` | string | 프로젝트 ID로 필터링; 빈 문자열은 현재 프로젝트를 의미 |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Bolt 애플리케이션 로그를 인쇄합니다. 로그는 OS 로그 디렉터리(예: `~/.local/state/bolt/opencode.log`)에 저장됩니다.
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | 인쇄할 뒷부분 라인 수 (기본값: 1000) |
+  | `--follow` | `-f` | boolean | 실시간으로 새 로그 라인 스트리밍 |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  로컬 SQLite 세션 데이터베이스를 직접 쿼리하거나 검사합니다.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | 쿼리 결과의 출력 형식 (기본값: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Bolt를 최신 릴리스 또는 특정 버전으로 업그레이드합니다. Bolt는 설치 방법을 자동 감지하고 적절한 패키지 관리자를 사용합니다.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Flag | Alias | Type | Description |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | 사용할 설치 방법 |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Bolt 바이너리와 모든 관련 데이터를 제거합니다.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  `bash`, `zsh` 또는 `fish`용 셸 완성 스크립트를 생성합니다.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  트러블슈팅 및 내부 검사 하위 명령 모음. 버그 보고서를 제출하거나 예상치 못한 동작을 진단할 때 유용합니다.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  ACP(Agent Client Protocol) 서버를 시작합니다. ACP는 [Zed](https://zed.dev) 같은 편집기 통합이 stdin/stdout을 통해 Bolt와 통신하는 데 사용하는 프로토콜입니다.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--cwd` | string | 서버 작업 디렉터리 (기본값: `process.cwd()`) |
+  | `--hostname` | string | 바인딩 호스트명 (기본값: `127.0.0.1`) |
+  | `--port` | number | 바인딩 포트 |
+  | `--mdns` | boolean | mDNS 서비스 검색 활성화 |
+  | `--mdns-domain` | string | mDNS 서비스용 커스텀 도메인 이름 (기본값: `opencode.local`) |
+  | `--cors` | string\[\] | CORS로 허용할 추가 도메인 |
+</Accordion>

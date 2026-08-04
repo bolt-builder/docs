@@ -1,0 +1,32 @@
+---
+title: "Statistiche e costi (bolt stats)"
+sidebarTitle: "Statistiche e costi"
+description: "bolt stats aggrega l'utilizzo dei token e i costi tra le tue sessioni, così puoi vedere dove sta andando la tua spesa e regolare modelli o agenti di conseguenza."
+---
+
+`bolt stats` aggrega conteggi di token e costi nel database locale delle sessioni. Poiché ogni chiamata di strumento viene registrata (vedi [Database locale](/reference/local-database)), i numeri sono esatti per le chiamate LLM che Bolt ha guidato.
+
+## Utilizzo base
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Cosa mostra
+
+- Token totali di input, output e cache.
+- Costo stimato per provider (utilizzando le tabelle di prezzi del provider al momento dell'esecuzione).
+- Suddivisioni per modello, per agente e per giorno a seconda dei flag.
+
+## Ridurre i costi
+
+- Usa `--variant minimal` o `--variant low` su modelli pesanti nel ragionamento. Vedi [Provider e modelli](/concepts/providers-and-models).
+- Preferisci l'agente `ask` o `plan` per l'esplorazione; sono in sola lettura ed evitano cicli pesanti di strumenti.
+- Passa a un modello più piccolo con `bolt models` per attività che non hanno bisogno di capacità di frontiera.
+
+## Correlati
+
+- [Provider e modelli](/concepts/providers-and-models) — scegli e regola i modelli che `stats` misura.
+- [Troubleshooting](/reference/troubleshooting) — cosa fare di fronte a una fattura inaspettata.

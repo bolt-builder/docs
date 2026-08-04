@@ -1,0 +1,191 @@
+---
+title: "Økter — Vedvarende samtalehistorikk i Bolt"
+sidebarTitle: "Økter"
+description: "Økter er Bolts enhet for vedvarende arbeid: hver lagrer en full samtale i lokal SQLite slik at du kan koble fra, gjenoppta, forgrene, dele og eksportere når som helst."
+---
+
+En **økt** er Bolts primære arbeidsenhet. Hver ledetekst du sender, hver fil agenten leser eller redigerer, og hvert verktøykall modellen gjør, registreres varig i den øktens historie. Fordi økter lever i en lokal SQLite-database, overlever de prosessomstart, kan listes og spørres når som helst, og forlater aldri maskinen din med mindre du eksplisitt deler eller eksporterer dem.
+
+<Note>
+  Alle øktdata lagres lokalt i en SQLite-database på din egen maskin. Ingenting sendes til eksterne servere med mindre du aktiverer deling. Bruk `bolt db path` for å finne den nøyaktige databasefilen.
+</Note>
+
+## Øktens livssyklus
+
+En økt starter i det øyeblikket du sender din første ledetekst og ender først når du sletter den. Mellom disse to punktene kan du fritt koble fra, gjenoppta, forgrene eller overlevere den.
+
+<Steps>
+  <Step title="Opprett eller fortsett en økt">
+    Start TUI-en for å starte en ny økt interaktivt, eller send en ledetekst til `bolt run` for å opprette en ikke-interaktivt:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Koble fra og kom tilbake senere">
+    Lukk TUI-en når som helst – økten lagres automatisk. Gjenoppta din siste økt med `--continue`, eller mål en spesifikk økt via ID med `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Forgren før du eksperimenterer">
+    Bruk `--fork` for å forgrene fra gjeldende øktshistorikk før du prøver en risikabel endring. Forken er en uavhengig økt som ikke påvirker originalen:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Del og samarbeid">
+    Generer en dele-URL med `--share`. Alle med lenken kan se øktutskriften i en nettleser:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Kommandoer for økthåndtering
+
+### List økter
+
+```bash
+bolt session list
+```
+
+Skriver ut en formatert tabell over alle økter med ID, tittel og sist-oppdatert-tid. Legg til `--format json` for maskinlesbar utdata, eller `-n <N>` for å begrense til de N nyeste øktene:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Slett en økt
+
+```bash
+bolt session delete <sessionID>
+```
+
+Fjerner permanent økten og alle meldingene dens fra den lokale databasen.
+
+## Run-flagg for øktkontroll
+
+Disse flaggene er tilgjengelige på `bolt run`:
+
+| Flagg | Alias | Beskrivelse |
+|------|-------|-------------|
+| `--continue` | `-c` | Fortsett den nyeste økten |
+| `--session <id>` | `-s` | Fortsett en spesifikk økt via ID |
+| `--fork` | | Forgren økten før du fortsetter (krever `--continue` eller `--session`) |
+| `--share` | | Generer en dele-URL for økten |
+| `--title <title>` | | Sett eller overstyr øktens tittel |
+
+## Eksportere økter
+
+Eksporter en økts fulle utskrift som JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize`-flagget erstatter filstier, kodeinnhold, verktøyinnganger og -utganger og andre potensielt sensitive felt med `[redacted:kind:id]`-plassholdere – nyttig for å dele utskrifter med lagkamerater eller sende inn feilrapporter.
+
+## Importere økter
+
+Importer en økt fra en lokal JSON-fil eller direkte fra en dele-URL:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Importerte økter dukker opp i din lokale øktliste og kan gjenopptas fullstendig.
+
+## Spørring i øktdatabasen
+
+Bolt eksponerer den underliggende SQLite-databasen direkte for erfarne brukere.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Utdataformatet er som standard tabulatorseparerte verdier; legg til `--format json` for JSON-utdata.
+
+## Statistikk for tokenbruk og kostnad
+
+`bolt stats` aggregerer tokenbruk og kostnadsdata på tvers av alle øktene dine:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Utdataene inkluderer totalt antall økter, meldinger, input/output/resonnering/cache-tokens, total kostnad, gjennomsnittlig kostnad per dag, gjennomsnittlig og medianen for tokens per økt, og en oversikt over verktøybruk. Send `--models` for også å vise en per-modell-oversikt over meldinger, tokens og kostnad.
+
+## Arbeidsflyt for forgrening og deling
+
+Her er et fullstendig eksempel på å forgrene en økt og dele resultatet:
+
+<Steps>
+  <Step title="Start arbeidet i en ny økt">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Forgren før det risikable neste steget">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Den forgrenede økt-ID-en skrives ut i konsollen. Den opprinnelige økten forblir uendret.
+  </Step>
+  <Step title="Del forken for gjennomgang">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Dele-URL-en skrives ut når økten går inaktiv.
+  </Step>
+  <Step title="Importer på en annen maskin">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,61 @@
+---
+title: "Bolt 环境变量参考"
+sidebarTitle: "环境变量"
+description: "Bolt 识别的每个环境变量,包括日志控制、服务器认证、配置覆盖和提供商 API 密钥约定。"
+---
+
+环境变量允许你在不触碰任何配置文件的情况下配置 Bolt — 在 CI 管道、Docker 容器和无法提交凭证的共享环境中很有用。它们在启动时读取一次,并且在 Bolt 运行时无法更改。
+
+## 参考
+
+| 变量 | 描述 |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | 设置日志详细级别。接受的值：`DEBUG`、`INFO`、`WARN`、`ERROR`。等同于 `--log-level` 标志。 |
+| `BOLT_PRINT_LOGS` | 设置为任何非空值以将日志输出打印到 stderr。等同于 `--print-logs`。 |
+| `BOLT_PURE` | 设置为任何非空值以禁用所有外部插件。等同于 `--pure`。 |
+| `BOLT_SERVER_USERNAME` | `bolt serve` 和 `bolt web` 的基本认证用户名。 |
+| `BOLT_SERVER_PASSWORD` | `bolt serve` 和 `bolt web` 的基本认证密码。所有连接的客户端必须提供此密码。 |
+| `BOLT_CONFIG` | 覆盖 Bolt 加载的配置文件路径。设置此值时,Bolt 不会搜索默认位置。 |
+| `BOLT_CONFIG_DIR` | 覆盖配置目录。Bolt 将在此目录中查找配置文件,而不是默认的操作系统配置目录。 |
+| `BOLT_CONFIG_CONTENT` | 以内联 JSON 字符串形式提供完整配置。在写入文件不实际的 CI 中很有用。在配置源中优先级最高。 |
+| `BOLT_GIT_BASH_PATH` | Windows 上 Git Bash 的 `bin` 目录路径,用于定位 `less` 等 Unix 实用程序。 |
+
+## 提供商 API 密钥
+
+Bolt 自动从环境变量发现提供商凭证 — 无需 `bolt providers login` 步骤。每个提供商查找特定的环境变量,如果变量已设置,Bolt 将使用它,无论 `auth.json` 中存储了什么。
+
+<Tip>
+  在你的 shell 配置文件（例如 `~/.zshrc`、`~/.bashrc`）或由你的 shell 加载的 `.env` 文件中设置提供商 API 密钥。你也可以在 `provider.*.apiKey` 字段中使用 `${VAR_NAME}` 语法从配置文件中引用它们,以便密钥永远不会以明文存储。
+</Tip>
+
+常见提供商变量：
+
+| 变量 | 提供商 |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT、o 系列) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+运行 `bolt models --verbose` 查看每个已配置提供商期望的环境变量。
+
+## 使用示例
+
+```bash
+# 为单次运行启用调试日志
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# 不带任何插件运行以排除插件干扰
+BOLT_PURE=1 bolt
+
+# 使用基本认证启动公共服务器
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# 内联提供配置（在 CI 中很有用）
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

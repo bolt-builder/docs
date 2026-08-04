@@ -1,0 +1,38 @@
+---
+title: "Mahalliy ma'lumotlar bazasi (bolt db)"
+sidebarTitle: "Mahalliy ma'lumotlar bazasi"
+description: "Bolt har bir sessiya, xabar va asbob chaqiruvini mahalliy SQLite ma'lumotlar bazasida saqlaydi. Uni tekshiring, zaxira nusxa oling yoki bolt db bilan to'g'ridan-to'g'ri so'rang."
+---
+
+Bolt har bir sessiya, xabar va asbob chaqiruvini mahalliy SQLite ma'lumotlar bazasida saqlaydi. U to'liq tekshiriladi va to'liq sizniki — sessiyani aniq bo'lishmaguningizcha hech narsa yuklanmaydi.
+
+## Umumiy amallar
+
+```bash
+bolt db path                        # SQLite fayl yo'lini chop etish
+bolt db                             # interaktiv SQL shellni ochish
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Zaxira nusxa olish
+
+Bu bitta SQLite fayli bo'lgani uchun, zaxira nusxa nusxa olishdir:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Uzoq muddatli saqlash yoki transport uchun `bolt export` / `bolt import` ni afzal ko'ring — ular sxema migratsiyalaridan omon qoladigan ko'chma JSON ko'rinishini yaratadi.
+
+## Bir qarashda sxema
+
+- `sessions` — sessiya bo'yicha bitta qator, sarlavha, loyiha, timestamp'lar va status bilan.
+- `messages` — sessiya bo'yicha to'liq navbat log'i.
+- `tool_calls` — kirishlar, chiqishlar va davomiyliklar bilan har bir chaqiruv.
+
+Aniq ustunlar rivojlanadi; jonli sxemani ko'rish uchun `PRAGMA table_info(<table>)` dan foydalaning.
+
+## Aloqador
+
+- [Sessions](/concepts/sessions) — ma'lumotlar bazasi nima saqlaydi.
+- [Stats & Cost](/reference/stats-and-cost) — bir xil ma'lumotlar ustidan yig'ilgan ko'rinishlar.

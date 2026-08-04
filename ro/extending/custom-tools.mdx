@@ -1,0 +1,36 @@
+---
+title: "Instrumente personalizate în Bolt"
+sidebarTitle: "Instrumente personalizate"
+description: "Adaugă instrumente specifice proiectului în Bolt aruncând fișiere executabile în .opencode/tool/. Fiecare fișier devine un instrument pe care agentul îl poate apela."
+---
+
+Instrumentele personalizate îți permit să expui orice poți scripta (scripturi shell, programe Node/Bun/Python, mici binare) ca instrument pe care agentul îl poate invoca după nume. Este cel mai simplu mod de a-i oferi Bolt acces la propriile fluxuri de build, deploy sau date ale proiectului tău.
+
+## Unde trăiesc
+
+Aruncă fișierele în unul dintre:
+
+- `.opencode/tool/` — la nivel de proiect, comitat împreună cu repo-ul.
+- `.opencode/tools/` — acceptat ca alias pentru cel de mai sus.
+
+Fiecare fișier devine un instrument numit după fișier (fără extensia acestuia). Instrumentele sunt preluate automat la următoarea pornire a Bolt.
+
+## Anatomia unui instrument
+
+Un instrument personalizat își declară numele, descrierea și schema de intrare într-un antet, apoi implementează comportamentul. Forma exactă depinde de runtime-ul pe care îl alegi (script shell, TypeScript etc.), dar fiecare instrument trebuie:
+
+1. Să anunțe o JSON Schema pentru intrările sale, astfel încât modelul să știe cum să îl apeleze.
+2. Să returneze o valoare (sau o eroare) pe care Bolt o poate reda în TUI și o poate returna modelului.
+
+Odată încărcat, instrumentul apare în lista de instrumente a agentului lângă instrumentele încorporate precum `bash` și `grep` și este controlat de același sistem de [permisiuni](/concepts/permissions).
+
+## Când să folosești un instrument personalizat versus un server MCP
+
+- **Instrument personalizat** — mic, specific proiectului, fără reutilizare între proiecte. Rapid de scris.
+- **Server MCP** — partajat între proiecte sau învelește un serviciu extern real cu autentificare. Consultă [Servere MCP](/extending/mcp-servers).
+- **Instrument din plugin** — distribuit ca pachet npm alături de alte puncte de extensie. Consultă [Plugin-uri](/extending/plugins).
+
+## Legături conexe
+
+- [Instrumente](/concepts/tools) — referință pentru instrumentele încorporate.
+- [Plugin-uri](/extending/plugins) — suprafața de extensie pentru instrumente și mai mult.

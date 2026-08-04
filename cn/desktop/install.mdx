@@ -1,0 +1,116 @@
+---
+title: "Bolt 桌面应用：多窗口 AI 编程会话"
+sidebarTitle: "安装"
+description: "安装 Bolt 桌面应用，享受多窗口会话、集成终端、支持粘贴图片的提示词编辑器、自动更新以及 28 种 UI 语言。"
+url: "desktop/install"
+---
+
+Bolt 桌面应用将与 CLI 相同的引擎包装在完整的 Electron 外壳中。终端中提供的所有功能——代理、MCP 服务器、插件、远程会话、可派生与分享的会话——在桌面应用中都完全一样，并额外提供多窗口和多标签体验、图形化设置 UI、原生通知和自动更新。如果你已经在使用 CLI，桌面应用是一个直接的补充，而非替代。
+
+---
+
+## 安装
+
+### macOS
+
+<Steps>
+  <Step title="使用一行命令安装（推荐）">
+    打开终端并运行：
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    该脚本会下载最新版本、验证并将应用放置到 `/Applications`。不会弹出 Gatekeeper 提示。
+  </Step>
+
+  <Step title="启动应用">
+    从 `/Applications` 或 Spotlight 中打开 **Bolt**。首次启动时，Bolt 会让你选择默认的 LLM 提供商并创建全局配置文件。
+  </Step>
+</Steps>
+
+<Tip>
+  这行安装命令以绕过 macOS Gatekeeper 的“无法识别的开发者”对话框的方式安装应用，让你无需额外的安全提示即可直接开始编程。
+</Tip>
+
+### 所有平台 — 从 releases 下载
+
+从 [Bolt releases 页面](https://github.com/Bolt-builder/bolt-cli/releases) 下载对应平台的最新安装程序。
+
+| 平台 | 安装程序类型 |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` 安装程序 |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  在 Windows 上，Bolt 包含 WSL（Windows Subsystem for Linux）集成。当 WSL 可用时，Bolt 可直接在你的 WSL 发行版中打开会话——为你提供一个 Linux 原生的代理环境，外层是原生 Windows UI。
+</Note>
+
+---
+
+## 功能
+
+### 多窗口与多标签会话管理
+
+打开任意数量的窗口，每个都有自己的一组标签。标签直接对应 Bolt 会话，因此你可以在一个标签中让代理执行重构，在另一个标签中提出问题，在第三个标签中运行后台任务——同时进行。
+
+### 提示词编辑器
+
+提示词编辑器支持丰富的输入：粘贴文本、拖入文件作为附件，或直接从剪贴板粘贴图片。Bolt 会自动编码图片并将其发送给任意支持视觉的模型。
+
+### 集成终端和文件树
+
+分屏布局在一侧显示与代理的对话，另一侧显示实时终端和项目文件树。你可以运行命令、检查输出，并将结果反馈给代理，无需切换应用。
+
+### 命令面板
+
+按 `Cmd/Ctrl+K` 打开命令面板。从这里可以切换会话、更换代理、打开设置或触发任意动作，无需使用鼠标。
+
+### 完整设置 UI
+
+设置面板涵盖 `.bolt/bolt.jsonc` 中所有选项——键位、模型选择、LLM 提供商、MCP 服务器和鉴权——都以下拉、开关和内联校验形式提供。你几乎不需要手工编辑配置文件。
+
+### 原生通知
+
+长时间运行的任务完成时，Bolt 会触发原生系统通知。点击通知可直接跳转到该会话。
+
+### 深层链接
+
+通过导航到 `bolt://` URL 打开特定会话。适合与队友分享会话链接或书签保存进行中的工作。
+
+### 自动更新
+
+桌面应用会跨三个渠道自动更新：
+
+| 渠道 | 描述 |
+|---------|-------------|
+| `prod` | 稳定发布，每个生产标签更新一次 |
+| `beta` | 预发布构建，用于抢先体验新功能 |
+| `dev` | 来自 `dev` 分支的每日构建 |
+
+在 **Settings → About** 中切换渠道。
+
+### 28 种 UI 语言
+
+Bolt 的界面已本地化为 28 种语言。在 **Settings → Appearance → Language** 中更改显示语言。
+
+---
+
+## 相关文档
+
+<CardGroup cols={2}>
+  <Card title="远程会话" icon="server" href="/server/remote-sessions">
+    在远程机器上运行 headless 服务器，并从桌面应用或 CLI 进行连接。
+  </Card>
+  <Card title="MCP 服务器" icon="plug" href="/extending/mcp-servers">
+    使用 Model Context Protocol 向代理添加外部工具和 API。
+  </Card>
+  <Card title="插件" icon="puzzle-piece" href="/extending/plugins">
+    使用自定义提供商、鉴权方式和工作区适配器扩展 Bolt。
+  </Card>
+  <Card title="GitHub 集成" icon="github" href="/server/github-actions">
+    从桌面应用或 CI 自动化 PR、提交信息和代码评审。
+  </Card>
+</CardGroup>

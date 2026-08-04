@@ -1,0 +1,22 @@
+---
+title: "Skills：可复用的代理剧本"
+sidebarTitle: "Skills"
+description: "Skills 是具名的、可复用的剧本，由 Bolt 代理通过 skill 工具调用——适合发布版本或运行 lint 套件等固定工作流。"
+---
+
+Skills 是与项目共存、通过 `skill` 工具调用的具名可复用剧本。如果说自定义工具是单一可执行动作，那么 skill 就是代理可以逐步执行的脚本化工作流：收集这些文件、运行这些命令、根据输出决定下一步。
+
+在以下情况使用 skills：
+
+- 你有一个总要在提示中重复解释的工作流（“先运行 linter，然后 …”）。
+- 你希望代理遵循特定的决策树。
+- 你希望同一个工作流对项目中每个会话和每个代理都可用。
+
+## 存放位置
+
+Skills 是位于项目根目录 `.opencode/skill/`（或 `.opencode/skills/`）下的文件。每个文件描述触发名称、代理何时应使用它，以及涉及的步骤。`skill` [工具](/concepts/tools) 将它们暴露给模型。
+
+## 相关内容
+
+- [Custom Tools](/extending/custom-tools) — 更底层的、单一动作的扩展。
+- [Custom Agents](/extending/custom-agents) — 将指令直接烘焙进代理。

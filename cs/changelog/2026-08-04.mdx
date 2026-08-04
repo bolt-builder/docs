@@ -1,0 +1,33 @@
+---
+title: "Týden 4. srpna 2026"
+description: "Týdenní changelog Boltu: 11 nových jazyků UI, layout zprava doleva, nativní desktopové překlady, provider Poolside, vylepšení GPT-5 a opravy chyb."
+---
+
+## Nové funkce
+
+- **11 nových jazyků UI** — Desktopová aplikace a TUI nyní obsahují překlady do hindštiny, nizozemštiny, indonéštiny, vietnamštiny, italštiny, urdštiny, paňdžábštiny, ázerbájdžánštiny, finštiny, švédštiny a thajštiny, čímž celkový počet podporovaných jazyků stoupá na 28. Jazyk přepneš v **Settings → Appearance → Language**. Viz [Desktopové funkce](/desktop/features) a [Instalace](/desktop/install#28-ui-languages).
+- **Podpora rozložení zprava doleva** — Navigace, editory, dialogy, ovládací prvky a vykreslování textu se nyní správně zrcadlí pro jazyky psané zprava doleva jako arabština, hebrejština a urdština, takže celé rozhraní působí v těchto lokalitách přirozeně.
+- **Nativní desktopové překlady** — Menu na úrovni OS, dialogy updateru, obnovovací tok, onboarding pro WSL a nativní výběry souborů jsou nyní lokalizovány spolu s UI aplikace, takže celé desktopové prostředí respektuje nastavení jazyka.
+- **Rozšířené pokrytí lokalizace** — Menu, dialogy, prompty, obsah nápovědy, chybové zprávy a popisky pro přístupnost jsou nyní přeloženy ve všech podporovaných jazycích a zaplňují mezery, kde předtím řetězce padaly zpět na angličtinu.
+- **Provider Poolside** — Bolt se nyní připojí k [Poolside](https://poolside.ai) přes jeho API kompatibilní s OpenAI. Spusť `/connect`, vyber **Poolside** a vlož svůj API klíč z [platform.poolside.ai](https://platform.poolside.ai). Nasazení Poolside na vlastním hostiteli lze také nakonfigurovat jako vlastního providera. Viz [Provideři a modely](/concepts/providers-and-models).
+- **Skloňování podle locale** — Počty, stavy, soubory a položky v seznamu sezení se nyní správně skloňují podle jazyka, takže texty na časové ose a stavové texty působí ve všech podporovaných lokalitách přirozeně.
+- **Bohatší vykreslování Markdownu** — Zprávy od asistenta získávají vylepšené formátování Markdownu, plynulejší streamovací aktualizace, lepší zvýrazňování syntaxe a podporu matematického obsahu, což usnadňuje čtení dlouhých a technických odpovědí.
+
+## Aktualizace
+
+- **Míra uvažování GPT-5 odpovídá verzi modelu** — Úrovně reasoning effort (včetně `none` a `xhigh`) jsou nyní nabízeny pouze pro varianty GPT-5, které je podporují, takže `--variant` už nezobrazuje volby, které by daný model odmítl. Viz [Kontrola míry uvažování](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Vylepšení anotací diffů** — Diff pohled v UI sezení vylepšuje indikátory komentářů, chování žlabu a barvy syntaxe pro světlý/tmavý režim kvůli lepší čitelnosti.
+- **Vylepšené stávající překlady** — Stávající jazyky získávají jasnější terminologii a rozšířené UI popisky pro konzistentnější zážitek v celé aplikaci.
+
+## Opravy chyb
+
+- **Načasování akcí sezení** — Akce sezení nyní zaznamenávají a hlásí své načasování přesněji, takže časová osa odráží, kdy práce skutečně začala a skončila.
+- **Jasnější chyby vzdáleného workspace** — Selhání při připojování nebo spouštění příkazů ve vzdáleném workspace nyní zobrazují popisnější chybové zprávy místo obecných.
+- **Workspace proxy už neprozrazuje pracovní adresář** — Požadavky směrované přes workspace proxy již neobsahují detaily pracovního adresáře, takže lokální cesty se nedostanou ven.
+- **Mapa vyplní prázdné oblasti** — Mapa aktivity nyní zůstává viditelná i v oblastech bez zaznamenané aktivity místo toho, aby se zbortila na prázdnou plochu.
+- **Opravena detekce locale** — Bolt nyní spolehlivě rozpozná systémovou locale při startu, takže se rozhraní otevře ve správném jazyce na více platformách.
+- **Opraven německý překlad časové osy** — Položky časové osy v němčině se nyní zobrazují se správnými řetězci místo toho, aby padaly zpět na angličtinu nebo špatně formátovaný text.
+- **Přepínání výběru souborů zpět** — Kliknutí na výběr souboru podruhé nyní výběr zruší, takže můžeš výběr vzít zpět, aniž bys musel(a) nejdřív vybrat jiný.
+- **Čistší interakce s koncepty komentářů** — Zahájení nebo zavření konceptu komentáře nyní konzistentně vymaže podkladový výběr a už nekoliduje s hover stavem.
+- **Obnovena animovaná hlavička uvažování** — Hlavička uvažování v TUI opět zobrazuje animovaný spinner, když model přemýšlí, a její gradient se ztlumí při rozbalení, takže sbalený a otevřený stav jsou od sebe lépe rozeznatelné.
+- **Obnoveny nástroje pro procesy na pozadí a testy** — `bash_background`, `process_output`, `list_processes`, `kill_process` a `test_run` jsou opět dostupné agentům poté, co v dřívějším merge vypadly. Agenti mohou spouštět dlouho běžící příkazy jako dev servery a watchery, číst jejich výstup a spouštět testy projektu se strukturovanými výsledky pass/fail. Viz [Vestavěné nástroje](/concepts/tools#built-in-tools).

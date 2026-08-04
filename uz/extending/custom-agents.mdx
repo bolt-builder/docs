@@ -1,0 +1,68 @@
+---
+title: "Bolt'da Custom agentlar"
+sidebarTitle: "Custom agentlar"
+description: "O'zingizning Bolt agentlaringizni Markdown fayllar sifatida aniqlang — modelni tanlang, kirish darajasini o'rnating, asboblarni cheklang va domenga xos ko'rsatmalarni qo'shing."
+---
+
+O'nta o'rnatilgan agentdan tashqari, siz o'zingiznikini aniqlashingiz mumkin. Custom agentlar — agentning modeli, kirish darajasi va mavjud asboblarni tavsiflaydigan frontmatter bloki va uning system prompti sifatida ishlaydigan tana bilan Markdown fayllar.
+
+## Agent yaratish
+
+Eng tez yo'l — o'rnatilgan generator, u bir necha savol beradi va fayl'ni siz uchun yozadi:
+
+```bash
+bolt agent create
+```
+
+Agentlar loyihada `.opencode/agent/` (yoki shaxsiy agentlar uchun global konfiguratsiya katalogingiz) ostida yashaydi. Har bir agent bitta `.md` fayl bo'lib, uning fayl nomi agent nomiga aylanadi.
+
+## Agent faylining anatomiyasi
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Umumiy frontmatter maydonlari:
+
+| Maydon | Maqsad |
+| --- | --- |
+| `name` | `--agent` bilan ishlatiladigan agent nomi. |
+| `description` | Ro'yxatlarda ko'rsatiladigan bir qatorli xulosa. |
+| `model` | `provider/model` formatidagi standart model. |
+| `access` | `full`, `edit` yoki `read` ([Permissions](/concepts/permissions) ga qarang). |
+| `tools` | Agent chaqirishi mumkin bo'lgan [tools](/concepts/tools) ni cheklaydigan ixtiyoriy ruxsat berish ro'yxati. |
+
+## Custom agentni ishlatish
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+TUI da agentlar orasida aylanish uchun `Tab` ni bosing; custom agentlar o'rnatilganlar bilan bir qatorda paydo bo'ladi.
+
+## Subagentlar
+
+Agentlar `task` asbobi orqali subagentlarga topshiriq berishlari mumkin. Bolt `@general` va `@explore` bilan keladi va `.opencode/agent/` ostidagi fayli bo'lgan har qanday custom agent ham nom bo'yicha subagent sifatida chaqirilishi mumkin.
+
+## Aloqador
+
+- [Agents](/concepts/agents) — o'rnatilgan agentlar tarkibi.
+- [Tools](/concepts/tools) — `tools:` ga nima qo'shishingiz mumkin.
+- [Custom Tools](/extending/custom-tools) — agent chaqiradigan asbobni yarating.

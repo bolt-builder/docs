@@ -1,0 +1,28 @@
+---
+title: "ACP: a Bolt vezérlése Zedből és más szerkesztőkből"
+sidebarTitle: "ACP (szerkesztők)"
+description: "A Bolt beszéli az Agent Client Protocolt (ACP), így az olyan szerkesztők, mint a Zed, natív MI-kódolási háttérként ágyazhatják be külön alkalmazás vagy TUI futtatása nélkül."
+---
+
+A Bolt megvalósítja az Agent Client Protocolt (ACP), amelyen keresztül az olyan szerkesztők, mint a Zed, beszélnek MI-ügynökökkel. Egyszer beállítva, a szerkesztő a `bolt acp`-t indítja alfolyamatként, és közvetlenül vezérli — megkapod a Bolt ügynökeit, eszközeit, munkameneteit és szolgáltatói stackjét anélkül, hogy elhagynád a szerkesztőt.
+
+## ACP engedélyezése
+
+A szerkesztőd MI-beállításaiban add hozzá a Bolt-ot ACP-kompatibilis ügynökként, és mutass rá:
+
+```bash
+bolt acp
+```
+
+A szerkesztő fogja kezelni a folyamat életciklusát. Konfiguráld a szolgáltatókat, modelleket és MCP-szervereket a szokásos módon a `.bolt/bolt.jsonc` fájlban — itt is érvényesek.
+
+## Amit kapsz
+
+- Minden Bolt-ügynök, a szerkesztő MI-panelről meghívva.
+- Megosztott munkamenetek a TUI-val és a webes felülettel (a helyi adatbázison keresztül).
+- Ugyanaz az eszközkészlet, jogosultsági modell és projektmemória, mint bármely más Bolt-belépési ponton.
+
+## Kapcsolódó
+
+- [Fej nélküli szerver](/server/headless-server) — a párhuzamos HTTP-interfész.
+- [Konfiguráció](/concepts/configuration) — a konfigurációs fájl, amelyet az ACP örököl.

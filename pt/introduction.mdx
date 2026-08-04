@@ -1,0 +1,107 @@
+---
+title: "Introdução ao Bolt: o agente de IA de terminal open-source"
+sidebarTitle: "Introdução"
+description: "Conheça o Bolt: um agente de programação com IA de terminal open-source, com dez agentes, sessões duradouras, memória do projeto, MCP, mais de 75 fornecedores de LLM, TUI e aplicação de desktop."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**O seu terminal, agora com uma equipa de engenharia de IA completa lá dentro.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+O Bolt é um agente de programação com IA orientado ao terminal, construído com [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) e [SolidJS](https://www.solidjs.com). Aponte-o para qualquer projeto e ele reúne contexto automaticamente: explora o seu código, segue as suas convenções, executa comandos de shell, edita ficheiros, executa testes e entrega alterações.
+
+Dez agentes incorporados (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) mais os subagentes `@general` e `@explore` cobrem todo o ciclo de engenharia. As sessões são duradouras: desanexe, reanexe (mesmo a um servidor remoto), faça fork, partilhe, exporte e importe em qualquer momento. A memória do projeto persiste o que o agente aprende entre sessões. Extensível via servidores MCP (com OAuth), plugins, agentes personalizados e ferramentas personalizadas.
+
+O Bolt é open source sob a licença PolyForm Noncommercial 1.0.0.
+
+## Porquê o Bolt?
+
+O Bolt foi concebido em torno da forma como os developers realmente trabalham: no terminal, em várias sessões, em bases de código reais. Eis o que o distingue:
+
+- **TUI orientada ao terminal.** Uma interface rápida e controlada pelo teclado, construída com [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) e [SolidJS](https://www.solidjs.com). Parece nativo porque é nativo.
+- **Uma equipa inteira de agentes.** Dez agentes especializados — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` e `perf` — mais subagentes para investigação e delegação em vários passos. Alterne entre eles com `Tab`.
+- **Sessões das quais pode sair e voltar.** Desanexe-se de uma sessão e ligue-se mais tarde, mesmo num servidor remoto. Faça fork, partilhe, exporte e importe trabalho a qualquer momento. As sessões são armazenadas em SQLite e totalmente inspecionáveis com `bolt db`.
+- **Extensível por conceção.** Servidores MCP com suporte OAuth completo, um sistema de plugins, integração com o GitHub, um servidor de API incorporado e uma UI Web.
+- **Aplicação de desktop.** O mesmo motor embrulhado numa experiência de desktop multi-janela e multi-separador — com terminal integrado, árvore de ficheiros, paleta de comandos, 28 idiomas de UI e atualizações automáticas.
+
+## Agentes incorporados
+
+O Bolt inclui dez agentes especializados. Cada agente tem um nível definido de acesso ao sistema de ficheiros, adequado ao seu propósito.
+
+| Agente | Acesso | Descrição |
+| --- | --- | --- |
+| `code` | Full | Predefinição: lê, escreve e executa código |
+| `plan` | Read | Explora o código-fonte e produz um plano sem alterar ficheiros |
+| `ask` | Read | Perguntas e investigação — sem edições de ficheiros |
+| `code-review` | Read | Revê alterações quanto a correção, estilo e segurança |
+| `debug` | Full | Depura testes que falham, crashes e erros de lógica |
+| `refactor` | Full | Refatoração segura com verificação de testes em cada passo |
+| `docs` | Edit | Escreve e atualiza documentação e comentários |
+| `security` | Read | Auditoria de segurança: vulnerabilidades, segredos, padrões |
+| `migrate` | Full | Atualizações de frameworks e migrações de dependências |
+| `perf` | Full | Análise de desempenho e otimização |
+
+Também pode definir os seus próprios agentes como ficheiros Markdown ou gerar um com `bolt agent create`.
+
+## Aplicação de desktop
+
+O Bolt também é distribuído como uma aplicação de desktop autónoma, com gestão de sessões multi-janela e multi-separador, compositor de prompts com suporte para anexos e colagem de imagens da área de transferência, terminal integrado e árvore de ficheiros, paleta de comandos, definições completas para atalhos, modelos, fornecedores e servidores, notificações nativas, deep links, integração WSL no Windows e atualizações automáticas nos canais dev, beta e produção.
+
+Descarregue a aplicação de desktop na [página de releases](https://github.com/Bolt-builder/bolt-cli/releases), ou instale-a em uma linha no macOS sem desvios pelo Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Explorar a documentação
+
+<CardGroup cols={2}>
+  <Card title="Instalação" icon="download" href="/installation">
+    Instale o Bolt via curl, npm ou o gestor de pacotes do seu sistema no macOS, Linux e Windows.
+  </Card>
+
+  <Card title="Guia rápido" icon="rocket" href="/quickstart">
+    Abra o TUI, execute o seu primeiro prompt e envie um commit gerado por IA em menos de um minuto.
+  </Card>
+
+  <Card title="Agentes" icon="users" href="/concepts/agents">
+    Dez agentes incorporados mais subagentes. Aprenda o que cada um faz e como escrever os seus.
+  </Card>
+
+  <Card title="Memória do projeto" icon="brain" href="/concepts/project-memory">
+    Como o Bolt recorda o seu projeto entre sessões e como controlar o que é capturado.
+  </Card>
+
+  <Card title="Servidores MCP" icon="plug" href="/extending/mcp-servers">
+    Ligue ferramentas e fontes de dados externas ao Bolt através do Model Context Protocol.
+  </Card>
+
+  <Card title="Servidor headless" icon="server" href="/server/headless-server">
+    Execute `bolt serve`, ligue um TUI a partir de qualquer máquina e controle o Bolt pela API.
+  </Card>
+</CardGroup>

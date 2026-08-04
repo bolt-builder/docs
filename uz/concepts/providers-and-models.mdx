@@ -1,0 +1,139 @@
+---
+title: "Provayderlar va modellar — LLM autentifikatsiyasi va tanlash"
+sidebarTitle: "Provayderlar va modellar"
+description: "Bolt Vercel AI SDK orqali har qanday LLM provayderni qo'llab-quvvatlaydi. Provayderlarni autentifikatsiya qiling, modellarni ro'yxatga oling, reasoning effort'ni sozlang va best-of-N parallel taqqoslashlarni ishga tushiring."
+---
+
+Bolt dizayn bo'yicha model-agnostik. Kaput ostida u provayderlar bilan gaplashish uchun **Vercel AI SDK** dan foydalanadi, bu SDK qo'llab-quvvatlaydigan har qanday provayder — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter va boshqalar — qutidan ishlashini anglatadi. Provayder va model katalogi provayder metama'lumotlari va narxlashning jamoa tomonidan yuritiladigan ma'lumotlar bazasi bo'lgan [models.dev](https://models.dev) dan olinadi.
+
+## Provayder hisob ma'lumotlarini boshqarish
+
+Provayder hisob ma'lumotlarini qo'shish, ro'yxatga olish va olib tashlash uchun `bolt providers` dan (alias sifatida `bolt auth`) foydalaning.
+
+### Hisob ma'lumotlarini qo'shish yoki yangilash
+
+```bash
+bolt providers login
+# yoki teng ravishda:
+bolt auth login
+```
+
+Bu provayderni tanlash va hisob ma'lumotlarini kiritish uchun interaktiv so'rovni ishga tushiradi. Interaktiv oqimni o'tkazib yuborish uchun bayroqlarni to'g'ridan-to'g'ri uzating:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Sozlangan provayderlarni ro'yxatga olish
+
+```bash
+bolt providers list
+# yoki:
+bolt auth list
+```
+
+Barcha saqlangan hisob ma'lumotlarini va environment variable'lardan aniqlangan har qanday provayder API kalitlarini ko'rsatadi.
+
+### Hisob ma'lumotlarini olib tashlash
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Environment variable autentifikatsiyasi
+
+CI pipelinelari yoki headless muhitlar uchun to'g'ridan-to'g'ri provayderning API kaliti environment variable'ini o'rnating — interaktiv login talab qilinmaydi. Umumiy misollar:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt bu o'zgaruvchilarni ishga tushirishda avtomatik o'qiydi. `bolt providers list` u qaysi environment variable'larni aniqlaganini ko'rsatadi.
+
+## Mavjud modellarni ko'rish
+
+`bolt models` sizning sozlangan provayderlaringiz bo'ylab mavjud har bir modelni ro'yxatga oladi.
+
+```bash
+# Barcha modellarni ro'yxatga olish
+bolt models
+
+# Bitta provayderga filtrlash
+bolt models anthropic
+
+# Xarajat va imkoniyat metama'lumotlarini ko'rsatish
+bolt models --verbose
+
+# Model katalogini models.dev dan yangilash
+bolt models --refresh
+```
+
+<Tip>
+  Har bir model uchun input/output token narxlashni ko'rish uchun `bolt models --verbose` ni ishga tushiring. Bu uzoq davom etadigan vazifa uchun modelga qaror qilishdan oldin xarajatlarni taqqoslashni osonlashtiradi.
+</Tip>
+
+### Model identifikatori formati
+
+Modellar har doim `provider/model` formatida havola qilinadi:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Bu formatni Bolt modelni qabul qiladigan har qanday joyda ishlating — CLI bayroqlari, konfiguratsiya fayllari va agent ta'riflari.
+
+## Runtime da modelni tanlash
+
+### `--model` / `-m` bayrog'i
+
+`--model` bayrog'i `bolt run`, `bolt commit` va `bolt review` da mavjud:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — reasoning effort'ni boshqarish
+
+Ba'zi modellar sozlanadigan reasoning effort darajalarini qo'llab-quvvatlaydi (masalan, Anthropic'ning kengaytirilgan fikrlashi, OpenAI'ning reasoning modellari). Effort darajasini tanlash uchun `--variant` dan foydalaning:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Mavjud variant qiymatlari provayder va modelga bog'liq. Umumiy qiymatlar `minimal`, `low`, `medium`, `high` va `max`, lekin aniq to'plam farq qiladi. Muayyan model uchun qo'llab-quvvatlanadigan variantlarni ko'rish uchun provayderning hujjatlariga qarang yoki `bolt models --verbose` dan foydalaning.
+</Note>
+
+### `--thinking` — reasoning bloklarini ko'rsatish
+
+Kengaytirilgan fikrlashni qo'llab-quvvatlaydigan modeldan foydalanganda, chiqishda modelning fikr zanjirini ko'rsatish uchun `--thinking` ni uzating:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Best-of-N parallel ishga tushirishlar
+
+`--best-of` bir xil promptni bir vaqtning o'zida bir nechta modelga uzatadi, so'ngra javoblarni tartiblash va eng yaxshisini saqlash uchun sudya modeldan foydalanadi:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+Sudya standart bo'yicha `--model` orqali uzatilgan modelga, yoki `--model` o'rnatilmagan bo'lsa `--best-of` ro'yxatidagi birinchi yozuvga o'rnatiladi. Bayroq `provider/model` identifikatorlarining vergul bilan ajratilgan ro'yxatini qabul qiladi.
+
+<Tip>
+  Best-of-N ayniqsa turli xil modellar chindan ham boshqacha yondashuvlarni olib kelishi mumkin bo'lgan murakkab algoritmik muammolar yoki arxitektura qarorlari uchun foydali. Bolt ularni bir vaqtning o'zida ishga tushirsin va g'olibni avtomatik tanlasin.
+</Tip>

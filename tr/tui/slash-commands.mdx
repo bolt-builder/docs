@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI Eğik Çizgi Komutları"
+sidebarTitle: "Eğik Çizgi Komutları"
+description: "Bolt TUI içinde çalıştırabileceğiniz eğik çizgi komutları — /memory, /plan, /todos, /btw — ve mevcut oturumun davranışını nasıl değiştirdikleri."
+---
+
+Eğik çizgi komutları TUI komut istemine yazılır ve mevcut oturumun nasıl davrandığını değiştirir. Modele hiçbir şey göndermezler; Bolt'un kendisine karşı yerel olarak çalışırlar.
+
+## Referans
+
+| Komut | Ne yapar |
+| --- | --- |
+| `/memory` | Bu oturum için proje belleği durumunu göster. |
+| \`/memory use on | off\` | Bu oturumun [proje belleğinden](/concepts/project-memory) okuyup okumayacağı. |
+| \`/memory contribute on | off\` | Tur kapandığında bu oturumun proje belleğine geri yazıp yazmayacağı. |
+| `/plan` | Mevcut oturumu planlama moduna geçir (salt okunur, bir plan üretir). |
+| `/todos` | Ajanın mevcut yapılandırılmış görev listesini göster. |
+| `/btw` | Ajanın bir sonraki turunda göreceği ancak tam bir yanıt tetiklemeyecek bant dışı bir not enjekte et ("bu arada..."). |
+
+<Tip>
+  Eğik çizgi komutları oturum kapsamlıdır. Bir tercihi kalıcı hale getirmek için, bunun yerine `.bolt/bolt.jsonc` içinde ayarlayın. [Yapılandırma](/concepts/configuration) bölümüne bakın.
+</Tip>
+
+## Kendinizinkini ekleme
+
+Özel eğik çizgi komutları [eklentiler](/extending/plugins) ve `.opencode/command/` içindeki dosyalar tarafından katkıda bulunulabilir. Her komut, tetikleyiciyi ve davranışı açıklayan bir ön veriye sahip bir Markdown dosyasıdır.
+
+## İlgili
+
+- [Kısayol Tuşları](/tui/keybinds) — TUI için klavye kısayolları.
+- [Proje Belleği](/concepts/project-memory) — `/memory`'nin neyi değiştirdiği.

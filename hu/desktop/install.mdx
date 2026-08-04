@@ -1,0 +1,116 @@
+---
+title: "Bolt asztali alkalmazás: több ablakos MI-alapú kódolómunkamenetek"
+sidebarTitle: "Telepítés"
+description: "Telepítsd a Bolt asztali alkalmazást több ablakos munkamenetekhez, integrált terminálhoz, prompt-szerkesztőhöz képbeillesztéssel, automatikus frissítésekhez és 28 felületnyelvhez."
+url: "desktop/install"
+---
+
+A Bolt asztali alkalmazás ugyanazt a motort csomagolja, mint a CLI, teljes Electron-héjba. Minden funkció, amely elérhető a terminálban — ügynökök, MCP-szerverek, pluginek, távoli munkamenetek, elágaztatható és megosztható munkamenetek — azonos módon működik az asztali alkalmazásban, kiegészítve egy több ablakos és több lapos élménnyel, grafikus beállítási felülettel, natív értesítésekkel és automatikus frissítésekkel. Ha már használod a CLI-t, az asztali alkalmazás egy közvetlen kiegészítő, nem helyettesítő.
+
+---
+
+## Telepítés
+
+### macOS
+
+<Steps>
+  <Step title="Telepítés az egysoros paranccsal (ajánlott)">
+    Nyiss egy terminált, és futtasd:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    A szkript letölti a legújabb kiadást, ellenőrzi, és az alkalmazást az `/Applications` mappába helyezi. Nincs Gatekeeper-felugró ablak.
+  </Step>
+
+  <Step title="Indítsd el az alkalmazást">
+    Nyisd meg a **Bolt**-ot az `/Applications` mappából vagy a Spotlight-ból. Első indításkor a Bolt megkér, hogy válassz alapértelmezett LLM-szolgáltatót, és létrehoz egy globális konfigurációs fájlt.
+  </Step>
+</Steps>
+
+<Tip>
+  Az egysoros parancs olyan módon telepíti az alkalmazást, amely megkerüli a macOS Gatekeeper „azonosítatlan fejlesztő" párbeszédablakát, így extra biztonsági promptok nélkül vághatsz bele a kódolásba.
+</Tip>
+
+### Minden platform — letöltés a kiadásokból
+
+Töltsd le a legújabb telepítőt a platformodhoz a [Bolt kiadási oldalról](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Platform | Telepítő típusa |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` telepítő |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Windowson a Bolt tartalmazza a WSL (Windows Subsystem for Linux) integrációt. Amikor a WSL elérhető, a Bolt közvetlenül a WSL-disztribúciódban tud munkameneteket nyitni — Linux-natív ügynökkörnyezetet biztosítva natív Windows felhasználói felülettel.
+</Note>
+
+---
+
+## Funkciók
+
+### Több ablakos és több lapos munkamenet-kezelés
+
+Nyiss annyi ablakot, ahányat csak akarsz, mindegyiket saját lapkészlettel. A lapok közvetlenül Bolt-munkamenetekre vannak leképezve, így egy lapon futtathatsz egy ügynököt refaktoráláshoz, egy másikon feltehetsz kérdést, egy harmadikon pedig egy háttérfeladatot futtathatsz — mindezt egyszerre.
+
+### Prompt-szerkesztő
+
+A prompt-szerkesztő gazdag bevitelt támogat: illessz be szöveget, húzz be fájlokat mellékletként, vagy illessz be közvetlenül képet a vágólapról. A Bolt kódolja a képet, és automatikusan elküldi bármely vízió-képes modellnek.
+
+### Integrált terminál és fájlfa
+
+Egy osztott elrendezés az ügynökbeszélgetést az egyik oldalon, egy élő terminált és projekt-fájlfát a másikon jelenít meg. Futtathatsz parancsokat, megvizsgálhatod a kimenetet, és visszaadhatod az eredményeket az ügynöknek anélkül, hogy alkalmazást kellene váltanod.
+
+### Parancspaletta
+
+Nyomd meg a `Cmd/Ctrl+K` billentyűkombinációt a parancspaletta megnyitásához. Innen munkamenetek között válthatsz, ügynököt cserélhetsz, beállításokat nyithatsz, vagy bármilyen műveletet indíthatsz anélkül, hogy egérhez kellene nyúlnod.
+
+### Teljes beállítási felület
+
+A beállítások panel minden opciót lefed, amely a `.bolt/bolt.jsonc` fájlban él — billentyűkombinációk, modellválasztás, LLM-szolgáltatók, MCP-szerverek és hitelesítés — legördülő listákkal, kapcsolókkal és soron belüli érvényesítéssel. Ritkán kell kézzel szerkesztened a konfigurációs fájlt.
+
+### Natív értesítések
+
+A Bolt natív OS-értesítést küld, amikor egy hosszan futó feladat befejeződik. Kattints az értesítésre, hogy közvetlenül a munkamenethez ugorj.
+
+### Deep linkek
+
+Nyiss meg egy adott munkamenetet egy `bolt://` URL-re navigálva. Hasznos munkamenet-linkek megosztásához csapattársakkal vagy folyamatban lévő munka könyvjelzőzéséhez.
+
+### Automatikus frissítések
+
+Az asztali alkalmazás három csatornán frissíti magát:
+
+| Csatorna | Leírás |
+|---------|-------------|
+| `prod` | Stabil kiadások, minden produkciós tag után frissítve |
+| `beta` | Előzetes buildek korai hozzáférésért az új funkciókhoz |
+| `dev` | Éjszakai buildek a `dev` ágból |
+
+A csatornaváltás a **Settings → About** menüben történik.
+
+### 28 felületnyelv
+
+A Bolt felülete 28 nyelvre van lokalizálva. Változtasd meg a megjelenítési nyelvet a **Settings → Appearance → Language** menüben.
+
+---
+
+## Kapcsolódó dokumentumok
+
+<CardGroup cols={2}>
+  <Card title="Távoli munkamenetek" icon="server" href="/server/remote-sessions">
+    Futtass fej nélküli szervert egy távoli gépen, és csatlakozz az asztali alkalmazásból vagy a CLI-ből.
+  </Card>
+  <Card title="MCP-szerverek" icon="plug" href="/extending/mcp-servers">
+    Adj hozzá külső eszközöket és API-kat az ügynökeidhez a Model Context Protocol segítségével.
+  </Card>
+  <Card title="Pluginek" icon="puzzle-piece" href="/extending/plugins">
+    Bővítsd a Bolt-ot egyedi szolgáltatókkal, hitelesítési módszerekkel és munkaterület-adapterekkel.
+  </Card>
+  <Card title="GitHub-integráció" icon="github" href="/server/github-actions">
+    Automatizáld a PR-eket, commit-üzeneteket és kódellenőrzést az asztali alkalmazásból vagy CI-ből.
+  </Card>
+</CardGroup>

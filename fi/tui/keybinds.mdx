@@ -1,0 +1,38 @@
+---
+title: "Boltin TUI-näppäinsidokset"
+sidebarTitle: "Näppäinsidokset"
+description: "Boltin olennaiset TUI-oikotiet: agenttien vaihtaminen Tabilla, mini-tila, push-to-talk-ääni ja kaikki muu, mitä voit ohjata näppäimistöltä."
+---
+
+Boltin TUI on suunniteltu ohjattavaksi päästä päähän näppäimistöltä. Tämä sivu listaa oikotiet, joihin tartut useimmiten. Tyhjentävää luetteloa varten suorita `bolt` ja avaa sovelluksen sisäinen ohje.
+
+## Olennaiset
+
+| Näppäimet | Toiminta |
+| --- | --- |
+| `Tab` | Siirry seuraavaan agenttiin (`code`, `plan`, `ask`, ...). Nykyinen agentti näkyy tilarivillä. |
+| `Shift+Tab` | Siirry edelliseen agenttiin. |
+| `Enter` | Lähetä nykyinen viesti. |
+| `Esc` | Peruuta käynnissä oleva vuoro. |
+| `Ctrl+C` | Keskeytä nykyinen työkalukutsu. |
+| `Ctrl+D` | Irrottaudu istunnosta (jättää sen käyntiin palvelimella). |
+
+## Tilat
+
+### `--mini`-tila
+
+Käynnistä Bolt kompaktilla split-footer-asettelulla, joka vie vähemmän terminaalitilaa, hienoa jaettuihin paneeleihin:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk-ääni
+
+Pidä pohjassa määritetty push-to-talk-näppäin sanellaksesi kehotteen puhe-tekstiksi-toiminnolla ja vapauta sitten lähettääksesi. Määritä näppäin ja STT-tarjoaja tiedostossa `.bolt/bolt.jsonc`.
+
+## Liittyvät
+
+- [Kauttaviivakomennot](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` ja kaverit.
+- [Istunnot](/concepts/sessions) — irrottaudu, jatka, haaraudu ja jaa näppäimistöltä.

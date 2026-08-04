@@ -1,0 +1,46 @@
+---
+title: "Proje Belleği: Bolt Oturumları Arasında Kalıcı Bağlam"
+sidebarTitle: "Proje Belleği"
+description: "Bolt her turun sonunda projeniz hakkında öğrendiklerini yakalar ve yeni oturumlara enjekte eder; böylece ajan kod tabanınızı her seferinde yeniden öğrenmez."
+---
+
+Proje belleği, Bolt'un projenizi zaten biliyormuş gibi hissettiren şeydir. Bir oturum turunu sonlandırdığında, Bolt işe yarayan şeyleri damıtır ve proje başına bir bellek deposuna yazar. Yeni bir oturum açtığınızda Bolt, sistem komutuna bir bellek dizinini ve en son oturum özetini enjekte eder; böylece ajan boş bir sayfa yerine gerçek bağlamla başlar.
+
+## Yakalamanın işleyişi
+
+Her konuşma turunun sonunda Bolt, modelden bir sonraki sefer için yararlı olacak kalıcı gerçekleri özetlemesini ister: kurallar, mimari notlar, dosya düzeni, derleme/test komutları, sürprizler ve açık başlıklar. Bunlar, projenin bellek dizini altında, en son oturumun sürekli güncellenen bir özetiyle birlikte diske yazılır.
+
+Bellek proje başınadır. Aynı makinedeki aynı deponun iki teslim alması belleği paylaşır; alakasız projeler asla birbirlerinin belleğini görmez.
+
+## Açık araçlar
+
+Ajanlar bir oturum sırasında belleği doğrudan okuyup yazabilir:
+
+- `memory_save` — ajanın bir sonraki sefer hatırlaması gereken belirli bir gerçeği kaydeder.
+- `memory_recall` — ajanın (veya sizin) daha önce yakaladığınız bir şeyi arar.
+
+Ajandan "npm değil, pnpm kullandığımızı hatırla" demesini isteyebilirsiniz ve sizin için `memory_save` çağıracaktır.
+
+## Oturum başına kontroller
+
+TUI içinden, mevcut oturum için bellek davranışını eğik çizgi komutlarıyla değiştirebilirsiniz:
+
+```text
+/memory use on|off         # bu oturumun proje belleğini okuyup okumayacağı
+/memory contribute on|off  # bu oturumun belleğe geri yazıp yazmayacağı
+```
+
+Belleğinizi kirletmeyecek tek kullanımlık keşif oturumları veya önceki bağlamdan yine de yararlanan salt okunur bir oturum istediğinizde bu kullanışlıdır.
+
+## Belleği inceleme ve düzenleme
+
+```bash
+bolt memory           # mevcut projenin bellek deposunu incele
+```
+
+Bellek, projenin Bolt veri dizini altında düz dosyalar olarak diskte saklanır; böylece girişleri doğrudan grep, düzenleme veya silme yapabilirsiniz. Makinenizdeki tam yolu bulmak için `bolt debug paths` komutunu çalıştırın.
+
+## İlgili
+
+- [Oturumlar](/concepts/sessions) — bellek girişleri üreten kalıcı konuşmalar.
+- [Yapılandırma](/concepts/configuration) — belleğin nerede saklandığı ve yolun nasıl geçersiz kılınacağı.

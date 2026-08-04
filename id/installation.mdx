@@ -1,0 +1,121 @@
+---
+title: "Instal Bolt di macOS, Linux, atau Windows"
+sidebarTitle: "Installation"
+description: "Instal Bolt CLI via curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey, atau Scoop. Mencakup upgrading, uninstalling, dan aplikasi desktop."
+---
+
+Bolt dapat diinstal di macOS, Linux, dan Windows menggunakan metode yang sesuai dengan alur kerjamu — script curl satu baris, package manager Node.js utama mana pun, atau package manager sistem seperti Homebrew, Chocolatey, atau Scoop.
+
+## Instal cepat (macOS / Linux)
+
+Cara tercepat untuk memulai adalah script install resmi. Script ini otomatis mendeteksi OS dan arsitekturmu, mengunduh binary yang tepat ke `~/.bolt/bin`, dan menambahkannya ke `$PATH` kamu.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Installer juga menyiapkan dependensi input suara opsional (sox dan whisper-cpp untuk transkripsi offline). Untuk melewatinya, teruskan `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Untuk mengunci versi tertentu:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Package manager
+
+Instal Bolt secara global dengan package manager pilihanmu:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Verifikasi instalasi
+
+<Steps>
+  <Step title="Check the installed version">
+    Setelah instalasi, konfirmasi bahwa `bolt` tersedia di `$PATH` kamu:
+
+    ```bash
+    bolt --version
+    ```
+
+    Jika perintah tidak ditemukan, buka sesi terminal baru (atau re-source konfigurasi shell kamu) sehingga pembaruan `$PATH` diterapkan.
+  </Step>
+</Steps>
+
+## Upgrading
+
+Jalankan `bolt upgrade` untuk memperbarui ke rilis terbaru:
+
+```bash
+bolt upgrade
+```
+
+Bolt mendeteksi metode instalasi awal kamu secara otomatis. Kamu dapat meng-override-nya dengan flag `--method`:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Metode yang didukung adalah: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Kamu juga dapat upgrade ke versi tertentu dengan meneruskan versi sebagai argumen posisional:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Uninstalling
+
+Untuk menghapus Bolt dari sistem kamu:
+
+```bash
+bolt uninstall
+```
+
+## Variabel lingkungan
+
+| Variabel               | Deskripsi                                             |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Verbositas log: `DEBUG`, `INFO`, `WARN`, atau `ERROR` |
+| `BOLT_PRINT_LOGS`      | Cetak log ke stderr                                   |
+| `BOLT_PURE`            | Jalankan tanpa memuat plugin eksternal                |
+| `BOLT_SERVER_PASSWORD` | Password basic auth untuk server API headless        |
+| `BOLT_SERVER_USERNAME` | Username basic auth untuk server API headless        |
+
+<Tip>
+  Atur `BOLT_PURE=1` ketika kamu menginginkan run yang bersih tanpa plugin pihak ketiga apa pun — berguna untuk debugging atau lingkungan CI yang terkontrol.
+</Tip>
+
+## Aplikasi desktop
+
+<Note>
+  Bolt juga hadir sebagai aplikasi desktop native dengan manajemen sesi multi-window, terminal dan file tree terintegrasi, command palette, 28 bahasa UI, dan auto-update. Unduh rilis terbaru dari [halaman rilis](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  Di macOS kamu dapat menginstalnya dalam satu baris tanpa jalan memutar Gatekeeper:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

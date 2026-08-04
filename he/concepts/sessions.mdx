@@ -1,0 +1,191 @@
+---
+title: "סשנים — היסטוריית שיחה עמידה ב-Bolt"
+sidebarTitle: "סשנים"
+description: "סשנים הם יחידת העבודה המתמשכת של Bolt: כל אחד מאחסן שיחה מלאה ב-SQLite מקומי כך שתוכל לנתק, לחדש, לפצל, לשתף ולייצא בכל עת."
+---
+
+**סשן** הוא יחידת העבודה העיקרית של Bolt. כל הנחיה שאתה שולח, כל קובץ שהסוכן קורא או עורך, וכל קריאת כלי שהמודל מבצע נרשמים באופן עמיד בהיסטוריית הסשן הזה. מכיוון שסשנים חיים במסד נתונים מקומי של SQLite, הם שורדים הפעלה מחדש של תהליכים, ניתן לרשום ולתשאל אותם בכל עת, והם אף פעם לא עוזבים את המחשב שלך אלא אם תשתף או תייצא אותם במפורש.
+
+<Note>
+  כל נתוני הסשן מאוחסנים מקומית במסד נתונים SQLite במחשב שלך. שום דבר לא נשלח לשרתים חיצוניים אלא אם אתה מאפשר שיתוף. השתמש ב-`bolt db path` כדי למצוא את קובץ מסד הנתונים המדויק.
+</Note>
+
+## מחזור חיים של סשן
+
+סשן מתחיל ברגע שאתה שולח את ההנחיה הראשונה שלך ומסתיים רק כשאתה מוחק אותו. בין שתי הנקודות האלה תוכל בחופשיות לנתק, לחדש, להסתעף או להעביר אותו.
+
+<Steps>
+  <Step title="צור או המשך סשן">
+    השק את ה-TUI כדי להתחיל סשן חדש באינטראקטיביות, או העבר הנחיה ל-`bolt run` כדי ליצור אחד באופן לא-אינטראקטיבי:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="נתק וחזור מאוחר יותר">
+    סגור את ה-TUI בכל עת — הסשן נשמר אוטומטית. חדש את הסשן האחרון עם `--continue`, או כוון לסשן ספציפי לפי מזהה עם `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="פצל לפני ניסוי">
+    השתמש ב-`--fork` כדי להסתעף מהיסטוריית הסשן הנוכחית לפני ניסיון שינוי מסוכן. הפיצול הוא סשן עצמאי שלא משפיע על המקורי:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="שתף ושתף פעולה">
+    צור URL לשיתוף עם `--share`. כל מי שיש לו את הקישור יכול לצפות בתמליל הסשן בדפדפן:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## פקודות ניהול סשנים
+
+### רשימת סשנים
+
+```bash
+bolt session list
+```
+
+מוציא טבלה מעוצבת של כל הסשנים עם המזהה, הכותרת וזמן העדכון האחרון שלהם. הוסף `--format json` כדי לקבל פלט לקריאה של מכונה, או `-n <N>` כדי להגביל ל-N הסשנים האחרונים:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### מחיקת סשן
+
+```bash
+bolt session delete <sessionID>
+```
+
+מסיר לצמיתות את הסשן ואת כל ההודעות שלו ממסד הנתונים המקומי.
+
+## דגלי הרצה לבקרת סשנים
+
+דגלים אלה זמינים ב-`bolt run`:
+
+| דגל | כינוי | תיאור |
+|------|-------|-------------|
+| `--continue` | `-c` | המשך את הסשן האחרון |
+| `--session <id>` | `-s` | המשך סשן ספציפי לפי מזהה |
+| `--fork` | | פצל את הסשן לפני המשך (דורש `--continue` או `--session`) |
+| `--share` | | צור URL לשיתוף עבור הסשן |
+| `--title <title>` | | הגדר או דרוס את כותרת הסשן |
+
+## ייצוא סשנים
+
+ייצא את התמליל המלא של סשן כ-JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+הדגל `--sanitize` מחליף נתיבי קבצים, תוכן קוד, קלטים ופלטים של כלים, ושדות רגישים פוטנציאלית אחרים בממלאי מקום `[redacted:kind:id]` — שימושי לשיתוף תמלילים עם עמיתים לצוות או להגשת דיווחי באגים.
+
+## ייבוא סשנים
+
+ייבא סשן מקובץ JSON מקומי או ישירות מכתובת URL של שיתוף:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+סשנים מיובאים מופיעים ברשימת הסשנים המקומית שלך וניתן לחדש אותם במלואם.
+
+## תשאול מסד הנתונים של הסשנים
+
+Bolt חושף את מסד הנתונים SQLite הבסיסי ישירות למשתמשי כוח.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+פורמט הפלט מוגדר כברירת מחדל לערכים מופרדים בטאב; הוסף `--format json` לפלט JSON.
+
+## סטטיסטיקות שימוש בטוקנים ועלות
+
+`bolt stats` מקבץ נתוני שימוש בטוקנים ועלות בכל הסשנים שלך:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+הפלט כולל סך הכל סשנים, הודעות, טוקני קלט/פלט/היגיון/מטמון, עלות כוללת, עלות ממוצעת ליום, ממוצע וחציון של טוקנים לסשן, ופירוט שימוש בכלים. העבר `--models` כדי להציג גם פירוט למודל של הודעות, טוקנים ועלות.
+
+## זרימת פיצול ושיתוף
+
+הנה דוגמה מלאה לפיצול סשן ושיתוף התוצאה:
+
+<Steps>
+  <Step title="התחל עבודה בסשן חדש">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="פצל לפני הצעד המסוכן הבא">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    מזהה הסשן המפוצל מודפס לקונסולה. הסשן המקורי נשאר לא נגוע.
+  </Step>
+  <Step title="שתף את הפיצול לסקירה">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    URL השיתוף מודפס לאחר שהסשן הופך ללא פעיל.
+  </Step>
+  <Step title="ייבא במכונה אחרת">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,36 @@
+---
+title: "Brugerdefinerede værktøjer i Bolt"
+sidebarTitle: "Brugerdefinerede værktøjer"
+description: "Tilføj projektspecifikke værktøjer til Bolt ved at lægge eksekverbare filer i .opencode/tool/. Hver fil bliver et værktøj, agenten kan kalde."
+---
+
+Brugerdefinerede værktøjer lader dig eksponere alt, hvad du kan scripte (shell-scripts, Node/Bun/Python-programmer, små binære filer) som et værktøj, agenten kan kalde ved navn. De er den enkleste måde at give Bolt adgang til dit projekts egne build-, deploy- eller data-workflows.
+
+## Hvor de bor
+
+Læg filer ind i én af:
+
+- `.opencode/tool/` — projekt-scoped, tjekket ind i repoet.
+- `.opencode/tools/` — accepteres som et alias for ovenstående.
+
+Hver fil bliver et værktøj, der er opkaldt efter filen (minus dens filtypenavn). Værktøjer opsamles automatisk næste gang Bolt starter.
+
+## Anatomi af et værktøj
+
+Et brugerdefineret værktøj deklarerer sit navn, beskrivelse og input-skema i en header og implementerer derefter adfærden. Den nøjagtige form afhænger af den runtime, du vælger (shell-script, TypeScript osv.), men hvert værktøj skal:
+
+1. Annoncere et JSON Schema for sine inputs, så modellen ved, hvordan den skal kalde det.
+2. Returnere en værdi (eller en fejl), som Bolt kan gengive i TUI'en og føre tilbage til modellen.
+
+Når det er indlæst, vises værktøjet på agentens værktøjsliste ved siden af indbyggede værktøjer som `bash` og `grep` og er afgrænset af det samme [tilladelses](/concepts/permissions)-system.
+
+## Hvornår man skal bruge et brugerdefineret værktøj vs. en MCP-server
+
+- **Brugerdefineret værktøj** — lille, projektspecifikt, ingen genbrug på tværs af projekter. Hurtigt at skrive.
+- **MCP-server** — delt på tværs af projekter, eller pakker en reel ekstern tjeneste med auth. Se [MCP-servere](/extending/mcp-servers).
+- **Plugin-værktøj** — distribueret som en npm-pakke sammen med andre udvidelsespunkter. Se [Plugins](/extending/plugins).
+
+## Relateret
+
+- [Værktøjer](/concepts/tools) — reference til indbyggede værktøjer.
+- [Plugins](/extending/plugins) — udvidelsesfladen for værktøjer plus mere.

@@ -1,0 +1,185 @@
+---
+title: "Bolt remote sessiyalariga HTTP orqali biriktirish"
+sidebarTitle: "Remote sessiyalar"
+description: "Headless Bolt serverni boshlang, har qanday mashinadan TUI biriktiring va mDNS bilan mahalliy tarmoqdagi serverlarni toping — ixtiyoriy basic auth bilan."
+url: "server/remote-sessions"
+---
+
+Bolt dvigatel'ni interfeysdan to'liq ajratib turadigan o'rnatilgan HTTP serverga ega. Kuchli remote mashinada (cloud VM, dev konteyner, tunda ishlab qolgan desktop) headless serverni boshlashingiz va TUI'ni laptopingizdan, ikkinchi terminaldan yoki hatto brauzerdan biriktirishingiz mumkin — hammasi bir xil jonli sessiyaga ishora qiladi. Bu Bolt'ni jamoalar, remote workload'lar va SSH orqali qutini kirmasdan tekshirmoqchi bo'lgan uzoq davom etadigan vazifalar uchun mos qiladi.
+
+---
+
+## `bolt serve`
+
+To'liq API'ni HTTP orqali ochib beradigan va TUI ulanishlarini qabul qiladigan headless Bolt serverni boshlang.
+
+```bash
+bolt serve
+```
+
+### Bayroqlar
+
+| Bayroq | Standart | Tavsif |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Bog'lash uchun hostname yoki IP manzil |
+| `--port <n>` | `0` (avto) | Tinglash uchun port; Bolt ishga tushirishda tayinlangan portni chop etadi |
+| `--mdns` | `false` | Zero-config mahalliy tarmoq topilishi uchun serverni mDNS orqali reklama qilish; shuningdek hostname'ni `0.0.0.0` ga o'rnatadi |
+| `--mdns-domain <name>` | `opencode.local` | Custom mDNS xizmat domeni |
+| `--cors <origin>` | `[]` | CORS orqali ruxsat berish uchun qo'shimcha origin'lar (takrorlanadi) |
+
+<Warning>
+  Agar `OPENCODE_SERVER_PASSWORD` o'rnatilmagan bo'lsa, Bolt ogohlantirishni chop etadi va server unga yetib bo'ladigan har kim uchun to'liq ochiq bo'ladi. `127.0.0.1` dan boshqa har qanday interfeysga bog'lashdan oldin har doim parolni o'rnating.
+</Warning>
+
+### Autentifikatsiya
+
+Environment variable'lar yordamida HTTP Basic Auth bilan serverni himoya qiling:
+
+| O'zgaruvchi | Tavsif |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Basic auth paroli |
+| `OPENCODE_SERVER_USERNAME` | Basic auth foydalanuvchi nomi (tashlab qo'yilsa standart `opencode`) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+To'liq TUI'ni ishlayotgan Bolt serverga biriktiring. Bu HTTP orqali yetib bo'ladigan har qanday serverga qarshi ishlaydi — mahalliy yoki remote.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Bayroqlar
+
+| Bayroq | Alias | Tavsif |
+|------|-------|-------------|
+| `--dir <path>` | | Remote serverda ishga tushirilishi kerak bo'lgan katalog |
+| `--continue` | `-c` | Serverdagi so'nggi sessiyani davom ettirish |
+| `--session <id>` | `-s` | Davom ettirish uchun sessiya ID |
+| `--fork` | | Davom ettirganda sessiyani fork qilish (`--continue` yoki `--session` bilan ishlating) |
+| `--password <pw>` | `-p` | Basic auth paroli (`OPENCODE_SERVER_PASSWORD` ni override qiladi) |
+| `--username <user>` | `-u` | Basic auth foydalanuvchi nomi (`OPENCODE_SERVER_USERNAME` ni override qiladi) |
+| `--mini` | | To'liq TUI o'rniga minimal interaktiv UI dan foydalanish |
+
+```bash
+# Remote serverda so'nggi sessiyani davom ettirish
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Muayyan sessiyani fork qilish
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — cheklangan terminallarda foydali
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Bolt serverni boshlang va standart brauzeringizda web UI'ni darhol oching. Bu mahalliy tarzda brauzer asosidagi interfeysni ishga tushirishning eng tez yo'li.
+
+```bash
+bolt web
+```
+
+`bolt web` `bolt serve` bilan bir xil tarmoq bayroqlarini qabul qiladi.
+
+---
+
+## mDNS discovery
+
+Server manzilini mDNS yordamida mahalliy tarmoqda tarqatish uchun `bolt serve` ga `--mdns` ni uzating. Xuddi shu tarmoqdagi har qanday mashina IP manzil yoki portni bilmasdan mDNS hostname yordamida biriktirilishi mumkin.
+
+```bash
+# Server mashinasida
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# Xuddi shu LAN'dagi boshqa mashinadan
+bolt attach http://opencode.local --password my-secret
+```
+
+Standart mDNS domeni `opencode.local`. Uni `--mdns-domain` bilan override qiling:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Serverni boshlash va remote biriktirish
+
+<Steps>
+  <Step title="Server mashinasida parolni o'rnating">
+    Serverni boshlashdan oldin `OPENCODE_SERVER_PASSWORD` ni eksport qiling. Usiz Bolt ogohlantirish chop etadi va API autentifikatsiyalanmagan bo'ladi.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Headless serverni boshlang">
+    Laptopingiz unga yetib borishi uchun barcha interfeyslarga bog'lang va ixtiyoriy ravishda muayyan portni tanlang:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Bu terminalni oching qoldiring (yoki uni `tmux` / `screen` / systemd unit'da ishga tushiring).
+  </Step>
+
+  <Step title="Laptopingizdan biriktiring">
+    Serverga yetib bo'ladigan har qanday mashinada ishga tushiring:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    To'liq TUI ochiladi va remote dvigatelga ulanadi. Sessiyalar, tarix va asbob holati hammasi serverda yashaydi.
+  </Step>
+
+  <Step title="Keyinroq sessiyani davom ettirish">
+    TUI'dan chiqib ajrating (`q` yoki `Ctrl-C`). Sessiya serverda ishlashda davom etadi. Qayta qo'shilish uchun:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Yoki asl nusxaga ta'sir qilmasdan filial ochish uchun uni fork qiling:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Remote workflow misoli
+
+Umumiy shakl — Bolt serverni yuqori-yadroli dev mashinada ishlab qoldirish va yupqa laptopdan ulanish.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Barcha sessiya ma'lumotlari serverning SQLite ma'lumotlar bazasida saqlanadi. Laptop faqat TUI'ni render qiladi — u ishni yo'qotmasdan istalgan vaqtda uzilishi va qayta ulanishi mumkin.

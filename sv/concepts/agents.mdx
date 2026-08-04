@@ -1,0 +1,135 @@
+---
+title: "Agenter — Bolts tio inbyggda och anpassade AI-personas"
+sidebarTitle: "Agenter"
+description: "Bolt levereras med tio inbyggda agenter, var och en med en distinkt roll, verktygsuppsättning och åtkomstnivå. Lär dig växla, konfigurera och skapa egna agenter."
+---
+
+Bolt behandlar varje AI-persona som en namngiven **agent**: en systemprompt kombinerad med en precist scopad uppsättning verktygsbehörigheter. Istället för att köra en allmän modell för varje uppgift väljer du agenten vars åtkomst och fokus matchar det du behöver — vare sig det är att granska säkerhet, skriva dokumentation eller sätta upp en fullständig ramverksmigration.
+
+## Åtkomstnivåer
+
+Varje inbyggd agent tilldelas en av tre åtkomstnivåer som avgör vilka verktyg den kan använda:
+
+| Nivå | Beviljade behörigheter | Typisk användning |
+|-------|---------------------|-------------|
+| **Full** | Läsa filer, skriva/redigera filer, köra skalkommandon | Aktiv kodning, felsökning, refaktorisering, migrationer |
+| **Redigera** | Läsa filer, skriva/redigera filer — inget skal | Dokumentation, kommentaruppdateringar, säkra prosaändringar |
+| **Läs** | Enbart läsa filer — inga skrivningar, inget skal | Planering, research, kodgranskning, granskningar |
+
+## Inbyggda agenter
+
+Bolt levereras med tio specialiserade agenter från start. Växla mellan dem i TUI:n genom att trycka på <kbd>Tab</kbd>.
+
+| Agent | Åtkomst | Beskrivning |
+|-------|--------|-------------|
+| `code` | Full | Standard: läser, skriver och kör kod |
+| `plan` | Läs | Utforskar kodbasen och producerar en plan utan att ändra kod |
+| `ask` | Läs | Frågor och research — inga filändringar |
+| `code-review` | Läs | Granskar ändringar för korrekthet, stil och säkerhet |
+| `debug` | Full | Felsöker misslyckade tester, krascher och logiska fel |
+| `refactor` | Full | Säker refaktorisering med testverifiering i varje steg |
+| `docs` | Redigera | Skriver och uppdaterar dokumentation och kommentarer |
+| `security` | Läs | Säkerhetsgranskning: sårbarheter, hemligheter och farliga mönster |
+| `migrate` | Full | Ramverksuppgraderingar och beroendemigrationer |
+| `perf` | Full | Prestandaanalys och optimering |
+
+## Underagenter
+
+Utöver de tio primära agenterna exponerar Bolt två inbyggda **underagenter** som primära agenter kan delegera arbete till under en session. Du väljer aldrig en underagent manuellt — de skickas ut automatiskt när en primär agent beslutar att skapa en.
+
+| Underagent | Roll |
+|----------|------|
+| `@general` | Delegering av komplexa uppgifter i flera steg som kräver breda kapaciteter |
+| `@explore` | Snabb, skrivskyddad kodbas-research — traverserar filer utan sidoeffekter |
+
+<Tip>
+  När du snabbt behöver förstå en obekant kodbas, börja med agenten `ask` eller `plan`. Under huven kan de skicka ut underagenten `@explore` för att indexera ditt projekt med hög hastighet innan de producerar ett svar — utan att röra en enda fil.
+</Tip>
+
+## Växla agenter
+
+**I TUI:n** — tryck på <kbd>Tab</kbd> för att cykla genom listan över tillgängliga agenter när som helst under en session. Den aktiva agenten visas i sessionsfoten.
+
+**Icke-interaktivt** — skicka `--agent <name>` till `bolt run` för att fästa en specifik agent under körningen:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Lista agenter
+
+För att se alla tillgängliga agenter — både inbyggda och anpassade — med deras lägen och behörighetskonfiguration:
+
+```bash
+bolt agent list
+```
+
+## Anpassade agenter
+
+Du kan skapa egna agenter på två sätt.
+
+### Generera med `bolt agent create`
+
+Den interaktiva guiden genererar en agentfil med hjälp av en LLM och skriver den till disk:
+
+```bash
+bolt agent create
+```
+
+Alla flaggor är valfria. Ange dem för att köra icke-interaktivt:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flagga | Beskrivning |
+|------|-------------|
+| `--description` | Vad agenten ska göra (används som LLM-prompt för generering) |
+| `--path` | Katalog att skriva den genererade agentfilen till |
+| `--mode` | `all` (standard), `primary` eller `subagent` |
+| `--permissions` | Kommaseparerad lista över behörigheter att tillåta. Utelämna för alla. |
+| `--model` / `-m` | Modell att använda i formatet `provider/model` |
+
+### Skriv en markdown-fil manuellt
+
+En agent är bara en markdown-fil med YAML-frontmatter. Placera den i `.bolt/agents/` i ditt projekt eller i den globala agentkatalogen:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Filnamnet (utan `.md`) blir agentens identifierare.
+
+### Tillgängliga behörigheter
+
+Behörigheter är de finkorniga verktygsgrindarna du styr när du skapar en anpassad agent:
+
+| Behörighet | Styr |
+|------------|----------|
+| `bash` | Körning av skalkommandon |
+| `read` | Filläsning |
+| `edit` | Filskrivning och -redigering (gäller även `write` och `apply_patch`) |
+| `glob` | Fil-glob/kataloglistning |
+| `grep` | Filsökning via ripgrep |
+| `webfetch` | HTTP-hämtning från webben |
+| `task` | Att skapa underagentuppgifter |
+| `todowrite` | Att skapa och uppdatera todo-poster |
+| `websearch` | Webbsökningsfrågor |
+| `lsp` | Language server protocol-operationer |
+| `skill` | Åtkomst till projektskills |

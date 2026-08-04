@@ -1,0 +1,78 @@
+---
+title: "Bolt：面向终端的 AI 编程代理"
+sidebarTitle: "首页"
+description: "Bolt 是一款以终端为先的 AI 编程代理，内置十个专用代理、持久化会话、MCP 支持以及桌面应用，可对接任意 LLM 提供商。"
+---
+
+Bolt 将一支完整的 AI 工程团队直接放进你的终端。它以快速、以键盘为主的 TUI 和原生桌面应用形式提供，两者都由同一引擎驱动：十个专用代理、持久化的会话、支持 OAuth 的 MCP 服务器管理、插件系统，以及对所有主流 LLM 提供商的支持。
+
+<CardGroup cols={2}>
+  <Card title="安装" icon="download" href="/installation">
+    通过 curl、npm、bun 或你偏好的包管理器，在数秒内安装 Bolt。
+  </Card>
+  <Card title="快速开始" icon="rocket" href="/quickstart">
+    不到一分钟运行你的第一个 AI 编程会话。
+  </Card>
+  <Card title="代理" icon="robot" href="/concepts/agents">
+    认识十个内置代理：code、plan、ask、review、debug、refactor、docs、security、migrate 和 perf。
+  </Card>
+  <Card title="命令参考" icon="terminal" href="/reference/commands">
+    完整记录每一个 CLI 命令、子命令和参数。
+  </Card>
+</CardGroup>
+
+## Bolt 的能力
+
+Bolt 能读取你的代码库、理解你在构建什么，并与你一起交付代码——无论是在终端还是桌面应用中。每个会话都是持久化的：可以分离、从另一台机器重新连接、从对话中派生分支、分享链接，或导出脱敏后的记录。
+
+<CardGroup cols={3}>
+  <Card title="会话" icon="clock-rotate-left" href="/concepts/sessions">
+    存储在本地 SQLite 中、可派生的持久化会话。
+  </Card>
+  <Card title="提供商与模型" icon="microchip" href="/concepts/providers-and-models">
+    使用你自己的 API 密钥对接任意主流 LLM 提供商。
+  </Card>
+  <Card title="配置" icon="sliders" href="/concepts/configuration">
+    按项目提供 `.bolt/bolt.jsonc`，附完整 schema 支持。
+  </Card>
+  <Card title="MCP 服务器" icon="plug" href="/extending/mcp-servers">
+    通过 Model Context Protocol 添加工具，包含 OAuth 流程。
+  </Card>
+  <Card title="插件" icon="puzzle-piece" href="/extending/plugins">
+    使用自定义提供商、工具和鉴权方式扩展 Bolt。
+  </Card>
+  <Card title="GitHub 集成" icon="github" href="/server/github-actions">
+    AI 驱动的提交信息、代码评审以及 GitHub Actions。
+  </Card>
+</CardGroup>
+
+## 启动并运行
+
+<Steps>
+  <Step title="安装 Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    或通过 npm 安装：`npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="打开你的项目">
+    进入任意项目目录并启动 TUI：
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="配置提供商">
+    首次启动时，Bolt 会提示你添加 LLM 提供商。你也可以运行：
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="开始与 AI 结对编程">
+    在 TUI 底部输入你的提示，按下回车，让 Bolt 的代理开始工作。使用 `Tab` 切换代理。
+  </Step>
+</Steps>
+
+<Tip>
+  使用 `bolt run "explain this codebase"` 可在不打开完整 TUI 的情况下快速获得非交互式答复。
+</Tip>

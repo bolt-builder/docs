@@ -1,0 +1,33 @@
+---
+title: "Semaine du 4 août 2026"
+description: "Journal des modifications hebdomadaire de Bolt : 11 nouvelles langues d'interface, dispositions de droite à gauche, traductions natives de l'application de bureau, fournisseur Poolside, améliorations GPT-5 et corrections de bogues."
+---
+
+## Nouvelles fonctionnalités
+
+- **11 nouvelles langues d'interface** — L'application de bureau et le TUI offrent maintenant des traductions en hindi, néerlandais, indonésien, vietnamien, italien, ourdou, pendjabi, azerbaïdjanais, finnois, suédois et thaï, ce qui porte le total à 28 langues prises en charge. Changez de langue dans **Paramètres → Apparence → Langue**. Voir [Fonctionnalités du bureau](/desktop/features) et [Installation](/desktop/install#28-ui-languages).
+- **Prise en charge des dispositions de droite à gauche** — La navigation, les éditeurs, les boîtes de dialogue, les contrôles et le rendu du texte sont maintenant correctement inversés pour les langues de droite à gauche comme l'arabe, l'hébreu et l'ourdou, de sorte que l'interface entière se lit naturellement dans ces locales.
+- **Traductions natives de l'application de bureau** — Les menus au niveau du système d'exploitation, les boîtes de dialogue de mise à jour, le processus de récupération, l'intégration WSL et les sélecteurs de fichiers natifs sont maintenant localisés en même temps que l'interface intégrée, de sorte que toute l'expérience de bureau suit votre réglage de langue.
+- **Couverture de localisation élargie** — Les menus, les boîtes de dialogue, les invites, le contenu d'aide, les messages d'erreur et les étiquettes d'accessibilité sont maintenant traduits dans toutes les langues prises en charge, ce qui comble les lacunes où les chaînes retombaient auparavant en anglais.
+- **Fournisseur Poolside** — Bolt se connecte maintenant à [Poolside](https://poolside.ai) par l'entremise de son API compatible OpenAI. Exécutez `/connect`, choisissez **Poolside** et collez votre clé d'API depuis [platform.poolside.ai](https://platform.poolside.ai). Les déploiements Poolside auto-hébergés peuvent aussi être configurés comme fournisseur personnalisé. Voir [Fournisseurs et modèles](/concepts/providers-and-models).
+- **Pluralisation adaptée à la locale** — Les nombres, les états, les fichiers et les éléments de la liste de sessions se pluralisent maintenant correctement selon la langue, de sorte que la chronologie et le texte d'état se lisent naturellement dans toutes les locales prises en charge.
+- **Rendu Markdown enrichi** — Les messages de l'assistant bénéficient d'un formatage Markdown amélioré, de mises à jour de diffusion plus fluides, d'une meilleure coloration syntaxique et d'une prise en charge du contenu mathématique, ce qui rend les réponses longues et techniques plus faciles à lire.
+
+## Mises à jour
+
+- **L'effort de raisonnement GPT-5 correspond à la version du modèle** — Les niveaux d'effort de raisonnement (y compris `none` et `xhigh`) ne sont maintenant offerts que pour les variantes GPT-5 qui les prennent en charge, de sorte que `--variant` n'affiche plus d'options qu'un modèle donné rejetterait. Voir [Contrôler l'effort de raisonnement](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Peaufinage des annotations de diff** — La vue diff de l'interface de session resserre les indicateurs de commentaires, le comportement de la gouttière et les couleurs de syntaxe claires et sombres pour une meilleure lisibilité.
+- **Traductions existantes affinées** — Les langues existantes bénéficient d'une terminologie plus claire et d'étiquettes d'interface élargies pour une expérience plus cohérente dans toute l'application.
+
+## Corrections de bogues
+
+- **Chronométrage des actions de session** — Les actions de session enregistrent et rapportent maintenant leur chronométrage avec plus de précision, de sorte que la chronologie reflète le moment où le travail a réellement commencé et s'est terminé.
+- **Messages d'erreur d'espace de travail à distance plus clairs** — Les échecs de connexion ou d'exécution de commandes dans un espace de travail à distance affichent maintenant des messages d'erreur plus descriptifs plutôt que génériques.
+- **Le proxy d'espace de travail ne divulgue plus le répertoire de travail** — Les requêtes acheminées par le proxy d'espace de travail n'incluent plus les détails du répertoire de travail, ce qui garde les chemins locaux hors du réseau.
+- **La carte remplit les régions vides** — La carte d'activité reste maintenant visible dans les régions sans activité enregistrée au lieu de s'effondrer en zone vide.
+- **Détection de locale corrigée** — Bolt capte maintenant votre locale système de manière fiable au démarrage, de sorte que l'interface s'ouvre dans la bonne langue sur plus de plateformes.
+- **Traduction de la chronologie en allemand corrigée** — Les entrées de la chronologie en allemand s'affichent maintenant avec les bonnes chaînes au lieu de retomber en anglais ou en texte mal formaté.
+- **Désactivation des sélections de fichiers** — Cliquer une seconde fois sur une sélection de fichier l'efface maintenant, ce qui vous permet d'annuler une sélection sans en choisir une autre d'abord.
+- **Interactions plus propres avec les brouillons de commentaires** — Commencer ou rejeter un brouillon de commentaire efface maintenant la sélection sous-jacente de façon cohérente et n'entre plus en conflit avec l'état de survol.
+- **Entête de raisonnement animé rétabli** — L'entête de raisonnement dans le TUI affiche de nouveau une roulette animée pendant la réflexion, et son dégradé s'estompe lorsqu'il est développé pour qu'on distingue mieux les états replié et ouvert.
+- **Outils de processus en arrière-plan et de tests rétablis** — `bash_background`, `process_output`, `list_processes`, `kill_process` et `test_run` sont de nouveau accessibles aux agents après avoir été retirés lors d'une fusion antérieure. Les agents peuvent démarrer des commandes de longue durée comme des serveurs de développement et des observateurs, lire leur sortie, et exécuter les tests du projet avec des résultats structurés de réussite ou d'échec. Voir [Outils intégrés](/concepts/tools#built-in-tools).

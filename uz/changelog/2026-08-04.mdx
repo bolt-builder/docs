@@ -1,0 +1,33 @@
+---
+title: "4-avgust, 2026 haftasi"
+description: "Haftalik Bolt changelog: 11 ta yangi UI tili, o'ngdan chapga yo'nalishli tartib, native desktop tarjimalari, Poolside provayderi, GPT-5 yaxshilanishlari va xatoliklar tuzatildi."
+---
+
+## Yangi imkoniyatlar
+
+- **11 ta yangi UI tili** — Desktop ilova va TUI endi Hind, Golland, Indonez, Vetnam, Italyan, Urdu, Panjob, Ozarbayjon, Fin, Shved va Tay tillari uchun tarjimalar bilan yetkaziladi, umumiy qo'llab-quvvatlanadigan tillar soni 28 taga yetdi. Tillarni **Settings → Appearance → Language** orqali almashtiring. [Desktop features](/desktop/features) va [Install](/desktop/install#28-ui-languages) bo'limlariga qarang.
+- **O'ngdan chapga tartib qo'llab-quvvatlanishi** — Navigatsiya, muharrirlar, dialoglar, boshqaruv elementlari va matn ko'rinishi endi arab, ibroniy va urdu kabi o'ngdan chapga yoziladigan tillar uchun to'g'ri aks etadi, shuning uchun butun interfeys bunday tillarda tabiiy o'qiladi.
+- **Native desktop tarjimalari** — OS darajasidagi menyular, updater dialoglari, tiklash oqimi, WSL onboarding va native fayl tanlagichlari endi ilova ichidagi UI bilan bir qatorda mahalliylashtirildi, shuning uchun butun desktop tajribasi til sozlamangizga muvofiq bo'ladi.
+- **Kengaytirilgan mahalliylashtirish qamrovi** — Menyular, dialoglar, so'rovlar, yordam mazmuni, xatolik xabarlari va accessibility yorliqlari endi har bir qo'llab-quvvatlanadigan tilda tarjima qilingan, ilgari inglizchaga qaytadigan bo'shliqlar to'ldirildi.
+- **Poolside provayderi** — Bolt endi [Poolside](https://poolside.ai) ga uning OpenAI-mos API'si orqali ulanadi. `/connect` ni ishga tushiring, **Poolside** ni tanlang va [platform.poolside.ai](https://platform.poolside.ai) dan API kalitingizni joylashtiring. Self-hosted Poolside deploymentlarini ham custom provayder sifatida sozlash mumkin. [Providers and models](/concepts/providers-and-models) bo'limiga qarang.
+- **Til-hisobga oluvchi ko'plikni yasash** — Sonlar, statuslar, fayllar va sessiya ro'yxati elementlari endi har bir tilga mos ravishda to'g'ri ko'plikda ko'rsatiladi, shuning uchun timeline va status matni barcha qo'llab-quvvatlanadigan tillarda tabiiy o'qiladi.
+- **Boyroq Markdown render qilish** — Assistent xabarlari yaxshilangan Markdown formatlash, silliqroq streaming yangilanishlari, yaxshi sintaksis rang belgilash va matematik mazmun qo'llab-quvvatlash bilan yetkaziladi, bu esa uzun va texnik javoblarni o'qishni osonlashtiradi.
+
+## Yangilanishlar
+
+- **GPT-5 reasoning effort model versiyasiga mos keladi** — Reasoning effort tiers (`none` va `xhigh` ni ham hisobga olgan holda) endi faqat ularni qo'llab-quvvatlaydigan GPT-5 variantlari uchun taklif etiladi, shuning uchun `--variant` endi ma'lum model rad etadigan opsiyalarni ko'rsatmaydi. [Controlling reasoning effort](/concepts/providers-and-models#variant-controlling-reasoning-effort) bo'limiga qarang.
+- **Diff izohlash yaxshilandi** — Sessiya UI diff ko'rinishi izoh indikatorlarini, gutter xatti-harakatini va yaxshi o'qish uchun light/dark sintaksis ranglarini yaxshilaydi.
+- **Mavjud tarjimalar yaxshilandi** — Mavjud tillar ilovada yanada izchil tajriba uchun aniqroq terminologiya va kengaytirilgan UI yorliqlari oldi.
+
+## Xatoliklar tuzatildi
+
+- **Sessiya harakati vaqti** — Sessiya harakatlari endi o'z vaqtini aniqroq qayd etadi va hisobot beradi, shuning uchun timeline ish qachon boshlanganini va tugallanganini aks ettiradi.
+- **Aniqroq remote workspace xatoliklari** — Remote workspace ga ulanishda yoki unda buyruqlar ishga tushirishda yuzaga keladigan xatolar endi umumiy xatolar o'rniga aniqroq xatolik xabarlarini ko'rsatadi.
+- **Workspace proxy endi joriy katalogni oshkor qilmaydi** — Workspace proxy orqali marshrutlangan so'rovlar endi joriy katalog tafsilotlarini o'z ichiga olmaydi, mahalliy yo'llarni tarmoqdan tashqarida saqlaydi.
+- **Xarita bo'sh mintaqalarni to'ldiradi** — Faoliyat xaritasi endi qayd etilgan faoliyat bo'lmagan mintaqalarda bo'sh maydonga qulab tushmasdan ko'rinadi.
+- **Til aniqlash tuzatildi** — Bolt endi tizim tilingizni ishga tushirishda ishonchli ravishda aniqlaydi, shuning uchun interfeys ko'proq platformalarda to'g'ri tilda ochiladi.
+- **Nemis timeline tarjimasi tuzatildi** — Nemis tilidagi timeline yozuvlari endi inglizchaga qaytmasdan yoki noto'g'ri formatlangan matnsiz to'g'ri satrlar bilan render qilinadi.
+- **Fayl tanlashni o'chirish** — Fayl tanlashni ikkinchi marta bosish endi uni tozalaydi, shuning uchun avval boshqasini tanlamasdan tanlovni bekor qilishingiz mumkin.
+- **Draft izoh interaksiyalari yaxshilandi** — Draft izohni boshlash yoki bekor qilish endi asosiy tanlovni izchil ravishda tozalaydi va endi hover holati bilan raqobatlashmaydi.
+- **Animatsiyali reasoning header tiklandi** — TUI dagi reasoning header o'ylash paytida yana animatsiyali spinner ko'rsatadi va kengaytirilganda gradient xiralashadi, shuning uchun yopiq va ochiq holatlarni ajratish osonroq.
+- **Fon jarayoni va test asboblari tiklandi** — `bash_background`, `process_output`, `list_processes`, `kill_process` va `test_run` avvalgi mergeda tushib qolganidan keyin agentlar uchun yana mavjud. Agentlar dev serverlar va watcherlar kabi uzoq davom etadigan buyruqlarni ishga tushirishi, ularning chiqishini o'qishi va loyihaning testlarini strukturalangan pass/fail natijalar bilan ishga tushirishi mumkin. [Built-in tools](/concepts/tools#built-in-tools) bo'limiga qarang.

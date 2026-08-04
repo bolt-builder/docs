@@ -1,0 +1,28 @@
+---
+title: "ACP：从 Zed 和其他编辑器驱动 Bolt"
+sidebarTitle: "ACP (编辑器)"
+description: "Bolt 说 Agent Client Protocol (ACP),允许 Zed 等编辑器将其作为原生 AI 编程后端嵌入,无需运行单独的应用或 TUI。"
+---
+
+Bolt 实现了 Agent Client Protocol (ACP),这是 Zed 等编辑器与 AI 代理通信的方式。配置完成后,编辑器将 `bolt acp` 作为子进程生成并直接驱动它 — 你可以获得 Bolt 的代理、工具、会话和提供商堆栈,而无需离开编辑器。
+
+## 启用 ACP
+
+在编辑器的 AI 设置中,将 Bolt 添加为 ACP 兼容代理并指向：
+
+```bash
+bolt acp
+```
+
+编辑器将管理进程生命周期。像通常在 `.bolt/bolt.jsonc` 中一样配置提供商、模型和 MCP 服务器 — 它们也适用于这里。
+
+## 你能得到什么
+
+- 每个 Bolt 代理,都可从编辑器的 AI 面板调用。
+- 与 TUI 和 Web UI 共享会话（通过本地数据库）。
+- 与任何其他 Bolt 入口点相同的工具集、权限模型和项目记忆。
+
+## 相关
+
+- [无头服务器](/server/headless-server) — 并行的 HTTP 接口。
+- [配置](/concepts/configuration) — ACP 继承的配置文件。

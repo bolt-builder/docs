@@ -1,0 +1,61 @@
+---
+title: "Boltin ympäristömuuttujaviite"
+sidebarTitle: "Ympäristömuuttujat"
+description: "Jokainen Boltin tunnistama ympäristömuuttuja, mukaan lukien lokinhallinta, palvelimen todennus, konfiguraation ohitukset ja tarjoajien API-avainten käytännöt."
+---
+
+Ympäristömuuttujat antavat sinun konfiguroida Boltia koskematta yhteenkään konfigurointitiedostoon — hyödyllistä CI-putkissa, Docker-konteissa ja jaetuissa ympäristöissä, joissa et voi sitouttaa tunnistetietoja. Ne luetaan kerran käynnistyksessä, eikä niitä voi muuttaa Boltin ollessa käynnissä.
+
+## Viite
+
+| Muuttuja | Kuvaus |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Aseta lokin sanaisuus. Hyväksytyt arvot: `DEBUG`, `INFO`, `WARN`, `ERROR`. Vastaa `--log-level`-lippua. |
+| `BOLT_PRINT_LOGS` | Aseta mikä tahansa ei-tyhjä arvo tulostaaksesi lokitulosteen stderriin. Vastaa `--print-logs`ia. |
+| `BOLT_PURE` | Aseta mikä tahansa ei-tyhjä arvo poistaaksesi kaikki ulkoiset laajennukset käytöstä. Vastaa `--pure`a. |
+| `BOLT_SERVER_USERNAME` | Perustodennuksen käyttäjänimi `bolt serve`lle ja `bolt web`ille. |
+| `BOLT_SERVER_PASSWORD` | Perustodennuksen salasana `bolt serve`lle ja `bolt web`ille. Kaikkien yhdistävien asiakkaiden on annettava tämä salasana. |
+| `BOLT_CONFIG` | Ohita polku konfigurointitiedostoon, jonka Bolt lataa. Bolt ei etsi oletussijainneista, kun tämä on asetettu. |
+| `BOLT_CONFIG_DIR` | Ohita konfigurointihakemisto. Bolt etsii konfigurointitiedostoja tästä hakemistosta oletuskäyttöjärjestelmän konfigurointihakemiston sijaan. |
+| `BOLT_CONFIG_CONTENT` | Anna koko konfiguraatio inline-JSON-merkkijonona. Hyödyllinen CI:ssä, jossa tiedostojen kirjoittaminen on epäkäytännöllistä. Otetaan huomioon korkeimmalla etusijalla konfiguraatiolähteiden joukossa. |
+| `BOLT_GIT_BASH_PATH` | Polku Git Bashin `bin`-hakemistoon Windowsissa, käytetään Unix-apuohjelmien, kuten `less`in, paikallistamiseen. |
+
+## Tarjoajien API-avaimet
+
+Bolt havaitsee tarjoajien tunnistetiedot ympäristömuuttujista automaattisesti — `bolt providers login` -vaihetta ei tarvita. Jokainen tarjoaja etsii tiettyä ympäristömuuttujaa, ja Bolt käyttää sitä, jos muuttuja on asetettu, riippumatta siitä, mitä `auth.json`iin on tallennettu.
+
+<Tip>
+  Aseta tarjoajien API-avaimet shell-profiiliisi (esim. `~/.zshrc`, `~/.bashrc`) tai `.env`-tiedostoon, jonka shellisi lataa. Voit myös viitata niihin konfigurointitiedostosta käyttäen `${VAR_NAME}`-syntaksia `provider.*.apiKey`-kentässä, jotta avaimia ei koskaan tallenneta selkotekstinä.
+</Tip>
+
+Yleiset tarjoajamuuttujat:
+
+| Muuttuja | Tarjoaja |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-sarja) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Suorita `bolt models --verbose` nähdäksesi, mitä ympäristömuuttujaa jokainen määritetty tarjoaja odottaa.
+
+## Käyttöesimerkit
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

@@ -1,0 +1,36 @@
+---
+title: "Benutzerdefinierte Tools in Bolt"
+sidebarTitle: "Custom Tools"
+description: "Fügen Sie Bolt projektspezifische Tools hinzu, indem Sie ausführbare Dateien in .opencode/tool/ ablegen. Jede Datei wird zu einem Tool, das der Agent aufrufen kann."
+---
+
+Benutzerdefinierte Tools erlauben es Ihnen, alles Skriptbare (Shell-Skripte, Node-/Bun-/Python-Programme, kleine Binaries) als Tool freizugeben, das der Agent per Name aufrufen kann. Sie sind der einfachste Weg, Bolt Zugriff auf die eigenen Build-, Deploy- oder Datenworkflows Ihres Projekts zu geben.
+
+## Wo sie liegen
+
+Legen Sie Dateien in eines dieser Verzeichnisse:
+
+- `.opencode/tool/` – projektspezifisch, wird mit dem Repo eingecheckt.
+- `.opencode/tools/` – wird als Alias für Obiges akzeptiert.
+
+Jede Datei wird zu einem Tool, das nach der Datei (ohne Endung) benannt ist. Tools werden beim nächsten Start von Bolt automatisch erkannt.
+
+## Aufbau eines Tools
+
+Ein benutzerdefiniertes Tool deklariert im Header seinen Namen, seine Beschreibung und sein Eingabeschema und implementiert dann das Verhalten. Die genaue Form hängt von der gewählten Laufzeit ab (Shell-Skript, TypeScript usw.), aber jedes Tool muss:
+
+1. Ein JSON Schema für seine Eingaben veröffentlichen, damit das Modell weiß, wie es aufzurufen ist.
+2. Einen Wert (oder einen Fehler) zurückgeben, den Bolt im TUI darstellen und dem Modell zurückgeben kann.
+
+Einmal geladen, erscheint das Tool in der Tool-Liste des Agents neben eingebauten Tools wie `bash` und `grep` und wird durch dasselbe [Berechtigungssystem](/concepts/permissions) kontrolliert.
+
+## Wann ein benutzerdefiniertes Tool und wann ein MCP-Server
+
+- **Benutzerdefiniertes Tool** – klein, projektspezifisch, keine Wiederverwendung über Projekte hinweg. Schnell zu schreiben.
+- **MCP-Server** – projektübergreifend geteilt oder umschließt einen echten externen Dienst mit Auth. Siehe [MCP Servers](/extending/mcp-servers).
+- **Plugin-Tool** – als npm-Paket zusammen mit anderen Erweiterungspunkten verteilt. Siehe [Plugins](/extending/plugins).
+
+## Verwandt
+
+- [Tools](/concepts/tools) – Referenz zu eingebauten Tools.
+- [Plugins](/extending/plugins) – die Erweiterungsschnittstelle für Tools und mehr.

@@ -1,0 +1,142 @@
+---
+title: "Bolt ile Bir Dakikadan Kısa Sürede Başlayın"
+sidebarTitle: "Hızlı Başlangıç"
+description: "Bolt'u kurun, projenizi açın, bir sağlayıcı bağlayın ve ilk AI komutunuzu çalıştırın — bu adım adım kılavuzla hepsi 60 saniyeden az sürede."
+---
+
+Bu kılavuz, Bolt'u kurmaktan, onu bir projede başlatmaktan, bir AI sağlayıcısı bağlamaktan ve ilk komutunuzu çalıştırmaktan geçirir. Tüm akış bir dakikadan az sürer.
+
+<Steps>
+  <Step title="Bolt'u kurun">
+    En hızlı yol, macOS ve Linux'ta çalışan resmi kurulum betiğidir:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Paket yöneticisi mi tercih edersiniz? npm, bun, pnpm veya yarn ile global olarak kurun:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    macOS'ta masaüstü uygulaması için (Gatekeeper detourı yok):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Homebrew, Chocolatey, Scoop ve Windows'a özgü notlar dahil tüm yöntemler için [Kurulum kılavuzuna](/installation) bakın.
+  </Step>
+  <Step title="Projenizi açın">
+    Herhangi bir proje dizinine gidin ve etkileşimli TUI'yi başlatın:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt proje bağlamınızı otomatik olarak alır — dosya ağacınızı okur, yığını anlar ve onu açtığınız andan itibaren her ajana sunar.
+  </Step>
+  <Step title="Bir AI sağlayıcısı yapılandırın">
+    İlk başlatmada Bolt, hiçbiri ayarlı değilse bir sağlayıcı yapılandırmanızı ister. Bunu istediğiniz zaman da çalıştırabilirsiniz:
+
+    ```bash
+    bolt providers
+    ```
+
+    Bu, OpenAI, Anthropic ve diğer desteklenen LLM sağlayıcıları için API anahtarları ekleyebileceğiniz sağlayıcı yönetim akışını açar. Yapılandırma proje kökünüzdeki `.bolt/bolt.jsonc` dosyasına kaydedilir.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Bir komut yazın ve ajanları keşfedin">
+    TUI'ye girdikten sonra komutunuzu yazın ve Enter'a basın. Bolt'un on yerleşik ajanı arasında istediğiniz zaman geçiş yapmak için **Tab** kullanın — mevcut ajan durum çubuğunda gösterilir.
+
+    Ayrıca TUI'yi açmadan doğrudan komut satırından da komut çalıştırabilirsiniz:
+
+    ```bash
+    # Varsayılan ajanı kullanarak etkileşimsiz komut
+    bolt run "explain this codebase"
+    
+    # Belirli bir ajan kullan
+    bolt run --agent ask "what does this project do?"
+    
+    # Çalışan bir sunucuya TUI'yi bağla (yerel veya uzak)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Yerleşik ajanlar
+
+TUI'de `Tab` ile ajan değiştirin veya `bolt run` komutuna `--agent <name>` geçirin. Her ajan, amacına uygun tanımlı bir erişim düzeyine sahiptir.
+
+| Ajan | Erişim | Açıklama |
+| --- | --- | --- |
+| `code` | Full | Varsayılan: kod okur, yazar ve çalıştırır |
+| `plan` | Read | Kod tabanını keşfeder ve dosyaları değiştirmeden bir plan üretir |
+| `ask` | Read | Sorular ve araştırma — dosya düzenlemesi yok |
+| `code-review` | Read | Değişiklikleri doğruluk, stil ve güvenlik açısından inceler |
+| `debug` | Full | Başarısız testler, çökmeler ve mantık hatalarını ayıklar |
+| `refactor` | Full | Her adımda test doğrulamasıyla güvenli yeniden düzenleme |
+| `docs` | Edit | Dokümantasyon ve yorumları yazar ve günceller |
+| `security` | Read | Güvenlik denetimi: güvenlik açıkları, sırlar, desenler |
+| `migrate` | Full | Çerçeve yükseltmeleri ve bağımlılık göçleri |
+| `perf` | Full | Performans analizi ve optimizasyon |
+
+Devretme için iki yerleşik alt ajan da vardır: karmaşık çok adımlı görevler için `@general` ve hızlı salt okunur kod tabanı araştırması için `@explore`. Kendi ajanlarınızı Markdown dosyaları olarak da tanımlayabilir veya `bolt agent create` ile üretebilirsiniz.
+
+## Sırada denenecek yaygın komutlar
+
+```bash
+# Sahnelenmiş değişiklikleri geç/kal çıkış koduyla incele
+bolt review --staged
+
+# Sahnelenmiş değişiklikler için bir commit mesajı üret
+bolt commit
+
+# Oturumları listele ve yönet
+bolt session list
+
+# Token kullanımı ve maliyet istatistiklerini görüntüle
+bolt stats
+
+# Yerel oturum veritabanını sorgula
+bolt db
+```
+
+<Tip>
+  Daha az terminal alanı kaplayan kompakt bir arayüz için `bolt` veya `bolt attach` komutuna `--mini` geçirin — daha küçük pencereler veya bölünmüş panel düzenleri için harika.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run`, tüm izin komutlarını sormadan otomatik onaylayan `--auto`, `--yolo` ve `--dangerously-skip-permissions` bayraklarını kabul eder. Bunları yalnızca güvenilir ortamlarda kullanın — ajanın onay olmadan okuma, yazma ve yürütme yapmasına izin verirler.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt bash, zsh, fish ve diğer kabuklar için kabuk tamamlamalarını destekler. Tamamlamaları oluşturun ve şu şekilde kurun:
+
+  ```bash
+  bolt completion
+  ```
+
+  Tamamlama betiğini kabuk yapılandırmanızda kaynaklamak için yazdırılan talimatları izleyin.
+</Note>

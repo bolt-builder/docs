@@ -1,0 +1,145 @@
+---
+title: "A Bolt bővítése pluginekkel"
+sidebarTitle: "Pluginek"
+description: "Telepíts és készíts Bolt-plugineket, hogy egyedi MI-szolgáltatókat, hitelesítési módszereket, eszközöket és munkaterület-adaptereket adj hozzá bármely projekthez vagy globálisan."
+url: "extending/plugins"
+---
+
+A pluginek lehetővé teszik, hogy a Bolt-ot a beépített képességein túl bővítsd. Egy plugin egy Node vagy Bun modul, amely egy Bolt-plugin manifesztet exportál; betöltéskor új LLM-szolgáltatókat, egyedi hitelesítési módszereket, további eszközöket és munkaterület-adaptereket regisztrálhat. A pluginek telepíthetők egyetlen projekthez vagy alkalmazhatók globálisan az összes munkádra.
+
+## Plugin telepítése
+
+Használd a `bolt plugin install` parancsot (alias: `bolt plug`) egy plugin telepítéséhez az npm-ről, és automatikus regisztrálásához a konfigurációdban:
+
+```bash
+bolt plugin install <module>
+```
+
+### Kapcsolók
+
+| Kapcsoló | Alias | Leírás |
+|------|-------|-------------|
+| `--global` | `-g` | Telepítés a globális konfigurációba az aktuális projekt helyett |
+| `--force` | `-f` | Létező bejegyzés lecserélése ugyanahhoz a modulhoz |
+
+### Hatókör: projekt vs. globális
+
+Alapértelmezésben a `bolt plugin install` a projekt-szintű `.bolt/bolt.jsonc` fájlhoz adja hozzá a plugint. Add át a `--global` kapcsolót, hogy a felhasználó-szintű konfigurációhoz add hozzá, így minden projektben betöltődjön.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Futtasd a `bolt --pure` parancsot (vagy állítsd be az `OPENCODE_PURE=1` értéket) a Bolt indításához az összes külső plugin letiltásával. Ez hasznos annak hibakereséséhez, hogy egy plugin okoz-e váratlan viselkedést, anélkül hogy eltávolítanád.
+</Note>
+
+---
+
+## Egy közzétett plugin telepítése
+
+<Steps>
+  <Step title="Keresd meg a plugin-csomagot">
+    Keress az npm-en `bolt-plugin` vagy `opencode-plugin` néven csomagokat, vagy kövess egy linket egy szolgáltató dokumentációjából.
+  </Step>
+
+  <Step title="Telepítsd a projektedbe">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    A Bolt telepíti a csomagot, elolvassa a manifesztjét a szerver és TUI célok észleléséhez, majd beírja a bejegyzést a `.bolt/bolt.jsonc` fájlba.
+  </Step>
+
+  <Step title="Ellenőrizd a konfigurációt">
+    Nyisd meg a `.bolt/bolt.jsonc` fájlt, és erősítsd meg, hogy a plugin bejegyzés hozzá lett adva:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Indíts egy munkamenetet">
+    ```bash
+    bolt
+    ```
+
+    A Bolt indításkor betölti a plugint. Az általa regisztrált szolgáltatók vagy eszközök azonnal elérhetők.
+  </Step>
+</Steps>
+
+---
+
+## Manuális plugin-konfiguráció
+
+Regisztrálhatsz plugineket a `.bolt/bolt.jsonc` közvetlen szerkesztésével. Ez hasznos fejlesztés alatt álló helyi pluginekhez:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+A relatív útvonalak a projekt gyökerétől oldódnak fel. Mind a TypeScript, mind a JavaScript belépési pontok támogatva vannak.
+
+---
+
+## Plugin készítése
+
+A pluginek az `@opencode-ai/plugin` csomaggal íródnak, amely biztosítja a `Hooks` interfészt, amelyet a modulodnak ki kell elégítenie.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Egy minimális plugin egy függvényt exportál, amely `PluginInput` objektumot fogad, és `Hooks` objektumot ad vissza:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Elérhető hook-típusok
+
+| Hook | Cél |
+|------|---------|
+| `auth` | Egyedi hitelesítési szolgáltatók regisztrálása `methods` tömbbel |
+| `event` | Reagálás munkamenet-eseményekre (üzenetek, eszközhívások, befejezések) |
+| `config` | Reagálás konfigurációs változásokra futásidőben |
+| `dispose` | Erőforrások takarítása a plugin kirakodásakor |
+
+A `PluginInput` objektum elérhetővé teszi a `client` (típusos Bolt API-kliens), `project`, `worktree`, `directory` és `serverUrl` mezőket, így a pluginod interakcióba léphet a futó szerverrel.
+
+---
+
+## Környezeti változók
+
+| Változó | Leírás |
+|----------|-------------|
+| `OPENCODE_PURE` | Állítsd `1`-re, hogy külső pluginek nélkül fusson |

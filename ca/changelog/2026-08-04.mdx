@@ -1,0 +1,33 @@
+---
+title: "Setmana del 4 d'agost de 2026"
+description: "Registre de canvis setmanal de Bolt: 11 idiomes nous d'interfície, disposicions de dreta a esquerra, traduccions natives d'escriptori, proveïdor Poolside, retocs a GPT-5 i correccions d'errors."
+---
+
+## Novetats
+
+- **11 idiomes nous d'interfície** — L'aplicació d'escriptori i el TUI ara inclouen traduccions per a hindi, neerlandès, indonesi, vietnamita, italià, urdú, panjabi, azerbaidjanès, finès, suec i tai, arribant a un total de 28 idiomes suportats. Canvia d'idioma a **Configuració → Aparença → Idioma**. Consulta [Funcions d'escriptori](/desktop/features) i [Instal·lació](/desktop/install#28-ui-languages).
+- **Suport de disposició de dreta a esquerra** — La navegació, els editors, els diàlegs, els controls i la representació de text ara es reflecteixen correctament per a idiomes de dreta a esquerra com l'àrab, l'hebreu i l'urdú, de manera que tota la interfície es llegeix de manera natural en aquestes localitzacions.
+- **Traduccions natives d'escriptori** — Els menús a nivell de sistema operatiu, els diàlegs d'actualització, el flux de recuperació, la incorporació de WSL i els selectors de fitxers natius ara estan localitzats juntament amb la interfície de l'aplicació, de manera que tota l'experiència d'escriptori segueix la teva configuració d'idioma.
+- **Cobertura de localització ampliada** — Els menús, diàlegs, indicacions, contingut d'ajuda, missatges d'error i etiquetes d'accessibilitat ara estan traduïts a cada idioma suportat, tancant llacunes on les cadenes anteriorment tornaven a l'anglès.
+- **Proveïdor Poolside** — Bolt ara es connecta a [Poolside](https://poolside.ai) mitjançant la seva API compatible amb OpenAI. Executa `/connect`, tria **Poolside** i enganxa la teva clau API des de [platform.poolside.ai](https://platform.poolside.ai). Els desplegaments autoallotjats de Poolside també es poden configurar com a proveïdor personalitzat. Consulta [Proveïdors i models](/concepts/providers-and-models).
+- **Pluralització sensible a la localització** — Els recomptes, estats, fitxers i elements de la llista de sessions ara es pluralitzen correctament per idioma, de manera que el text de la línia de temps i l'estat es llegeix de manera natural en totes les localitzacions suportades.
+- **Renderització de Markdown enriquida** — Els missatges de l'assistent obtenen un format de Markdown millorat, actualitzacions d'streaming més suaus, millor ressaltat de sintaxi i suport per a contingut matemàtic, cosa que fa que les respostes llargues i tècniques siguin més fàcils de llegir.
+
+## Actualitzacions
+
+- **L'esforç de raonament de GPT-5 coincideix amb la versió del model** — Els nivells d'esforç de raonament (inclosos `none` i `xhigh`) ara només s'ofereixen per a les variants de GPT-5 que els suporten, de manera que `--variant` ja no mostra opcions que un model determinat rebutjaria. Consulta [Controlar l'esforç de raonament](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Retocs a l'anotació de diferències** — La vista de diferències de la interfície de sessió afina els indicadors de comentaris, el comportament de la cuneta i els colors de sintaxi clars/foscos per a una millor llegibilitat.
+- **Traduccions existents refinades** — Els idiomes existents obtenen terminologia més clara i etiquetes d'interfície ampliades per a una experiència més coherent a tota l'aplicació.
+
+## Correccions d'errors
+
+- **Temporització d'accions de sessió** — Les accions de sessió ara registren i informen la seva temporització amb més precisió, de manera que la línia de temps reflecteix quan realment va començar i acabar el treball.
+- **Errors més clars de l'espai de treball remot** — Els errors en connectar-se o executar ordres en un espai de treball remot ara mostren missatges d'error més descriptius en lloc de genèrics.
+- **El proxy de l'espai de treball ja no filtra el directori de treball** — Les sol·licituds enrutades a través del proxy de l'espai de treball ja no inclouen detalls del directori de treball, mantenint les rutes locals fora de la xarxa.
+- **El mapa omple les regions buides** — El mapa d'activitat ara es manté visible en regions sense activitat registrada en lloc de col·lapsar-se a una àrea en blanc.
+- **Detecció de localització corregida** — Bolt ara detecta la teva localització del sistema de manera fiable a l'inici, de manera que la interfície s'obre en l'idioma correcte en més plataformes.
+- **Traducció alemanya de la línia de temps corregida** — Les entrades de la línia de temps en alemany ara es representen amb les cadenes correctes en lloc de tornar a l'anglès o text mal formatat.
+- **Desactivar seleccions de fitxers** — Fer clic per segona vegada sobre una selecció de fitxer ara la neteja, de manera que pots desfer una selecció sense triar-ne una altra primer.
+- **Interaccions més netes de comentaris esborranys** — Iniciar o descartar un comentari esborrany ara neteja la selecció subjacent de manera coherent i ja no competeix amb l'estat de passar el cursor.
+- **Capçalera animada de raonament restaurada** — La capçalera de raonament al TUI mostra de nou un indicador animat mentre pensa, i el seu degradat s'atenua quan s'expandeix, de manera que els estats col·lapsat i obert són més fàcils de distingir.
+- **Eines de procés en segon pla i de proves restaurades** — `bash_background`, `process_output`, `list_processes`, `kill_process` i `test_run` estan de nou disponibles per als agents després d'haver estat eliminades en una fusió anterior. Els agents poden iniciar ordres de llarga durada com servidors de desenvolupament i watchers, llegir la seva sortida i executar les proves del projecte amb resultats estructurats d'èxit/error. Consulta [Eines integrades](/concepts/tools#built-in-tools).

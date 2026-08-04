@@ -1,0 +1,53 @@
+---
+title: "Permissões: controlando o que os agentes do Bolt podem fazer"
+sidebarTitle: "Permissões"
+description: "Como os níveis de acesso por agente do Bolt, os prompts de permissão e as regras de allow/deny em nível de config impedem o agente de fazer coisas que você não aprovou."
+---
+
+Os agentes do Bolt podem ler arquivos, escrever arquivos e executar comandos de shell. Esse poder é delimitado por duas camadas: um nível de acesso por agente e prompts interativos de permissão que você pode aprovar, negar ou configurar antecipadamente.
+
+## Níveis de acesso do agente
+
+Cada agente nativo tem um nível de acesso declarado:
+
+| Nível de acesso | Ler arquivos | Escrever arquivos | Executar comandos de shell |
+| --- | --- | --- | --- |
+| **Total** | ✓ | ✓ | ✓ |
+| **Edição** | ✓ | ✓ | ✗ |
+| **Leitura** | ✓ | ✗ | ✗ |
+
+Mapeamentos nativos:
+
+- **Total** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edição** — `docs`
+- **Leitura** — `plan`, `ask`, `code-review`, `security`
+
+Alterne agentes com `Tab` no TUI ou passe `--agent <name>` para `bolt run`.
+
+## Prompts interativos
+
+Dentro do nível de acesso de um agente, ações potencialmente destrutivas ainda solicitam confirmação. Você pode aprovar uma vez, aprovar pela sessão ou negar. Chamadas negadas retornam um erro ao agente e ele segue adiante.
+
+## Aprovação não interativa
+
+Para CI, scripts ou fluxos locais confiáveis, `bolt run` suporta flags que pulam prompts:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` e `--dangerously-skip-permissions` permitem que o agente leia, escreva e execute sem perguntar. Use-os apenas em ambientes confiáveis.
+</Warning>
+
+## Regras em nível de config
+
+Você pode pré-negar (ou pré-permitir) ferramentas específicas para todo o projeto adicionando um bloco `permission` a `.bolt/bolt.jsonc`. Isso se aplica a todas as sessões no projeto, incluindo chamadas não interativas de `bolt run`. Veja [Configuração](/concepts/configuration) para o schema.
+
+## Relacionados
+
+- [Agentes](/concepts/agents) — quais agentes têm quais níveis de acesso.
+- [Ferramentas](/concepts/tools) — a lista completa de ferramentas que as permissões controlam.
+- [Configuração](/concepts/configuration) — definindo regras duráveis de permissão.

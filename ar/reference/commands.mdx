@@ -1,0 +1,475 @@
+---
+title: "مرجع أوامر Bolt CLI"
+sidebarTitle: "الأوامر"
+description: "مرجع كامل لكل أمر Bolt CLI، بما في ذلك الخيارات والوسائط وأمثلة الاستخدام لـ TUI وrun وserve وsession وagent والمزيد."
+---
+
+يعرض Bolt ثنائيًا واحدًا `bolt` مع مجموعة غنية من الأوامر الفرعية. تشغيل `bolt` بدون وسائط يفتح واجهة الطرفية الكاملة. جميع الأوامر الفرعية الأخرى مسرودة أدناه. استخدم `bolt <command> --help` في أي وقت للمساعدة المضمّنة.
+
+<Accordion title="bolt (الافتراضي — إطلاق TUI)">
+  يفتح واجهة الطرفية التفاعلية في المجلد الحالي. يكتشف Bolt سياق مشروعك تلقائيًا ويحمّل الإعدادات ويتصل بأي مزوّدين مضبوطين.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **الخيارات العامة** — متاحة في كل أمر:
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | طباعة إخراج السجلات إلى stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | ضبط مستوى تفصيل السجلات |
+  | `--pure` | boolean | التشغيل دون تحميل أي إضافات خارجية |
+  | `--help`, `-h` | boolean | إظهار نص المساعدة |
+  | `--version`, `-v` | boolean | طباعة رقم الإصدار المثبّت |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  شغّل Bolt بموجّه واحد في وضع غير تفاعلي. يبدأ Bolt خادمًا داخل العملية، ويرسل الموجّه إلى الجلسة النشطة، ويبث الاستجابة إلى stdout، ثم يخرج. مرّر stdin أو مرّر `--file` لإرفاق سياق.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | أمر slash للتنفيذ؛ مرّر الوسائط كالرسالة |
+  | `--continue` | `-c` | boolean | متابعة الجلسة الأحدث |
+  | `--session` | `-s` | string | معرّف الجلسة للمتابعة |
+  | `--fork` |  | boolean | تفريع الجلسة قبل المتابعة (يتطلّب `--continue` أو `--session`) |
+  | `--share` |  | boolean | مشاركة الجلسة بعد اكتمالها |
+  | `--model` | `-m` | string | النموذج المستخدم بتنسيق `provider/model` |
+  | `--best-of` |  | string | قائمة `provider/model` مفصولة بفواصل؛ يشغّل المهمة بالتوازي، ويرتّب النتائج، ويحتفظ بالفائز |
+  | `--agent` |  | string | الوكيل المستخدم (مثل `code`، `ask`، `review`) |
+  | `--format` |  | `default`\|`json` | تنسيق الإخراج؛ `json` يبث أحداث JSON خام مفصولة بأسطر جديدة |
+  | `--file` | `-f` | string\[\] | ملف(ات) لإرفاقها كسياق |
+  | `--title` |  | string | عنوان الجلسة |
+  | `--attach` |  | string | التشغيل مقابل خادم Bolt بعيد (مثل `http://localhost:4096`) |
+  | `--password` | `-p` | string | كلمة مرور المصادقة الأساسية للخادم البعيد |
+  | `--username` | `-u` | string | اسم مستخدم المصادقة الأساسية للخادم البعيد |
+  | `--dir` |  | string | مجلد العمل؛ إذا كان `--attach` مضبوطًا، فهو المجلد على الخادم البعيد |
+  | `--port` |  | number | منفذ الخادم داخل العملية المحلي (عشوائي إذا حُذف) |
+  | `--variant` |  | string | مستوى جهد الاستدلال، خاص بالمزوّد (مثل `high`، `max`، `minimal`) |
+  | `--thinking` |  | boolean | إظهار كتل التفكير/الاستدلال في الإخراج |
+  | `--mini` |  | boolean | بدء واجهة تفاعلية بسيطة مقسّمة التذييل (مخفي) |
+  | `--interactive` | `-i` | boolean | فرض وضع تفاعلي مباشر مقسّم التذييل |
+  | `--auto` |  | boolean | الموافقة التلقائية على الأذونات غير المرفوضة صراحة |
+  | `--yolo` |  | boolean | تخطي جميع موجّهات الأذونات (لقب لـ `--auto`، مخفي) |
+  | `--dangerously-skip-permissions` |  | boolean | تخطي جميع فحوصات الأذونات (مخفي) |
+  | `--demo` |  | boolean | تفعيل أوامر slash للعرض التفاعلي المباشر (مخفي) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  أرفق الـ TUI الكامل بخادم Bolt قيد التشغيل. يمكن أن يكون الخادم محليًا أو بعيدًا. مرّر `--mini` لاستخدام واجهة التذييل المقسّم البسيطة بدلًا من الـ TUI الكامل.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | المجلد على الخادم البعيد |
+  | `--continue` | `-c` | boolean | متابعة الجلسة الأحدث على الخادم البعيد |
+  | `--session` | `-s` | string | معرّف الجلسة للمتابعة |
+  | `--fork` |  | boolean | تفريع الجلسة عند المتابعة |
+  | `--password` | `-p` | string | كلمة مرور المصادقة الأساسية |
+  | `--username` | `-u` | string | اسم مستخدم المصادقة الأساسية |
+  | `--mini` |  | boolean | استخدام الواجهة التفاعلية البسيطة |
+  | `--no-replay` |  | boolean | تعطيل إعادة تشغيل تاريخ الجلسة عند الاستئناف وبعد تغيير الحجم (يتطلّب `--mini`) |
+  | `--replay-limit` |  | number | تقييد الإعادة المرئية إلى أحدث N رسالة (يتطلّب `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  ابدأ خادم Bolt API بدون واجهة. يعرض الخادم API من REST\+SSE يمكن للـ TUI و`bolt run --attach` و`bolt attach` الاتصال بها. الربط بـ `0.0.0.0` يجعله قابلاً للوصول من أجهزة أخرى — دائمًا اضبط `BOLT_SERVER_PASSWORD` عند القيام بذلك.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--hostname` | string | العنوان للربط (الافتراضي: `127.0.0.1`) |
+  | `--port` | number | المنفذ للاستماع (عشوائي إذا حُذف) |
+  | `--mdns` | boolean | تفعيل اكتشاف خدمة mDNS (يعيّن اسم المضيف افتراضيًا على `0.0.0.0`) |
+  | `--mdns-domain` | string | اسم نطاق مخصّص لخدمة mDNS (الافتراضي: `opencode.local`) |
+  | `--cors` | string\[\] | نطاقات إضافية للسماح بـ CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` غير مضبوط افتراضيًا. سيسجّل الخادم تحذيرًا ويقبل جميع الاتصالات حتى تضبطه.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  ابدأ خادم Bolt وافتح واجهة الويب فورًا في المتصفح الافتراضي. يقبل نفس خيارات الشبكة كـ `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--hostname` | string | العنوان للربط (الافتراضي: `127.0.0.1`) |
+  | `--port` | number | المنفذ للاستماع (عشوائي إذا حُذف) |
+  | `--mdns` | boolean | تفعيل اكتشاف خدمة mDNS (يعيّن اسم المضيف افتراضيًا على `0.0.0.0`) |
+  | `--mdns-domain` | string | اسم نطاق مخصّص لخدمة mDNS (الافتراضي: `opencode.local`) |
+  | `--cors` | string\[\] | نطاقات إضافية للسماح بـ CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  إدارة جلسات Bolt المخزّنة في قاعدة بيانات SQLite المحلية.
+
+  **الأوامر الفرعية**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **خيارات `bolt session list`**
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | تقييد الإخراج إلى أحدث N جلسة |
+  | `--format` |  | `table`\|`json` | تنسيق الإخراج (الافتراضي: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  اسرد وأنشئ الوكلاء المخصّصين. الوكلاء هم ملفات markdown مع بيانات وصفية YAML تعرّف موجّه نظام وأذونات ووضعًا.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **خيارات `bolt agent create`**
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | مسار المجلد لكتابة ملف الوكيل |
+  | `--description` |  | string | وصف بلغة طبيعية لما يجب على الوكيل فعله |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | ما إذا كان الوكيل يعمل كوكيل أساسي أو فرعي أو كليهما |
+  | `--permissions` | `--tools` | string | قائمة أذونات مفصولة بفواصل (الافتراضي: الكل) |
+  | `--model` | `-m` | string | النموذج المستخدم بتنسيق `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (لقب: auth)">
+  إدارة بيانات اعتماد مزوّد الذكاء الاصطناعي تفاعليًا. تُخزّن بيانات الاعتماد في مجلد بيانات نظام التشغيل (`~/.local/share/bolt/auth.json` على Linux، `~/Library/Application Support/bolt/auth.json` على macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  اسرد جميع النماذج المتاحة من المزوّدين المضبوطين.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--verbose` | boolean | تضمين بيانات JSON للتكلفة لكل نموذج |
+  | `--refresh` | boolean | تحديث ذاكرة تخزين النماذج المؤقتة من models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  إدارة خوادم Model Context Protocol (MCP). يدعم Bolt خوادم بعيدة (HTTP/SSE) مع OAuth وخوادم محلية (stdio).
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **خيارات `bolt mcp add`**
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--url` | string | عنوان URL لخادم MCP بعيد |
+  | `--env` | string\[\] | متغير بيئة لخادم محلي (`KEY=VALUE`) |
+  | `--header` | string\[\] | رأس HTTP لخادم بعيد (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  ثبّت إضافة Bolt من npm وحدّث ملف الإعدادات ذي الصلة. يمكن للإضافات توسيع الـ TUI أو إضافة أوامر slash جديدة أو تسجيل مزوّدين جدد.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | إضافة الإضافة إلى الإعدادات العامة بدلًا من إعدادات المشروع |
+  | `--force` | `-f` | boolean | استبدال إصدار إضافة مضبوط بالفعل |
+</Accordion>
+
+<Accordion title="bolt github">
+  إدارة تكامل Bolt مع GitHub Actions، الذي يسمح لـ Bolt بالاستجابة إلى pull requests والقضايا وأحداث GitHub الأخرى.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **خيارات `bolt github run`**
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--event` | string | اسم حدث GitHub للمحاكاة (مثل `pull_request`) |
+  | `--token` | string | رمز وصول شخصي إلى GitHub |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  أخرج pull request من GitHub كفرع محلي باستخدام `gh` CLI، ثم أطلق Bolt في المجلد المخرَج. إذا كان وصف الـ PR يحتوي على رابط مشاركة جلسة، فإن Bolt يستورد تلك الجلسة تلقائيًا.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    يتطلّب هذا الأمر تثبيت [GitHub CLI (`gh`)](https://cli.github.com/) والمصادقة عليه.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  ولّد رسالة commit للتغييرات المُهيّأة (أو كل التغييرات المتتبَّعة) باستخدام نموذج ذكاء اصطناعي ثم قم بـ commit. يفحص النموذج تاريخ commits الأخير لسياق الأسلوب.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | commit جميع التغييرات المتتبَّعة، وليس فقط المُهيّأة |
+  | `--dry-run` |  | boolean | طباعة الرسالة المولّدة دون commit |
+  | `--model` | `-m` | string | النموذج المستخدم بتنسيق `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  شغّل مراجعة شيفرة بالذكاء الاصطناعي على فرق (diff) واخرج بالرمز `0` (نجاح) أو `1` (فشل). يفحص وكيل `code-review` الفرق بحثًا عن الصحة والأسلوب والقضايا الأمنية، ثم يُخرج سطرًا `Verdict: PASS` أو `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | مراجعة التغييرات المُهيّأة فقط |
+  | `--branch` |  | string | مراجعة التغييرات منذ نقطة الدمج الأساسية مع هذا الفرع |
+  | `--model` | `-m` | string | النموذج المستخدم بتنسيق `provider/model` |
+
+  <Note>
+    رموز الخروج: `0` = PASS، `1` = FAIL، `2` = لم يمكن تحديد الحكم.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  صدّر جلسة كـ JSON إلى stdout. مفيد للأرشفة أو المشاركة أو إدخالها في أدوات أخرى. مرّر `--sanitize` قبل المشاركة العلنية لإخفاء مسارات الملفات والموجّهات ومحتوى المحادثة الحساس الآخر.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | إخفاء البيانات الحساسة (مسارات الملفات، نص الموجّه، مدخلات ومخرجات الأدوات) قبل التصدير |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  استورد جلسة مصدَّرة سابقًا إلى قاعدة البيانات المحلية. يقبل إما ملف JSON محلي أو رابط مشاركة جلسة.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  اعرض إحصائيات استخدام رموز وتكلفة مجمّعة عبر جميع الجلسات. يشمل الإخراج جدول نظرة عامة، وتفصيل التكلفة والرموز، واستخدام النموذج، ورسم شريطي لاستخدام الأدوات.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--days` | number | تقييد إلى آخر N يوم (الافتراضي: طوال الوقت) |
+  | `--tools` | number | عدد الأدوات لعرضها في رسم استخدام الأدوات |
+  | `--models` | boolean\|number | إظهار إحصائيات النموذج؛ مرّر رقمًا لتقييد القائمة |
+  | `--project` | string | التصفية حسب معرّف المشروع؛ سلسلة فارغة تعني المشروع الحالي |
+</Accordion>
+
+<Accordion title="bolt logs">
+  اطبع سجل تطبيق Bolt. يُخزّن السجل في مجلد سجل نظام التشغيل (مثل `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | عدد الأسطر النهائية للطباعة (الافتراضي: 1000) |
+  | `--follow` | `-f` | boolean | بث الأسطر الجديدة في الوقت الحقيقي |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  الاستعلام أو فحص قاعدة بيانات SQLite للجلسات المحلية مباشرة.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | تنسيق الإخراج لنتائج الاستعلام (الافتراضي: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  رقّي Bolt إلى أحدث إصدار أو إصدار محدّد. يكتشف Bolt طريقة التثبيت تلقائيًا ويستخدم مدير الحزم المناسب.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | الخيار | اللقب | النوع | الوصف |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | طريقة التثبيت المستخدمة |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  أزل ثنائي Bolt وجميع البيانات المرتبطة.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  ولّد سكربت إكمال صدفة لـ `bash` أو `zsh` أو `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  مجموعة من الأوامر الفرعية لاستكشاف الأخطاء والفحص. مفيدة عند تقديم تقارير الأخطاء أو تشخيص سلوك غير متوقّع.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  ابدأ خادم ACP (Agent Client Protocol). ACP هو البروتوكول المستخدم من قبل تكاملات المحرّرات مثل [Zed](https://zed.dev) للتواصل مع Bolt عبر stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | الخيار | النوع | الوصف |
+  | --- | --- | --- |
+  | `--cwd` | string | مجلد العمل للخادم (الافتراضي: `process.cwd()`) |
+  | `--hostname` | string | اسم المضيف للربط (الافتراضي: `127.0.0.1`) |
+  | `--port` | number | منفذ الربط |
+  | `--mdns` | boolean | تفعيل اكتشاف خدمة mDNS |
+  | `--mdns-domain` | string | اسم نطاق مخصّص لخدمة mDNS (الافتراضي: `opencode.local`) |
+  | `--cors` | string\[\] | نطاقات إضافية للسماح بـ CORS |
+</Accordion>

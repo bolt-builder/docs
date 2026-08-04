@@ -1,0 +1,121 @@
+---
+title: "Bolt unter macOS, Linux oder Windows installieren"
+sidebarTitle: "Installation"
+description: "Installieren Sie die Bolt CLI per curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey oder Scoop. Inklusive Upgrade, Deinstallation und Desktop-App."
+---
+
+Bolt kann unter macOS, Linux und Windows mit der Methode installiert werden, die zu Ihrem Workflow passt – ein Einzeiler mit curl, jeder große Node.js-Paketmanager oder ein Systempaketmanager wie Homebrew, Chocolatey oder Scoop.
+
+## Schnellinstallation (macOS / Linux)
+
+Der schnellste Einstieg ist das offizielle Installationsskript. Es erkennt automatisch Ihr Betriebssystem und Ihre Architektur, lädt die passende Binary nach `~/.bolt/bin` herunter und fügt sie Ihrem `$PATH` hinzu.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Der Installer richtet außerdem optionale Sprach­eingabe-Abhängigkeiten ein (sox und whisper-cpp für Offline-Transkription). Um das zu überspringen, übergeben Sie `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Um eine bestimmte Version festzunageln:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Paketmanager
+
+Installieren Sie Bolt global mit dem Paketmanager Ihrer Wahl:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Installation überprüfen
+
+<Steps>
+  <Step title="Installierte Version prüfen">
+    Bestätigen Sie nach der Installation, dass `bolt` in Ihrem `$PATH` verfügbar ist:
+
+    ```bash
+    bolt --version
+    ```
+
+    Wird der Befehl nicht gefunden, öffnen Sie eine neue Terminalsitzung (oder laden Sie Ihre Shell-Konfiguration neu), damit der aktualisierte `$PATH` wirksam wird.
+  </Step>
+</Steps>
+
+## Upgrade
+
+Führen Sie `bolt upgrade` aus, um auf das neueste Release zu aktualisieren:
+
+```bash
+bolt upgrade
+```
+
+Bolt erkennt Ihre ursprüngliche Installationsmethode automatisch. Sie können sie mit dem Flag `--method` überschreiben:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Unterstützte Methoden sind: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Sie können auch auf eine bestimmte Version aktualisieren, indem Sie die Version als Positionsargument übergeben:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Deinstallation
+
+Um Bolt von Ihrem System zu entfernen:
+
+```bash
+bolt uninstall
+```
+
+## Umgebungsvariablen
+
+| Variable               | Beschreibung                                                    |
+| ---------------------- | --------------------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Log-Verbosität: `DEBUG`, `INFO`, `WARN` oder `ERROR`            |
+| `BOLT_PRINT_LOGS`      | Logs auf stderr ausgeben                                        |
+| `BOLT_PURE`            | Ohne externe Plugins ausführen                                  |
+| `BOLT_SERVER_PASSWORD` | Basic-Auth-Passwort für den Headless-API-Server                 |
+| `BOLT_SERVER_USERNAME` | Basic-Auth-Benutzername für den Headless-API-Server             |
+
+<Tip>
+  Setzen Sie `BOLT_PURE=1`, wenn Sie einen sauberen Lauf ohne Drittanbieter-Plugins möchten – nützlich für Debugging oder kontrollierte CI-Umgebungen.
+</Tip>
+
+## Desktop-App
+
+<Note>
+  Bolt kommt außerdem als native Desktop-Anwendung mit Mehrfenster-Sitzungsverwaltung, integriertem Terminal und Dateibaum, einer Befehlspalette, 28 UI-Sprachen und Auto-Updates. Laden Sie das neueste Release von der [Releases-Seite](https://github.com/Bolt-builder/bolt-cli/releases) herunter.
+
+  Unter macOS können Sie es in einer Zeile ohne Gatekeeper-Umweg installieren:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

@@ -1,0 +1,142 @@
+---
+title: "1분 안에 Bolt 시작하기"
+sidebarTitle: "Quickstart"
+description: "Bolt를 설치하고, 프로젝트를 열고, 프로바이더를 연결하고, 첫 AI 프롬프트를 실행하세요 — 이 단계별 가이드로 60초 이내에 모두 완료할 수 있습니다."
+---
+
+이 가이드는 Bolt 설치, 프로젝트에서 시작, AI 프로바이더 연결, 첫 프롬프트 실행 과정을 안내합니다. 전체 흐름은 1분 이내에 완료됩니다.
+
+<Steps>
+  <Step title="Bolt 설치">
+    가장 빠른 경로는 macOS와 Linux에서 작동하는 공식 설치 스크립트입니다:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    패키지 관리자를 선호하시나요? npm, bun, pnpm, yarn으로 전역 설치하세요:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    macOS에서 데스크톱 앱 (Gatekeeper 우회 없음):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Homebrew, Chocolatey, Scoop, Windows 관련 참고 사항을 포함한 모든 방법은 [설치 가이드](/installation)를 참조하세요.
+  </Step>
+  <Step title="프로젝트 열기">
+    아무 프로젝트 디렉터리로 이동하고 대화형 TUI를 시작하세요:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt는 프로젝트 컨텍스트를 자동으로 파악합니다 — 파일 트리를 읽고, 스택을 이해하고, 여는 순간부터 모든 에이전트가 사용할 수 있게 합니다.
+  </Step>
+  <Step title="AI 프로바이더 구성">
+    첫 실행 시, 프로바이더가 설정되어 있지 않으면 Bolt가 프로바이더 구성을 요청합니다. 언제든지 다음을 실행할 수도 있습니다:
+
+    ```bash
+    bolt providers
+    ```
+
+    이는 OpenAI, Anthropic 및 기타 지원되는 LLM 프로바이더에 대한 API 키를 추가할 수 있는 프로바이더 관리 흐름을 엽니다. 구성은 프로젝트 루트의 `.bolt/bolt.jsonc`에 저장됩니다.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="프롬프트 입력 및 에이전트 탐색">
+    TUI에 들어가면 프롬프트를 입력하고 Enter를 누르세요. 언제든지 **Tab**을 사용해 Bolt의 10개 내장 에이전트를 전환하세요 — 현재 에이전트는 상태 바에 표시됩니다.
+
+    TUI를 열지 않고 명령줄에서 직접 프롬프트를 실행할 수도 있습니다:
+
+    ```bash
+    # 기본 에이전트를 사용한 비대화형 프롬프트
+    bolt run "explain this codebase"
+    
+    # 특정 에이전트 사용
+    bolt run --agent ask "what does this project do?"
+    
+    # 실행 중인 서버(로컬 또는 원격)에 TUI 연결
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## 내장 에이전트
+
+TUI에서 `Tab`으로 에이전트를 전환하거나, `bolt run`에 `--agent <name>`을 전달하세요. 각 에이전트는 목적에 맞는 접근 수준이 정의되어 있습니다.
+
+| Agent | Access | Description |
+| --- | --- | --- |
+| `code` | Full | 기본값: 코드를 읽고 쓰고 실행합니다 |
+| `plan` | Read | 코드베이스를 탐색하고 파일을 변경하지 않은 채 계획을 생성합니다 |
+| `ask` | Read | 질문과 조사 — 파일 편집 없음 |
+| `code-review` | Read | 정확성, 스타일, 보안 관점에서 변경을 검토합니다 |
+| `debug` | Full | 실패하는 테스트, 크래시, 논리 오류를 디버깅합니다 |
+| `refactor` | Full | 각 단계에서 테스트 검증을 동반한 안전한 리팩터링 |
+| `docs` | Edit | 문서와 주석을 작성하고 업데이트합니다 |
+| `security` | Read | 보안 감사: 취약점, 시크릿, 패턴 |
+| `migrate` | Full | 프레임워크 업그레이드와 의존성 마이그레이션 |
+| `perf` | Full | 성능 분석과 최적화 |
+
+위임을 위한 두 개의 내장 서브에이전트도 있습니다: 복잡한 다단계 작업을 위한 `@general`과 빠른 읽기 전용 코드베이스 조사를 위한 `@explore`. 자신만의 에이전트를 Markdown 파일로 정의하거나 `bolt agent create`로 생성할 수 있습니다.
+
+## 다음으로 시도할 일반적인 명령
+
+```bash
+# 통과/실패 종료 코드로 스테이지된 변경 검토
+bolt review --staged
+
+# 스테이지된 변경에 대한 커밋 메시지 생성
+bolt commit
+
+# 세션 나열 및 관리
+bolt session list
+
+# 토큰 사용량 및 비용 통계 보기
+bolt stats
+
+# 로컬 세션 데이터베이스 쿼리
+bolt db
+```
+
+<Tip>
+  `bolt` 또는 `bolt attach`에 `--mini`를 전달하면 터미널 공간을 덜 차지하는 컴팩트한 UI가 나옵니다 — 작은 창이나 분할 창 레이아웃에 유용합니다.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run`은 묻지 않고 모든 권한 프롬프트를 자동 승인하는 `--auto`, `--yolo`, `--dangerously-skip-permissions` 플래그를 받습니다. 신뢰할 수 있는 환경에서만 사용하세요 — 이러한 플래그는 확인 없이 에이전트가 읽고, 쓰고, 실행하도록 허용합니다.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt는 bash, zsh, fish, 기타 셸에 대한 셸 완성을 지원합니다. 완성을 생성하고 설치하려면:
+
+  ```bash
+  bolt completion
+  ```
+
+  출력된 지침에 따라 셸 설정에서 완성 스크립트를 소스하세요.
+</Note>

@@ -1,0 +1,28 @@
+---
+title: "ACP: vadiet Bolt no Zed un citiem redaktoriem"
+sidebarTitle: "ACP (redaktori)"
+description: "Bolt runā Agent Client Protocol (ACP) valodā, ļaujot redaktoriem, piemēram, Zed, iestrādāt to kā vietējo MI kodēšanas aizmuguri, nepalaižot atsevišķu lietotni vai TUI."
+---
+
+Bolt īsteno Agent Client Protocol (ACP), kas ir veids, kā redaktori, piemēram, Zed, runā ar MI aģentiem. Konfigurēts, redaktors palaiž `bolt acp` kā apakšprocesu un vada to tieši — jūs iegūstat Bolt aģentus, rīkus, sesijas un sniedzēju steku, neatstājot redaktoru.
+
+## Iespējot ACP
+
+Redaktora MI iestatījumos pievienojiet Bolt kā ACP saderīgu aģentu un norādiet to uz:
+
+```bash
+bolt acp
+```
+
+Redaktors pārvaldīs procesa dzīves ciklu. Konfigurējiet sniedzējus, modeļus un MCP serverus, kā parasti darāt failā `.bolt/bolt.jsonc` — tie attiecas arī šeit.
+
+## Ko iegūstat
+
+- Katru Bolt aģentu, izsaucamu no redaktora MI paneļa.
+- Koplietotās sesijas ar TUI un tīmekļa UI (caur lokālo datubāzi).
+- Tā pati rīku kopa, atļauju modelis un projekta atmiņa kā jebkurā citā Bolt ieejas punktā.
+
+## Saistīts
+
+- [Bezgalvas serveris](/server/headless-server) — paralēlā HTTP saskarne.
+- [Konfigurācija](/concepts/configuration) — konfigurācijas fails, ko manto ACP.

@@ -1,0 +1,185 @@
+---
+title: "أرفق بجلسات Bolt البعيدة عبر HTTP"
+sidebarTitle: "الجلسات البعيدة"
+description: "ابدأ خادم Bolt بدون واجهة، أرفق TUI من أي جهاز، واكتشف الخوادم على شبكتك المحلية بـ mDNS — مع مصادقة أساسية اختيارية."
+url: "server/remote-sessions"
+---
+
+يحتوي Bolt على خادم HTTP مدمج يفصل المحرّك عن الواجهة بالكامل. يمكنك بدء خادم بدون واجهة على جهاز بعيد قوي (VM سحابي، حاوية تطوير، سطح مكتب متروك يعمل طوال الليل) وإرفاق TUI من حاسوبك المحمول أو طرفية ثانية أو حتى متصفح — كل ذلك يشير إلى نفس الجلسة الحيّة. هذا يجعل Bolt مناسبًا للفرق والأحمال البعيدة والمهام طويلة الأمد التي تريد الاطمئنان عليها دون SSH إلى جهاز.
+
+---
+
+## `bolt serve`
+
+ابدأ خادم Bolt بدون واجهة يعرض API الكامل عبر HTTP ويقبل اتصالات TUI.
+
+```bash
+bolt serve
+```
+
+### الخيارات
+
+| الخيار | الافتراضي | الوصف |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | اسم المضيف أو عنوان IP للربط |
+| `--port <n>` | `0` (تلقائي) | المنفذ للاستماع؛ يطبع Bolt المنفذ المعيّن عند بدء التشغيل |
+| `--mdns` | `false` | نشر الخادم عبر mDNS للاكتشاف بدون تكوين على الشبكة المحلية؛ يعيّن أيضًا اسم المضيف على `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | نطاق خدمة mDNS مخصّص |
+| `--cors <origin>` | `[]` | نطاقات إضافية للسماح عبر CORS (قابل للتكرار) |
+
+<Warning>
+  إذا لم يُضبط `OPENCODE_SERVER_PASSWORD`، يطبع Bolt تحذيرًا ويكون الخادم مفتوحًا تمامًا لأي شخص يمكنه الوصول إليه. اضبط دائمًا كلمة مرور قبل الربط بأي واجهة غير `127.0.0.1`.
+</Warning>
+
+### المصادقة
+
+أمّن الخادم بمصادقة HTTP الأساسية باستخدام متغيرات البيئة:
+
+| المتغير | الوصف |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | كلمة مرور المصادقة الأساسية |
+| `OPENCODE_SERVER_USERNAME` | اسم مستخدم المصادقة الأساسية (الافتراضي `opencode` إذا حُذف) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+أرفق الـ TUI الكامل بخادم Bolt قيد التشغيل. يعمل هذا مقابل أي خادم يمكن الوصول إليه عبر HTTP — محلي أو بعيد.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### الخيارات
+
+| الخيار | اللقب | الوصف |
+|------|-------|-------------|
+| `--dir <path>` | | المجلد للتشغيل فيه على الخادم البعيد |
+| `--continue` | `-c` | متابعة آخر جلسة على الخادم |
+| `--session <id>` | `-s` | معرّف الجلسة للمتابعة |
+| `--fork` | | تفريع الجلسة عند المتابعة (استخدم مع `--continue` أو `--session`) |
+| `--password <pw>` | `-p` | كلمة مرور المصادقة الأساسية (تتجاوز `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | اسم مستخدم المصادقة الأساسية (يتجاوز `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | استخدام واجهة تفاعلية بسيطة بدلًا من الـ TUI الكامل |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+ابدأ خادم Bolt وافتح واجهة الويب فورًا في متصفحك الافتراضي. هذه أسرع طريقة لتشغيل واجهة قائمة على المتصفح محليًا.
+
+```bash
+bolt web
+```
+
+يقبل `bolt web` نفس خيارات الشبكة كـ `bolt serve`.
+
+---
+
+## اكتشاف mDNS
+
+مرّر `--mdns` إلى `bolt serve` لبث عنوان الخادم على شبكتك المحلية باستخدام mDNS. يمكن لأي جهاز على نفس الشبكة عندئذٍ الإرفاق باستخدام اسم مضيف mDNS دون معرفة عنوان IP أو المنفذ.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+نطاق mDNS الافتراضي هو `opencode.local`. تجاوزه بـ `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## ابدأ خادمًا وأرفق عن بعد
+
+<Steps>
+  <Step title="اضبط كلمة مرور على جهاز الخادم">
+    صدّر `OPENCODE_SERVER_PASSWORD` قبل بدء الخادم. بدونها، يطبع Bolt تحذيرًا ويكون API غير مُصادَق.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="ابدأ الخادم بدون واجهة">
+    اربط بجميع الواجهات بحيث يمكن لحاسوبك المحمول الوصول إليه، واختياريًا اختر منفذًا ثابتًا:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    اترك هذه الطرفية مفتوحة (أو شغّلها في `tmux` / `screen` / وحدة systemd).
+  </Step>
+
+  <Step title="أرفق من حاسوبك المحمول">
+    على أي جهاز يمكنه الوصول إلى الخادم، شغّل:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    يفتح الـ TUI الكامل ويتصل بالمحرّك البعيد. الجلسات والتاريخ وحالة الأداة كلها تعيش على الخادم.
+  </Step>
+
+  <Step title="تابع جلسة لاحقًا">
+    انفصل بإنهاء الـ TUI (`q` أو `Ctrl-C`). تبقى الجلسة تعمل على الخادم. لإعادة الانضمام:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    أو فرّعها للتفريع دون التأثير على الأصلية:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## مثال سير عمل بعيد
+
+نمط شائع هو ترك خادم Bolt يعمل على جهاز تطوير عالي الأنوية والاتصال من حاسوب محمول نحيف.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+كل بيانات الجلسة مخزّنة على قاعدة بيانات SQLite للخادم. الحاسوب المحمول يعرض الـ TUI فقط — يمكنه الانفصال وإعادة الاتصال في أي وقت دون فقدان العمل.
