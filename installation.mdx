@@ -50,6 +50,26 @@ yarn global add @bolt-builder/bolt-cli
 
 </CodeGroup>
 
+## Homebrew (macOS / Linux)
+
+If you already use Homebrew, install Bolt from the official tap:
+
+```bash
+brew install bolt-builder/tap/bolt-cli
+```
+
+That pulls the same release archives as the curl installer and drops the `bolt` binary on your `$PATH`. Upgrades work through `brew upgrade bolt-cli` or `bolt upgrade`.
+
+## Run without installing (npx)
+
+To try Bolt without installing anything globally, run it straight through npx:
+
+```bash
+npx @bolt-builder/bolt-cli
+```
+
+This is handy for one-off sessions or CI jobs — npm caches the package after the first run, so subsequent invocations are fast. For anything you'll use regularly, install with one of the methods above.
+
 ## Verify the installation
 
 <Steps>
