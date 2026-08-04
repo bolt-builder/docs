@@ -1,0 +1,78 @@
+---
+title: "Bolt: Terminaliningiz uchun AI kodlash agenti"
+sidebarTitle: "Bosh sahifa"
+description: "Bolt — bu o'nta ixtisoslashgan agent, doimiy sessiyalar, MCP qo'llab-quvvatlash va desktop ilova bilan terminal-birinchi AI kodlash agenti — istalgan LLM provayderi bilan quvvatlanadi."
+---
+
+Bolt to'liq AI muhandislik jamoasini to'g'ridan-to'g'ri sizning terminalingizga joylashtiradi. U tez, klaviatura orqali boshqariladigan TUI va native desktop ilova sifatida yetkaziladi, ikkalasi ham bir xil dvigatel bilan quvvatlanadi: o'nta ixtisoslashgan agent, doimiy barqaror sessiyalar, OAuth bilan MCP server boshqaruvi, plagin tizimi va har bir yirik LLM provayderi uchun qo'llab-quvvatlash.
+
+<CardGroup cols={2}>
+  <Card title="O'rnatish" icon="download" href="/installation">
+    Bolt'ni curl, npm, bun yoki sevimli paket menejeringiz orqali soniyalarda o'rnating.
+  </Card>
+  <Card title="Tez boshlash" icon="rocket" href="/quickstart">
+    Birinchi AI kodlash sessiyangizni bir daqiqadan kamroq vaqt ichida ishga tushiring.
+  </Card>
+  <Card title="Agentlar" icon="robot" href="/concepts/agents">
+    O'rnatilgan o'nta agent bilan tanishing: code, plan, ask, review, debug, refactor, docs, security, migrate va perf.
+  </Card>
+  <Card title="Buyruqlar ma'lumotnomasi" icon="terminal" href="/reference/commands">
+    Har bir CLI buyrug'i, subbuyruq va bayroq to'liq hujjatlangan.
+  </Card>
+</CardGroup>
+
+## Bolt nima qiladi
+
+Bolt kodbazangizni o'qiydi, siz nima qurayotganingizni tushunadi va siz bilan birga kodni jo'natadi — terminalda yoki desktop ilova sifatida. Har bir sessiya barqaror: ajrating, boshqa mashinadan qayta biriktiring, suhbat filialini fork qiling, havolani bo'lishing yoki sanitizatsiya qilingan transkriptni eksport qiling.
+
+<CardGroup cols={3}>
+  <Card title="Sessiyalar" icon="clock-rotate-left" href="/concepts/sessions">
+    Mahalliy SQLite'da saqlanadigan barqaror, fork qilinadigan sessiyalar.
+  </Card>
+  <Card title="Provayderlar va modellar" icon="microchip" href="/concepts/providers-and-models">
+    Har qanday yirik LLM provayderi uchun o'z API kalitingizni olib keling.
+  </Card>
+  <Card title="Konfiguratsiya" icon="sliders" href="/concepts/configuration">
+    To'liq sxema qo'llab-quvvatlashi bilan har bir loyiha uchun `.bolt/bolt.jsonc`.
+  </Card>
+  <Card title="MCP serverlari" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol orqali, jumladan OAuth oqimlari orqali asboblarni qo'shing.
+  </Card>
+  <Card title="Plaginlar" icon="puzzle-piece" href="/extending/plugins">
+    Bolt'ni custom provayderlar, asboblar va auth usullari bilan kengaytiring.
+  </Card>
+  <Card title="GitHub integratsiyasi" icon="github" href="/server/github-actions">
+    AI quvvatidagi commit xabarlari, kod ko'rib chiqish va GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Ishga tushish
+
+<Steps>
+  <Step title="Bolt'ni o'rnating">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Yoki npm orqali o'rnating: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Loyihangizni oching">
+    Har qanday loyiha katalogiga o'ting va TUI ni ishga tushiring:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Provayderni sozlang">
+    Birinchi ishga tushirishda Bolt sizdan LLM provayderni qo'shishni so'raydi. Shuningdek ishga tushirishingiz mumkin:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="AI bilan kodlashni boshlang">
+    TUI footerida promptingizni yozing, Enter'ni bosing va Bolt agentlariga ishlashga imkon bering. Agentlarni `Tab` bilan almashtiring.
+  </Step>
+</Steps>
+
+<Tip>
+  To'liq TUI ni ochmasdan tezkor interaktiv bo'lmagan javob uchun `bolt run "explain this codebase"` dan foydalaning.
+</Tip>

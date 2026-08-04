@@ -1,0 +1,46 @@
+---
+title: "Projektimuisti: pysyvä konteksti Bolt-istuntojen välillä"
+sidebarTitle: "Projektimuisti"
+description: "Bolt tallentaa oppimansa projektista jokaisen vuoron lopussa ja syöttää sen uusiin istuntoihin, jotta agentin ei tarvitse opetella koodikantaasi joka kerta uudelleen."
+---
+
+Projektimuisti on se, mikä saa Boltin tuntumaan siltä, että se jo tuntee projektisi. Kun istunto päättää vuoronsa, Bolt tislaa hyödylliset asiat ja kirjoittaa ne projektikohtaiseen muistivarastoon. Kun avaat uuden istunnon, Bolt syöttää muisti-indeksin sekä uusimman istuntotiivistelmän järjestelmäkehotteeseen, jotta agentti aloittaa todellisella kontekstilla tyhjän sijaan.
+
+## Miten talteenotto toimii
+
+Jokaisen keskusteluvuoron lopussa Bolt pyytää mallia tiivistämään kestävät faktat, jotka ovat hyödyllisiä ensi kerralla: käytännöt, arkkitehtuurihuomiot, tiedostorakenteet, build/test-komennot, sudenkuopat ja avoimet asiat. Nämä kirjoitetaan levylle projektin muistihakemistoon yhdessä uusimman istunnon rullaavan tiivistelmän kanssa.
+
+Muisti on projektikohtainen. Kaksi saman repon kloonia samalla koneella jakavat muistin; toisiinsa liittymättömät projektit eivät koskaan näe toistensa muistia.
+
+## Nimenomaiset työkalut
+
+Agentit voivat myös lukea ja kirjoittaa muistia suoraan istunnon aikana:
+
+- `memory_save` — tallenna tietty fakta, jonka agentin tulisi muistaa ensi kerralla.
+- `memory_recall` — etsi jotain, minkä agentti (tai sinä) tallensitte aiemmin.
+
+Voit pyytää agenttia "muistamaan, että käytämme pnpm:ää emmekä npm:ää" ja se kutsuu puolestasi `memory_save`ia.
+
+## Istuntokohtaiset säätimet
+
+TUI:n sisällä voit vaihtaa nykyisen istunnon muistikäyttäytymistä kauttaviivakomennoilla:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Tämä on hyödyllistä, kun haluat kertakäyttöisen tutkivan istunnon, joka ei saastuta muistiasi, tai vain luku -istunnon, joka silti hyötyy aiemmasta kontekstista.
+
+## Muistin tarkastaminen ja muokkaaminen
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Muisti tallennetaan tavallisina tiedostoina levylle projektin Bolt-datahakemistoon, joten voit grepata, muokata tai poistaa merkintöjä suoraan. Selvitä tarkka polku koneellasi suorittamalla `bolt debug paths`.
+
+## Liittyvät
+
+- [Istunnot](/concepts/sessions) — kestävät keskustelut, jotka tuottavat muistimerkintöjä.
+- [Konfigurointi](/concepts/configuration) — missä muisti tallennetaan ja miten polun voi ohittaa.

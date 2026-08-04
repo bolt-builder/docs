@@ -1,0 +1,61 @@
+---
+title: "Bolt environment variable संदर्भ"
+sidebarTitle: "Env Variables"
+description: "Bolt द्वारा पहचाना गया हर environment variable, जिसमें log नियंत्रण, server auth, config overrides, और provider API key कन्वेंशन्स शामिल हैं।"
+---
+
+Environment variables आपको बिना किसी config फ़ाइल को छुए Bolt को कॉन्फ़िगर करने देते हैं — CI pipelines, Docker containers, और साझा वातावरण में उपयोगी जहाँ आप क्रेडेंशियल्स commit नहीं कर सकते। ये स्टार्टअप पर एक बार पढ़े जाते हैं और Bolt चलते समय बदले नहीं जा सकते।
+
+## संदर्भ
+
+| Variable | विवरण |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Log verbosity सेट करें। स्वीकृत मान: `DEBUG`, `INFO`, `WARN`, `ERROR`। `--log-level` flag के समतुल्य। |
+| `BOLT_PRINT_LOGS` | stderr पर log आउटपुट प्रिंट करने के लिए किसी भी non-empty मान पर सेट करें। `--print-logs` के समतुल्य। |
+| `BOLT_PURE` | सभी बाहरी plugins अक्षम करने के लिए किसी भी non-empty मान पर सेट करें। `--pure` के समतुल्य। |
+| `BOLT_SERVER_USERNAME` | `bolt serve` और `bolt web` के लिए Basic auth username। |
+| `BOLT_SERVER_PASSWORD` | `bolt serve` और `bolt web` के लिए Basic auth password। सभी connecting clients को यह password देना होगा। |
+| `BOLT_CONFIG` | Bolt द्वारा लोड की जाने वाली config फ़ाइल के path को ओवरराइड करें। जब यह सेट होता है तो Bolt डिफ़ॉल्ट स्थानों की खोज नहीं करेगा। |
+| `BOLT_CONFIG_DIR` | Config directory ओवरराइड करें। Bolt डिफ़ॉल्ट OS config directory के बजाय इस directory में config फ़ाइलों की तलाश करेगा। |
+| `BOLT_CONFIG_CONTENT` | पूरी config को inline JSON string के रूप में दें। CI में उपयोगी जहाँ फ़ाइलें लिखना अव्यावहारिक है। config स्रोतों में सर्वोच्च प्राथमिकता लेता है। |
+| `BOLT_GIT_BASH_PATH` | Windows पर Git Bash के `bin` directory का path, `less` जैसी Unix utilities का पता लगाने के लिए उपयोग किया जाता है। |
+
+## Provider API keys
+
+Bolt स्वचालित रूप से environment variables से provider क्रेडेंशियल्स की खोज करता है — कोई `bolt providers login` step आवश्यक नहीं। प्रत्येक provider एक विशिष्ट environment variable की तलाश करता है, और यदि variable सेट है तो Bolt इसका उपयोग करेगा, `auth.json` में जो भी संग्रहीत है उसकी परवाह किए बिना।
+
+<Tip>
+  अपने shell profile (उदा. `~/.zshrc`, `~/.bashrc`) में या अपने shell द्वारा लोड की गई `.env` फ़ाइल में provider API keys सेट करें। आप उन्हें config फ़ाइल से `provider.*.apiKey` फ़ील्ड में `${VAR_NAME}` syntax का उपयोग करके संदर्भित भी कर सकते हैं ताकि keys कभी plaintext में संग्रहीत न हों।
+</Tip>
+
+सामान्य provider variables:
+
+| Variable | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+यह देखने के लिए `bolt models --verbose` चलाएँ कि प्रत्येक कॉन्फ़िगर किया गया provider कौन-सा environment variable अपेक्षा करता है।
+
+## उपयोग उदाहरण
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

@@ -1,0 +1,68 @@
+---
+title: "Egyedi ügynökök a Bolt-ban"
+sidebarTitle: "Egyedi ügynökök"
+description: "Definiálj saját Bolt-ügynököket Markdown-fájlokként — válassz modellt, állíts be hozzáférési szintet, korlátozd az eszközöket, és adj hozzá tématerület-specifikus utasításokat."
+---
+
+A tíz beépített ügynökön túl saját ügynököket is definiálhatsz. Az egyedi ügynökök Markdown-fájlok egy frontmatter blokkal, amely leírja az ügynök modelljét, hozzáférési szintjét és elérhető eszközeit, valamint egy törzzsel, amely a rendszerpromptjaként működik.
+
+## Ügynök létrehozása
+
+A leggyorsabb út a beépített generátor, amely néhány kérdést tesz fel, és megírja neked a fájlt:
+
+```bash
+bolt agent create
+```
+
+Az ügynökök a projekt `.opencode/agent/` mappájában élnek (vagy a globális konfigurációs könyvtáradban a személyes ügynökökhöz). Minden ügynök egyetlen `.md` fájl, amelynek fájlneve lesz az ügynök neve.
+
+## Egy ügynökfájl anatómiája
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Gyakori frontmatter mezők:
+
+| Mező | Cél |
+| --- | --- |
+| `name` | Az ügynök neve, amelyet a `--agent` kapcsolóval használsz. |
+| `description` | Egysoros összefoglaló a listákban. |
+| `model` | Alapértelmezett modell `provider/model` formátumban. |
+| `access` | `full`, `edit` vagy `read` (lásd: [Jogosultságok](/concepts/permissions)). |
+| `tools` | Opcionális engedélyezési lista, amely korlátozza, mely [eszközöket](/concepts/tools) hívhatja az ügynök. |
+
+## Egyedi ügynök használata
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+A TUI-ban nyomd meg a `Tab` billentyűt, hogy körkörösen végigmenj az ügynökökön; az egyedi ügynökök a beépítettek mellett jelennek meg.
+
+## Al-ügynökök
+
+Az ügynökök a `task` eszközön keresztül delegálhatnak al-ügynököknek. A Bolt `@general` és `@explore` al-ügynökökkel érkezik, és bármely egyedi ügynök, amelynek fájlja a `.opencode/agent/` alatt él, al-ügynökként is meghívható név szerint.
+
+## Kapcsolódó
+
+- [Ügynökök](/concepts/agents) — a beépített ügynökcsapat.
+- [Eszközök](/concepts/tools) — mit adhatsz hozzá a `tools:` mezőhöz.
+- [Egyedi eszközök](/extending/custom-tools) — építsd meg az eszközt, amit az ügynök meghív.

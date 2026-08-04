@@ -1,0 +1,78 @@
+---
+title: "Bolt: ターミナル向けの AI コーディングエージェント"
+sidebarTitle: "ホーム"
+description: "Bolt は、10 の専門エージェント、永続的なセッション、MCP サポート、デスクトップアプリを備えたターミナルファーストの AI コーディングエージェントです — あらゆる LLM プロバイダで動作します。"
+---
+
+Bolt は完全な AI エンジニアリングチームをターミナルに直接組み込みます。高速でキーボード駆動の TUI とネイティブデスクトップアプリとして提供され、どちらも同じエンジンを使用しています。10 の専門エージェント、永続的で耐久性のあるセッション、OAuth 付き MCP サーバ管理、プラグインシステム、そしてすべての主要 LLM プロバイダのサポートです。
+
+<CardGroup cols={2}>
+  <Card title="インストール" icon="download" href="/installation">
+    curl、npm、bun、またはお好みのパッケージマネージャで数秒で Bolt をインストールします。
+  </Card>
+  <Card title="クイックスタート" icon="rocket" href="/quickstart">
+    1 分以内に最初の AI コーディングセッションを実行します。
+  </Card>
+  <Card title="エージェント" icon="robot" href="/concepts/agents">
+    10 の組み込みエージェントに触れてください: code、plan、ask、review、debug、refactor、docs、security、migrate、perf。
+  </Card>
+  <Card title="コマンドリファレンス" icon="terminal" href="/reference/commands">
+    すべての CLI コマンド、サブコマンド、フラグを完全に文書化しています。
+  </Card>
+</CardGroup>
+
+## Bolt ができること
+
+Bolt はコードベースを読み、何を作ろうとしているかを理解して、あなたと一緒にコードを出荷します — ターミナル内でもデスクトップアプリでも。各セッションは耐久性があります。デタッチ、別のマシンからの再アタッチ、会話ブランチのフォーク、リンクの共有、サニタイズされたトランスクリプトのエクスポートが可能です。
+
+<CardGroup cols={3}>
+  <Card title="セッション" icon="clock-rotate-left" href="/concepts/sessions">
+    ローカル SQLite に保存された永続的でフォーク可能なセッション。
+  </Card>
+  <Card title="プロバイダとモデル" icon="microchip" href="/concepts/providers-and-models">
+    主要な LLM プロバイダの API キーを持ち込みます。
+  </Card>
+  <Card title="設定" icon="sliders" href="/concepts/configuration">
+    完全なスキーマサポートを備えたプロジェクトごとの `.bolt/bolt.jsonc`。
+  </Card>
+  <Card title="MCP サーバ" icon="plug" href="/extending/mcp-servers">
+    OAuth フローを含む Model Context Protocol を介してツールを追加します。
+  </Card>
+  <Card title="プラグイン" icon="puzzle-piece" href="/extending/plugins">
+    カスタムプロバイダ、ツール、認証方式で Bolt を拡張します。
+  </Card>
+  <Card title="GitHub 連携" icon="github" href="/server/github-actions">
+    AI 駆動のコミットメッセージ、コードレビュー、GitHub Actions。
+  </Card>
+</CardGroup>
+
+## 立ち上げて実行する
+
+<Steps>
+  <Step title="Bolt をインストール">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    または npm 経由でインストール: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="プロジェクトを開く">
+    任意のプロジェクトディレクトリに移動して TUI を起動します。
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="プロバイダを設定">
+    初回起動時、Bolt は LLM プロバイダの追加を求めます。次のコマンドも実行できます。
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="AI でコーディングを始める">
+    TUI フッターにプロンプトを入力し、Enter を押して、Bolt のエージェントに仕事を任せましょう。`Tab` でエージェントを切り替えます。
+  </Step>
+</Steps>
+
+<Tip>
+  完全な TUI を開かず、素早く非対話的な回答が欲しいときは `bolt run "explain this codebase"` を使ってください。
+</Tip>

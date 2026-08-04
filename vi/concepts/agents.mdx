@@ -1,0 +1,135 @@
+---
+title: "Agent — Mười agent AI tích hợp sẵn và tùy chỉnh của Bolt"
+sidebarTitle: "Agent"
+description: "Bolt được trang bị sẵn mười agent, mỗi agent có vai trò, bộ công cụ và mức truy cập riêng. Tìm hiểu cách chuyển đổi, cấu hình và tạo agent của riêng bạn."
+---
+
+Bolt xem mỗi persona AI như một **agent** có tên: một system prompt kết hợp với một bộ quyền truy cập công cụ được giới hạn chính xác. Thay vì chạy một mô hình đa năng cho mọi tác vụ, bạn chọn agent có quyền truy cập và trọng tâm phù hợp với những gì bạn cần — dù là kiểm toán bảo mật, viết tài liệu, hay thiết lập một cuộc di chuyển framework toàn diện.
+
+## Mức truy cập
+
+Mỗi agent tích hợp sẵn được gán một trong ba bậc truy cập xác định các công cụ mà nó có thể gọi:
+
+| Mức | Quyền được cấp | Trường hợp sử dụng điển hình |
+|-------|---------------------|-------------|
+| **Full** | Đọc tệp, ghi/chỉnh sửa tệp, chạy lệnh shell | Lập trình chủ động, gỡ lỗi, refactor, di chuyển |
+| **Edit** | Đọc tệp, ghi/chỉnh sửa tệp — không có shell | Tài liệu, cập nhật bình luận, chỉnh sửa văn bản an toàn |
+| **Read** | Chỉ đọc tệp — không ghi, không shell | Lập kế hoạch, nghiên cứu, review code, kiểm toán |
+
+## Agent tích hợp sẵn
+
+Bolt cung cấp mười agent chuyên biệt sẵn có. Chuyển đổi giữa chúng trong TUI bằng cách nhấn <kbd>Tab</kbd>.
+
+| Agent | Truy cập | Mô tả |
+|-------|--------|-------------|
+| `code` | Full | Mặc định: đọc, ghi và chạy code |
+| `plan` | Read | Khám phá codebase và tạo ra kế hoạch mà không thay đổi code |
+| `ask` | Read | Câu hỏi và nghiên cứu — không chỉnh sửa tệp |
+| `code-review` | Read | Review các thay đổi về tính đúng đắn, phong cách và bảo mật |
+| `debug` | Full | Gỡ lỗi các test thất bại, crash và lỗi logic |
+| `refactor` | Full | Refactor an toàn với xác minh test ở mỗi bước |
+| `docs` | Edit | Viết và cập nhật tài liệu và bình luận |
+| `security` | Read | Kiểm toán bảo mật: lỗ hổng, bí mật và các mẫu nguy hiểm |
+| `migrate` | Full | Nâng cấp framework và di chuyển dependency |
+| `perf` | Full | Phân tích và tối ưu hóa hiệu năng |
+
+## Subagent
+
+Ngoài mười agent chính, Bolt còn cung cấp hai **subagent** tích hợp sẵn mà các agent chính có thể ủy thác công việc cho chúng trong một phiên. Bạn không bao giờ chọn subagent thủ công — chúng được điều phối tự động khi một agent chính quyết định tạo ra một subagent.
+
+| Subagent | Vai trò |
+|----------|------|
+| `@general` | Ủy thác tác vụ phức tạp nhiều bước cần khả năng rộng |
+| `@explore` | Nghiên cứu codebase chỉ-đọc nhanh — duyệt tệp mà không có tác dụng phụ |
+
+<Tip>
+  Khi bạn cần hiểu nhanh một codebase lạ, hãy bắt đầu với agent `ask` hoặc `plan`. Ở phía sau chúng có thể điều phối subagent `@explore` để lập chỉ mục dự án của bạn với tốc độ cao trước khi đưa ra câu trả lời — mà không đụng tới một tệp nào.
+</Tip>
+
+## Chuyển đổi agent
+
+**Trong TUI** — nhấn <kbd>Tab</kbd> để duyệt qua danh sách agent có sẵn bất kỳ lúc nào trong phiên. Agent đang hoạt động được hiển thị ở chân phiên.
+
+**Không tương tác** — truyền `--agent <name>` cho `bolt run` để cố định một agent cụ thể trong suốt lần chạy đó:
+
+```bash
+bolt run --agent ask "luồng xác thực làm gì?"
+bolt run --agent security "kiểm toán tầng API để tìm lỗ hổng injection"
+bolt run --agent docs "thêm bình luận JSDoc vào mọi hàm được export trong src/utils"
+```
+
+## Liệt kê agent
+
+Để xem tất cả agent có sẵn — cả tích hợp sẵn lẫn tùy chỉnh — cùng với mode và cấu hình quyền của chúng:
+
+```bash
+bolt agent list
+```
+
+## Agent tùy chỉnh
+
+Bạn có thể tạo agent riêng theo hai cách.
+
+### Tạo bằng `bolt agent create`
+
+Trình hướng dẫn tương tác tạo tệp agent bằng LLM và ghi nó ra đĩa:
+
+```bash
+bolt agent create
+```
+
+Tất cả cờ đều tùy chọn. Cung cấp chúng để chạy không tương tác:
+
+```bash
+bolt agent create \
+  --description "Kiểm toán các GraphQL resolver để tìm vấn đề N+1 và đề xuất sửa DataLoader" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Cờ | Mô tả |
+|------|-------------|
+| `--description` | Agent nên làm gì (được dùng làm prompt LLM để sinh) |
+| `--path` | Thư mục để ghi tệp agent được tạo |
+| `--mode` | `all` (mặc định), `primary`, hoặc `subagent` |
+| `--permissions` | Danh sách quyền phân cách bằng dấu phẩy để cho phép. Bỏ qua để cấp tất cả. |
+| `--model` / `-m` | Mô hình để dùng theo định dạng `provider/model` |
+
+### Viết tệp markdown thủ công
+
+Một agent chỉ là một tệp markdown với YAML frontmatter. Đặt nó trong `.bolt/agents/` bên trong dự án của bạn hoặc trong thư mục agent toàn cục:
+
+```markdown
+---
+description: "Kiểm toán các GraphQL resolver để tìm vấn đề N+1"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+Bạn là một chuyên gia hiệu năng GraphQL. Công việc của bạn là xác định các mẫu
+truy vấn N+1 trong mã resolver và đề xuất các giải pháp dựa trên DataLoader...
+```
+
+Tên tệp (không có `.md`) trở thành định danh của agent.
+
+### Các quyền có sẵn
+
+Quyền là các cổng công cụ chi tiết bạn kiểm soát khi tạo agent tùy chỉnh:
+
+| Quyền | Kiểm soát |
+|------------|----------|
+| `bash` | Thực thi lệnh shell |
+| `read` | Đọc tệp |
+| `edit` | Ghi và chỉnh sửa tệp (cũng kiểm soát `write` và `apply_patch`) |
+| `glob` | Liệt kê glob tệp/thư mục |
+| `grep` | Tìm kiếm tệp qua ripgrep |
+| `webfetch` | Fetch HTTP từ web |
+| `task` | Tạo tác vụ subagent |
+| `todowrite` | Tạo và cập nhật các mục todo |
+| `websearch` | Truy vấn tìm kiếm web |
+| `lsp` | Các thao tác language server protocol |
+| `skill` | Truy cập các skill của dự án |

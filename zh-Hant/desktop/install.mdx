@@ -1,0 +1,116 @@
+---
+title: "Bolt 桌面應用:多視窗 AI 編程工作階段"
+sidebarTitle: "安裝"
+description: "安裝 Bolt 桌面應用,享受多視窗工作階段、整合終端機、支援圖片貼上的提示編輯器、自動更新與 28 種介面語言。"
+url: "desktop/install"
+---
+
+Bolt 桌面應用以完整的 Electron 殼包裝與 CLI 相同的引擎。終端機中可用的每個功能 — 代理、MCP 伺服器、外掛、遠端工作階段、可分叉與分享的工作階段 — 在桌面應用中的運作完全相同,額外還加上多視窗與多分頁體驗、圖形化的設定 UI、原生通知與自動更新。若你已在使用 CLI,桌面應用是即插即用的搭配,而不是替代品。
+
+---
+
+## 安裝
+
+### macOS
+
+<Steps>
+  <Step title="使用一行命令安裝(建議)">
+    開啟終端機並執行:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    指令碼會下載最新發行版、驗證它,並將應用放在 `/Applications`。不會有 Gatekeeper 彈出視窗。
+  </Step>
+
+  <Step title="啟動應用">
+    從 `/Applications` 或 Spotlight 開啟 **Bolt**。首次啟動時,Bolt 會請你選擇預設 LLM 供應商,並建立全域設定檔。
+  </Step>
+</Steps>
+
+<Tip>
+  一行命令的安裝方式會繞過 macOS Gatekeeper 的「未識別開發者」對話框,讓你直接開始編寫程式碼,不需要額外的安全提示。
+</Tip>
+
+### 所有平台 — 從 releases 下載
+
+從 [Bolt releases 頁面](https://github.com/Bolt-builder/bolt-cli/releases) 下載適用於你平台的最新安裝程式。
+
+| 平台 | 安裝程式類型 |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` 安裝程式 |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  在 Windows 上,Bolt 內建 WSL(Windows Subsystem for Linux)整合。當 WSL 可用時,Bolt 可以直接在你的 WSL 發行版中開啟工作階段 — 提供 Linux 原生的代理環境搭配原生 Windows UI 介面。
+</Note>
+
+---
+
+## 功能
+
+### 多視窗與多分頁工作階段管理
+
+你可以開啟任意數量的視窗,每個都有自己的分頁組。分頁直接對應到 Bolt 工作階段,因此你可以在一個分頁執行重構代理、在另一個分頁提問,並在第三個執行背景工作 — 全部同時進行。
+
+### 提示編輯器
+
+提示編輯器支援豐富輸入:貼上文字、拖入檔案作為附件,或直接從剪貼簿貼上圖片。Bolt 會將圖片編碼並自動送給任何支援視覺的模型。
+
+### 整合終端機與檔案樹
+
+分割窗格版面配置讓代理對話在一側,即時終端機與專案檔案樹在另一側。你可以執行命令、檢視輸出,並將結果回饋給代理,而不需要切換應用。
+
+### 命令面板
+
+按 `Cmd/Ctrl+K` 開啟命令面板。從這裡你可以切換工作階段、變更代理、開啟設定,或觸發任何動作,不需要用滑鼠。
+
+### 完整設定 UI
+
+設定面板涵蓋 `.bolt/bolt.jsonc` 中的每個選項 — 快捷鍵、模型選擇、LLM 供應商、MCP 伺服器與驗證 — 提供下拉選單、切換按鈕與行內驗證。你幾乎不需要手動編輯設定檔。
+
+### 原生通知
+
+當長時間執行的任務完成時,Bolt 會觸發原生 OS 通知。點擊通知可直接跳到該工作階段。
+
+### 深層連結
+
+透過瀏覽到 `bolt://` URL 開啟特定工作階段。這對於與隊友分享工作階段連結或加入書籤標記進行中的工作很有用。
+
+### 自動更新
+
+桌面應用在三個頻道間自動更新:
+
+| 頻道 | 描述 |
+|---------|-------------|
+| `prod` | 穩定發行版,在每個 production tag 時更新 |
+| `beta` | 預發行建置,可搶先體驗新功能 |
+| `dev` | 來自 `dev` 分支的每夜建置 |
+
+在 **Settings → About** 中切換頻道。
+
+### 28 種介面語言
+
+Bolt 介面已在地化為 28 種語言。在 **Settings → Appearance → Language** 中變更顯示語言。
+
+---
+
+## 相關文件
+
+<CardGroup cols={2}>
+  <Card title="遠端工作階段" icon="server" href="/server/remote-sessions">
+    在遠端機器上執行無介面伺服器,並從桌面應用或 CLI 附加。
+  </Card>
+  <Card title="MCP 伺服器" icon="plug" href="/extending/mcp-servers">
+    使用 Model Context Protocol 為代理新增外部工具與 API。
+  </Card>
+  <Card title="外掛" icon="puzzle-piece" href="/extending/plugins">
+    透過自訂供應商、驗證方法與工作區配接器擴充 Bolt。
+  </Card>
+  <Card title="GitHub 整合" icon="github" href="/server/github-actions">
+    從桌面應用或 CI 自動化 PR、提交訊息與程式碼審查。
+  </Card>
+</CardGroup>

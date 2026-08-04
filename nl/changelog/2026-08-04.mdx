@@ -1,0 +1,33 @@
+---
+title: "Week van 4 augustus 2026"
+description: "Wekelijkse Bolt-changelog: 11 nieuwe UI-talen, right-to-left layouts, native desktopvertalingen, Poolside-provider, GPT-5-verbeteringen en bugfixes."
+---
+
+## Nieuwe functies
+
+- **11 nieuwe UI-talen** — De desktop-app en TUI bevatten nu vertalingen voor Hindi, Nederlands, Indonesisch, Vietnamees, Italiaans, Urdu, Punjabi, Azerbeidzjaans, Fins, Zweeds en Thai, waarmee het totaal op 28 ondersteunde talen komt. Wissel van taal via **Settings → Appearance → Language**. Zie [Desktopfuncties](/desktop/features) en [Installatie](/desktop/install#28-ui-languages).
+- **Ondersteuning voor right-to-left layout** — Navigatie, editors, dialoogvensters, bedieningselementen en tekstweergave worden nu correct gespiegeld voor right-to-left talen zoals Arabisch, Hebreeuws en Urdu, zodat de hele interface natuurlijk leest in die talen.
+- **Native desktopvertalingen** — Menu's op OS-niveau, updater-dialoogvensters, het herstelproces, WSL-onboarding en native bestandskiezers worden nu net als de in-app UI gelokaliseerd, zodat de hele desktopervaring je taalinstelling volgt.
+- **Uitgebreide lokalisatiedekking** — Menu's, dialoogvensters, prompts, help-inhoud, foutmeldingen en toegankelijkheidslabels zijn nu vertaald in elke ondersteunde taal, waarmee lacunes worden gedicht waar tekst voorheen terugviel op Engels.
+- **Poolside-provider** — Bolt maakt nu verbinding met [Poolside](https://poolside.ai) via de OpenAI-compatibele API. Voer `/connect` uit, kies **Poolside**, en plak je API-sleutel van [platform.poolside.ai](https://platform.poolside.ai). Zelf-gehoste Poolside-implementaties kunnen ook worden geconfigureerd als custom provider. Zie [Providers en modellen](/concepts/providers-and-models).
+- **Locale-bewust meervoud** — Aantallen, statussen, bestanden en items in sessielijsten krijgen nu per taal het juiste meervoud, zodat tijdlijn- en statustekst natuurlijk leest in alle ondersteunde talen.
+- **Rijkere Markdown-weergave** — Assistent-berichten krijgen verbeterde Markdown-opmaak, soepelere streaming-updates, betere syntax highlighting en ondersteuning voor wiskundige inhoud, waardoor uitgebreide en technische antwoorden makkelijker te lezen zijn.
+
+## Updates
+
+- **GPT-5 reasoning effort volgt modelversie** — Reasoning-effort niveaus (waaronder `none` en `xhigh`) worden nu alleen aangeboden voor de GPT-5 varianten die ze ondersteunen, zodat `--variant` geen opties meer toont die een bepaald model zou weigeren. Zie [Reasoning effort besturen](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Verbeterde diff-annotatie** — De diff-weergave in de sessie-UI verscherpt commentaarindicatoren, gutter-gedrag en licht/donker syntaxkleuren voor betere leesbaarheid.
+- **Verfijnde bestaande vertalingen** — Bestaande talen krijgen duidelijkere terminologie en uitgebreide UI-labels voor een consistentere ervaring in de hele app.
+
+## Bugfixes
+
+- **Timing van sessie-acties** — Sessie-acties registreren en rapporteren hun timing nu nauwkeuriger, zodat de tijdlijn weerspiegelt wanneer werk daadwerkelijk begon en eindigde.
+- **Duidelijkere foutmeldingen voor remote workspaces** — Fouten bij het verbinden met of uitvoeren van commando's in een remote workspace tonen nu beschrijvender foutmeldingen in plaats van generieke.
+- **Workspace-proxy lekt niet langer werkmap** — Verzoeken via de workspace-proxy bevatten geen werkmap-details meer, waardoor lokale paden niet meer over de lijn gaan.
+- **Kaart vult lege regio's op** — De activiteitenkaart blijft nu zichtbaar in regio's zonder geregistreerde activiteit in plaats van in te storten tot een leeg gebied.
+- **Locale-detectie hersteld** — Bolt pikt je systeem-locale nu betrouwbaar op bij het opstarten, zodat de interface op meer platforms in de juiste taal opent.
+- **Duitse tijdlijnvertaling hersteld** — Tijdlijnitems in het Duits worden nu weergegeven met de juiste tekst in plaats van terug te vallen op Engels of misvormde tekst.
+- **Bestandsselecties uitschakelen** — Klik je een tweede keer op een bestandsselectie, dan wordt die nu gewist, zodat je een selectie ongedaan kunt maken zonder eerst een andere te kiezen.
+- **Schonere interacties met concept-commentaar** — Het starten of afwijzen van een concept-commentaar wist de onderliggende selectie nu consistent en concurreert niet meer met hover-status.
+- **Geanimeerde reasoning-header hersteld** — De reasoning-header in de TUI toont weer een geanimeerde spinner tijdens het denken, en het verloop dimt bij uitklappen zodat de ingeklapte en open toestand makkelijker te onderscheiden zijn.
+- **Achtergrondproces- en test-tools hersteld** — `bash_background`, `process_output`, `list_processes`, `kill_process` en `test_run` zijn weer beschikbaar voor agents nadat ze in een eerdere merge waren verwijderd. Agents kunnen langlopende commando's zoals dev-servers en watchers starten, hun output lezen en de tests van het project uitvoeren met gestructureerde pass/fail-resultaten. Zie [Ingebouwde tools](/concepts/tools#built-in-tools).

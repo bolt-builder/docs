@@ -1,0 +1,179 @@
+---
+title: "GitHub-integráció: Actions, PR-ek és MI-alapú ellenőrzés"
+sidebarTitle: "GitHub Actions"
+description: "Futtasd a Bolt-ot a GitHub Actions-ben, checkoutold a PR-eket helyben, generálj MI-alapú commit-üzeneteket, és korlátozd a merge-eket MI-alapú kódellenőrzéssel és kilépési kódokkal."
+url: "server/github-actions"
+---
+
+A Bolt négy paranccsal érkezik, amelyek összekötik a napi Git-munkafolyamatodat az MI-vel: egy GitHub Actions ügynök, amelyet egyetlen paranccsal telepíthetsz, egy gyorsítás a pull requestek checkoutolásához, egy MI-alapú commit-üzenet generátor, és egy MI-alapú kódellenőrző géppel olvasható kilépési kódokkal. Együtt lehetővé teszik, hogy a Bolt-ot a fejlesztés minden szakaszába bevidd — helyi kódolás, PR-ellenőrzés és folyamatos integráció.
+
+---
+
+## `bolt github`
+
+A GitHub Actions ügynök kezelése, amely a Bolt-ot CI-eseményeken futtatja.
+
+### `bolt github install`
+
+A GitHub Actions munkafolyamat telepítése az aktuális repositoryba. Ez a munkafolyamat YAML-t a `.github/workflows/` alá írja, így a Bolt automatikusan elindul issue-megjegyzésekre, új pull requestekre vagy más eseményekre, amelyeket konfigurálsz.
+
+```bash
+bolt github install
+```
+
+Futtasd ezt egy git-repository gyökerében. Írási hozzáférésre lesz szükséged a `.github/workflows/` mappához.
+
+### `bolt github run`
+
+A GitHub-ügynök futtatása helyben vagy egy CI-lépésben, egy adott GitHub-esemény adattartalmának visszajátszásával.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Kapcsoló | Leírás |
+|------|-------------|
+| `--event <event>` | GitHub-esemény neve vagy útvonal egy JSON-esemény adattartalmához |
+| `--token <pat>` | GitHub személyes hozzáférési token (`github_pat_…`), amelyet megjegyzések küldéséhez és kontextus letöltéséhez használ |
+
+---
+
+## A GitHub Actions ügynök beállítása
+
+<Steps>
+  <Step title="Telepítsd a munkafolyamatot">
+    A repositoryd gyökeréből:
+
+    ```bash
+    bolt github install
+    ```
+
+    A Bolt egy GitHub Actions munkafolyamat-fájlt ír a `.github/workflows/` mappába. Commitold és pushold a fájlt.
+  </Step>
+
+  <Step title="Add hozzá az API-kulcsod titokként">
+    A repository beállításaiban add hozzá a preferált LLM-szolgáltatód API-kulcsát repository-titokként (például `ANTHROPIC_API_KEY`). A munkafolyamat automatikusan felveszi.
+  </Step>
+
+  <Step title="Indítsd el az ügynököt">
+    Kommentelj `/bolt <your request>` szöveget bármely issue-n vagy pull requesten. A munkafolyamat elindul, a Bolt olvassa az esemény adattartalmát, és választ küld az eredménnyel.
+  </Step>
+
+  <Step title="Futtasd helyben hibakereséshez">
+    Játssz vissza egy élő esemény-adattartalmat egy korábbi munkafolyamat-futtatásból:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Checkoutol egy GitHub pull requestet egy helyi ágba, és elindítja a Bolt-ot ezen az ágon — készen áll az ellenőrzésre, hibakeresésre vagy a munka folytatására onnan, ahol a PR szerzője abbahagyta.
+
+```bash
+bolt pr 42
+```
+
+A Bolt a `gh` CLI-t használja a PR letöltéséhez, létrehoz egy `pr/<number>` nevű ágat, és beállítja az upstream tracking referenciát. Cross-repository (fork) PR-eknél automatikusan hozzáadja a forkot remote-ként. Ha a PR leírása egy megosztott Bolt-munkamenet URL-t tartalmaz (`opncd.ai/s/…`), a munkamenet importálódik, hogy folytathasd a szerző beszélgetését.
+
+> Ehhez telepítve és hitelesítve kell lennie a [GitHub CLI-nek (`gh`)](https://cli.github.com/).
+
+---
+
+## `bolt commit`
+
+Commit-üzenet generálása a staged (vagy minden követett) változtatásokból, és commitolás egy lépésben.
+
+```bash
+bolt commit
+```
+
+A Bolt diffeli a változtatásaidat, a diffet átadja a `commit` ügynöknek stílus-referenciának a legutóbbi commit-tárgyakkal együtt, és a `git commit -m <message>` parancsot futtatja az eredménnyel.
+
+### Kapcsolók
+
+| Kapcsoló | Alias | Leírás |
+|------|-------|-------------|
+| `--all` | `-a` | Minden követett változtatás commitolása, nem csak a staged-ek (egyenértékű a `git commit -a`-val) |
+| `--dry-run` | | A generált üzenet kiírása commitolás nélkül |
+| `--model <provider/model>` | `-m` | Az üzenet generálásához használt modell felülírása |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Használd a `bolt commit --dry-run` parancsot, hogy előnézd a generált üzenetet a commit előtt. Ha szerkeszteni akarod, másold ki a kimenetet, és futtasd a `git commit -m "…"` parancsot módosított szöveggel.
+</Tip>
+
+---
+
+## `bolt review`
+
+Futtatja a `code-review` ügynököt egy diffen, és géppel olvasható ítélettel lép ki. Az ellenőrzés utolsó sora mindig vagy `Verdict: PASS` vagy `Verdict: FAIL`, ami a `bolt review`-t drop-in-készen alkalmassá teszi CI-pipeline-ekhez.
+
+```bash
+bolt review
+```
+
+Alapértelmezésben a `bolt review` a `HEAD`-et diffeli a munkafával szemben. Használd az alábbi kapcsolókat a diff hatókörének korlátozásához.
+
+### Kapcsolók
+
+| Kapcsoló | Alias | Leírás |
+|------|-------|-------------|
+| `--staged` | | Csak a staged változtatások ellenőrzése |
+| `--branch <name>` | | Az adott ággal való merge base óta történt változtatások ellenőrzése (alapértelmezésben a repository alapértelmezett ága) |
+| `--model <provider/model>` | `-m` | Az ellenőrzéshez használt modell |
+
+### Kilépési kódok
+
+| Kód | Jelentés |
+|------|---------|
+| `0` | `Verdict: PASS` — nincsenek kritikus vagy súlyos problémák |
+| `1` | `Verdict: FAIL` — egy vagy több kritikus vagy súlyos probléma található |
+| `2` | Az ítélet nem volt meghatározható a válaszból |
+
+### Használat GitHub Actions munkafolyamatban
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Egy nem nulla kilépési kód elbukja az ellenőrzést, és blokkolja a merge-et, amíg a problémák nem kerülnek megoldásra.
+
+<Tip>
+  Futtasd a `bolt review --staged` parancsot commit előtt, hogy elkapd a problémákat, amíg még könnyen megváltoztathatók — mielőtt egyáltalán pull requestbe kerülnének.
+</Tip>

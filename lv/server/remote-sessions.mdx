@@ -1,0 +1,185 @@
+---
+title: "Pievienojieties attālinātām Bolt sesijām caur HTTP"
+sidebarTitle: "Attālinātās sesijas"
+description: "Palaidiet bezgalvas Bolt serveri, pievienojiet TUI no jebkuras iekārtas un atklājiet serverus savā lokālajā tīklā ar mDNS — ar izvēles basic auth."
+url: "server/remote-sessions"
+---
+
+Bolt ir iebūvēts HTTP serveris, kas pilnībā atdala dzinēju no saskarnes. Jūs varat palaist bezgalvas serveri jaudīgā attālinātā iekārtā (mākoņa VM, izstrādes konteineru, darbvirsmu, kas atstāta darboties naktī) un pievienot TUI no sava klēpjdatora, otra termināļa vai pat pārlūka — visi norādot uz vienu un to pašu tiešraides sesiju. Tas padara Bolt piemērotu komandām, attālinātām slodzēm un ilgstošiem uzdevumiem, kurus vēlaties pārbaudīt bez SSH savienojuma ar iekārtu.
+
+---
+
+## `bolt serve`
+
+Palaidiet bezgalvas Bolt serveri, kas atklāj pilnu API caur HTTP un pieņem TUI savienojumus.
+
+```bash
+bolt serve
+```
+
+### Karogi
+
+| Karogs | Noklusējums | Apraksts |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Resursdators vai IP adrese, uz kuras saistīties |
+| `--port <n>` | `0` (auto) | Ports, uz kā klausīties; Bolt izdrukā piešķirto portu palaišanas laikā |
+| `--mdns` | `false` | Reklamējiet serveri caur mDNS bez konfigurācijas lokālā tīkla atklāšanai; arī iestata resursdatoru uz `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | Pielāgots mDNS pakalpojuma domēns |
+| `--cors <origin>` | `[]` | Papildu izcelsmes, ko atļaut caur CORS (var atkārtot) |
+
+<Warning>
+  Ja `OPENCODE_SERVER_PASSWORD` nav iestatīts, Bolt izdrukā brīdinājumu, un serveris ir pilnīgi atvērts ikvienam, kas var to sasniegt. Vienmēr iestatiet paroli, pirms saistāties ar jebkuru saskarni, kas nav `127.0.0.1`.
+</Warning>
+
+### Autentifikācija
+
+Nodrošiniet serveri ar HTTP Basic Auth, izmantojot vides mainīgos:
+
+| Mainīgais | Apraksts |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Basic auth parole |
+| `OPENCODE_SERVER_USERNAME` | Basic auth lietotājvārds (pēc noklusējuma `opencode`, ja izlaists) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Pievienojiet pilno TUI palaistam Bolt serverim. Tas darbojas pret jebkuru serveri, kas sasniedzams caur HTTP — lokālu vai attālinātu.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Karogi
+
+| Karogs | Aizstājējs | Apraksts |
+|------|-------|-------------|
+| `--dir <path>` | | Direktorija, kurā palaist attālinātajā serverī |
+| `--continue` | `-c` | Turpināt pēdējo sesiju serverī |
+| `--session <id>` | `-s` | Sesijas ID turpināšanai |
+| `--fork` | | Dakšot sesiju, kad turpina (izmantot ar `--continue` vai `--session`) |
+| `--password <pw>` | `-p` | Basic auth parole (ignorē `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | Basic auth lietotājvārds (ignorē `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | Izmantot minimālo interaktīvo UI, nevis pilno TUI |
+
+```bash
+# Turpiniet pēdējo sesiju attālinātā serverī
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Dakšojiet konkrētu sesiju
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimāls UI — noderīgs ierobežotos termināļos
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Palaidiet Bolt serveri un nekavējoties atveriet tīmekļa UI savā noklusējuma pārlūkā. Šis ir ātrākais veids, kā iegūt pārlūkā balstītu saskarni, kas darbojas lokāli.
+
+```bash
+bolt web
+```
+
+`bolt web` pieņem tos pašus tīkla karogus kā `bolt serve`.
+
+---
+
+## mDNS atklāšana
+
+Nododiet `--mdns` komandai `bolt serve`, lai apraidītu servera adresi savā lokālajā tīklā, izmantojot mDNS. Jebkura iekārta tajā pašā tīklā pēc tam var pievienoties, izmantojot mDNS resursdatoru, nezinot IP adresi vai portu.
+
+```bash
+# Uz servera iekārtas
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# No citas iekārtas tajā pašā LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+Noklusējuma mDNS domēns ir `opencode.local`. Ignorējiet to ar `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Sāciet serveri un pievienojieties attālināti
+
+<Steps>
+  <Step title="Iestatiet paroli servera iekārtā">
+    Eksportējiet `OPENCODE_SERVER_PASSWORD` pirms servera palaišanas. Bez tā Bolt izdrukā brīdinājumu, un API ir bez autentifikācijas.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Palaidiet bezgalvas serveri">
+    Piesaistiet visām saskarnēm, lai jūsu klēpjdators to var sasniegt, un pēc izvēles izvēlieties fiksētu portu:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Atstājiet šo termināli atvērtu (vai palaidiet to `tmux` / `screen` / systemd vienībā).
+  </Step>
+
+  <Step title="Pievienojieties no sava klēpjdatora">
+    No jebkuras iekārtas, kas var sasniegt serveri, palaidiet:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    Pilnais TUI atveras un pievienojas attālinātajam dzinējam. Sesijas, vēsture un rīku stāvoklis — visi dzīvo serverī.
+  </Step>
+
+  <Step title="Turpiniet sesiju vēlāk">
+    Atvienojieties, aizverot TUI (`q` vai `Ctrl-C`). Sesija turpina darboties serverī. Lai atkal pievienotos:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Vai dakšojiet to, lai sazarotos, neietekmējot oriģinālu:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Attālinātās darbplūsmas piemērs
+
+Izplatīts modelis ir atstāt Bolt serveri darbojamies uz augstas kodolu skaita izstrādes iekārtas un savienot no plāna klēpjdatora.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Visi sesijas dati tiek glabāti servera SQLite datubāzē. Klēpjdators tikai atveido TUI — tas var atvienoties un atkal savienoties jebkurā laikā, nezaudējot darbu.

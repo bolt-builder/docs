@@ -1,0 +1,179 @@
+---
+title: "GitHub-integration: Actions, PR:er och AI-granskning"
+sidebarTitle: "GitHub Actions"
+description: "Kör Bolt inuti GitHub Actions, checka ut PR:er lokalt, generera AI-commit-meddelanden och grinda merges med AI-driven kodgranskning och avslutningskoder."
+url: "server/github-actions"
+---
+
+Bolt levererar fyra kommandon som ansluter ditt dagliga Git-arbetsflöde till AI: en GitHub Actions-agent du kan installera med ett enda kommando, en genväg för att checka ut pull requests, en AI-commit-meddelandegenerator och en AI-kodgranskare med maskinläsbara avslutningskoder. Tillsammans låter de dig ta med Bolt i varje utvecklingsstadium — lokal kodning, PR-granskning och kontinuerlig integration.
+
+---
+
+## `bolt github`
+
+Hantera GitHub Actions-agenten som kör Bolt på CI-händelser.
+
+### `bolt github install`
+
+Installera GitHub Actions-workflow:n till det aktuella repot. Detta skriver workflow-YAML:en till `.github/workflows/` så att Bolt startar automatiskt vid issue-kommentarer, nya pull requests eller andra händelser du konfigurerar.
+
+```bash
+bolt github install
+```
+
+Kör detta från roten av ett git-repo. Du behöver skrivbehörighet till `.github/workflows/`.
+
+### `bolt github run`
+
+Kör GitHub-agenten lokalt eller inuti ett CI-steg och spela upp en specifik GitHub-händelsepayload.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flagga | Beskrivning |
+|------|-------------|
+| `--event <event>` | GitHub-händelsenamn eller sökväg till en JSON-händelsepayload |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) som används för att posta kommentarer och hämta kontext |
+
+---
+
+## Sätt upp GitHub Actions-agenten
+
+<Steps>
+  <Step title="Installera workflow:n">
+    Från roten av ditt repo:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt skriver en GitHub Actions-workflow-fil till `.github/workflows/`. Committa och pusha filen.
+  </Step>
+
+  <Step title="Lägg till din API-nyckel som en hemlighet">
+    I dina repo-inställningar, lägg till API-nyckeln för din föredragna LLM-leverantör som en repo-hemlighet (till exempel `ANTHROPIC_API_KEY`). Workflow:n plockar upp den automatiskt.
+  </Step>
+
+  <Step title="Utlösa agenten">
+    Kommentera `/bolt <your request>` på valfritt issue eller pull request. Workflow:n startar, Bolt läser händelsepayloaden och postar ett svar med resultatet.
+  </Step>
+
+  <Step title="Kör lokalt för felsökning">
+    Spela upp en live-händelsepayload från en tidigare workflow-körning:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Checka ut en GitHub pull request i en lokal gren och starta Bolt i den grenen — redo att granska, felsöka eller fortsätta arbete från där PR-författaren slutade.
+
+```bash
+bolt pr 42
+```
+
+Bolt använder `gh`-CLI:t för att hämta PR:en, skapar en gren med namnet `pr/<number>` och kopplar upstream tracking-ref:en. För cross-repo (fork) PR:er lägger den till forken som en remote automatiskt. Om PR-beskrivningen innehåller en delad Bolt-session-URL (`opncd.ai/s/…`) importeras sessionen så att du kan fortsätta författarens konversation.
+
+> Kräver att [GitHub CLI (`gh`)](https://cli.github.com/) är installerat och autentiserat.
+
+---
+
+## `bolt commit`
+
+Generera ett commit-meddelande från dina staged (eller alla spårade) ändringar och committa i ett steg.
+
+```bash
+bolt commit
+```
+
+Bolt diffar dina ändringar, matar diffen till `commit`-agenten tillsammans med senaste commit-ämnen för stilreferens och kör `git commit -m <message>` med resultatet.
+
+### Flaggor
+
+| Flagga | Alias | Beskrivning |
+|------|-------|-------------|
+| `--all` | `-a` | Committa alla spårade ändringar, inte bara staged (motsvarar `git commit -a`) |
+| `--dry-run` | | Skriv ut det genererade meddelandet utan att committa |
+| `--model <provider/model>` | `-m` | Åsidosätt modellen som används för att generera meddelandet |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Använd `bolt commit --dry-run` för att förhandsgranska det genererade meddelandet innan det committas. Om du vill redigera det, kopiera utdatan och kör `git commit -m "…"` med din justerade formulering.
+</Tip>
+
+---
+
+## `bolt review`
+
+Kör `code-review`-agenten mot en diff och avsluta med ett maskinläsbart utfall. Den sista raden av granskningen är alltid antingen `Verdict: PASS` eller `Verdict: FAIL`, vilket gör `bolt review` klart för CI-pipelines.
+
+```bash
+bolt review
+```
+
+Som standard diffar `bolt review` `HEAD` mot arbetsträdet. Använd flaggorna nedan för att avgränsa diffen.
+
+### Flaggor
+
+| Flagga | Alias | Beskrivning |
+|------|-------|-------------|
+| `--staged` | | Granska endast staged-ändringar |
+| `--branch <name>` | | Granska ändringar sedan merge base med den namngivna grenen (standardvärde är repots standardgren) |
+| `--model <provider/model>` | `-m` | Modell att använda för granskningen |
+
+### Avslutningskoder
+
+| Kod | Betydelse |
+|------|---------|
+| `0` | `Verdict: PASS` — inga kritiska eller större problem |
+| `1` | `Verdict: FAIL` — ett eller flera kritiska eller större problem hittades |
+| `2` | Utfallet kunde inte avgöras från svaret |
+
+### Använda i en GitHub Actions-workflow
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+En avslutningskod som inte är noll misslyckar kontrollen, vilket blockerar merge tills problemen är åtgärdade.
+
+<Tip>
+  Kör `bolt review --staged` innan du committar för att fånga problem medan de fortfarande är enkla att ändra — innan de någonsin når en pull request.
+</Tip>

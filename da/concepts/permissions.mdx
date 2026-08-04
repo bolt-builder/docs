@@ -1,0 +1,53 @@
+---
+title: "Tilladelser: styr hvad Bolt-agenter kan gøre"
+sidebarTitle: "Tilladelser"
+description: "Hvordan Bolts per-agent adgangsniveauer, tilladelsesprompter og konfigurations-niveau allow/deny-regler forhindrer agenten i at gøre ting, du ikke har godkendt."
+---
+
+Bolt-agenter kan læse filer, skrive filer og køre shell-kommandoer. Den kraft er afgrænset gennem to lag: et per-agent adgangsniveau og interaktive tilladelsesprompter, som du kan godkende, afvise eller konfigurere på forhånd.
+
+## Agent-adgangsniveauer
+
+Hver indbygget agent har et deklareret adgangsniveau:
+
+| Adgangsniveau | Læs filer | Skriv filer | Kør shell-kommandoer |
+| --- | --- | --- | --- |
+| **Fuld** | ✓ | ✓ | ✓ |
+| **Redigér** | ✓ | ✓ | ✗ |
+| **Læs** | ✓ | ✗ | ✗ |
+
+Indbyggede tildelinger:
+
+- **Fuld** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Redigér** — `docs`
+- **Læs** — `plan`, `ask`, `code-review`, `security`
+
+Skift agent med `Tab` i TUI'en, eller send `--agent <name>` til `bolt run`.
+
+## Interaktive prompter
+
+Inden for en agents adgangsniveau prompter potentielt destruktive handlinger stadig for bekræftelse. Du kan godkende én gang, godkende for sessionen eller afvise. Afviste kald returnerer en fejl til agenten, og den fortsætter.
+
+## Ikke-interaktiv godkendelse
+
+Til CI, scripts eller betroede lokale workflows understøtter `bolt run` flag, der springer prompter over:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` og `--dangerously-skip-permissions` lader agenten læse, skrive og udføre uden at spørge. Brug dem kun i betroede miljøer.
+</Warning>
+
+## Konfigurations-niveau regler
+
+Du kan for-afvise (eller for-godkende) specifikke værktøjer for hele projektet ved at tilføje en `permission`-blok til `.bolt/bolt.jsonc`. Dette gælder for hver session i projektet, inklusive ikke-interaktive `bolt run`-kald. Se [Konfiguration](/concepts/configuration) for skemaet.
+
+## Relateret
+
+- [Agenter](/concepts/agents) — hvilke agenter har hvilke adgangsniveauer.
+- [Værktøjer](/concepts/tools) — den fulde liste af værktøjer, som tilladelser afgrænser.
+- [Konfiguration](/concepts/configuration) — opsætning af varige tilladelsesregler.

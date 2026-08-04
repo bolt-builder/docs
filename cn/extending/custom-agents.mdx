@@ -1,0 +1,68 @@
+---
+title: "Bolt 中的自定义代理"
+sidebarTitle: "自定义代理"
+description: "将你自己的 Bolt 代理定义为 Markdown 文件——选择模型、设置访问级别、限制工具，并添加领域相关的指令。"
+---
+
+除了十个内置代理之外，你还可以定义自己的代理。自定义代理是带有 frontmatter 块的 Markdown 文件，frontmatter 描述代理的模型、访问级别和可用工具，正文则充当其系统提示词。
+
+## 创建代理
+
+最快的方式是内置生成器，它会问几个问题并帮你写好文件：
+
+```bash
+bolt agent create
+```
+
+代理位于项目下的 `.opencode/agent/`（或用于个人代理的全局配置目录）。每个代理是一个 `.md` 文件，文件名即为代理的名字。
+
+## 代理文件的结构
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+常见 frontmatter 字段：
+
+| 字段 | 用途 |
+| --- | --- |
+| `name` | 与 `--agent` 一起使用的代理名字。 |
+| `description` | 在列表中显示的一句摘要。 |
+| `model` | 默认模型，格式为 `provider/model`。 |
+| `access` | `full`、`edit` 或 `read`（参见 [Permissions](/concepts/permissions)）。 |
+| `tools` | 可选的允许列表，用于限制代理可以调用的 [工具](/concepts/tools)。 |
+
+## 使用自定义代理
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+在 TUI 中按 `Tab` 循环切换代理；自定义代理会与内置代理并列显示。
+
+## 子代理
+
+代理可以通过 `task` 工具委派给子代理。Bolt 自带 `@general` 和 `@explore`，任何位于 `.opencode/agent/` 下的自定义代理也可以按名称作为子代理被调用。
+
+## 相关内容
+
+- [Agents](/concepts/agents) — 内置代理阵容。
+- [Tools](/concepts/tools) — 可以添加到 `tools:` 中的内容。
+- [Custom Tools](/extending/custom-tools) — 构建代理将调用的工具。

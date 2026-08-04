@@ -1,0 +1,142 @@
+---
+title: "Aloita Boltin käyttö alle minuutissa"
+sidebarTitle: "Pikaopas"
+description: "Asenna Bolt, avaa projektisi, yhdistä tarjoaja ja suorita ensimmäinen AI-kehotteesi — kaikki alle 60 sekunnissa tällä vaihe vaiheelta -oppaalla."
+---
+
+Tämä opas käy läpi Boltin asennuksen, sen käynnistämisen projektissa, AI-tarjoajan yhdistämisen ja ensimmäisen kehotteesi suorittamisen. Koko virta kestää alle minuutin.
+
+<Steps>
+  <Step title="Asenna Bolt">
+    Nopein polku on virallinen asennusskripti, joka toimii macOS:llä ja Linuxilla:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Suositteletko paketinhallintaa? Asenna globaalisti npm:llä, bunilla, pnpm:llä tai yarnilla:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Työpöytäsovellukselle macOS:llä (ei Gatekeeperin kiertoreittiä):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Katso [Asennusopas](/installation) kaikkia menetelmiä varten, mukaan lukien Homebrew, Chocolatey, Scoop ja Windows-erityiset huomautukset.
+  </Step>
+  <Step title="Avaa projektisi">
+    Siirry mihin tahansa projektihakemistoon ja käynnistä interaktiivinen TUI:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt ottaa projektisi kontekstin automaattisesti — lukee tiedostopuusi, ymmärtää pinon ja tekee sen saataville jokaiselle agentille avaamishetkestä alkaen.
+  </Step>
+  <Step title="Määritä AI-tarjoaja">
+    Ensimmäisellä käynnistyksellä Bolt kehottaa sinua määrittämään tarjoajan, jos sitä ei ole asetettu. Voit myös suorittaa tämän milloin tahansa:
+
+    ```bash
+    bolt providers
+    ```
+
+    Tämä avaa tarjoajien hallintavirran, jossa voit lisätä API-avaimia OpenAI:lle, Anthropicille ja muille tuetuille LLM-tarjoajille. Konfigurointi tallennetaan tiedostoon `.bolt/bolt.jsonc` projektisi juuressa.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Kirjoita kehote ja tutki agentteja">
+    TUI:n sisällä kirjoita kehote ja paina Enter. Käytä **Tab**ia vaihtaaksesi Boltin kymmenen sisäänrakennetun agentin välillä milloin tahansa — nykyinen agentti näkyy tilarivillä.
+
+    Voit myös suorittaa kehotteita suoraan komentoriviltä avaamatta TUI:ta:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Sisäänrakennetut agentit
+
+Vaihda agentteja `Tab`illa TUI:ssa tai anna `--agent <name>` `bolt run` -komennolle. Jokaisella agentilla on määritelty käyttöoikeustaso, joka vastaa sen tarkoitusta.
+
+| Agentti | Käyttöoikeus | Kuvaus |
+| --- | --- | --- |
+| `code` | Full | Oletus: lukee, kirjoittaa ja suorittaa koodia |
+| `plan` | Read | Tutkii koodikantaa ja tuottaa suunnitelman muuttamatta tiedostoja |
+| `ask` | Read | Kysymykset ja tutkimus — ei tiedostomuokkauksia |
+| `code-review` | Read | Tarkastelee muutoksia oikeellisuuden, tyylin ja tietoturvan osalta |
+| `debug` | Full | Debuggaa epäonnistuvia testejä, kaatumisia ja logiikkavirheitä |
+| `refactor` | Full | Turvallinen refaktorointi testivarmistuksella jokaisessa vaiheessa |
+| `docs` | Edit | Kirjoittaa ja päivittää dokumentaatiota ja kommentteja |
+| `security` | Read | Tietoturvatarkastus: haavoittuvuudet, salaisuudet, kaavat |
+| `migrate` | Full | Ohjelmistokehysten päivitykset ja riippuvuuksien migraatiot |
+| `perf` | Full | Suorituskykyanalyysi ja optimointi |
+
+On myös kaksi sisäänrakennettua aliagenttia delegointia varten: `@general` monimutkaisiin monivaiheisiin tehtäviin ja `@explore` nopeaan vain luku -koodikannan tutkimukseen. Voit määrittää omia agentteja Markdown-tiedostoina tai luoda sellaisen komennolla `bolt agent create`.
+
+## Yleisiä komentoja kokeiltavaksi seuraavaksi
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Anna `--mini` `bolt`ille tai `bolt attach`ille kompaktia käyttöliittymää varten, joka vie vähemmän terminaalitilaa — hienoa pienemmille ikkunoille tai jaetun paneelin asetteluille.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` hyväksyy liput `--auto`, `--yolo` ja `--dangerously-skip-permissions`, jotka hyväksyvät automaattisesti kaikki oikeuskehotteet kysymättä. Käytä näitä vain luotetuissa ympäristöissä — ne sallivat agentin lukea, kirjoittaa ja suorittaa ilman vahvistusta.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt tukee shell-täydennyksiä bashille, zsh:lle, fishille ja muille shelleille. Luo ja asenna täydennykset komennolla:
+
+  ```bash
+  bolt completion
+  ```
+
+  Seuraa tulostettuja ohjeita täydennysskriptin lataamiseen shell-konfiguraatiossasi.
+</Note>

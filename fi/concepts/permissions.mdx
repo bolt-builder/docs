@@ -1,0 +1,53 @@
+---
+title: "Oikeudet: sen hallinta, mitä Bolt-agentit voivat tehdä"
+sidebarTitle: "Oikeudet"
+description: "Miten Boltin agenttikohtaiset käyttöoikeustasot, oikeuskehotteet ja konfiguraatiotason salli-/kielto-säännöt pitävät agentin tekemästä asioita, joita et hyväksynyt."
+---
+
+Bolt-agentit voivat lukea tiedostoja, kirjoittaa tiedostoja ja suorittaa shell-komentoja. Tuo voima on rajattu kahdella kerroksella: agenttikohtainen käyttöoikeustaso ja interaktiiviset oikeuskehotteet, jotka voit hyväksyä, hylätä tai määrittää etukäteen.
+
+## Agenttien käyttöoikeustasot
+
+Jokaisella sisäänrakennetulla agentilla on ilmoitettu käyttöoikeustaso:
+
+| Käyttöoikeustaso | Lue tiedostoja | Kirjoita tiedostoja | Suorita shell-komentoja |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Sisäänrakennetut kartoitukset:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Vaihda agenttia painamalla `Tab` TUI:ssa tai anna `--agent <name>` `bolt run` -komennolle.
+
+## Interaktiiviset kehotteet
+
+Agentin käyttöoikeustason sisällä mahdollisesti tuhoisat toimet pyytävät silti vahvistuksen. Voit hyväksyä kerran, hyväksyä istunnon ajaksi tai hylätä. Hylätyt kutsut palauttavat virheen agentille, ja se jatkaa eteenpäin.
+
+## Ei-interaktiivinen hyväksyntä
+
+CI:tä, skriptejä tai luotettuja paikallisia työnkulkuja varten `bolt run` tukee lippuja, jotka ohittavat kehotteet:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` ja `--dangerously-skip-permissions` antavat agentin lukea, kirjoittaa ja suorittaa kysymättä. Käytä niitä vain luotetuissa ympäristöissä.
+</Warning>
+
+## Konfiguraatiotason säännöt
+
+Voit esikieltää (tai esisallia) tiettyjä työkaluja koko projektille lisäämällä `permission`-lohkon tiedostoon `.bolt/bolt.jsonc`. Tämä koskee jokaista projektin istuntoa, mukaan lukien ei-interaktiivisia `bolt run` -kutsuja. Katso [Konfigurointi](/concepts/configuration) skeeman osalta.
+
+## Liittyvät
+
+- [Agentit](/concepts/agents) — mitkä agentit ovat millä käyttöoikeustasoilla.
+- [Työkalut](/concepts/tools) — täydellinen luettelo työkaluista, joita oikeudet porttivat.
+- [Konfigurointi](/concepts/configuration) — kestävien oikeussääntöjen asettaminen.

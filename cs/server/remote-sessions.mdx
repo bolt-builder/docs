@@ -1,0 +1,185 @@
+---
+title: "Připojení ke vzdáleným Bolt sezením přes HTTP"
+sidebarTitle: "Vzdálená sezení"
+description: "Spusť bezhlavý Bolt server, připoj TUI z libovolného stroje a najdi servery v lokální síti pomocí mDNS — s volitelnou basic auth."
+url: "server/remote-sessions"
+---
+
+Bolt má vestavěný HTTP server, který plně odpojuje engine od rozhraní. Můžeš spustit bezhlavý server na výkonném vzdáleném stroji (cloud VM, dev container, desktop nechaný běžet přes noc) a připojit se TUI z laptopu, druhého terminálu nebo dokonce z prohlížeče — vše míří na totéž živé sezení. To dělá z Boltu vhodný nástroj pro týmy, vzdálené workloady a dlouho běžící úlohy, u kterých se chceš stavit bez toho, abys musel(a) SSHovat na krabici.
+
+---
+
+## `bolt serve`
+
+Spustí bezhlavý Bolt server, který vystavuje plné API přes HTTP a přijímá TUI spojení.
+
+```bash
+bolt serve
+```
+
+### Přepínače
+
+| Přepínač | Výchozí | Popis |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Hostname nebo IP adresa k bindování |
+| `--port <n>` | `0` (auto) | Port pro naslouchání; Bolt při startu vytiskne přiřazený port |
+| `--mdns` | `false` | Inzeruje server přes mDNS pro zero-config discovery v lokální síti; také nastavuje hostname na `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | Vlastní mDNS service domain |
+| `--cors <origin>` | `[]` | Další origins povolené přes CORS (opakovatelné) |
+
+<Warning>
+  Pokud `OPENCODE_SERVER_PASSWORD` není nastavena, Bolt vytiskne varování a server je zcela otevřený každému, kdo se k němu dostane. Vždy nastav heslo předtím, než bindneš na jakékoli rozhraní jiné než `127.0.0.1`.
+</Warning>
+
+### Autentizace
+
+Zabezpeč server pomocí HTTP Basic Auth přes proměnné prostředí:
+
+| Proměnná | Popis |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Heslo pro basic auth |
+| `OPENCODE_SERVER_USERNAME` | Uživatelské jméno pro basic auth (výchozí je `opencode`, pokud je vynecháno) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Připojí plné TUI k běžícímu Bolt serveru. Funguje proti libovolnému serveru dosažitelnému přes HTTP — lokálnímu nebo vzdálenému.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Přepínače
+
+| Přepínač | Alias | Popis |
+|------|-------|-------------|
+| `--dir <path>` | | Adresář, ve kterém běžet na vzdáleném serveru |
+| `--continue` | `-c` | Pokračovat v posledním sezení na serveru |
+| `--session <id>` | `-s` | ID sezení, ve kterém pokračovat |
+| `--fork` | | Rozvětvit sezení při pokračování (použij s `--continue` nebo `--session`) |
+| `--password <pw>` | `-p` | Heslo pro basic auth (přepisuje `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | Uživatelské jméno pro basic auth (přepisuje `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | Použít minimální interaktivní UI místo plného TUI |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Spustí Bolt server a okamžitě otevře webové UI ve výchozím prohlížeči. Toto je nejrychlejší cesta, jak spustit rozhraní v prohlížeči lokálně.
+
+```bash
+bolt web
+```
+
+`bolt web` přijímá stejné síťové přepínače jako `bolt serve`.
+
+---
+
+## mDNS discovery
+
+Předej `--mdns` do `bolt serve` pro vysílání adresy serveru v lokální síti pomocí mDNS. Libovolný stroj ve stejné síti se pak může připojit pomocí mDNS hostname bez znalosti IP adresy nebo portu.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+Výchozí mDNS doména je `opencode.local`. Přepiš ji pomocí `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Spuštění serveru a vzdálené připojení
+
+<Steps>
+  <Step title="Nastav heslo na serveru">
+    Exportuj `OPENCODE_SERVER_PASSWORD` před spuštěním serveru. Bez něj Bolt vytiskne varování a API je neautentizované.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Spusť bezhlavý server">
+    Bindni na všechny interface, aby se k němu tvůj laptop dostal, a volitelně vyber fixní port:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Nech tento terminál otevřený (nebo spusť v `tmux` / `screen` / systemd unit).
+  </Step>
+
+  <Step title="Připoj se z laptopu">
+    Na libovolném stroji, který se k serveru dostane, spusť:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    Otevře se plné TUI a připojí se k vzdálenému enginu. Sezení, historie a stav nástrojů všechny žijí na serveru.
+  </Step>
+
+  <Step title="Pokračování v sezení později">
+    Odpoj se ukončením TUI (`q` nebo `Ctrl-C`). Sezení běží dál na serveru. Pro opětovné připojení:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Nebo ho rozvětvi pro odbočení bez ovlivnění originálu:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Příklad vzdáleného workflow
+
+Běžný vzorec je nechat Bolt server běžet na dev stroji s velkým počtem jader a připojovat se z tenkého laptopu.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Všechna data sezení jsou uložena v SQLite databázi serveru. Laptop pouze vykresluje TUI — může se odpojit a znovu připojit kdykoli bez ztráty práce.

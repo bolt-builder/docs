@@ -1,0 +1,38 @@
+---
+title: "Keybind TUI Bolt"
+sidebarTitle: "Keybinds"
+description: "Pintasan TUI Bolt yang penting: berganti agent dengan Tab, mode mini, push-to-talk suara, dan segala hal lain yang dapat kamu kendalikan dari keyboard."
+---
+
+TUI Bolt dirancang untuk dikendalikan sepenuhnya dari keyboard. Halaman ini mendaftar pintasan yang paling sering kamu jangkau. Untuk daftar lengkap, jalankan `bolt` dan buka bantuan dalam aplikasi.
+
+## Yang penting
+
+| Tombol | Aksi |
+| --- | --- |
+| `Tab` | Beralih ke agent berikutnya (`code`, `plan`, `ask`, ...). Agent saat ini ditampilkan di status bar. |
+| `Shift+Tab` | Beralih ke agent sebelumnya. |
+| `Enter` | Kirim pesan saat ini. |
+| `Esc` | Batalkan giliran yang sedang berjalan. |
+| `Ctrl+C` | Interupsi panggilan tool saat ini. |
+| `Ctrl+D` | Detach dari sesi (membiarkannya berjalan di server). |
+
+## Mode
+
+### Mode `--mini`
+
+Mulai Bolt dengan tata letak split-footer kompak yang mengambil lebih sedikit ruang terminal, bagus untuk split pane:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk suara
+
+Tahan tombol push-to-talk yang dikonfigurasi untuk mendikte prompt menggunakan speech-to-text, lalu lepas untuk mengirim. Konfigurasikan tombol dan provider STT di `.bolt/bolt.jsonc`.
+
+## Terkait
+
+- [Slash commands](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw`, dan teman-teman.
+- [Sessions](/concepts/sessions) — detach, resume, fork, dan share dari keyboard.

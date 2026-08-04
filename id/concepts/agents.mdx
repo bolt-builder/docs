@@ -1,0 +1,135 @@
+---
+title: "Agents — Sepuluh Persona AI Bawaan dan Kustom Bolt"
+sidebarTitle: "Agents"
+description: "Bolt menyertakan sepuluh agent bawaan, masing-masing dengan peran, toolset, dan tingkat akses yang berbeda. Pelajari cara berganti, mengonfigurasi, dan membuat agent kamu sendiri."
+---
+
+Bolt memperlakukan setiap persona AI sebagai **agent** yang diberi nama: sebuah system prompt yang dipasangkan dengan sekumpulan izin tool yang dilingkupi secara presisi. Alih-alih menjalankan satu model serbaguna untuk setiap tugas, kamu memilih agent yang aksesnya dan fokusnya sesuai dengan yang kamu butuhkan — apakah itu mengaudit keamanan, menulis dokumentasi, atau merangkai migrasi framework lengkap.
+
+## Tingkat akses
+
+Setiap agent bawaan diberi salah satu dari tiga tingkat akses yang menentukan tool mana yang dapat dipanggilnya:
+
+| Tingkat | Izin yang diberikan | Penggunaan umum |
+|-------|---------------------|-------------|
+| **Full** | Membaca file, menulis/mengedit file, menjalankan perintah shell | Coding aktif, debugging, refactoring, migrasi |
+| **Edit** | Membaca file, menulis/mengedit file — tanpa shell | Dokumentasi, pembaruan komentar, edit prosa yang aman |
+| **Read** | Membaca file saja — tanpa penulisan, tanpa shell | Perencanaan, penelitian, tinjauan kode, audit |
+
+## Agent bawaan
+
+Bolt menyertakan sepuluh agent khusus siap pakai. Beralih di antaranya di TUI dengan menekan <kbd>Tab</kbd>.
+
+| Agent | Akses | Deskripsi |
+|-------|--------|-------------|
+| `code` | Full | Default: membaca, menulis, dan menjalankan kode |
+| `plan` | Read | Mengeksplorasi basis kode dan menghasilkan rencana tanpa mengubah kode |
+| `ask` | Read | Pertanyaan dan penelitian — tanpa edit file |
+| `code-review` | Read | Meninjau perubahan untuk kebenaran, gaya, dan keamanan |
+| `debug` | Full | Men-debug tes yang gagal, crash, dan kesalahan logika |
+| `refactor` | Full | Refactoring aman dengan verifikasi tes di setiap langkah |
+| `docs` | Edit | Menulis dan memperbarui dokumentasi serta komentar |
+| `security` | Read | Audit keamanan: kerentanan, secret, dan pola berbahaya |
+| `migrate` | Full | Upgrade framework dan migrasi dependensi |
+| `perf` | Full | Analisis performa dan optimasi |
+
+## Subagent
+
+Selain sepuluh agent utama, Bolt menyediakan dua **subagent** bawaan yang dapat didelegasikan pekerjaannya oleh agent utama selama sesi. Kamu tidak pernah memilih subagent secara manual — mereka dikirim secara otomatis saat agent utama memutuskan untuk memunculkan salah satunya.
+
+| Subagent | Peran |
+|----------|------|
+| `@general` | Delegasi tugas multi-langkah kompleks yang membutuhkan kemampuan luas |
+| `@explore` | Penelitian basis kode cepat dan hanya-baca — menjelajahi file tanpa efek samping |
+
+<Tip>
+  Saat kamu perlu memahami basis kode yang asing dengan cepat, mulailah dengan agent `ask` atau `plan`. Di balik layar mereka dapat mengirim subagent `@explore` untuk mengindeks proyek kamu dengan kecepatan tinggi sebelum menghasilkan jawaban — tanpa menyentuh satu file pun.
+</Tip>
+
+## Berganti agent
+
+**Di TUI** — tekan <kbd>Tab</kbd> untuk menelusuri daftar agent yang tersedia kapan saja selama sesi. Agent yang aktif ditampilkan di footer sesi.
+
+**Non-interaktif** — teruskan `--agent <name>` ke `bolt run` untuk mengunci agent tertentu selama durasi run tersebut:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Menampilkan daftar agent
+
+Untuk melihat semua agent yang tersedia — bawaan maupun kustom — beserta mode dan konfigurasi izinnya:
+
+```bash
+bolt agent list
+```
+
+## Agent kustom
+
+Kamu dapat membuat agent kamu sendiri dengan dua cara.
+
+### Buat dengan `bolt agent create`
+
+Wizard interaktif menghasilkan file agent menggunakan LLM dan menulisnya ke disk:
+
+```bash
+bolt agent create
+```
+
+Semua flag bersifat opsional. Berikan flag tersebut untuk berjalan non-interaktif:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | Deskripsi |
+|------|-------------|
+| `--description` | Apa yang harus dilakukan agent (digunakan sebagai prompt LLM untuk generasi) |
+| `--path` | Direktori tempat menulis file agent yang dihasilkan |
+| `--mode` | `all` (default), `primary`, atau `subagent` |
+| `--permissions` | Daftar izin yang diizinkan, dipisahkan koma. Kosongkan untuk semua. |
+| `--model` / `-m` | Model yang akan digunakan dalam format `provider/model` |
+
+### Tulis file markdown secara manual
+
+Agent hanyalah file markdown dengan frontmatter YAML. Letakkan di `.bolt/agents/` di dalam proyek kamu atau di direktori agent global:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Nama file (tanpa `.md`) menjadi pengenal agent.
+
+### Izin yang tersedia
+
+Izin adalah gate tool berbutir halus yang kamu kontrol saat membuat agent kustom:
+
+| Izin | Kontrol |
+|------------|----------|
+| `bash` | Eksekusi perintah shell |
+| `read` | Pembacaan file |
+| `edit` | Penulisan dan pengeditan file (juga menjaga `write` dan `apply_patch`) |
+| `glob` | Daftar direktori/glob file |
+| `grep` | Pencarian file via ripgrep |
+| `webfetch` | Pengambilan HTTP dari web |
+| `task` | Memunculkan tugas subagent |
+| `todowrite` | Membuat dan memperbarui item todo |
+| `websearch` | Kueri pencarian web |
+| `lsp` | Operasi language server protocol |
+| `skill` | Mengakses skill proyek |

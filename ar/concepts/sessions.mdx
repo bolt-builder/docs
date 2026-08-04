@@ -1,0 +1,191 @@
+---
+title: "الجلسات — سجل محادثات دائم في Bolt"
+sidebarTitle: "الجلسات"
+description: "الجلسات هي وحدة العمل الدائمة في Bolt: كل جلسة تخزّن محادثة كاملة في SQLite محلي بحيث يمكنك الانفصال والاستئناف والتفريع والمشاركة والتصدير في أي وقت."
+---
+
+**الجلسة** هي وحدة العمل الأساسية في Bolt. يُسجَّل كل موجّه ترسله، وكل ملف يقرأه الوكيل أو يعدّله، وكل استدعاء أداة يقوم به النموذج بشكل دائم في سجل تلك الجلسة. لأن الجلسات تعيش في قاعدة بيانات SQLite محلية، فإنها تنجو من إعادة تشغيل العمليات، ويمكن سردها والاستعلام عنها في أي وقت، ولا تغادر جهازك أبدًا إلا إذا شاركتها أو صدّرتها صراحة.
+
+<Note>
+  تُخزَّن كل بيانات الجلسة محليًا في قاعدة بيانات SQLite على جهازك. لا يُرسل أي شيء إلى خوادم خارجية إلا إذا فعّلت المشاركة. استخدم `bolt db path` للعثور على ملف قاعدة البيانات الدقيق.
+</Note>
+
+## دورة حياة الجلسة
+
+تبدأ الجلسة لحظة إرسالك أول موجّه وتنتهي فقط عند حذفها. بين هاتين النقطتين يمكنك بحرية الانفصال أو الاستئناف أو التفريع أو التسليم.
+
+<Steps>
+  <Step title="أنشئ أو تابع جلسة">
+    شغّل الـ TUI لبدء جلسة جديدة تفاعليًا، أو مرّر موجّهًا إلى `bolt run` لإنشائها بشكل غير تفاعلي:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="انفصل وعُد لاحقًا">
+    أغلق الـ TUI في أي وقت — تُحفظ الجلسة تلقائيًا. استأنف جلستك الأحدث بـ `--continue`، أو استهدف جلسة معيّنة بمعرّفها عبر `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="فرّع قبل التجريب">
+    استخدم `--fork` للتفريع من سجل الجلسة الحالية قبل تجربة تغيير محفوف بالمخاطر. الفرع هو جلسة مستقلّة لا تؤثر على الأصلية:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="شارك وتعاون">
+    ولّد رابط مشاركة بـ `--share`. يمكن لأي شخص لديه الرابط عرض نسخة المحادثة في المتصفح:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## أوامر إدارة الجلسات
+
+### سرد الجلسات
+
+```bash
+bolt session list
+```
+
+يُخرج جدولًا منسّقًا لكل الجلسات مع معرّفها وعنوانها ووقت آخر تحديث. أضف `--format json` للحصول على إخراج قابل للقراءة الآلية، أو `-n <N>` للاقتصار على أحدث N جلسة:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### حذف جلسة
+
+```bash
+bolt session delete <sessionID>
+```
+
+يزيل الجلسة وجميع رسائلها من قاعدة البيانات المحلية بشكل دائم.
+
+## خيارات تشغيل للتحكم بالجلسة
+
+هذه الخيارات متاحة في `bolt run`:
+
+| الخيار | اللقب | الوصف |
+|------|-------|-------------|
+| `--continue` | `-c` | متابعة الجلسة الأحدث |
+| `--session <id>` | `-s` | متابعة جلسة معيّنة بمعرّفها |
+| `--fork` | | تفريع الجلسة قبل المتابعة (يتطلّب `--continue` أو `--session`) |
+| `--share` | | توليد رابط مشاركة للجلسة |
+| `--title <title>` | | ضبط أو تجاوز عنوان الجلسة |
+
+## تصدير الجلسات
+
+صدّر نسخة نصية كاملة من جلسة بصيغة JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+يستبدل الخيار `--sanitize` مسارات الملفات ومحتوى الشيفرة ومدخلات ومخرجات الأدوات وغيرها من الحقول الحساسة المحتملة بعناصر نائبة `[redacted:kind:id]` — مفيد لمشاركة نسخ المحادثات مع الزملاء أو ملء تقارير الأخطاء.
+
+## استيراد الجلسات
+
+استورد جلسة من ملف JSON محلي أو مباشرة من رابط مشاركة:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+تظهر الجلسات المستوردة في قائمة جلساتك المحلية ويمكن استئنافها بالكامل.
+
+## الاستعلام من قاعدة بيانات الجلسات
+
+يعرض Bolt قاعدة بيانات SQLite الأساسية مباشرة للمستخدمين المتمكّنين.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+تنسيق الإخراج الافتراضي هو قيم مفصولة بـ tab؛ أضف `--format json` لإخراج JSON.
+
+## إحصائيات استخدام الرموز والتكلفة
+
+يجمّع `bolt stats` بيانات استخدام الرموز والتكلفة عبر كل جلساتك:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+يشمل الإخراج إجمالي الجلسات والرسائل ورموز الإدخال/الإخراج/الاستدلال/التخزين المؤقت، وإجمالي التكلفة، ومتوسط التكلفة يوميًا، ومتوسط وميدان الرموز لكل جلسة، وتفصيل استخدام الأدوات. مرّر `--models` لإظهار تفصيل لكل نموذج للرسائل والرموز والتكلفة أيضًا.
+
+## سير عمل التفريع والمشاركة
+
+إليك مثالًا كاملاً على تفريع جلسة ومشاركة النتيجة:
+
+<Steps>
+  <Step title="ابدأ العمل في جلسة جديدة">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="فرّع قبل الخطوة الخطرة التالية">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    يُطبع معرّف الجلسة المتفرّعة على الطرفية. الجلسة الأصلية تبقى دون تغيير.
+  </Step>
+  <Step title="شارك الفرع للمراجعة">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    يُطبع رابط المشاركة بمجرد أن تصبح الجلسة خاملة.
+  </Step>
+  <Step title="استورد على جهاز آخر">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,33 @@
+---
+title: "Giao diện web của Bolt"
+sidebarTitle: "Giao diện web"
+description: "bolt web phục vụ giao diện dựa trên trình duyệt trên một server Bolt đang chạy — hữu ích cho máy nhóm chia sẻ, máy từ xa và bất kỳ nơi nào TUI không thực tế."
+---
+
+`bolt web` khởi động một server Bolt và phục vụ giao diện trình duyệt trước nó. Đó là cùng một engine như TUI, chỉ được hiển thị trong tab trình duyệt.
+
+## Khởi động nó
+
+```bash
+bolt web                                # chỉ localhost
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Sau đó mở URL được in ra. Khi phơi bày qua mạng, hãy đặt basic auth trước:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Khi nào dùng giao diện web
+
+- Chạy Bolt trên máy từ xa mạnh nhưng điều khiển nó từ laptop.
+- Chia sẻ phiên trực tiếp với đồng nghiệp để pair-debug.
+- Môi trường nơi TUI đầy đủ không thuận tiện (Chromebook, tablet, máy coworking).
+
+## Liên quan
+
+- [Server headless](/server/headless-server) — server API bên dưới.
+- [Phiên từ xa](/server/remote-sessions) — gắn TUI vào cùng server mà giao diện web phục vụ.

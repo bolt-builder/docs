@@ -1,0 +1,475 @@
+---
+title: "Довідник команд Bolt CLI"
+sidebarTitle: "Команди"
+description: "Повний довідник для кожної команди Bolt CLI, включно з прапорцями, аргументами та прикладами використання для TUI, run, serve, session, agent та інших."
+---
+
+Bolt виставляє єдиний бінарний файл `bolt` з багатим набором підкоманд. Запуск `bolt` без аргументів відкриває повний термінальний UI. Усі інші підкоманди перелічено нижче. Використовуйте `bolt <command> --help` у будь-який час для вбудованої довідки.
+
+<Accordion title="bolt (за замовчуванням — запуск TUI)">
+  Відкриває інтерактивний термінальний UI у поточному каталозі. Bolt автоматично виявляє контекст вашого проєкту, завантажує конфігурацію та під'єднується до налаштованих провайдерів.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Глобальні прапорці** — доступні для кожної команди:
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Друкує вивід логів у stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Встановлює рівень деталізації логів |
+  | `--pure` | boolean | Запускається без завантаження будь-яких зовнішніх плагінів |
+  | `--help`, `-h` | boolean | Показує текст довідки |
+  | `--version`, `-v` | boolean | Друкує номер встановленої версії |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Запускає Bolt з одним промптом у неінтерактивному режимі. Bolt запускає внутрішньопроцесний сервер, надсилає промпт до активної сесії, транслює відповідь у stdout і виходить. Направляйте stdin або передавайте `--file`, щоб додати контекст.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slash-команда для виконання; передавайте аргументи як повідомлення |
+  | `--continue` | `-c` | boolean | Продовжити останню сесію |
+  | `--session` | `-s` | string | ID сесії для продовження |
+  | `--fork` |  | boolean | Розгалужити сесію перед продовженням (потребує `--continue` або `--session`) |
+  | `--share` |  | boolean | Поділитися сесією після її завершення |
+  | `--model` | `-m` | string | Модель у форматі `provider/model` |
+  | `--best-of` |  | string | Список `provider/model` через кому; запускає завдання паралельно, ранжує результати, залишає переможця |
+  | `--agent` |  | string | Агент для використання (наприклад, `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Формат виводу; `json` транслює сирі JSON-події через новий рядок |
+  | `--file` | `-f` | string\[\] | Файл(и) для додавання як контекст |
+  | `--title` |  | string | Заголовок сесії |
+  | `--attach` |  | string | Запускати проти віддаленого сервера Bolt (наприклад, `http://localhost:4096`) |
+  | `--password` | `-p` | string | Пароль базової автентифікації для віддаленого сервера |
+  | `--username` | `-u` | string | Ім'я користувача базової автентифікації для віддаленого сервера |
+  | `--dir` |  | string | Робочий каталог; якщо встановлено `--attach`, це каталог на віддаленому сервері |
+  | `--port` |  | number | Порт для локального внутрішньопроцесного сервера (випадковий, якщо пропущено) |
+  | `--variant` |  | string | Рівень зусилля міркування, специфічний для провайдера (наприклад, `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Показує блоки міркування/мислення у виводі |
+  | `--mini` |  | boolean | Запустити мінімальний UI із розділеним футером (прихований) |
+  | `--interactive` | `-i` | boolean | Примусово прямий інтерактивний режим із розділеним футером |
+  | `--auto` |  | boolean | Автоматично схвалювати дозволи, які не заборонено явно |
+  | `--yolo` |  | boolean | Пропустити всі запити дозволів (псевдонім для `--auto`, прихований) |
+  | `--dangerously-skip-permissions` |  | boolean | Пропустити всі перевірки дозволів (прихований) |
+  | `--demo` |  | boolean | Увімкнути прямі інтерактивні демо slash-команди (прихований) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Приєднує повний TUI до запущеного сервера Bolt. Сервер може бути локальним або віддаленим. Передайте `--mini`, щоб використати мінімальний UI із розділеним футером замість повного TUI.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Каталог на віддаленому сервері |
+  | `--continue` | `-c` | boolean | Продовжити останню сесію на віддаленому сервері |
+  | `--session` | `-s` | string | ID сесії для продовження |
+  | `--fork` |  | boolean | Розгалужити сесію під час продовження |
+  | `--password` | `-p` | string | Пароль базової автентифікації |
+  | `--username` | `-u` | string | Ім'я користувача базової автентифікації |
+  | `--mini` |  | boolean | Використати мінімальний інтерактивний UI |
+  | `--no-replay` |  | boolean | Вимкнути відтворення історії сесії при відновленні та після зміни розміру (потребує `--mini`) |
+  | `--replay-limit` |  | number | Обмежити видиме відтворення новішими N повідомленнями (потребує `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Запускає headless API-сервер Bolt. Сервер виставляє REST\+SSE API, до якого можуть підключатися TUI, `bolt run --attach` та `bolt attach`. Прив'яжіть до `0.0.0.0`, щоб зробити його доступним з інших машин — завжди встановлюйте `BOLT_SERVER_PASSWORD` при цьому.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--hostname` | string | Адреса для прив'язки (за замовчуванням: `127.0.0.1`) |
+  | `--port` | number | Порт для прослуховування (випадковий, якщо пропущено) |
+  | `--mdns` | boolean | Увімкнути виявлення сервісів mDNS (за замовчуванням hostname `0.0.0.0`) |
+  | `--mdns-domain` | string | Власне доменне ім'я для сервісу mDNS (за замовчуванням: `opencode.local`) |
+  | `--cors` | string\[\] | Додаткові домени, дозволені для CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` не встановлено за замовчуванням. Сервер запише попередження та прийматиме всі підключення, доки ви його не встановите.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Запускає сервер Bolt і одразу відкриває веб-UI у стандартному браузері. Приймає ті самі мережеві прапорці, що й `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--hostname` | string | Адреса для прив'язки (за замовчуванням: `127.0.0.1`) |
+  | `--port` | number | Порт для прослуховування (випадковий, якщо пропущено) |
+  | `--mdns` | boolean | Увімкнути виявлення сервісів mDNS (за замовчуванням hostname `0.0.0.0`) |
+  | `--mdns-domain` | string | Власне доменне ім'я для сервісу mDNS (за замовчуванням: `opencode.local`) |
+  | `--cors` | string\[\] | Додаткові домени, дозволені для CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Керує сесіями Bolt, збереженими в локальній базі даних SQLite.
+
+  **Підкоманди**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **Прапорці `bolt session list`**
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Обмежити вивід N найновішими сесіями |
+  | `--format` |  | `table`\|`json` | Формат виводу (за замовчуванням: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Перегляд і створення власних агентів. Агенти — це markdown-файли з YAML frontmatter, що визначають системний промпт, дозволи та режим.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **Прапорці `bolt agent create`**
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Шлях до каталогу для запису файлу агента |
+  | `--description` |  | string | Опис природною мовою того, що агент повинен робити |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Чи діє агент як основний, субагент або обидва |
+  | `--permissions` | `--tools` | string | Список дозволених дозволів через кому (за замовчуванням: усі) |
+  | `--model` | `-m` | string | Модель у форматі `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (псевдонім: auth)">
+  Інтерактивно керує обліковими даними AI-провайдерів. Облікові дані зберігаються у каталозі даних ОС (`~/.local/share/bolt/auth.json` на Linux, `~/Library/Application Support/bolt/auth.json` на macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Перелічує всі моделі, доступні у ваших налаштованих провайдерів.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Включити JSON-метадані вартості для кожної моделі |
+  | `--refresh` | boolean | Оновити кеш моделей з models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Керує серверами Model Context Protocol (MCP). Bolt підтримує як віддалені (HTTP/SSE) сервери з OAuth, так і локальні (stdio) сервери.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **Прапорці `bolt mcp add`**
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--url` | string | URL віддаленого MCP-сервера |
+  | `--env` | string\[\] | Змінна середовища для локального сервера (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP-заголовок для віддаленого сервера (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Встановлює плагін Bolt з npm і оновлює відповідний файл конфігурації. Плагіни можуть розширювати TUI, додавати нові slash-команди або реєструвати нових провайдерів.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Додати плагін до глобальної конфігурації замість проєктної |
+  | `--force` | `-f` | boolean | Замінити вже налаштовану версію плагіна |
+</Accordion>
+
+<Accordion title="bolt github">
+  Керує інтеграцією Bolt з GitHub Actions, що дозволяє Bolt реагувати на pull request-и, issue та інші події GitHub.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **Прапорці `bolt github run`**
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--event` | string | Ім'я події GitHub для симуляції (наприклад, `pull_request`) |
+  | `--token` | string | Особистий токен доступу GitHub |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Отримує pull request GitHub як локальну гілку за допомогою CLI `gh`, потім запускає Bolt у отриманому каталозі. Якщо опис PR містить посилання на спільний доступ до сесії, Bolt автоматично імпортує цю сесію.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Ця команда потребує встановленого та автентифікованого [GitHub CLI (`gh`)](https://cli.github.com/).
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Генерує повідомлення коміту для проіндексованих (або всіх відстежуваних) змін за допомогою AI-моделі, а потім комітить. Модель перевіряє нещодавню історію комітів для контексту стилю.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Комітити всі відстежувані зміни, а не лише проіндексовані |
+  | `--dry-run` |  | boolean | Друкувати згенероване повідомлення без коміту |
+  | `--model` | `-m` | string | Модель у форматі `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Запускає AI-ревʼю коду на diff і виходить з кодом `0` (пройдено) або `1` (не пройдено). Агент `code-review` перевіряє diff на предмет коректності, стилю та проблем безпеки, потім видає рядок `Verdict: PASS` або `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Переглядати лише проіндексовані зміни |
+  | `--branch` |  | string | Переглядати зміни з моменту merge base із цією гілкою |
+  | `--model` | `-m` | string | Модель у форматі `provider/model` |
+
+  <Note>
+    Коди виходу: `0` = PASS, `1` = FAIL, `2` = вердикт не вдалося визначити.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Експортує сесію як JSON у stdout. Корисно для архівування, обміну або передачі в інші інструменти. Передайте `--sanitize` перед публічним поширенням, щоб приховати шляхи файлів, промпти та інший чутливий вміст стенограми.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Приховати чутливі дані (шляхи файлів, текст промптів, вхід/вихід інструментів) перед експортом |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Імпортує раніше експортовану сесію в локальну базу даних. Приймає локальний JSON-файл або URL спільного доступу до сесії.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Показує агреговану статистику використання токенів і вартості за всіма сесіями. Вивід включає оглядову таблицю, розбивку вартості та токенів, використання моделей та стовпчикову діаграму використання інструментів.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--days` | number | Обмежити останніми N днями (за замовчуванням: увесь час) |
+  | `--tools` | number | Кількість інструментів для показу в діаграмі використання інструментів |
+  | `--models` | boolean\|number | Показати статистику моделей; передайте число, щоб обмежити список |
+  | `--project` | string | Фільтрувати за ID проєкту; порожній рядок означає поточний проєкт |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Друкує лог застосунку Bolt. Лог зберігається в каталозі логів ОС (наприклад, `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Кількість кінцевих рядків для друку (за замовчуванням: 1000) |
+  | `--follow` | `-f` | boolean | Транслювати нові рядки логу в реальному часі |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Запити або перегляд локальної SQLite бази даних сесій безпосередньо.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Формат виводу для результатів запиту (за замовчуванням: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Оновлює Bolt до останнього випуску або конкретної версії. Bolt автоматично визначає метод встановлення й використовує відповідний менеджер пакетів.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Прапорець | Псевдонім | Тип | Опис |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Метод встановлення для використання |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Видаляє бінарний файл Bolt та всі пов'язані дані.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Генерує shell-скрипт автозаповнення для `bash`, `zsh` або `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Колекція підкоманд для усунення несправностей та інтроспекції. Корисно при поданні звітів про помилки або діагностиці неочікуваної поведінки.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Запускає ACP (Agent Client Protocol) сервер. ACP — це протокол, який використовують інтеграції редакторів, таких як [Zed](https://zed.dev), для спілкування з Bolt через stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Прапорець | Тип | Опис |
+  | --- | --- | --- |
+  | `--cwd` | string | Робочий каталог для сервера (за замовчуванням: `process.cwd()`) |
+  | `--hostname` | string | Hostname для прив'язки (за замовчуванням: `127.0.0.1`) |
+  | `--port` | number | Порт для прив'язки |
+  | `--mdns` | boolean | Увімкнути виявлення сервісів mDNS |
+  | `--mdns-domain` | string | Власне доменне ім'я для сервісу mDNS (за замовчуванням: `opencode.local`) |
+  | `--cors` | string\[\] | Додаткові домени, дозволені для CORS |
+</Accordion>

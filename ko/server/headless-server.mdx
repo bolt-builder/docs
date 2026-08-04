@@ -1,0 +1,52 @@
+---
+title: "Bolt를 헤드리스 서버로 실행하기"
+sidebarTitle: "Headless Server"
+description: "bolt serve는 완전한 Bolt 런타임을 HTTP로 노출하여 어떤 TUI, 웹 UI, 편집기 통합 또는 스크립트라도 로컬 또는 네트워크에서 연결할 수 있게 합니다."
+---
+
+`bolt serve`는 완전한 엔진을 HTTP로 노출하는 헤드리스 Bolt 서버를 실행합니다: 세션, 에이전트, 도구, 프로바이더 접근, MCP, 스트리밍 이벤트. Bolt가 대화형으로 할 수 있는 모든 것을 API로 할 수 있습니다.
+
+## 서버 시작
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  `0.0.0.0`에 바인딩하면 Bolt가 네트워크에 노출됩니다. 그렇게 하기 전에 항상 `BOLT_SERVER_USERNAME`과 `BOLT_SERVER_PASSWORD`를 설정하세요.
+</Warning>
+
+## TUI 연결
+
+서버에 도달할 수 있는 아무 머신에서:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+또는 원격 서버에 대해 일회성 프롬프트를 실행하세요:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+환경 변수를 통해 자격 증명을 설정하세요 ([Env Variables](/reference/environment-variables) 참조):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+모든 클라이언트는 일치하는 자격 증명을 보내야 합니다.
+
+## 관련 항목
+
+- [Remote Sessions](/server/remote-sessions) — 연결, mDNS 검색, 공유 서버.
+- [Web UI](/server/web-ui) — 브라우저 프론트엔드.
+- [ACP](/server/acp) — Zed 및 기타 편집기에서 Bolt 구동.

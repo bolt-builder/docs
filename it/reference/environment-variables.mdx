@@ -1,0 +1,61 @@
+---
+title: "Riferimento delle variabili d'ambiente di Bolt"
+sidebarTitle: "Variabili d'ambiente"
+description: "Ogni variabile d'ambiente riconosciuta da Bolt, incluso il controllo dei log, l'autenticazione del server, gli override della configurazione e le convenzioni per le chiavi API dei provider."
+---
+
+Le variabili d'ambiente ti permettono di configurare Bolt senza toccare alcun file di configurazione — utile in pipeline CI, container Docker e ambienti condivisi dove non puoi committare credenziali. Vengono lette una volta all'avvio e non possono essere modificate mentre Bolt è in esecuzione.
+
+## Riferimento
+
+| Variabile | Descrizione |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Imposta la verbosità del log. Valori accettati: `DEBUG`, `INFO`, `WARN`, `ERROR`. Equivalente al flag `--log-level`. |
+| `BOLT_PRINT_LOGS` | Impostala a qualsiasi valore non vuoto per stampare l'output del log su stderr. Equivalente a `--print-logs`. |
+| `BOLT_PURE` | Impostala a qualsiasi valore non vuoto per disabilitare tutti i plugin esterni. Equivalente a `--pure`. |
+| `BOLT_SERVER_USERNAME` | Username di autenticazione base per `bolt serve` e `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Password di autenticazione base per `bolt serve` e `bolt web`. Tutti i client che si connettono devono fornire questa password. |
+| `BOLT_CONFIG` | Sovrascrivi il percorso del file di configurazione che Bolt carica. Bolt non cercherà nelle posizioni predefinite quando questo è impostato. |
+| `BOLT_CONFIG_DIR` | Sovrascrivi la directory di configurazione. Bolt cercherà i file di configurazione in questa directory invece che nella directory di configurazione del sistema operativo predefinita. |
+| `BOLT_CONFIG_CONTENT` | Fornisci l'intera configurazione come stringa JSON in linea. Utile in CI dove scrivere file è poco pratico. Ha la precedenza più alta tra le sorgenti di configurazione. |
+| `BOLT_GIT_BASH_PATH` | Percorso della directory `bin` di Git Bash su Windows, usato per localizzare utility Unix come `less`. |
+
+## Chiavi API dei provider
+
+Bolt rileva automaticamente le credenziali dei provider dalle variabili d'ambiente — non è richiesto alcun passaggio `bolt providers login`. Ogni provider cerca una specifica variabile d'ambiente, e Bolt la utilizzerà se la variabile è impostata, indipendentemente da ciò che è memorizzato in `auth.json`.
+
+<Tip>
+  Imposta le chiavi API dei provider nel profilo della tua shell (ad es. `~/.zshrc`, `~/.bashrc`) o in un file `.env` caricato dalla tua shell. Puoi anche fare riferimento ad esse dal file di configurazione utilizzando la sintassi `${VAR_NAME}` in un campo `provider.*.apiKey` in modo che le chiavi non vengano mai memorizzate in chiaro.
+</Tip>
+
+Variabili comuni dei provider:
+
+| Variabile | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, serie o) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Esegui `bolt models --verbose` per vedere quale variabile d'ambiente ogni provider configurato si aspetta.
+
+## Esempi di utilizzo
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

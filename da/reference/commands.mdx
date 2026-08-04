@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI-kommandoreference"
+sidebarTitle: "Kommandoer"
+description: "Komplet reference for hver Bolt CLI-kommando, inklusive flag, argumenter og brugseksempler for TUI, run, serve, session, agent og mere."
+---
+
+Bolt eksponerer en enkelt `bolt`-binær med et rigt sæt af underkommandoer. At køre `bolt` uden argumenter åbner den fulde terminal-UI. Alle andre underkommandoer er listet nedenfor. Brug `bolt <command> --help` når som helst for inline-hjælp.
+
+<Accordion title="bolt (standard — start TUI)">
+  Åbner den interaktive terminal-UI i den aktuelle mappe. Bolt registrerer automatisk din projektkontekst, indlæser konfiguration og forbinder til eventuelle konfigurerede udbydere.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Globale flag** — tilgængelige på hver kommando:
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Udskriv log-output til stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Sæt log-detaljeringsgraden |
+  | `--pure` | boolean | Kør uden at indlæse nogen eksterne plugins |
+  | `--help`, `-h` | boolean | Vis hjælpetekst |
+  | `--version`, `-v` | boolean | Udskriv det installerede versionsnummer |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Kør Bolt med en enkelt prompt i ikke-interaktiv tilstand. Bolt starter en in-process-server, sender prompten til den aktive session, streamer svaret til stdout og afslutter derefter. Rør stdin ind eller send `--file` for at vedhæfte kontekst.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slash-kommando at udføre; send argumenter som beskeden |
+  | `--continue` | `-c` | boolean | Fortsæt den seneste session |
+  | `--session` | `-s` | string | Sessions-ID at fortsætte |
+  | `--fork` |  | boolean | Forgren sessionen før fortsættelse (kræver `--continue` eller `--session`) |
+  | `--share` |  | boolean | Del sessionen efter den er fuldført |
+  | `--model` | `-m` | string | Model at bruge i formatet `provider/model` |
+  | `--best-of` |  | string | Komma-separeret `provider/model`-liste; kører opgaven parallelt, rangerer resultater, beholder vinderen |
+  | `--agent` |  | string | Agent at bruge (fx `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Outputformat; `json` streamer rå newline-adskilte JSON-hændelser |
+  | `--file` | `-f` | string\[\] | Fil(er) at vedhæfte som kontekst |
+  | `--title` |  | string | Titel for sessionen |
+  | `--attach` |  | string | Kør mod en fjern Bolt-server (fx `http://localhost:4096`) |
+  | `--password` | `-p` | string | Basic auth-adgangskode til fjernserveren |
+  | `--username` | `-u` | string | Basic auth-brugernavn til fjernserveren |
+  | `--dir` |  | string | Arbejdsmappe; hvis `--attach` er sat, er dette mappen på fjernserveren |
+  | `--port` |  | number | Port for den lokale in-process-server (tilfældig hvis udeladt) |
+  | `--variant` |  | string | Reasoning-effort-niveau, udbyder-specifikt (fx `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Vis reasoning/thinking-blokke i output |
+  | `--mini` |  | boolean | Start den minimale split-footer interaktive UI (skjult) |
+  | `--interactive` | `-i` | boolean | Tving direkte interaktiv split-footer-tilstand |
+  | `--auto` |  | boolean | Auto-godkend tilladelser, der ikke er eksplicit afvist |
+  | `--yolo` |  | boolean | Spring alle tilladelsesprompter over (alias for `--auto`, skjult) |
+  | `--dangerously-skip-permissions` |  | boolean | Spring alle tilladelseskontroller over (skjult) |
+  | `--demo` |  | boolean | Aktivér direkte interaktive demo-slash-kommandoer (skjult) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Tilkobl den fulde TUI til en kørende Bolt-server. Serveren kan være lokal eller fjern. Send `--mini` for at bruge den minimale split-footer-UI i stedet for den fulde TUI.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Mappe på fjernserveren |
+  | `--continue` | `-c` | boolean | Fortsæt den seneste session på fjernserveren |
+  | `--session` | `-s` | string | Sessions-ID at fortsætte |
+  | `--fork` |  | boolean | Forgren sessionen ved fortsættelse |
+  | `--password` | `-p` | string | Basic auth-adgangskode |
+  | `--username` | `-u` | string | Basic auth-brugernavn |
+  | `--mini` |  | boolean | Brug den minimale interaktive UI |
+  | `--no-replay` |  | boolean | Deaktivér sessions-historik-replay ved genoptagelse og efter resize (kræver `--mini`) |
+  | `--replay-limit` |  | number | Begræns synlig replay til de nyeste N beskeder (kræver `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Start en headless Bolt API-server. Serveren eksponerer et REST\+SSE-API, som TUI'en, `bolt run --attach` og `bolt attach` kan forbinde til. Bind på `0.0.0.0` for at gøre den tilgængelig fra andre maskiner — sæt altid `BOLT_SERVER_PASSWORD`, når du gør det.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--hostname` | string | Adresse at binde (standard: `127.0.0.1`) |
+  | `--port` | number | Port at lytte på (tilfældig hvis udeladt) |
+  | `--mdns` | boolean | Aktivér mDNS-tjenesteopdagelse (standard-hostname til `0.0.0.0`) |
+  | `--mdns-domain` | string | Brugerdefineret domænenavn for mDNS-tjeneste (standard: `opencode.local`) |
+  | `--cors` | string\[\] | Yderligere domæner at tillade for CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` er ikke sat som standard. Serveren logger en advarsel og accepterer alle forbindelser, indtil du sætter den.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Start Bolt-serveren og åbn straks web-UI'en i din standardbrowser. Accepterer de samme netværksflag som `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--hostname` | string | Adresse at binde (standard: `127.0.0.1`) |
+  | `--port` | number | Port at lytte på (tilfældig hvis udeladt) |
+  | `--mdns` | boolean | Aktivér mDNS-tjenesteopdagelse (standard-hostname til `0.0.0.0`) |
+  | `--mdns-domain` | string | Brugerdefineret domænenavn for mDNS-tjeneste (standard: `opencode.local`) |
+  | `--cors` | string\[\] | Yderligere domæner at tillade for CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Administrér Bolt-sessioner gemt i den lokale SQLite-database.
+
+  **Underkommandoer**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **`bolt session list`-flag**
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Begræns output til de N nyeste sessioner |
+  | `--format` |  | `table`\|`json` | Outputformat (standard: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Vis og opret brugerdefinerede agenter. Agenter er markdown-filer med YAML-frontmatter, der definerer en systemprompt, tilladelser og tilstand.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create`-flag**
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Mappesti at skrive agent-filen til |
+  | `--description` |  | string | Naturligt sprog-beskrivelse af hvad agenten skal gøre |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Om agenten fungerer som primær agent, underagent eller begge |
+  | `--permissions` | `--tools` | string | Komma-separeret liste af tilladte tilladelser (standard: alle) |
+  | `--model` | `-m` | string | Model at bruge i formatet `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  Administrér interaktivt AI-udbyder-legitimationsoplysninger. Legitimationsoplysninger gemmes i din OS-datamappe (`~/.local/share/bolt/auth.json` på Linux, `~/Library/Application Support/bolt/auth.json` på macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Vis alle modeller tilgængelige fra dine konfigurerede udbydere.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Inkludér JSON-omkostningsmetadata for hver model |
+  | `--refresh` | boolean | Opdater models-cachen fra models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Administrér Model Context Protocol (MCP)-servere. Bolt understøtter både fjern-servere (HTTP/SSE) med OAuth og lokale (stdio) servere.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **`bolt mcp add`-flag**
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--url` | string | URL for en fjern MCP-server |
+  | `--env` | string\[\] | Miljøvariabel for en lokal server (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP-header for en fjern-server (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Installér et Bolt-plugin fra npm og opdatér den relevante konfigurationsfil. Plugins kan udvide TUI'en, tilføje nye slash-kommandoer eller registrere nye udbydere.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Tilføj plugin'et til den globale konfiguration i stedet for projekt-konfigurationen |
+  | `--force` | `-f` | boolean | Erstat en allerede-konfigureret plugin-version |
+</Accordion>
+
+<Accordion title="bolt github">
+  Administrér Bolt GitHub Actions-integrationen, som tillader Bolt at reagere på pull requests, issues og andre GitHub-hændelser.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run`-flag**
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--event` | string | GitHub-hændelsesnavn at simulere (fx `pull_request`) |
+  | `--token` | string | GitHub personal access token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Tjek en GitHub pull request ud som en lokal branch ved hjælp af `gh` CLI'en, og start derefter Bolt i den udtjekkede mappe. Hvis PR-beskrivelsen indeholder et sessions-delingslink, importerer Bolt automatisk den session.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Denne kommando kræver, at [GitHub CLI (`gh`)](https://cli.github.com/) er installeret og godkendt.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Generér en commit-besked for staged (eller alle sporede) ændringer ved hjælp af en AI-model og commit derefter. Modellen inspicerer den seneste commit-historik for stil-kontekst.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Commit alle sporede ændringer, ikke kun staged |
+  | `--dry-run` |  | boolean | Udskriv den genererede besked uden at committe |
+  | `--model` | `-m` | string | Model at bruge i formatet `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Kør en AI-kodegennemgang på en diff og afslut med kode `0` (bestå) eller `1` (fejl). `code-review`-agenten undersøger diff'en for korrekthed, stil og sikkerhedsproblemer og udsender derefter en `Verdict: PASS`- eller `Verdict: FAIL`-linje.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Gennemgå kun staged ændringer |
+  | `--branch` |  | string | Gennemgå ændringer siden merge base med denne branch |
+  | `--model` | `-m` | string | Model at bruge i formatet `provider/model` |
+
+  <Note>
+    Exit-koder: `0` = PASS, `1` = FAIL, `2` = dom kunne ikke bestemmes.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Eksportér en session som JSON til stdout. Nyttigt til arkivering, deling eller feeding ind i andre værktøjer. Send `--sanitize` før offentlig deling for at redigere filstier, prompter og andet følsomt transkriptindhold.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Redigér følsomme data (filstier, prompt-tekst, værktøjs-I/O) før eksport |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Importér en tidligere eksporteret session til den lokale database. Accepterer enten en lokal JSON-fil eller en sessions-delings-URL.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Vis aggregerede statistikker for token-forbrug og omkostninger på tværs af alle sessioner. Output inkluderer en oversigtstabel, opdeling af omkostninger og tokens, modelforbrug og et søjlediagram for værktøjsforbrug.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--days` | number | Begræns til de sidste N dage (standard: al tid) |
+  | `--tools` | number | Antal værktøjer at vise i søjlediagrammet |
+  | `--models` | boolean\|number | Vis modelstatistik; send et tal for at begrænse listen |
+  | `--project` | string | Filtrér efter projekt-ID; tom streng betyder aktuelt projekt |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Udskriv Bolt-applikationsloggen. Loggen er gemt i OS-log-mappen (fx `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Antal efterfølgende linjer at udskrive (standard: 1000) |
+  | `--follow` | `-f` | boolean | Stream nye log-linjer i realtid |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Forespørg eller inspicér den lokale SQLite-sessionsdatabase direkte.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Outputformat for forespørgselsresultater (standard: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Opgrader Bolt til den nyeste udgivelse eller en specifik version. Bolt registrerer installationsmetoden automatisk og bruger den passende pakkehåndtering.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Flag | Alias | Type | Beskrivelse |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Installationsmetode at bruge |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Fjern Bolt-binæren og alle tilhørende data.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Generér et shell-completion-script for `bash`, `zsh` eller `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  En samling af fejlfindings- og introspektionsunderkommandoer. Nyttige ved indsendelse af fejlrapporter eller diagnosticering af uventet adfærd.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Start en ACP-server (Agent Client Protocol). ACP er den protokol, der bruges af editor-integrationer som [Zed](https://zed.dev) til at kommunikere med Bolt over stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Flag | Type | Beskrivelse |
+  | --- | --- | --- |
+  | `--cwd` | string | Arbejdsmappe for serveren (standard: `process.cwd()`) |
+  | `--hostname` | string | Bind-hostname (standard: `127.0.0.1`) |
+  | `--port` | number | Bind-port |
+  | `--mdns` | boolean | Aktivér mDNS-tjenesteopdagelse |
+  | `--mdns-domain` | string | Brugerdefineret domænenavn for mDNS-tjeneste (standard: `opencode.local`) |
+  | `--cors` | string\[\] | Yderligere domæner at tillade for CORS |
+</Accordion>

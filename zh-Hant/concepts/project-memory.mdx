@@ -1,0 +1,46 @@
+---
+title: "專案記憶:跨 Bolt 工作階段的持久上下文"
+sidebarTitle: "專案記憶"
+description: "Bolt 會在每輪結束時擷取它學到的專案知識並注入到新的工作階段,讓代理不必每次都重新學習你的程式碼庫。"
+---
+
+專案記憶讓 Bolt 感覺像是早已了解你的專案。當工作階段結束一輪對話時,Bolt 會提煉出有用的資訊並寫入每專案的記憶存放區。當你開啟新的工作階段時,Bolt 會將記憶索引與最新的工作階段摘要注入到系統提示中,讓代理從真實的上下文開始,而不是一片空白。
+
+## 擷取如何運作
+
+在每輪對話結束時,Bolt 會請模型摘要下次會用到的持久事實:慣例、架構筆記、檔案配置、建置/測試指令、注意事項與未完成的討論。這些會寫入專案的記憶目錄,並附上最近工作階段的滾動摘要。
+
+記憶是每專案獨立的。同一儲存庫在同一台機器上的兩個 checkout 會共用記憶;不相關的專案永遠不會看到彼此的記憶。
+
+## 明確工具
+
+代理也可以在工作階段中直接讀取與寫入記憶:
+
+- `memory_save` — 記錄代理下次應該記住的特定事實。
+- `memory_recall` — 查詢代理(或你)先前擷取的內容。
+
+你可以請代理「記住我們使用 pnpm,不是 npm」,它就會幫你呼叫 `memory_save`。
+
+## 每工作階段的控制
+
+在 TUI 中,你可以使用斜線命令切換目前工作階段的記憶行為:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+當你想要一個不污染記憶的一次性探索工作階段,或希望仍然受益於先前上下文的唯讀工作階段時,這會很有用。
+
+## 檢視與編輯記憶
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+記憶以純檔案的方式儲存在專案的 Bolt 資料目錄中,因此你可以直接 grep、編輯或刪除項目。若要找出你機器上的確切路徑,請執行 `bolt debug paths`。
+
+## 相關
+
+- [工作階段](/concepts/sessions) — 產生記憶項目的持久對話。
+- [設定](/concepts/configuration) — 記憶儲存位置以及如何覆寫路徑。

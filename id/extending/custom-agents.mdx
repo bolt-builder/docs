@@ -1,0 +1,68 @@
+---
+title: "Custom Agents di Bolt"
+sidebarTitle: "Custom Agents"
+description: "Definisikan agent Bolt kamu sendiri sebagai file Markdown — pilih model, atur tingkat akses, batasi tool, dan tambahkan instruksi spesifik domain."
+---
+
+Selain sepuluh agent bawaan, kamu dapat mendefinisikan agent kamu sendiri. Custom agent adalah file Markdown dengan blok frontmatter yang mendeskripsikan model, tingkat akses, dan tool yang tersedia untuk agent, ditambah body yang bertindak sebagai system prompt-nya.
+
+## Membuat agent
+
+Jalur tercepat adalah generator bawaan, yang mengajukan beberapa pertanyaan dan menulis file untuk kamu:
+
+```bash
+bolt agent create
+```
+
+Agent tinggal di bawah `.opencode/agent/` di proyek (atau direktori config global kamu untuk agent personal). Setiap agent adalah satu file `.md` yang nama file-nya menjadi nama agent.
+
+## Anatomi file agent
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Field frontmatter yang umum:
+
+| Field | Tujuan |
+| --- | --- |
+| `name` | Nama agent yang digunakan dengan `--agent`. |
+| `description` | Ringkasan satu baris yang ditampilkan di listing. |
+| `model` | Model default dalam format `provider/model`. |
+| `access` | `full`, `edit`, atau `read` (lihat [Permissions](/concepts/permissions)). |
+| `tools` | Allow-list opsional yang membatasi [tool](/concepts/tools) mana yang boleh dipanggil agent. |
+
+## Menggunakan custom agent
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+Di TUI, tekan `Tab` untuk menelusuri agent; custom agent muncul bersama agent bawaan.
+
+## Subagent
+
+Agent dapat mendelegasikan ke subagent melalui tool `task`. Bolt menyertakan `@general` dan `@explore`, dan custom agent mana pun yang file-nya tinggal di bawah `.opencode/agent/` juga dapat dipanggil sebagai subagent berdasarkan namanya.
+
+## Terkait
+
+- [Agents](/concepts/agents) — jajaran agent bawaan.
+- [Tools](/concepts/tools) — apa yang dapat kamu tambahkan ke `tools:`.
+- [Custom Tools](/extending/custom-tools) — bangun tool yang akan dipanggil agent.

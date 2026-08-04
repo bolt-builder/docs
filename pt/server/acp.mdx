@@ -1,0 +1,28 @@
+---
+title: "ACP: Controlar o Bolt a Partir do Zed e Outros Editores"
+sidebarTitle: "ACP (Editores)"
+description: "O Bolt fala o Agent Client Protocol (ACP), permitindo que editores como o Zed o incorporem como backend nativo de programação com IA sem executar uma aplicação ou TUI separados."
+---
+
+O Bolt implementa o Agent Client Protocol (ACP), que é a forma como editores como o Zed conversam com agentes de IA. Depois de configurado, o editor cria `bolt acp` como subprocesso e controla-o diretamente — obtém os agentes, ferramentas, sessões e stack de fornecedores do Bolt sem sair do seu editor.
+
+## Ativar o ACP
+
+Nas definições de IA do seu editor, adicione o Bolt como agente compatível com ACP e aponte-o para:
+
+```bash
+bolt acp
+```
+
+O editor irá gerir o ciclo de vida do processo. Configure fornecedores, modelos e servidores MCP como normalmente faria em `.bolt/bolt.jsonc` — aplicam-se aqui também.
+
+## O que obtém
+
+- Todos os agentes do Bolt, disponíveis a partir do painel de IA do editor.
+- Sessões partilhadas com o TUI e a UI Web (via base de dados local).
+- O mesmo conjunto de ferramentas, modelo de permissões e memória do projeto que qualquer outro ponto de entrada do Bolt.
+
+## Relacionado
+
+- [Servidor Headless](/server/headless-server) — a interface HTTP paralela.
+- [Configuração](/concepts/configuration) — o ficheiro de configuração que o ACP herda.

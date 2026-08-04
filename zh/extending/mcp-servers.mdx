@@ -1,0 +1,215 @@
+---
+title: "使用 MCP 服务器为 Bolt 添加工具"
+sidebarTitle: "MCP 服务器"
+description: "使用 Model Context Protocol 将外部工具和资源连接到 Bolt。从 CLI 添加、认证和调试 MCP 服务器。"
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) 是一种开放标准,允许 AI 代理通过通用接口与外部工具和数据源进行通信。Bolt 使用 MCP 扩展代理可以做的事情 — 连接的 MCP 服务器可以公开从数据库查询工具到完整的 Web 搜索 API 的任何内容。Bolt 管理完整的生命周期：添加服务器、运行 OAuth 流程、刷新令牌和探测连接性。
+
+## 服务器类型
+
+Bolt 支持两种 MCP 服务器。
+
+| 类型 | 传输 | 描述 |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE（Streamable HTTP） | 在你可以通过网络访问的 URL 上运行的服务器 |
+| `local` | stdio | Bolt 作为子进程生成的本地命令 |
+
+远程服务器开箱即用地支持 OAuth 认证。Bolt 处理令牌获取、存储和自动刷新 — 你从不手动管理令牌。
+
+---
+
+## 命令
+
+### `bolt mcp add`
+
+交互式或一次性添加新的 MCP 服务器。
+
+**交互式** — 运行 `bolt mcp add` 不带参数,通过提示驱动的向导逐步完成,该向导询问名称、范围（项目或全局）、类型、URL 或命令,以及服务器是否使用 OAuth。
+
+**非交互式** — 提供名称加上远程服务器的 `--url` 或本地服务器 `--` 后的命令：
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**`bolt mcp add` 的标志**
+
+| 标志 | 描述 |
+|------|-------------|
+| `--url <url>` | 远程 MCP 服务器的 URL |
+| `--header <KEY=VALUE>` | 发送到远程服务器的 HTTP 头（可重复） |
+| `--env <KEY=VALUE>` | 本地服务器的环境变量（可重复） |
+
+---
+
+### `bolt mcp list`
+
+列出每个已配置的 MCP 服务器及其连接和认证状态。
+
+```bash
+bolt mcp list
+```
+
+每个条目显示一个状态图标：
+
+| 图标 | 含义 |
+|------|---------|
+| `✓` | 已连接（如果使用 OAuth,则已认证） |
+| `⚠` | 需要认证或凭证已过期 |
+| `✗` | 连接失败或需要客户端注册 |
+| `○` | 尚未初始化或已禁用 |
+
+---
+
+### `bolt mcp auth <name>`
+
+使用启用 OAuth 的远程 MCP 服务器进行认证。如果省略名称,Bolt 会显示一个交互式选择器,列出所有支持 OAuth 的服务器及其当前认证状态（`✓ authenticated`、`⚠ expired`、`✗ not authenticated`）。
+
+```bash
+# 认证特定服务器
+bolt mcp auth my-server
+
+# 从支持 OAuth 的服务器列表中选择
+bolt mcp auth
+```
+
+Bolt 在提供商的授权 URL 处打开你的浏览器并等待回调 — 完整的 OAuth 握手,包括所需的动态客户端注册,都会自动进行。
+
+<Note>
+  Bolt 处理完整的 OAuth 流程,包括令牌存储和自动令牌刷新。你不需要复制令牌或手动管理过期。如果服务器需要预注册的客户端 ID,请将 `oauth.clientId`（以及可选的 `oauth.clientSecret`）添加到 `.bolt/bolt.jsonc` 中该服务器的配置条目。
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+删除服务器存储的 OAuth 凭证。如果省略名称,Bolt 会提示你从已存储令牌的服务器列表中选择。
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+在不启动完整会话的情况下探测远程服务器的连接性并检查其 OAuth 状态。当服务器显示 `✗ failed` 或 `⚠ needs authentication` 时,这是首先要使用的工具。
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` 报告：
+- 服务器 URL 和当前认证状态
+- 访问令牌详情（已屏蔽）和过期时间戳
+- 是否存在刷新令牌
+- 服务器的原始 HTTP 响应代码
+- `WWW-Authenticate` 头内容
+- OAuth 发现探测的结果（不完成流程）
+
+---
+
+## 手动配置
+
+你可以直接在 `.bolt/bolt.jsonc` 中添加或编辑 MCP 服务器,而无需使用 CLI 命令。Bolt 在下次会话启动时接收更改。
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+本地 stdio 服务器如下所示：
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+要为远程服务器提供自定义 HTTP 头或禁用 OAuth：
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## 添加并认证远程 MCP 服务器
+
+<Steps>
+  <Step title="添加服务器">
+    运行 `bolt mcp add` 并按照提示操作,或使用非交互式形式：
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt 将条目写入 `.bolt/bolt.jsonc`（项目范围）或你的全局配置。
+  </Step>
+
+  <Step title="检查连接状态">
+    ```bash
+    bolt mcp list
+    ```
+
+    如果服务器需要认证,你会在其名称旁看到 `⚠ needs authentication`。
+  </Step>
+
+  <Step title="使用 OAuth 认证">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt 打开你的浏览器。你批准访问后,终端确认认证成功,服务器状态更改为 `✓ connected (OAuth)`。
+  </Step>
+
+  <Step title="验证工具可用">
+    启动 Bolt 会话。服务器公开的工具现在可供所有代理使用。你可以随时检查它们：
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

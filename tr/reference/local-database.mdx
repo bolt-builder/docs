@@ -1,0 +1,38 @@
+---
+title: "Yerel Veritabanı (bolt db)"
+sidebarTitle: "Yerel Veritabanı"
+description: "Bolt her oturumu, mesajı ve araç çağrısını yerel bir SQLite veritabanında saklar. Onu inceleyin, yedekleyin veya bolt db ile doğrudan sorgulayın."
+---
+
+Bolt her oturumu, mesajı ve araç çağrısını yerel bir SQLite veritabanında tutar. Tamamen incelenebilir ve tamamen sizindir — bir oturumu açıkça paylaşmadıkça hiçbir şey yüklenmez.
+
+## Yaygın işlemler
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Yedekleme
+
+Tek bir SQLite dosyası olduğundan yedekleme bir kopyalamadır:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Uzun süreli depolama veya taşıma için `bolt export` / `bolt import` komutlarını tercih edin — bunlar şema göçlerinden kurtulan taşınabilir bir JSON temsili üretir.
+
+## Şemaya bakış
+
+- `sessions` — başlık, proje, zaman damgaları ve durum içeren oturum başına bir satır.
+- `messages` — oturum başına tam tur günlüğü.
+- `tool_calls` — girdiler, çıktılar ve süreyle birlikte her çağrı.
+
+Kesin sütunlar gelişir; canlı şemayı görmek için `PRAGMA table_info(<table>)` kullanın.
+
+## İlgili
+
+- [Oturumlar](/concepts/sessions) — veritabanının neyi sakladığı.
+- [İstatistikler ve Maliyet](/reference/stats-and-cost) — aynı veri üzerinde toplanmış görünümler.

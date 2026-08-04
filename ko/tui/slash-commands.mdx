@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI 슬래시 명령"
+sidebarTitle: "Slash Commands"
+description: "Bolt TUI 내에서 실행할 수 있는 슬래시 명령 — /memory, /plan, /todos, /btw — 과 이들이 현재 세션의 동작을 어떻게 변경하는지."
+---
+
+슬래시 명령은 TUI 프롬프트에 입력하며 현재 세션이 동작하는 방식을 변경합니다. 모델에 아무것도 전송하지 않으며, Bolt 자체에 대해 로컬로 실행됩니다.
+
+## 레퍼런스
+
+| Command | What it does |
+| --- | --- |
+| `/memory` | 이 세션의 프로젝트 메모리 상태 표시. |
+| \`/memory use on | off\` | 이 세션이 [프로젝트 메모리](/concepts/project-memory)에서 읽을지 여부. |
+| \`/memory contribute on | off\` | 이 세션이 턴이 종료될 때 프로젝트 메모리에 다시 쓸지 여부. |
+| `/plan` | 현재 세션을 계획 모드(읽기 전용, 계획 생성)로 전환. |
+| `/todos` | 에이전트의 현재 구조화된 작업 목록 표시. |
+| `/btw` | 에이전트가 다음 턴에서 볼 대역 외 노트("그런데...")를 주입하며, 완전한 응답을 트리거하지 않음. |
+
+<Tip>
+  슬래시 명령은 세션 범위입니다. 기본 설정을 지속시키려면 `.bolt/bolt.jsonc`에 대신 설정하세요. [Configuration](/concepts/configuration)을 참조하세요.
+</Tip>
+
+## 자신만의 명령 추가
+
+커스텀 슬래시 명령은 [플러그인](/extending/plugins)과 `.opencode/command/`의 파일에 의해 기여될 수 있습니다. 각 명령은 트리거와 동작을 설명하는 프론트매터를 가진 마크다운 파일입니다.
+
+## 관련 항목
+
+- [Keybinds](/tui/keybinds) — TUI용 키보드 단축키.
+- [Project Memory](/concepts/project-memory) — `/memory`가 토글하는 것.

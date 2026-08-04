@@ -1,0 +1,142 @@
+---
+title: "Kom i gang med Bolt på under et minut"
+sidebarTitle: "Kom hurtigt i gang"
+description: "Installér Bolt, åbn dit projekt, forbind en udbyder, og kør din første AI-prompt — alt sammen på under 60 sekunder med denne trinvise guide."
+---
+
+Denne guide leder dig igennem installation af Bolt, opstart i et projekt, forbindelse til en AI-udbyder og kørsel af din første prompt. Hele flowet tager under et minut.
+
+<Steps>
+  <Step title="Installér Bolt">
+    Den hurtigste vej er det officielle installationsscript, som virker på macOS og Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Foretrækker du en pakkehåndtering? Installér globalt med npm, bun, pnpm eller yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Til desktop-appen på macOS (ingen Gatekeeper-omvej):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Se [Installationsguiden](/installation) for alle metoder, inklusive Homebrew, Chocolatey, Scoop og Windows-specifikke bemærkninger.
+  </Step>
+  <Step title="Åbn dit projekt">
+    Naviger til en projektmappe og start den interaktive TUI:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt samler automatisk din projektkontekst — læser dit filtræ, forstår din stak og gør det tilgængeligt for hver agent fra det øjeblik, du åbner det.
+  </Step>
+  <Step title="Konfigurér en AI-udbyder">
+    Ved første opstart beder Bolt dig om at konfigurere en udbyder, hvis ingen er sat op. Du kan også køre dette når som helst:
+
+    ```bash
+    bolt providers
+    ```
+
+    Dette åbner flowet til udbyderadministration, hvor du kan tilføje API-nøgler til OpenAI, Anthropic og andre understøttede LLM-udbydere. Konfigurationen gemmes i `.bolt/bolt.jsonc` i din projektrod.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Skriv en prompt og udforsk agenter">
+    Når du er inde i TUI'en, indtast din prompt og tryk Enter. Brug **Tab** til at skifte mellem Bolts ti indbyggede agenter når som helst — den aktuelle agent vises i statuslinjen.
+
+    Du kan også køre prompts direkte fra kommandolinjen uden at åbne TUI'en:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Indbyggede agenter
+
+Skift agent med `Tab` i TUI'en, eller send `--agent <name>` til `bolt run`. Hver agent har et defineret adgangsniveau, der matcher dens formål.
+
+| Agent | Adgang | Beskrivelse |
+| --- | --- | --- |
+| `code` | Fuld | Standard: læser, skriver og kører kode |
+| `plan` | Læs | Udforsker kodebasen og producerer en plan uden at ændre filer |
+| `ask` | Læs | Spørgsmål og research — ingen filredigeringer |
+| `code-review` | Læs | Gennemgår ændringer for korrekthed, stil og sikkerhed |
+| `debug` | Fuld | Fejlfinder fejlende tests, nedbrud og logikfejl |
+| `refactor` | Fuld | Sikker refaktorering med testverificering ved hvert trin |
+| `docs` | Redigér | Skriver og opdaterer dokumentation og kommentarer |
+| `security` | Læs | Sikkerhedsaudit: sårbarheder, hemmeligheder, mønstre |
+| `migrate` | Fuld | Framework-opgraderinger og afhængighedsmigrationer |
+| `perf` | Fuld | Ydelsesanalyse og optimering |
+
+Der er også to indbyggede underagenter til delegering: `@general` til komplekse fler-trinsopgaver og `@explore` til hurtig, read-only kodebase-research. Du kan definere dine egne agenter som Markdown-filer eller generere en med `bolt agent create`.
+
+## Almindelige kommandoer at prøve næste gang
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Send `--mini` til `bolt` eller `bolt attach` for en kompakt UI, der fylder mindre i terminalen — perfekt til mindre vinduer eller opdelte layouts.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` accepterer flagene `--auto`, `--yolo` og `--dangerously-skip-permissions`, som automatisk godkender alle tilladelsesprompter uden at spørge. Brug kun disse i betroede miljøer — de tillader agenten at læse, skrive og udføre uden bekræftelse.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt understøtter shell-completion til bash, zsh, fish og andre shells. Generér og installér completions med:
+
+  ```bash
+  bolt completion
+  ```
+
+  Følg de udskrevne instruktioner for at indlæse completion-scriptet i din shell-konfiguration.
+</Note>

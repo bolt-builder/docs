@@ -1,0 +1,107 @@
+---
+title: "Pengantar Bolt: agent AI terminal sumber terbuka"
+sidebarTitle: "Introduction"
+description: "Temui Bolt: agent coding AI terminal sumber terbuka dengan sepuluh agent, sesi tahan lama, project memory, MCP, 75+ provider LLM, TUI, dan aplikasi desktop."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Terminal kamu, sekarang dengan tim engineering AI lengkap di dalamnya.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt adalah agent coding AI yang mengutamakan terminal, dibangun di atas [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui), dan [SolidJS](https://www.solidjs.com). Arahkan ke proyek mana pun dan Bolt mengambil konteksnya secara otomatis: mengeksplorasi kode kamu, mengikuti konvensi kamu, mengeksekusi perintah shell, mengedit file, menjalankan tes, dan mengirimkan perubahan.
+
+Sepuluh agent bawaan (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) plus subagent `@general` dan `@explore` mencakup seluruh loop engineering. Sesi tahan lama: detach, re-attach (bahkan ke server remote), fork, share, export, dan import kapan saja. Project memory mempertahankan apa yang dipelajari agent antar sesi. Dapat diperluas via MCP server (dengan OAuth), plugin, custom agent, dan custom tool.
+
+Bolt adalah sumber terbuka di bawah lisensi PolyForm Noncommercial 1.0.0.
+
+## Mengapa Bolt?
+
+Bolt dirancang seputar cara pengembang benar-benar bekerja: di terminal, di banyak sesi, pada basis kode nyata. Berikut yang membedakannya:
+
+- **TUI yang mengutamakan terminal.** Antarmuka yang cepat dan berbasis keyboard yang dibangun dengan [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui), dan [SolidJS](https://www.solidjs.com). Terasa native karena memang native.
+- **Seluruh tim agent.** Sepuluh agent khusus — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, dan `perf` — plus subagent untuk penelitian dan delegasi multi-langkah. Beralih antar mereka dengan `Tab`.
+- **Sesi yang dapat kamu tinggalkan dan gabungkan kembali.** Detach dari sesi dan attach nanti, bahkan di server remote. Fork, share, export, dan import pekerjaan kapan saja. Sesi disimpan di SQLite dan sepenuhnya dapat diperiksa dengan `bolt db`.
+- **Dapat diperluas secara desain.** MCP server dengan dukungan OAuth penuh, sistem plugin, integrasi GitHub, server API bawaan, dan UI web.
+- **Aplikasi desktop.** Engine yang sama dibungkus dalam pengalaman desktop multi-window dan multi-tab — dengan terminal terintegrasi, file tree, command palette, 28 bahasa UI, dan auto-update.
+
+## Agent bawaan
+
+Bolt hadir dengan sepuluh agent khusus. Setiap agent memiliki tingkat akses file-system yang ditentukan agar cocok dengan tujuannya.
+
+| Agent | Akses | Deskripsi |
+| --- | --- | --- |
+| `code` | Full | Default: membaca, menulis, dan menjalankan kode |
+| `plan` | Read | Mengeksplorasi basis kode dan menghasilkan rencana tanpa mengubah file |
+| `ask` | Read | Pertanyaan dan penelitian — tanpa edit file |
+| `code-review` | Read | Meninjau perubahan untuk kebenaran, gaya, dan keamanan |
+| `debug` | Full | Men-debug tes yang gagal, crash, dan kesalahan logika |
+| `refactor` | Full | Refactoring aman dengan verifikasi tes di setiap langkah |
+| `docs` | Edit | Menulis dan memperbarui dokumentasi dan komentar |
+| `security` | Read | Audit keamanan: kerentanan, secret, pola |
+| `migrate` | Full | Upgrade framework dan migrasi dependensi |
+| `perf` | Full | Analisis performa dan optimasi |
+
+Kamu juga dapat mendefinisikan agent kamu sendiri sebagai file Markdown atau menghasilkan satu dengan `bolt agent create`.
+
+## Aplikasi desktop
+
+Bolt juga hadir sebagai aplikasi desktop yang berdiri sendiri dengan manajemen sesi multi-window dan multi-tab, prompt composer dengan dukungan lampiran dan paste gambar dari clipboard, terminal dan file tree terintegrasi, command palette, setelan penuh untuk keybind, model, provider dan server, notifikasi native, deep link, integrasi WSL di Windows, dan auto-update di seluruh channel dev, beta, dan production.
+
+Unduh aplikasi desktop dari [halaman rilis](https://github.com/Bolt-builder/bolt-cli/releases), atau instal dalam satu baris di macOS tanpa jalan memutar Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Jelajahi dokumentasi
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Instal Bolt via curl, npm, atau package manager sistem kamu di macOS, Linux, dan Windows.
+  </Card>
+
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Buka TUI, jalankan prompt pertama kamu, dan kirim commit yang dihasilkan AI dalam kurang dari satu menit.
+  </Card>
+
+  <Card title="Agents" icon="users" href="/concepts/agents">
+    Sepuluh agent bawaan plus subagent. Pelajari apa yang dilakukan masing-masing dan cara menulis milikmu sendiri.
+  </Card>
+
+  <Card title="Project memory" icon="brain" href="/concepts/project-memory">
+    Bagaimana Bolt mengingat proyek kamu antar sesi dan cara mengontrol apa yang ditangkap.
+  </Card>
+
+  <Card title="MCP servers" icon="plug" href="/extending/mcp-servers">
+    Hubungkan tool dan sumber data eksternal ke Bolt via Model Context Protocol.
+  </Card>
+
+  <Card title="Headless server" icon="server" href="/server/headless-server">
+    Jalankan `bolt serve`, attach TUI dari mesin mana pun, dan kendalikan Bolt dari API.
+  </Card>
+</CardGroup>

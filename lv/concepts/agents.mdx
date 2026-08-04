@@ -1,0 +1,135 @@
+---
+title: "Aģenti — Bolt desmit iebūvētie un pielāgotie MI personāži"
+sidebarTitle: "Aģenti"
+description: "Bolt piegādā desmit iebūvētus aģentus, katru ar atšķirīgu lomu, rīku komplektu un piekļuves līmeni. Uzziniet, kā pārslēgt, konfigurēt un izveidot savus aģentus."
+---
+
+Bolt katru MI personāžu uztver kā nosauktu **aģentu**: sistēmas uzvedne apvienota ar precīzi noteiktu rīku atļauju kopu. Tā vietā, lai katram uzdevumam izmantotu vienu universālu modeli, jūs izvēlaties aģentu, kura piekļuve un fokuss atbilst jūsu vajadzībām — vai tā būtu drošības auditēšana, dokumentācijas rakstīšana vai pilna ietvara migrācijas savienošana.
+
+## Piekļuves līmeņi
+
+Katram iebūvētajam aģentam ir piešķirts viens no trim piekļuves līmeņiem, kas nosaka, kurus rīkus tas var izsaukt:
+
+| Līmenis | Piešķirtās atļaujas | Tipisks lietojums |
+|-------|---------------------|-------------|
+| **Full** | Lasīt failus, rakstīt/rediģēt failus, izpildīt čaulas komandas | Aktīva kodēšana, atkļūdošana, pārstrukturēšana, migrācijas |
+| **Edit** | Lasīt failus, rakstīt/rediģēt failus — bez čaulas | Dokumentācija, komentāru atjauninājumi, drošas prozas izmaiņas |
+| **Read** | Tikai lasīt failus — bez rakstīšanas, bez čaulas | Plānošana, izpēte, koda pārskatīšana, auditi |
+
+## Iebūvētie aģenti
+
+Bolt piegādā desmit specializētus aģentus. Pārslēdzieties starp tiem TUI, nospiežot <kbd>Tab</kbd>.
+
+| Aģents | Piekļuve | Apraksts |
+|-------|--------|-------------|
+| `code` | Full | Noklusējums: lasa, raksta un izpilda kodu |
+| `plan` | Read | Izpēta koda bāzi un izveido plānu, nemainot kodu |
+| `ask` | Read | Jautājumi un izpēte — bez failu izmaiņām |
+| `code-review` | Read | Pārskata izmaiņas attiecībā uz pareizību, stilu un drošību |
+| `debug` | Full | Atkļūdo neizdevušos testus, avārijas un loģikas kļūdas |
+| `refactor` | Full | Droša pārstrukturēšana ar testu pārbaudi katrā solī |
+| `docs` | Edit | Raksta un atjaunina dokumentāciju un komentārus |
+| `security` | Read | Drošības audits: ievainojamības, noslēpumi un bīstami paraugi |
+| `migrate` | Full | Ietvaru jauninājumi un atkarību migrācijas |
+| `perf` | Full | Veiktspējas analīze un optimizācija |
+
+## Apakšaģenti
+
+Papildus desmit galvenajiem aģentiem Bolt piedāvā divus iebūvētus **apakšaģentus**, kuriem primārie aģenti sesijas laikā var deleģēt darbu. Jūs nekad manuāli neizvēlaties apakšaģentu — tie tiek automātiski nosūtīti, kad primārais aģents nolemj to radīt.
+
+| Apakšaģents | Loma |
+|----------|------|
+| `@general` | Sarežģītu daudzsoļu uzdevumu deleģēšana, kas prasa plašas spējas |
+| `@explore` | Ātra, tikai lasāma koda bāzes izpēte — pāriet failus bez blakusparādībām |
+
+<Tip>
+  Ja jums ātri jāsaprot nepazīstama koda bāze, sāciet ar `ask` vai `plan` aģentu. Aizkulisēs tie var nosūtīt `@explore` apakšaģentu, lai ātri indeksētu jūsu projektu, pirms atbildes sniegšanas — nepieskaroties nevienam failam.
+</Tip>
+
+## Aģentu pārslēgšana
+
+**TUI** — nospiediet <kbd>Tab</kbd>, lai jebkurā sesijas brīdī pārvietotos cauri pieejamo aģentu sarakstam. Aktīvais aģents tiek parādīts sesijas kājenē.
+
+**Neinteraktīvi** — nododiet `--agent <name>` komandai `bolt run`, lai fiksētu konkrētu aģentu šai palaišanai:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Aģentu saraksts
+
+Lai redzētu visus pieejamos aģentus — gan iebūvētos, gan pielāgotos — ar to režīmiem un atļauju konfigurāciju:
+
+```bash
+bolt agent list
+```
+
+## Pielāgoti aģenti
+
+Jūs varat izveidot savus aģentus divos veidos.
+
+### Ģenerēt ar `bolt agent create`
+
+Interaktīvais vednis ģenerē aģenta failu, izmantojot LLM, un ieraksta to diskā:
+
+```bash
+bolt agent create
+```
+
+Visi karogi ir izvēles. Norādiet tos, lai palaistu neinteraktīvi:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Karogs | Apraksts |
+|------|-------------|
+| `--description` | Ko aģentam vajadzētu darīt (izmantots kā LLM uzvedne ģenerēšanai) |
+| `--path` | Direktorija, kurā ierakstīt ģenerēto aģenta failu |
+| `--mode` | `all` (noklusējums), `primary` vai `subagent` |
+| `--permissions` | Ar komatiem atdalīts atļauto atļauju saraksts. Izlaidiet, lai atļautu visas. |
+| `--model` / `-m` | Modelis izmantošanai `provider/model` formātā |
+
+### Uzrakstiet markdown failu manuāli
+
+Aģents ir tikai markdown fails ar YAML priekšstrukturu. Ievietojiet to `.bolt/agents/` savā projektā vai globālajā aģentu direktorijā:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Faila nosaukums (bez `.md`) kļūst par aģenta identifikatoru.
+
+### Pieejamās atļaujas
+
+Atļaujas ir precīzas rīku vārtejas, ko jūs kontrolējat, izveidojot pielāgotu aģentu:
+
+| Atļauja | Kontrolē |
+|------------|----------|
+| `bash` | Čaulas komandu izpildi |
+| `read` | Failu lasīšanu |
+| `edit` | Failu rakstīšanu un rediģēšanu (arī vārtu `write` un `apply_patch`) |
+| `glob` | Failu glob/direktoriju uzskaiti |
+| `grep` | Failu meklēšanu, izmantojot ripgrep |
+| `webfetch` | HTTP izgūšanu no tīmekļa |
+| `task` | Apakšaģentu uzdevumu radīšanu |
+| `todowrite` | Darāmo lietu vienumu izveidi un atjaunināšanu |
+| `websearch` | Tīmekļa meklēšanas pieprasījumus |
+| `lsp` | Language Server Protocol darbības |
+| `skill` | Piekļuvi projekta prasmēm |

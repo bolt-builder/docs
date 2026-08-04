@@ -1,0 +1,53 @@
+---
+title: "Oprávnění: řízení toho, co agenti Boltu mohou dělat"
+sidebarTitle: "Oprávnění"
+description: "Jak vrstvení per-agent úrovní přístupu, prompty pro oprávnění a pravidla allow/deny v konfiguraci brání agentovi provádět věci, které jsi neschválil(a)."
+---
+
+Agenti Boltu mohou číst soubory, zapisovat soubory a spouštět shellové příkazy. Tato moc je vymezena dvěma vrstvami: úrovní přístupu na úrovni agenta a interaktivními prompty pro oprávnění, které můžeš schvalovat, odmítat nebo konfigurovat předem.
+
+## Úrovně přístupu agentů
+
+Každý vestavěný agent má deklarovanou úroveň přístupu:
+
+| Úroveň přístupu | Číst soubory | Zapisovat soubory | Spouštět shellové příkazy |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Vestavěné přiřazení:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Mezi agenty přepínej klávesou `Tab` v TUI, nebo předej `--agent <name>` do `bolt run`.
+
+## Interaktivní prompty
+
+V rámci úrovně přístupu agenta jsou potenciálně destruktivní akce stále dotazovány. Můžeš schválit jednorázově, schválit pro dané sezení, nebo odmítnout. Odmítnutá volání vrátí agentovi chybu a on pokračuje dál.
+
+## Neinteraktivní schvalování
+
+Pro CI, skripty nebo důvěryhodné lokální workflow podporuje `bolt run` přepínače, které prompty přeskočí:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` a `--dangerously-skip-permissions` umožňují agentovi číst, zapisovat a spouštět bez dotazování. Používej je pouze v důvěryhodných prostředích.
+</Warning>
+
+## Pravidla na úrovni konfigurace
+
+Pro celý projekt můžeš předem zakázat (nebo předem povolit) konkrétní nástroje přidáním bloku `permission` do `.bolt/bolt.jsonc`. To se aplikuje na každé sezení v projektu, včetně neinteraktivních volání `bolt run`. Schéma najdeš v [Konfiguraci](/concepts/configuration).
+
+## Související
+
+- [Agenti](/concepts/agents) — kteří agenti mají jaké úrovně přístupu.
+- [Nástroje](/concepts/tools) — úplný seznam nástrojů, které oprávnění řídí.
+- [Konfigurace](/concepts/configuration) — nastavení trvalých pravidel oprávnění.

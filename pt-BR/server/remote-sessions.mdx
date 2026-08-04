@@ -1,0 +1,185 @@
+---
+title: "Anexe-se a sessões remotas do Bolt via HTTP"
+sidebarTitle: "Sessões remotas"
+description: "Inicie um servidor Bolt headless, anexe um TUI de qualquer máquina e descubra servidores na sua rede local com mDNS — com basic auth opcional."
+url: "server/remote-sessions"
+---
+
+O Bolt tem um servidor HTTP nativo que desacopla completamente o motor da interface. Você pode iniciar um servidor headless em uma máquina remota potente (uma VM na cloud, um container de dev, um desktop deixado ligado durante a noite) e anexar o TUI a partir do seu laptop, um segundo terminal ou até um navegador — todos apontando para a mesma sessão ao vivo. Isso torna o Bolt adequado para times, cargas de trabalho remotas e tarefas longas nas quais você quer dar uma checada sem fazer SSH em uma máquina.
+
+---
+
+## `bolt serve`
+
+Inicia um servidor Bolt headless que expõe a API completa via HTTP e aceita conexões TUI.
+
+```bash
+bolt serve
+```
+
+### Flags
+
+| Flag | Padrão | Descrição |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Hostname ou endereço IP para vincular |
+| `--port <n>` | `0` (auto) | Porta para escutar; o Bolt imprime a porta atribuída na inicialização |
+| `--mdns` | `false` | Anuncia o servidor via mDNS para descoberta zero-config na rede local; também define o hostname para `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | Domínio de serviço mDNS personalizado |
+| `--cors <origin>` | `[]` | Origens adicionais a permitir via CORS (repetível) |
+
+<Warning>
+  Se `OPENCODE_SERVER_PASSWORD` não estiver definida, o Bolt imprime um aviso e o servidor fica completamente aberto para qualquer um que possa alcançá-lo. Sempre defina uma senha antes de vincular a qualquer interface que não seja `127.0.0.1`.
+</Warning>
+
+### Autenticação
+
+Proteja o servidor com HTTP Basic Auth usando variáveis de ambiente:
+
+| Variável | Descrição |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Senha de basic auth |
+| `OPENCODE_SERVER_USERNAME` | Usuário de basic auth (padrão `opencode` se omitido) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Anexa o TUI completo a um servidor Bolt em execução. Isso funciona contra qualquer servidor acessível via HTTP — local ou remoto.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Flags
+
+| Flag | Alias | Descrição |
+|------|-------|-------------|
+| `--dir <path>` | | Diretório em que executar no servidor remoto |
+| `--continue` | `-c` | Continua a última sessão no servidor |
+| `--session <id>` | `-s` | ID da sessão a continuar |
+| `--fork` | | Ramifica a sessão ao continuar (use com `--continue` ou `--session`) |
+| `--password <pw>` | `-p` | Senha de basic auth (sobrescreve `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | Usuário de basic auth (sobrescreve `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | Usa a UI interativa minimalista em vez do TUI completo |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Inicia um servidor Bolt e abre imediatamente a UI web no seu navegador padrão. Esta é a maneira mais rápida de obter uma interface baseada em navegador rodando localmente.
+
+```bash
+bolt web
+```
+
+`bolt web` aceita as mesmas flags de rede que `bolt serve`.
+
+---
+
+## Descoberta mDNS
+
+Passe `--mdns` para `bolt serve` para transmitir o endereço do servidor na sua rede local usando mDNS. Qualquer máquina na mesma rede pode então anexar usando o hostname mDNS sem conhecer o endereço IP ou a porta.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+O domínio mDNS padrão é `opencode.local`. Sobrescreva-o com `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Iniciar um servidor e anexar remotamente
+
+<Steps>
+  <Step title="Defina uma senha na máquina do servidor">
+    Exporte `OPENCODE_SERVER_PASSWORD` antes de iniciar o servidor. Sem ela, o Bolt imprime um aviso e a API fica sem autenticação.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Inicie o servidor headless">
+    Vincule a todas as interfaces para que seu laptop possa alcançá-lo e opcionalmente escolha uma porta fixa:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Deixe este terminal aberto (ou execute em `tmux` / `screen` / uma unit systemd).
+  </Step>
+
+  <Step title="Anexe do seu laptop">
+    Em qualquer máquina que possa alcançar o servidor, execute:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    O TUI completo abre e conecta ao motor remoto. Sessões, histórico e estado das ferramentas vivem todos no servidor.
+  </Step>
+
+  <Step title="Continue uma sessão depois">
+    Desanexe saindo do TUI (`q` ou `Ctrl-C`). A sessão continua rodando no servidor. Para reingressar:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Ou ramifique-a para bifurcar sem afetar a original:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Exemplo de fluxo remoto
+
+Um padrão comum é deixar um servidor Bolt rodando em uma máquina de dev com muitos núcleos e conectar-se de um laptop fino.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Todos os dados de sessão são armazenados no banco de dados SQLite do servidor. O laptop apenas renderiza o TUI — ele pode desconectar e reconectar a qualquer momento sem perder o trabalho.

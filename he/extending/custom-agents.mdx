@@ -1,0 +1,68 @@
+---
+title: "סוכנים מותאמים אישית ב-Bolt"
+sidebarTitle: "סוכנים מותאמים אישית"
+description: "הגדר סוכני Bolt משלך כקבצי Markdown — בחר מודל, הגדר רמת גישה, הגבל כלים והוסף הוראות ספציפיות לתחום."
+---
+
+מעבר לעשרת הסוכנים המובנים, תוכל להגדיר סוכנים משלך. סוכנים מותאמים אישית הם קבצי Markdown עם בלוק frontmatter שמתאר את המודל, רמת הגישה והכלים הזמינים של הסוכן, ובנוסף גוף שפועל כהנחיית המערכת שלו.
+
+## יצירת סוכן
+
+הנתיב המהיר ביותר הוא המחולל המובנה, שמציג כמה שאלות וכותב את הקובץ בשבילך:
+
+```bash
+bolt agent create
+```
+
+סוכנים חיים תחת `.opencode/agent/` בפרויקט (או בספריית התצורה הגלובלית שלך עבור סוכנים אישיים). כל סוכן הוא קובץ `.md` בודד ששם הקובץ שלו הופך לשם הסוכן.
+
+## אנטומיה של קובץ סוכן
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+שדות frontmatter נפוצים:
+
+| שדה | מטרה |
+| --- | --- |
+| `name` | שם הסוכן בשימוש עם `--agent`. |
+| `description` | סיכום בשורה אחת שמוצג ברשימות. |
+| `model` | מודל ברירת מחדל בפורמט `provider/model`. |
+| `access` | `full`, `edit` או `read` (ראה [הרשאות](/concepts/permissions)). |
+| `tools` | רשימת היתר אופציונלית שמגבילה אילו [כלים](/concepts/tools) הסוכן יכול לקרוא. |
+
+## שימוש בסוכן מותאם אישית
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+ב-TUI, לחץ `Tab` כדי לעבור בין סוכנים; סוכנים מותאמים אישית מופיעים לצד המובנים.
+
+## תת-סוכנים
+
+סוכנים יכולים להאציל לתת-סוכנים דרך הכלי `task`. Bolt מגיע עם `@general` ו-`@explore`, וכל סוכן מותאם אישית שהקובץ שלו חי תחת `.opencode/agent/` יכול גם להיקרא כתת-סוכן לפי שם.
+
+## קשור
+
+- [סוכנים](/concepts/agents) — המערך המובנה של סוכנים.
+- [כלים](/concepts/tools) — מה תוכל להוסיף ל-`tools:`.
+- [כלים מותאמים אישית](/extending/custom-tools) — בנה את הכלי שהסוכן יקרא לו.

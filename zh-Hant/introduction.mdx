@@ -1,0 +1,107 @@
+---
+title: "Bolt 介紹:開源的終端 AI 代理"
+sidebarTitle: "介紹"
+description: "認識 Bolt:一個開源的終端 AI 編程代理,具備十個代理、持久工作階段、專案記憶、MCP、75+ LLM 供應商、TUI 與桌面應用。"
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**你的終端機,現在裡面有一支完整的 AI 工程團隊。**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt 是建置在 [Effect](https://effect.website)、[OpenTUI](https://github.com/opentui/opentui) 與 [SolidJS](https://www.solidjs.com) 之上的終端優先 AI 編程代理。將它指向任何專案,它就會自動接收上下文:它會探索你的程式碼、遵循你的慣例、執行 shell 命令、編輯檔案、執行測試並交付變更。
+
+十個內建代理(`code`、`plan`、`ask`、`code-review`、`debug`、`refactor`、`docs`、`security`、`migrate`、`perf`)加上 `@general` 與 `@explore` 子代理涵蓋整個工程循環。工作階段是持久的:可卸離、重新連接(甚至到遠端伺服器)、分叉、分享、匯出與匯入,任何時候都行。專案記憶會在工作階段之間保留代理學到的內容。可透過 MCP 伺服器(附 OAuth)、外掛、自訂代理與自訂工具擴充。
+
+Bolt 以 PolyForm Noncommercial 1.0.0 授權開源。
+
+## 為什麼選擇 Bolt?
+
+Bolt 是圍繞開發者實際工作的方式而設計:在終端機中、跨多個工作階段、在真實程式碼庫上。以下是它的獨特之處:
+
+- **終端優先的 TUI。** 一個快速、鍵盤驅動的介面,以 [Effect](https://effect.website)、[OpenTUI](https://github.com/opentui/opentui) 與 [SolidJS](https://www.solidjs.com) 建置。它感覺就像原生的,因為它就是。
+- **一整個代理團隊。** 十個專業化代理 — `code`、`plan`、`ask`、`code-review`、`debug`、`refactor`、`docs`、`security`、`migrate` 與 `perf` — 加上用於研究與多步驟委派的子代理。用 `Tab` 在它們之間切換。
+- **可離開再重新加入的工作階段。** 從工作階段卸離並稍後附加,甚至可以在遠端伺服器上。任何時候都可以分叉、分享、匯出與匯入工作。工作階段儲存在 SQLite 中,並可使用 `bolt db` 完整檢視。
+- **可擴充的設計。** 支援完整 OAuth 的 MCP 伺服器、外掛系統、GitHub 整合、內建 API 伺服器與 Web UI。
+- **桌面應用。** 相同的引擎包裝於多視窗、多分頁的桌面體驗中 — 附整合終端機、檔案樹、命令面板、28 種介面語言與自動更新。
+
+## 內建代理
+
+Bolt 內建十個專業化代理。每個代理都有定義的檔案系統存取層級,以符合其用途。
+
+| 代理 | 存取 | 描述 |
+| --- | --- | --- |
+| `code` | Full | 預設:讀取、寫入並執行程式碼 |
+| `plan` | Read | 探索程式碼庫並產生計畫,而不變更檔案 |
+| `ask` | Read | 問題與研究 — 不編輯檔案 |
+| `code-review` | Read | 審查變更的正確性、風格與安全性 |
+| `debug` | Full | 為失敗的測試、當機與邏輯錯誤除錯 |
+| `refactor` | Full | 安全的重構,每步都經過測試驗證 |
+| `docs` | Edit | 撰寫並更新文件與註解 |
+| `security` | Read | 安全稽核:漏洞、機密、模式 |
+| `migrate` | Full | 框架升級與相依套件遷移 |
+| `perf` | Full | 效能分析與優化 |
+
+你也可以將自己的代理定義為 Markdown 檔案,或使用 `bolt agent create` 產生。
+
+## 桌面應用
+
+Bolt 也以獨立的桌面應用發佈,具備多視窗與多分頁工作階段管理、支援附件與剪貼簿圖片貼上的提示編輯器、整合終端機與檔案樹、命令面板、涵蓋快捷鍵、模型、供應商與伺服器的完整設定、原生通知、深層連結、Windows 上的 WSL 整合,以及跨 dev、beta 與 production 頻道的自動更新。
+
+從 [releases 頁面](https://github.com/Bolt-builder/bolt-cli/releases) 下載桌面應用,或在 macOS 上用一行命令安裝而不必繞過 Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## 探索文件
+
+<CardGroup cols={2}>
+  <Card title="安裝" icon="download" href="/installation">
+    透過 curl、npm 或系統套件管理工具在 macOS、Linux 與 Windows 上安裝 Bolt。
+  </Card>
+
+  <Card title="快速開始" icon="rocket" href="/quickstart">
+    開啟 TUI、執行你的第一個提示,並在一分鐘內交付一個 AI 產生的提交。
+  </Card>
+
+  <Card title="代理" icon="users" href="/concepts/agents">
+    十個內建代理加上子代理。了解每個代理做什麼,以及如何撰寫你自己的。
+  </Card>
+
+  <Card title="專案記憶" icon="brain" href="/concepts/project-memory">
+    Bolt 如何跨工作階段記住你的專案,以及如何控制擷取哪些內容。
+  </Card>
+
+  <Card title="MCP 伺服器" icon="plug" href="/extending/mcp-servers">
+    透過 Model Context Protocol 將外部工具與資料來源連接到 Bolt。
+  </Card>
+
+  <Card title="無介面伺服器" icon="server" href="/server/headless-server">
+    執行 `bolt serve`、從任何機器附加 TUI,並透過 API 驅動 Bolt。
+  </Card>
+</CardGroup>

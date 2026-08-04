@@ -1,0 +1,52 @@
+---
+title: "以無介面伺服器執行 Bolt"
+sidebarTitle: "無介面伺服器"
+description: "bolt serve 透過 HTTP 公開完整的 Bolt 執行環境,讓任何 TUI、Web UI、編輯器整合或指令碼都可在本機或透過網路附加。"
+---
+
+`bolt serve` 執行一個無介面的 Bolt 伺服器,透過 HTTP 公開完整的引擎:工作階段、代理、工具、供應商存取、MCP 與串流事件。Bolt 在互動模式下能做的任何事,都可以透過 API 完成。
+
+## 啟動伺服器
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  綁定到 `0.0.0.0` 會把 Bolt 公開在你的網路上。這樣做之前務必設定 `BOLT_SERVER_USERNAME` 與 `BOLT_SERVER_PASSWORD`。
+</Warning>
+
+## 附加 TUI
+
+從任何可連到伺服器的機器:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+或針對遠端伺服器執行一次性提示:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+透過環境變數設定憑證(請見 [環境變數](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+所有用戶端都必須傳送相符的憑證。
+
+## 相關
+
+- [遠端工作階段](/server/remote-sessions) — 附加、mDNS 發現與共用伺服器。
+- [Web UI](/server/web-ui) — 瀏覽器前端。
+- [ACP](/server/acp) — 從 Zed 與其他編輯器驅動 Bolt。

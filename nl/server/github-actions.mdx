@@ -1,0 +1,179 @@
+---
+title: "GitHub-integratie: Actions, PR's en AI-review"
+sidebarTitle: "GitHub Actions"
+description: "Draai Bolt binnen GitHub Actions, check PR's lokaal uit, genereer AI-commit-berichten en beveilig merges met AI-code-review en exit-codes."
+url: "server/github-actions"
+---
+
+Bolt levert vier commando's die je dagelijkse Git-workflow verbinden met AI: een GitHub Actions-agent die je met één commando installeert, een snelkoppeling om pull requests uit te checken, een AI-commit-berichtgenerator en een AI-code-reviewer met machine-leesbare exit-codes. Samen laten ze je Bolt inzetten in elke fase van ontwikkeling — lokaal coderen, PR-review en continuous integration.
+
+---
+
+## `bolt github`
+
+Beheer de GitHub Actions-agent die Bolt draait op CI-events.
+
+### `bolt github install`
+
+Installeer de GitHub Actions-workflow in de huidige repository. Dit schrijft de workflow-YAML naar `.github/workflows/` zodat Bolt automatisch start bij issue-comments, nieuwe pull requests of andere events die je configureert.
+
+```bash
+bolt github install
+```
+
+Voer dit uit vanuit de root van een git-repository. Je hebt schrijftoegang tot `.github/workflows/` nodig.
+
+### `bolt github run`
+
+Draai de GitHub-agent lokaal of binnen een CI-stap, en speel een specifieke GitHub event-payload af.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flag | Beschrijving |
+|------|-------------|
+| `--event <event>` | GitHub-eventnaam of pad naar een JSON event-payload |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) gebruikt om comments te posten en context op te halen |
+
+---
+
+## De GitHub Actions-agent instellen
+
+<Steps>
+  <Step title="Installeer de workflow">
+    Vanuit de root van je repository:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt schrijft een GitHub Actions-workflow-bestand naar `.github/workflows/`. Commit en push het bestand.
+  </Step>
+
+  <Step title="Voeg je API-sleutel toe als secret">
+    Voeg in je repository-instellingen de API-sleutel voor je gewenste LLM-provider toe als repository-secret (bijvoorbeeld `ANTHROPIC_API_KEY`). De workflow pikt hem automatisch op.
+  </Step>
+
+  <Step title="Trigger de agent">
+    Plaats een reactie `/bolt <je verzoek>` op een issue of pull request. De workflow start, Bolt leest de event-payload en post een antwoord met het resultaat.
+  </Step>
+
+  <Step title="Draai lokaal om te debuggen">
+    Speel een live event-payload van een eerdere workflow-run opnieuw af:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Check een GitHub pull request uit in een lokale branch en start Bolt in die branch — klaar om te reviewen, te debuggen of het werk voort te zetten waar de PR-auteur was gebleven.
+
+```bash
+bolt pr 42
+```
+
+Bolt gebruikt de `gh` CLI om de PR op te halen, maakt een branch `pr/<number>` en zet de upstream-tracking-ref op. Voor cross-repository (fork) PR's voegt hij de fork automatisch als remote toe. Als de PR-beschrijving een gedeelde Bolt-sessie-URL bevat (`opncd.ai/s/…`), wordt de sessie geïmporteerd zodat je het gesprek van de auteur kunt voortzetten.
+
+> Vereist dat de [GitHub CLI (`gh`)](https://cli.github.com/) is geïnstalleerd en geauthenticeerd.
+
+---
+
+## `bolt commit`
+
+Genereer een commit-bericht uit je staged (of alle tracked) wijzigingen en commit in één stap.
+
+```bash
+bolt commit
+```
+
+Bolt diff't je wijzigingen, voedt de diff aan de `commit`-agent samen met recente commit-onderwerpen als stijlreferentie, en voert `git commit -m <message>` uit met het resultaat.
+
+### Flags
+
+| Flag | Alias | Beschrijving |
+|------|-------|-------------|
+| `--all` | `-a` | Commit alle tracked wijzigingen, niet alleen staged (equivalent aan `git commit -a`) |
+| `--dry-run` | | Print het gegenereerde bericht zonder te committen |
+| `--model <provider/model>` | `-m` | Overschrijf het model dat wordt gebruikt om het bericht te genereren |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Gebruik `bolt commit --dry-run` om het gegenereerde bericht te bekijken voordat het wordt gecommit. Als je het wilt bewerken, kopieer de output en voer `git commit -m "…"` uit met je aangepaste tekst.
+</Tip>
+
+---
+
+## `bolt review`
+
+Draai de `code-review`-agent op een diff en sluit af met een machine-leesbaar verdict. De laatste regel van de review is altijd `Verdict: PASS` of `Verdict: FAIL`, waardoor `bolt review` drop-in-klaar is voor CI-pipelines.
+
+```bash
+bolt review
+```
+
+Standaard diff't `bolt review` `HEAD` tegen de werkboom. Gebruik de onderstaande flags om de diff te scopen.
+
+### Flags
+
+| Flag | Alias | Beschrijving |
+|------|-------|-------------|
+| `--staged` | | Review alleen staged wijzigingen |
+| `--branch <name>` | | Review wijzigingen sinds de merge base met de genoemde branch (standaard de default-branch van de repository) |
+| `--model <provider/model>` | `-m` | Model om te gebruiken voor de review |
+
+### Exit-codes
+
+| Code | Betekenis |
+|------|---------|
+| `0` | `Verdict: PASS` — geen kritieke of grote problemen |
+| `1` | `Verdict: FAIL` — één of meer kritieke of grote problemen gevonden |
+| `2` | Verdict kon niet uit het antwoord worden bepaald |
+
+### Gebruik in een GitHub Actions-workflow
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Een niet-nul exit-code laat de check falen en blokkeert de merge totdat de problemen zijn opgelost.
+
+<Tip>
+  Voer `bolt review --staged` uit voordat je commit om problemen op te vangen terwijl ze nog makkelijk te wijzigen zijn — voordat ze ooit een pull request bereiken.
+</Tip>

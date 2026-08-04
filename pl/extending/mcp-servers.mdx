@@ -1,0 +1,215 @@
+---
+title: "Dodawaj narzędzia do Bolta za pomocą serwerów MCP"
+sidebarTitle: "Serwery MCP"
+description: "Podłączaj zewnętrzne narzędzia i zasoby do Bolta przy użyciu Model Context Protocol. Dodawaj, uwierzytelniaj i debuguj serwery MCP z CLI."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) to otwarty standard, który pozwala agentom AI komunikować się z zewnętrznymi narzędziami i źródłami danych poprzez wspólny interfejs. Bolt używa MCP do rozszerzania możliwości agentów — podłączony serwer MCP może udostępniać cokolwiek, od narzędzia do zapytań do bazy danych po pełne API wyszukiwania w sieci. Bolt zarządza całym cyklem życia: dodawaniem serwerów, uruchamianiem przepływów OAuth, odświeżaniem tokenów i sondowaniem łączności.
+
+## Typy serwerów
+
+Bolt wspiera dwa rodzaje serwerów MCP.
+
+| Typ | Transport | Opis |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Serwer działający pod adresem URL, do którego możesz się dostać przez sieć |
+| `local` | stdio | Lokalna komenda, którą Bolt uruchamia jako proces potomny |
+
+Zdalne serwery wspierają uwierzytelnianie OAuth od razu po instalacji. Bolt obsługuje pobieranie, przechowywanie i automatyczne odświeżanie tokenów — nigdy nie zarządzasz tokenami ręcznie.
+
+---
+
+## Komendy
+
+### `bolt mcp add`
+
+Dodaj nowy serwer MCP interaktywnie lub w jednym strzale.
+
+**Interaktywnie** — uruchom `bolt mcp add` bez argumentów, aby przejść przez kreator kierowany zapytaniami, który pyta o nazwę, zasięg (projekt lub globalny), typ, URL lub komendę oraz o to, czy serwer używa OAuth.
+
+**Nieinteraktywnie** — podaj nazwę plus `--url` dla serwera zdalnego lub komendę po `--` dla lokalnego:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**Flagi dla `bolt mcp add`**
+
+| Flaga | Opis |
+|------|-------------|
+| `--url <url>` | URL zdalnego serwera MCP |
+| `--header <KEY=VALUE>` | Nagłówek HTTP do wysyłania do zdalnego serwera (powtarzalne) |
+| `--env <KEY=VALUE>` | Zmienna środowiskowa dla lokalnego serwera (powtarzalne) |
+
+---
+
+### `bolt mcp list`
+
+Listuj wszystkie skonfigurowane serwery MCP wraz z ich statusem połączenia i uwierzytelnienia.
+
+```bash
+bolt mcp list
+```
+
+Każdy wpis pokazuje ikonę statusu:
+
+| Ikona | Znaczenie |
+|------|---------|
+| `✓` | Połączony (i uwierzytelniony, jeśli używany jest OAuth) |
+| `⚠` | Wymaga uwierzytelnienia lub dane uwierzytelniające wygasły |
+| `✗` | Nie udało się połączyć lub wymagana rejestracja klienta |
+| `○` | Jeszcze nie zainicjalizowany lub wyłączony |
+
+---
+
+### `bolt mcp auth <name>`
+
+Uwierzytelnij się z zdalnym serwerem MCP obsługującym OAuth. Jeśli pominiesz nazwę, Bolt pokaże interaktywny selektor listujący wszystkie serwery obsługujące OAuth wraz z ich bieżącym statusem uwierzytelniania (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+Bolt otwiera Twoją przeglądarkę pod adresem autoryzacji dostawcy i czeka na callback — pełny handshake OAuth, w tym dynamiczna rejestracja klienta, gdy jest wymagana, dzieje się automatycznie.
+
+<Note>
+  Bolt obsługuje pełny przepływ OAuth, w tym przechowywanie tokenów i automatyczne odświeżanie tokenów. Nie musisz kopiować tokenów ani ręcznie zarządzać wygaśnięciem. Jeśli serwer wymaga wcześniej zarejestrowanego identyfikatora klienta, dodaj `oauth.clientId` (i opcjonalnie `oauth.clientSecret`) do wpisu konfiguracyjnego serwera w `.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Usuń przechowywane dane uwierzytelniające OAuth dla serwera. Jeśli pominiesz nazwę, Bolt zaproponuje Ci wybór z listy serwerów, które mają przechowywane tokeny.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Sonduj łączność zdalnego serwera i zbadaj jego stan OAuth bez uruchamiania pełnej sesji. To pierwsze narzędzie, po które warto sięgnąć, gdy serwer pokazuje `✗ failed` lub `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` raportuje:
+- URL serwera i bieżący status uwierzytelniania
+- Szczegóły tokena dostępu (zamaskowane) i timestamp wygaśnięcia
+- Czy dostępny jest token odświeżania
+- Surowy kod odpowiedzi HTTP z serwera
+- Zawartość nagłówka `WWW-Authenticate`
+- Wynik sondowania odkrywania OAuth (bez ukończenia przepływu)
+
+---
+
+## Ręczna konfiguracja
+
+Możesz dodawać lub edytować serwery MCP bezpośrednio w `.bolt/bolt.jsonc` bez używania komend CLI. Bolt podnosi zmiany przy następnym starcie sesji.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Lokalny serwer stdio wygląda tak:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Aby dostarczyć niestandardowe nagłówki HTTP lub wyłączyć OAuth na zdalnym serwerze:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Dodaj i uwierzytelnij zdalny serwer MCP
+
+<Steps>
+  <Step title="Dodaj serwer">
+    Uruchom `bolt mcp add` i podążaj za pytaniami lub użyj formy nieinteraktywnej:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt zapisuje wpis do `.bolt/bolt.jsonc` (zasięg projektu) lub Twojej globalnej konfiguracji.
+  </Step>
+
+  <Step title="Sprawdź status połączenia">
+    ```bash
+    bolt mcp list
+    ```
+
+    Jeśli serwer wymaga uwierzytelnienia, zobaczysz obok jego nazwy `⚠ needs authentication`.
+  </Step>
+
+  <Step title="Uwierzytelnij się przez OAuth">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt otwiera Twoją przeglądarkę. Po zatwierdzeniu dostępu terminal potwierdza pomyślne uwierzytelnienie, a status serwera zmienia się na `✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="Zweryfikuj dostępność narzędzi">
+    Uruchom sesję Bolta. Narzędzia wystawione przez serwer są teraz dostępne dla wszystkich agentów. Możesz je w każdej chwili zbadać:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI Keybindlari"
+sidebarTitle: "Keybindlar"
+description: "Muhim Bolt TUI yorliqlari: Tab bilan agentlarni almashtirish, mini rejim, push-to-talk ovoz va klaviatura bilan boshqarishingiz mumkin bo'lgan hamma narsa."
+---
+
+Bolt TUI klaviatura orqali oxirigacha boshqarilishi uchun ishlab chiqilgan. Bu sahifa siz eng ko'p yetib boradigan yorliqlarni ro'yxatga oladi. To'liq ro'yxat uchun `bolt` ni ishga tushiring va ilova ichidagi yordamni oching.
+
+## Muhimlari
+
+| Tugmalar | Harakat |
+| --- | --- |
+| `Tab` | Keyingi agentga aylaning (`code`, `plan`, `ask`, ...). Joriy agent status barida ko'rsatiladi. |
+| `Shift+Tab` | Oldingi agentga aylaning. |
+| `Enter` | Joriy xabarni yuboring. |
+| `Esc` | Ishlab turgan navbatni bekor qiling. |
+| `Ctrl+C` | Joriy asbob chaqiruvini to'xtating. |
+| `Ctrl+D` | Sessiyadan ajrang (u serverda ishlab qoladi). |
+
+## Rejimlar
+
+### `--mini` rejimi
+
+Split-panel'lar uchun ajoyib bo'lgan kamroq terminal joyni egallaydigan kompakt split-footer tartibi bilan Bolt'ni boshlang:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk ovoz
+
+Speech-to-text yordamida promptni diktovka qilish uchun sozlangan push-to-talk tugmasini bosib turing, so'ngra yuborish uchun qo'yib yuboring. Tugmani va STT provayderini `.bolt/bolt.jsonc` da sozlang.
+
+## Aloqador
+
+- [Slash commands](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` va do'stlar.
+- [Sessions](/concepts/sessions) — klaviaturadan ajrating, davom ettiring, fork qiling va bo'lishing.

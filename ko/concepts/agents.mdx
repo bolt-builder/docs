@@ -1,0 +1,135 @@
+---
+title: "Agents — Bolt의 열 가지 내장 AI 페르소나와 커스텀 에이전트"
+sidebarTitle: "Agents"
+description: "Bolt는 각각 고유한 역할, 도구 세트, 접근 수준을 가진 10개의 내장 에이전트를 제공합니다. 에이전트 전환, 구성, 자신만의 에이전트 만드는 방법을 배워보세요."
+---
+
+Bolt는 모든 AI 페르소나를 이름이 지정된 **에이전트**로 취급합니다. 시스템 프롬프트와 정밀하게 범위가 지정된 도구 권한 집합이 짝을 이루는 형태입니다. 모든 작업에 하나의 범용 모델을 실행하는 대신, 필요한 것에 맞는 접근 권한과 초점을 가진 에이전트를 선택합니다 — 보안 감사, 문서 작성, 전체 프레임워크 마이그레이션 등 무엇이든 가능합니다.
+
+## 접근 수준
+
+모든 내장 에이전트는 호출할 수 있는 도구를 결정하는 세 가지 접근 계층 중 하나에 할당됩니다:
+
+| 수준 | 부여되는 권한 | 일반적인 용도 |
+|-------|---------------------|-------------|
+| **Full** | 파일 읽기, 파일 쓰기/편집, 셸 명령 실행 | 활발한 코딩, 디버깅, 리팩터링, 마이그레이션 |
+| **Edit** | 파일 읽기, 파일 쓰기/편집 — 셸 없음 | 문서 작성, 주석 업데이트, 안전한 산문 편집 |
+| **Read** | 파일 읽기만 — 쓰기 없음, 셸 없음 | 계획, 조사, 코드 리뷰, 감사 |
+
+## 내장 에이전트
+
+Bolt는 10개의 전문화된 에이전트를 기본 제공합니다. TUI에서 <kbd>Tab</kbd>을 눌러 전환하세요.
+
+| Agent | Access | Description |
+|-------|--------|-------------|
+| `code` | Full | 기본값: 코드를 읽고 쓰고 실행합니다 |
+| `plan` | Read | 코드베이스를 탐색하고 코드를 변경하지 않은 채 계획을 생성합니다 |
+| `ask` | Read | 질문과 조사 — 파일 편집 없음 |
+| `code-review` | Read | 정확성, 스타일, 보안 관점에서 변경을 검토합니다 |
+| `debug` | Full | 실패하는 테스트, 크래시, 논리 오류를 디버깅합니다 |
+| `refactor` | Full | 각 단계에서 테스트 검증을 동반한 안전한 리팩터링 |
+| `docs` | Edit | 문서와 주석을 작성하고 업데이트합니다 |
+| `security` | Read | 보안 감사: 취약점, 시크릿, 위험한 패턴 |
+| `migrate` | Full | 프레임워크 업그레이드와 의존성 마이그레이션 |
+| `perf` | Full | 성능 분석과 최적화 |
+
+## 서브에이전트
+
+10개의 기본 에이전트 외에도, Bolt는 기본 에이전트가 세션 중 작업을 위임할 수 있는 두 개의 내장 **서브에이전트**를 노출합니다. 서브에이전트는 수동으로 선택하지 않으며 — 기본 에이전트가 스폰을 결정할 때 자동으로 디스패치됩니다.
+
+| Subagent | Role |
+|----------|------|
+| `@general` | 광범위한 기능이 필요한 복잡한 다단계 작업 위임 |
+| `@explore` | 빠르고 읽기 전용인 코드베이스 조사 — 부작용 없이 파일을 순회합니다 |
+
+<Tip>
+  익숙하지 않은 코드베이스를 빠르게 이해해야 할 때는 `ask`나 `plan` 에이전트로 시작하세요. 내부적으로 이들은 답변을 생성하기 전에 프로젝트를 고속으로 인덱싱하기 위해 `@explore` 서브에이전트를 디스패치할 수 있습니다 — 단 하나의 파일도 건드리지 않고요.
+</Tip>
+
+## 에이전트 전환
+
+**TUI에서** — 세션 도중 언제든지 <kbd>Tab</kbd>을 눌러 사용 가능한 에이전트 목록을 순환할 수 있습니다. 활성 에이전트는 세션 푸터에 표시됩니다.
+
+**비대화형** — 해당 실행 기간 동안 특정 에이전트를 고정하려면 `bolt run`에 `--agent <name>`을 전달하세요:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## 에이전트 목록
+
+내장 및 커스텀 에이전트 모두를 모드 및 권한 구성과 함께 확인하려면:
+
+```bash
+bolt agent list
+```
+
+## 커스텀 에이전트
+
+두 가지 방법으로 자신만의 에이전트를 만들 수 있습니다.
+
+### `bolt agent create`로 생성
+
+대화형 마법사가 LLM을 사용해 에이전트 파일을 생성하고 디스크에 씁니다:
+
+```bash
+bolt agent create
+```
+
+모든 플래그는 선택 사항입니다. 비대화형으로 실행하려면 다음과 같이 제공하세요:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | Description |
+|------|-------------|
+| `--description` | 에이전트가 수행할 작업 (생성용 LLM 프롬프트로 사용됨) |
+| `--path` | 생성된 에이전트 파일을 쓸 디렉터리 |
+| `--mode` | `all` (기본값), `primary`, 또는 `subagent` |
+| `--permissions` | 허용할 권한의 쉼표로 구분된 목록. 생략 시 모두 허용. |
+| `--model` / `-m` | `provider/model` 형식으로 사용할 모델 |
+
+### 마크다운 파일을 수동으로 작성
+
+에이전트는 단지 YAML 프론트매터가 있는 마크다운 파일입니다. 프로젝트 내 `.bolt/agents/` 또는 전역 에이전트 디렉터리에 두세요:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+파일 이름(`.md` 확장자 제외)이 에이전트의 식별자가 됩니다.
+
+### 사용 가능한 권한
+
+권한은 커스텀 에이전트를 만들 때 제어하는 세밀한 도구 게이트입니다:
+
+| Permission | Controls |
+|------------|----------|
+| `bash` | 셸 명령 실행 |
+| `read` | 파일 읽기 |
+| `edit` | 파일 쓰기 및 편집 (`write`와 `apply_patch`도 게이트됨) |
+| `glob` | 파일 glob/디렉터리 목록 |
+| `grep` | ripgrep을 통한 파일 검색 |
+| `webfetch` | 웹에서 HTTP 페치 |
+| `task` | 서브에이전트 작업 스폰 |
+| `todowrite` | 할 일 항목 생성 및 업데이트 |
+| `websearch` | 웹 검색 쿼리 |
+| `lsp` | Language Server Protocol 작업 |
+| `skill` | 프로젝트 스킬 접근 |

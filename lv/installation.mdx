@@ -1,0 +1,121 @@
+---
+title: "Instalējiet Bolt uz macOS, Linux vai Windows"
+sidebarTitle: "Instalēšana"
+description: "Instalējiet Bolt CLI, izmantojot curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey vai Scoop. Aptver jaunināšanu, atinstalēšanu un darbvirsmas lietotni."
+---
+
+Bolt var instalēt uz macOS, Linux un Windows, izmantojot metodi, kas atbilst jūsu darbplūsmai — vienrindas curl skripts, jebkurš lielākais Node.js pakotņu pārvaldnieks vai sistēmas pakotņu pārvaldnieks, piemēram, Homebrew, Chocolatey vai Scoop.
+
+## Ātrā instalēšana (macOS / Linux)
+
+Ātrākais veids, kā sākt, ir oficiālais instalēšanas skripts. Tas automātiski nosaka jūsu OS un arhitektūru, lejupielādē pareizo bināro failu uz `~/.bolt/bin` un pievieno to jūsu `$PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Instalētājs arī iestata izvēles balss ievades atkarības (sox un whisper-cpp bezsaistes transkripcijai). Lai to izlaistu, nododiet `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Lai fiksētu konkrētu versiju:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Pakotņu pārvaldnieki
+
+Instalējiet Bolt globāli ar sev vēlamo pakotņu pārvaldnieku:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Pārbaudiet instalēšanu
+
+<Steps>
+  <Step title="Pārbaudiet instalēto versiju">
+    Pēc instalēšanas apstipriniet, ka `bolt` ir pieejams jūsu `$PATH`:
+
+    ```bash
+    bolt --version
+    ```
+
+    Ja komanda nav atrasta, atveriet jaunu termināļa sesiju (vai atkārtoti iegūstiet čaulas konfigurāciju), lai stājas spēkā atjauninātais `$PATH`.
+  </Step>
+</Steps>
+
+## Jaunināšana
+
+Palaidiet `bolt upgrade`, lai atjauninātu uz jaunāko izlaidumu:
+
+```bash
+bolt upgrade
+```
+
+Bolt automātiski nosaka jūsu sākotnējo instalēšanas metodi. Jūs varat to ignorēt ar karogu `--method`:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Atbalstītās metodes ir: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Jūs varat arī jaunināt uz konkrētu versiju, nododot versiju kā pozicionālo argumentu:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Atinstalēšana
+
+Lai noņemtu Bolt no jūsu sistēmas:
+
+```bash
+bolt uninstall
+```
+
+## Vides mainīgie
+
+| Mainīgais               | Apraksts                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Žurnāla detalizācija: `DEBUG`, `INFO`, `WARN` vai `ERROR`    |
+| `BOLT_PRINT_LOGS`      | Drukāt žurnālus uz stderr                                  |
+| `BOLT_PURE`            | Palaidiet, neielādējot ārējos spraudņus                  |
+| `BOLT_SERVER_PASSWORD` | Basic auth parole bezgalvas API serverim       |
+| `BOLT_SERVER_USERNAME` | Basic auth lietotājvārds bezgalvas API serverim       |
+
+<Tip>
+  Iestatiet `BOLT_PURE=1`, kad vēlaties tīru palaišanu bez trešo pušu spraudņiem — noderīgi atkļūdošanai vai kontrolētām CI vidēm.
+</Tip>
+
+## Darbvirsmas lietotne
+
+<Note>
+  Bolt tiek piegādāts arī kā vietējā darbvirsmas lietotne ar daudzloga sesiju pārvaldību, integrētu termināli un failu koku, komandu paleti, 28 UI valodām un automātiskajiem atjauninājumiem. Lejupielādējiet jaunāko izlaidumu no [izlaidumu lapas](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  Uz macOS to varat instalēt vienā rindā bez Gatekeeper apiešanas:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

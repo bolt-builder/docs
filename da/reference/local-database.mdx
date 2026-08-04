@@ -1,0 +1,38 @@
+---
+title: "Lokal database (bolt db)"
+sidebarTitle: "Lokal database"
+description: "Bolt gemmer hver session, besked og værktøjskald i en lokal SQLite-database. Inspicér den, sikkerhedskopiér den eller forespørg den direkte med bolt db."
+---
+
+Bolt gemmer hver session, besked og værktøjskald i en lokal SQLite-database. Den kan inspiceres fuldt ud og er helt din — intet uploades, medmindre du eksplicit deler en session.
+
+## Almindelige operationer
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Sikkerhedskopiering af databasen
+
+Fordi det er en enkelt SQLite-fil, er backup blot en kopi:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Til langtidslagring eller transport foretræk `bolt export` / `bolt import` — de producerer en portabel JSON-repræsentation, der overlever skemamigrations.
+
+## Skema kort
+
+- `sessions` — én række pr. session, med titel, projekt, tidsstempler og status.
+- `messages` — den fulde tur-log pr. session.
+- `tool_calls` — hvert kald med inputs, outputs og varighed.
+
+De nøjagtige kolonner udvikler sig; brug `PRAGMA table_info(<table>)` for at se det live-skema.
+
+## Relateret
+
+- [Sessioner](/concepts/sessions) — hvad databasen gemmer.
+- [Statistik og omkostninger](/reference/stats-and-cost) — aggregerede visninger over de samme data.

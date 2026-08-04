@@ -1,0 +1,185 @@
+---
+title: "透過 HTTP 附加到遠端 Bolt 工作階段"
+sidebarTitle: "遠端工作階段"
+description: "啟動無介面 Bolt 伺服器、從任何機器附加 TUI,並使用 mDNS 在本機網路上發現伺服器 — 可選 basic auth。"
+url: "server/remote-sessions"
+---
+
+Bolt 內建 HTTP 伺服器,可完全將引擎與介面解耦。你可以在功能強大的遠端機器(雲端 VM、開發容器、通宵開著的桌機)上啟動無介面伺服器,並從你的筆電、第二個終端機甚至瀏覽器附加 TUI — 全都指向同一個即時工作階段。這讓 Bolt 適合團隊、遠端工作負載,以及你想在不 SSH 到主機的情況下檢查的長時間執行任務。
+
+---
+
+## `bolt serve`
+
+啟動一個無介面的 Bolt 伺服器,透過 HTTP 公開完整的 API 並接受 TUI 連線。
+
+```bash
+bolt serve
+```
+
+### 旗標
+
+| 旗標 | 預設 | 描述 |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | 要綁定的 hostname 或 IP 位址 |
+| `--port <n>` | `0`(自動) | 要監聽的埠;Bolt 會在啟動時列印指派的埠 |
+| `--mdns` | `false` | 透過 mDNS 廣播伺服器以進行零設定的本機網路發現;同時將 hostname 設為 `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | 自訂 mDNS 服務網域 |
+| `--cors <origin>` | `[]` | CORS 允許的額外來源(可重複) |
+
+<Warning>
+  若未設定 `OPENCODE_SERVER_PASSWORD`,Bolt 會列印警告,伺服器對任何能連上的人完全開放。在綁定到 `127.0.0.1` 以外的任何介面之前,務必設定密碼。
+</Warning>
+
+### 驗證
+
+使用環境變數以 HTTP Basic Auth 保護伺服器:
+
+| 變數 | 描述 |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Basic auth 密碼 |
+| `OPENCODE_SERVER_USERNAME` | Basic auth 使用者名稱(省略時預設為 `opencode`) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+將完整的 TUI 附加到正在執行的 Bolt 伺服器。此指令可對任何透過 HTTP 可達的伺服器運作 — 本機或遠端。
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### 旗標
+
+| 旗標 | 別名 | 描述 |
+|------|-------|-------------|
+| `--dir <path>` | | 要在遠端伺服器上執行的目錄 |
+| `--continue` | `-c` | 繼續伺服器上最後的工作階段 |
+| `--session <id>` | `-s` | 要繼續的工作階段 ID |
+| `--fork` | | 繼續時分叉工作階段(與 `--continue` 或 `--session` 一起使用) |
+| `--password <pw>` | `-p` | Basic auth 密碼(覆寫 `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | Basic auth 使用者名稱(覆寫 `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | 使用精簡的互動 UI 而不是完整的 TUI |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+啟動 Bolt 伺服器並立即在你的預設瀏覽器中開啟 Web UI。這是在本機執行以瀏覽器為介面最快的方式。
+
+```bash
+bolt web
+```
+
+`bolt web` 接受與 `bolt serve` 相同的網路旗標。
+
+---
+
+## mDNS 發現
+
+將 `--mdns` 傳給 `bolt serve` 可透過 mDNS 在你的本機網路廣播伺服器位址。同一網路中的任何機器都可使用 mDNS hostname 附加,而不需要知道 IP 位址或埠。
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+預設的 mDNS 網域是 `opencode.local`。用 `--mdns-domain` 覆寫它:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## 啟動伺服器並遠端附加
+
+<Steps>
+  <Step title="在伺服器機器上設定密碼">
+    在啟動伺服器前匯出 `OPENCODE_SERVER_PASSWORD`。若未設定,Bolt 會列印警告,API 會不需驗證。
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="啟動無介面伺服器">
+    綁定到所有介面讓你的筆電可以連到,並可選擇挑一個固定埠:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    保持此終端機開啟(或在 `tmux` / `screen` / systemd unit 中執行)。
+  </Step>
+
+  <Step title="從你的筆電附加">
+    在任何可連到伺服器的機器上執行:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    完整的 TUI 會開啟並連接到遠端引擎。工作階段、歷史與工具狀態全部存在伺服器上。
+  </Step>
+
+  <Step title="稍後繼續工作階段">
+    透過退出 TUI(`q` 或 `Ctrl-C`)卸離。工作階段會在伺服器上繼續執行。若要重新加入:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    或分叉它以在不影響原本的情況下分支:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## 遠端工作流程範例
+
+常見的模式是在高核心數的開發機器上留一個 Bolt 伺服器執行,並從輕薄的筆電連線。
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+所有工作階段資料都儲存在伺服器的 SQLite 資料庫中。筆電只渲染 TUI — 它可以隨時斷線並重新連線,不會遺失工作。

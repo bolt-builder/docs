@@ -1,0 +1,36 @@
+---
+title: "Bolt 中的自定义工具"
+sidebarTitle: "自定义工具"
+description: "将可执行文件放入 .opencode/tool/，即可为 Bolt 添加项目特定工具。每个文件都会成为代理可调用的工具。"
+---
+
+自定义工具让你可以把任何能写成脚本的东西（shell 脚本、Node/Bun/Python 程序、小型二进制）作为代理按名字调用的工具暴露出来。这是让 Bolt 访问项目自有构建、部署或数据工作流的最简方式。
+
+## 存放位置
+
+将文件放入以下位置之一：
+
+- `.opencode/tool/` — 项目范围，随仓库提交。
+- `.opencode/tools/` — 上述位置的别名，也被接受。
+
+每个文件会成为一个工具，名字取自文件名（去掉扩展名）。Bolt 下次启动时会自动加载这些工具。
+
+## 工具的结构
+
+自定义工具在头部声明它的名字、描述和输入 schema，然后实现具体行为。具体形式取决于你选择的运行时（shell 脚本、TypeScript 等），但每个工具都必须：
+
+1. 声明其输入的 JSON Schema，让模型知道如何调用它。
+2. 返回一个值（或错误），Bolt 可以在 TUI 中渲染并回传给模型。
+
+加载后，该工具会出现在代理的工具列表中，与 `bash` 和 `grep` 等内置工具并列，并受同一 [权限](/concepts/permissions) 系统管控。
+
+## 何时选择自定义工具 vs. MCP 服务器
+
+- **自定义工具** — 小型、项目特定、无需跨项目复用。编写快速。
+- **MCP 服务器** — 跨项目共享，或包装带鉴权的真实外部服务。参见 [MCP Servers](/extending/mcp-servers)。
+- **插件工具** — 与其他扩展点一起以 npm 包的形式发布。参见 [Plugins](/extending/plugins)。
+
+## 相关内容
+
+- [Tools](/concepts/tools) — 内置工具参考。
+- [Plugins](/extending/plugins) — 工具及更多内容的扩展面。

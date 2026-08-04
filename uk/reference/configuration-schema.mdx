@@ -1,0 +1,192 @@
+---
+title: "Довідник файлу конфігурації Bolt"
+sidebarTitle: "Схема конфігурації"
+description: "Повний довідник схеми файлу конфігурації Bolt — розташування, усі поля верхнього рівня, типи MCP-серверів, перевизначення провайдерів і повний приклад."
+---
+
+Bolt використовує файл JSON з коментарями (`.jsonc`) для проєктної та глобальної конфігурації. Схема версіонована й опублікована за адресою `https://opencode.ai/config.json`, яку редактори можуть використовувати для автозаповнення та валідації.
+
+## Розташування файлів конфігурації
+
+Bolt об'єднує конфігурацію з двох розташувань. Проєктні налаштування перемагають глобальні, коли той самий ключ з'являється в обох.
+
+| Область | Шлях |
+|---|---|
+| **Проєкт** | `.bolt/bolt.jsonc` (або `.bolt/bolt.json`) у корені проєкту |
+| **Глобально** | `bolt.jsonc` (або `bolt.json`) у каталозі конфігурації ОС |
+
+Каталог конфігурації ОС:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt також читає застарілі файли `opencode.jsonc` / `opencode.json` у тих самих розташуваннях. Нові проєкти мають використовувати конвенцію іменування `bolt.jsonc`, яка має пріоритет над застарілими іменами файлів.
+</Note>
+
+Bolt створює мінімальний файл глобальної конфігурації з рядком `$schema` під час першого запуску та створює `.bolt/bolt.jsonc` у корені проєкту, коли ви вперше відкриваєте TUI в цьому каталозі.
+
+## Поля схеми
+
+<ParamField body="$schema" type="string">
+  URL, що вказує на JSON-схему для цього файлу конфігурації. Вмикає автозаповнення та вбудовану валідацію в редакторах, що підтримують JSON Schema (VS Code, Zed, JetBrains IDE тощо).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Модель за замовчуванням для всіх сесій, виражена як `provider/model`. Це можна перевизначити для кожної сесії через `bolt run --model` або у селекторі моделей TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Запустіть `bolt models`, щоб побачити всі доступні рядки `provider/model` для ваших налаштованих провайдерів.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Перевизначення облікових даних і налаштувань, специфічних для провайдера. Кожен ключ — це ID провайдера (наприклад, `anthropic`, `openai`, `google`). Найпоширеніше використання — встановлення API-ключа через посилання на змінну середовища, щоб ключ ніколи не зберігався у відкритому вигляді.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Значення, що починаються з `${` і закінчуються `}`, розглядаються як посилання на змінні середовища й розширюються під час виконання.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Конфігурації MCP-серверів, ключі яких ви обираєте самі. Bolt підтримує два типи серверів:
+
+  **Віддалений сервер** — під'єднується через HTTP/SSE з опціональним OAuth:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Поле | Тип | Опис |
+  |---|---|---|
+  | `type` | `"remote"` | Ідентифікує це як віддалений HTTP-сервер |
+  | `url` | string | Повний URL кінцевої точки MCP |
+  | `oauth` | object \| `false` | Об'єкт конфігурації OAuth (з необов'язковими `clientId`, `clientSecret`, `scope`, `redirectUri`). Встановіть у `false`, щоб вимкнути автоматичне виявлення OAuth. |
+  | `headers` | object | HTTP-заголовки для надсилання з кожним запитом (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Увімкнути чи вимкнути цей сервер під час запуску |
+  | `timeout` | number | Таймаут запиту в мілісекундах (за замовчуванням: 5000) |
+
+  **Локальний сервер** — породжує підпроцес через stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Поле | Тип | Опис |
+  |---|---|---|
+  | `type` | `"local"` | Ідентифікує це як локальний stdio-сервер |
+  | `command` | string[] | Команда й усі аргументи для запуску |
+  | `cwd` | string | Робочий каталог для процесу сервера (відносні шляхи розв'язуються від каталогу робочого простору) |
+  | `environment` | object | Додаткові змінні середовища для передачі підпроцесу |
+  | `enabled` | boolean | Увімкнути чи вимкнути цей сервер під час запуску |
+  | `timeout` | number | Таймаут запиту в мілісекундах (за замовчуванням: 5000) |
+
+  Використовуйте `bolt mcp add` для інтерактивного майстра або `bolt mcp list`, щоб перевірити поточний статус серверів.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Додаткові системні інструкції, що додаються до кожної сесії в цьому проєкті або глобально. Інструкції з кількох файлів конфігурації об'єднуються (дедуплікуються). Використовуйте це для впровадження специфічних для проєкту угод, правил стилю або обмежень, яких має дотримуватися кожен агент.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Специфікації плагінів для завантаження. Кожен запис — це ім'я npm-пакета, локальний шлях до файлу або URL. Плагіни можуть розширювати TUI, додавати slash-команди або реєструвати додаткових провайдерів. Використовуйте `bolt plugin install <spec>`, щоб встановити плагін і додати його до цього масиву автоматично.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Повний приклад
+
+Наступний `.bolt/bolt.jsonc` показує реалістичну конфігурацію проєкту:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Запустіть `bolt debug config`, щоб побачити повністю розв'язану конфігурацію після об'єднання всіх файлів. Це найшвидший спосіб підтвердити, що ваші проєктна та глобальна конфігурації комбінуються правильно.
+</Tip>

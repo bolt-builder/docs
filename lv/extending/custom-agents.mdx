@@ -1,0 +1,68 @@
+---
+title: "Pielāgoti aģenti Bolt"
+sidebarTitle: "Pielāgoti aģenti"
+description: "Definējiet savus Bolt aģentus kā Markdown failus — izvēlieties modeli, iestatiet piekļuves līmeni, ierobežojiet rīkus un pievienojiet domēnam specifiskas instrukcijas."
+---
+
+Papildus desmit iebūvētajiem aģentiem, jūs varat definēt savus. Pielāgoti aģenti ir Markdown faili ar priekšstrukturas bloku, kas apraksta aģenta modeli, piekļuves līmeni un pieejamos rīkus, kā arī pamattekstu, kas darbojas kā tā sistēmas uzvedne.
+
+## Aģenta izveide
+
+Ātrākais ceļš ir iebūvētais ģenerators, kas uzdod dažus jautājumus un ieraksta failu jūsu vietā:
+
+```bash
+bolt agent create
+```
+
+Aģenti atrodas mapē `.opencode/agent/` projektā (vai jūsu globālajā konfigurācijas direktorijā personīgajiem aģentiem). Katrs aģents ir viens `.md` fails, kura faila nosaukums kļūst par aģenta vārdu.
+
+## Aģenta faila anatomija
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Bieži sastopamie priekšstrukturas lauki:
+
+| Lauks | Mērķis |
+| --- | --- |
+| `name` | Aģenta vārds, ko izmanto ar `--agent`. |
+| `description` | Viens teikums, kas parādīts sarakstos. |
+| `model` | Noklusējuma modelis `provider/model` formātā. |
+| `access` | `full`, `edit` vai `read` (skatiet [Atļaujas](/concepts/permissions)). |
+| `tools` | Izvēles atļauju saraksts, kas ierobežo, kurus [rīkus](/concepts/tools) aģents var izsaukt. |
+
+## Pielāgota aģenta izmantošana
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+TUI nospiediet `Tab`, lai pārvietotos cauri aģentiem; pielāgotie aģenti parādās kopā ar iebūvētajiem.
+
+## Apakšaģenti
+
+Aģenti var deleģēt darbu apakšaģentiem, izmantojot `task` rīku. Bolt piegādā `@general` un `@explore`, un jebkurš pielāgots aģents, kura fails atrodas zem `.opencode/agent/`, var arī tikt izsaukts kā apakšaģents pēc vārda.
+
+## Saistīts
+
+- [Aģenti](/concepts/agents) — iebūvēto aģentu saraksts.
+- [Rīki](/concepts/tools) — ko varat pievienot `tools:`.
+- [Pielāgoti rīki](/extending/custom-tools) — izveidojiet rīku, ko aģents izsauks.

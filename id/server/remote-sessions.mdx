@@ -1,0 +1,185 @@
+---
+title: "Attach ke sesi Bolt remote melalui HTTP"
+sidebarTitle: "Remote Sessions"
+description: "Mulai server Bolt headless, attach TUI dari mesin mana pun, dan temukan server di jaringan lokal kamu dengan mDNS — dengan basic auth opsional."
+url: "server/remote-sessions"
+---
+
+Bolt memiliki server HTTP bawaan yang sepenuhnya memisahkan engine dari antarmuka. Kamu dapat memulai server headless di mesin remote yang kuat (VM cloud, dev container, desktop yang dibiarkan menyala semalaman) dan attach TUI dari laptop, terminal kedua, atau bahkan browser — semuanya mengarah ke sesi live yang sama. Ini membuat Bolt cocok untuk tim, beban kerja remote, dan tugas yang berjalan lama yang ingin kamu periksa tanpa SSH ke sebuah mesin.
+
+---
+
+## `bolt serve`
+
+Mulai server Bolt headless yang mengekspos API penuh melalui HTTP dan menerima koneksi TUI.
+
+```bash
+bolt serve
+```
+
+### Flag
+
+| Flag | Default | Deskripsi |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Hostname atau alamat IP untuk di-bind |
+| `--port <n>` | `0` (otomatis) | Port untuk mendengarkan; Bolt mencetak port yang ditetapkan saat startup |
+| `--mdns` | `false` | Iklankan server via mDNS untuk penemuan zero-config di jaringan lokal; juga mengatur hostname ke `0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | Domain layanan mDNS kustom |
+| `--cors <origin>` | `[]` | Origin tambahan yang diizinkan via CORS (dapat diulang) |
+
+<Warning>
+  Jika `OPENCODE_SERVER_PASSWORD` tidak diatur, Bolt mencetak peringatan dan server sepenuhnya terbuka bagi siapa saja yang dapat menjangkaunya. Selalu atur password sebelum binding ke interface apa pun selain `127.0.0.1`.
+</Warning>
+
+### Autentikasi
+
+Amankan server dengan HTTP Basic Auth menggunakan variabel lingkungan:
+
+| Variabel | Deskripsi |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Password basic auth |
+| `OPENCODE_SERVER_USERNAME` | Username basic auth (default ke `opencode` jika dihilangkan) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Attach TUI penuh ke server Bolt yang sedang berjalan. Ini bekerja terhadap server mana pun yang dapat dijangkau melalui HTTP — lokal atau remote.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Flag
+
+| Flag | Alias | Deskripsi |
+|------|-------|-------------|
+| `--dir <path>` | | Direktori untuk dijalankan di server remote |
+| `--continue` | `-c` | Lanjutkan sesi terakhir di server |
+| `--session <id>` | `-s` | ID sesi yang akan dilanjutkan |
+| `--fork` | | Fork sesi saat melanjutkan (gunakan dengan `--continue` atau `--session`) |
+| `--password <pw>` | `-p` | Password basic auth (override `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | Username basic auth (override `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | Gunakan UI interaktif minimal alih-alih TUI penuh |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Mulai server Bolt dan segera buka UI web di browser default kamu. Ini adalah cara tercepat untuk menjalankan antarmuka berbasis browser secara lokal.
+
+```bash
+bolt web
+```
+
+`bolt web` menerima flag jaringan yang sama dengan `bolt serve`.
+
+---
+
+## Penemuan mDNS
+
+Teruskan `--mdns` ke `bolt serve` untuk menyiarkan alamat server di jaringan lokal kamu menggunakan mDNS. Mesin mana pun di jaringan yang sama kemudian dapat attach menggunakan hostname mDNS tanpa mengetahui alamat IP atau port.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+Domain mDNS default adalah `opencode.local`. Override dengan `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Mulai server dan attach secara remote
+
+<Steps>
+  <Step title="Set a password on the server machine">
+    Export `OPENCODE_SERVER_PASSWORD` sebelum memulai server. Tanpa itu, Bolt mencetak peringatan dan API tidak terautentikasi.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Start the headless server">
+    Bind ke semua interface sehingga laptop kamu dapat menjangkaunya, dan opsional pilih port tetap:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Biarkan terminal ini terbuka (atau jalankan di `tmux` / `screen` / unit systemd).
+  </Step>
+
+  <Step title="Attach from your laptop">
+    Di mesin mana pun yang dapat menjangkau server, jalankan:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    TUI penuh terbuka dan terhubung ke engine remote. Sesi, riwayat, dan status tool semuanya tinggal di server.
+  </Step>
+
+  <Step title="Continue a session later">
+    Detach dengan keluar dari TUI (`q` atau `Ctrl-C`). Sesi terus berjalan di server. Untuk bergabung kembali:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Atau fork untuk mencabangkannya tanpa memengaruhi aslinya:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Contoh alur kerja remote
+
+Pola umum adalah membiarkan server Bolt berjalan di dev machine dengan jumlah core tinggi dan terhubung dari laptop tipis.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Semua data sesi disimpan di database SQLite server. Laptop hanya merender TUI — dapat disconnect dan reconnect kapan saja tanpa kehilangan pekerjaan.

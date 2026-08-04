@@ -1,0 +1,191 @@
+---
+title: "Sessies — duurzame gespreksgeschiedenis in Bolt"
+sidebarTitle: "Sessies"
+description: "Sessies zijn Bolts eenheid van blijvend werk: elke sessie slaat een compleet gesprek op in lokale SQLite zodat je op elk moment kunt loskoppelen, hervatten, forken, delen en exporteren."
+---
+
+Een **sessie** is Bolts primaire werkeenheid. Elke prompt die je verstuurt, elk bestand dat de agent leest of bewerkt, en elke tool-aanroep die het model doet, worden duurzaam vastgelegd in de geschiedenis van die sessie. Omdat sessies in een lokale SQLite-database leven, overleven ze procesherstarts, kunnen ze op elk moment worden opgesomd en bevraagd, en verlaten ze je machine nooit tenzij je ze expliciet deelt of exporteert.
+
+<Note>
+  Alle sessiegegevens worden lokaal opgeslagen in een SQLite-database op je eigen machine. Er wordt niets naar externe servers verzonden tenzij je delen inschakelt. Gebruik `bolt db path` om het exacte databasebestand te vinden.
+</Note>
+
+## Sessielevenscyclus
+
+Een sessie begint op het moment dat je je eerste prompt verstuurt en eindigt pas wanneer je hem verwijdert. Tussen deze twee punten kun je vrij loskoppelen, hervatten, vertakken of doorgeven.
+
+<Steps>
+  <Step title="Een sessie maken of voortzetten">
+    Start de TUI om interactief een nieuwe sessie te beginnen, of geef een prompt mee aan `bolt run` om er niet-interactief een aan te maken:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Loskoppelen en later terugkomen">
+    Sluit de TUI op elk moment — de sessie wordt automatisch bewaard. Hervat je meest recente sessie met `--continue`, of richt je op een specifieke sessie op ID met `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Forken voordat je experimenteert">
+    Gebruik `--fork` om vanuit de huidige sessiegeschiedenis te vertakken voordat je een riskante wijziging probeert. De fork is een onafhankelijke sessie die het origineel niet beïnvloedt:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Delen en samenwerken">
+    Genereer een deel-URL met `--share`. Iedereen met de link kan het sessietranscript in een browser bekijken:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Commando's voor sessiebeheer
+
+### Sessies opsommen
+
+```bash
+bolt session list
+```
+
+Geeft een opgemaakte tabel van alle sessies met hun ID, titel en laatst bijgewerkte tijd. Voeg `--format json` toe voor machine-leesbare output, of `-n <N>` om te beperken tot de N meest recente sessies:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Een sessie verwijderen
+
+```bash
+bolt session delete <sessionID>
+```
+
+Verwijdert de sessie en al zijn berichten permanent uit de lokale database.
+
+## Run-flags voor sessiebesturing
+
+Deze flags zijn beschikbaar op `bolt run`:
+
+| Flag | Alias | Beschrijving |
+|------|-------|-------------|
+| `--continue` | `-c` | Zet de meest recente sessie voort |
+| `--session <id>` | `-s` | Zet een specifieke sessie op ID voort |
+| `--fork` | | Fork de sessie voordat je voortzet (vereist `--continue` of `--session`) |
+| `--share` | | Genereer een deel-URL voor de sessie |
+| `--title <title>` | | Stel de sessietitel in of overschrijf hem |
+
+## Sessies exporteren
+
+Exporteer het volledige transcript van een sessie als JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+De `--sanitize`-flag vervangt bestandspaden, code-inhoud, tool-inputs en -outputs en andere potentieel gevoelige velden door `[redacted:kind:id]` placeholders — handig om transcripts met teamgenoten te delen of bugreports in te dienen.
+
+## Sessies importeren
+
+Importeer een sessie vanuit een lokaal JSON-bestand of direct vanuit een deel-URL:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Geïmporteerde sessies verschijnen in je lokale sessielijst en zijn volledig hervatbaar.
+
+## De sessie-database bevragen
+
+Bolt stelt de onderliggende SQLite-database direct beschikbaar voor power users.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Het output-formaat is standaard tab-separated values; voeg `--format json` toe voor JSON-output.
+
+## Tokengebruik en kostenstatistieken
+
+`bolt stats` aggregeert tokengebruik en kostgegevens over al je sessies:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+De output bevat totaal aantal sessies, berichten, input/output/reasoning/cache tokens, totale kosten, gemiddelde kosten per dag, gemiddelde en mediane tokens per sessie, en een uitsplitsing van toolgebruik. Geef `--models` mee om ook een per-model uitsplitsing van berichten, tokens en kosten te tonen.
+
+## Fork- en share-workflow
+
+Hier is een volledig voorbeeld van het forken van een sessie en het delen van het resultaat:
+
+<Steps>
+  <Step title="Werk starten in een nieuwe sessie">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Fork vóór de riskante volgende stap">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Het ID van de geforkte sessie wordt op de console afgedrukt. De originele sessie blijft onaangeraakt.
+  </Step>
+  <Step title="Deel de fork voor review">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    De deel-URL wordt afgedrukt zodra de sessie idle wordt.
+  </Step>
+  <Step title="Importeer op een andere machine">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

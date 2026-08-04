@@ -1,0 +1,68 @@
+---
+title: "Brugerdefinerede agenter i Bolt"
+sidebarTitle: "Brugerdefinerede agenter"
+description: "Definér dine egne Bolt-agenter som Markdown-filer — vælg en model, sæt adgangsniveau, begræns værktøjer og tilføj domænespecifikke instruktioner."
+---
+
+Ud over de ti indbyggede agenter kan du definere dine egne. Brugerdefinerede agenter er Markdown-filer med en frontmatter-blok, der beskriver agentens model, adgangsniveau og tilgængelige værktøjer, plus en body, der fungerer som dens systemprompt.
+
+## Oprettelse af en agent
+
+Den hurtigste vej er den indbyggede generator, som stiller et par spørgsmål og skriver filen for dig:
+
+```bash
+bolt agent create
+```
+
+Agenter lever under `.opencode/agent/` i projektet (eller din globale konfigurationsmappe til personlige agenter). Hver agent er en enkelt `.md`-fil, hvis filnavn bliver agentens navn.
+
+## Anatomi af en agent-fil
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Almindelige frontmatter-felter:
+
+| Felt | Formål |
+| --- | --- |
+| `name` | Agent-navn brugt med `--agent`. |
+| `description` | Sammendrag i én linje vist i lister. |
+| `model` | Standardmodel i formatet `provider/model`. |
+| `access` | `full`, `edit` eller `read` (se [Tilladelser](/concepts/permissions)). |
+| `tools` | Valgfri allow-list, der begrænser hvilke [værktøjer](/concepts/tools) agenten må kalde. |
+
+## Brug af en brugerdefineret agent
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+I TUI'en kan du trykke `Tab` for at cykle gennem agenter; brugerdefinerede agenter vises ved siden af de indbyggede.
+
+## Underagenter
+
+Agenter kan delegere til underagenter gennem værktøjet `task`. Bolt leveres med `@general` og `@explore`, og enhver brugerdefineret agent, hvis fil ligger under `.opencode/agent/`, kan også kaldes som en underagent efter navn.
+
+## Relateret
+
+- [Agenter](/concepts/agents) — den indbyggede agent-opstilling.
+- [Værktøjer](/concepts/tools) — hvad du kan tilføje til `tools:`.
+- [Brugerdefinerede værktøjer](/extending/custom-tools) — byg det værktøj, agenten vil kalde.

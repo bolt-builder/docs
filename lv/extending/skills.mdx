@@ -1,0 +1,22 @@
+---
+title: "Prasmes: atkārtoti izmantojami aģentu ceļveži"
+sidebarTitle: "Prasmes"
+description: "Prasmes ir nosaukti, atkārtoti izmantojami ceļveži, ko Bolt aģents izsauc, izmantojot skill rīku — noderīgi standarta darbplūsmām, piemēram, izlaidumu piegādei vai lint komplektu palaišanai."
+---
+
+Prasmes ir nosaukti, atkārtoti izmantojami ceļveži, kas dzīvo blakus jūsu projektam un tiek izsaukti, izmantojot `skill` rīku. Kur pielāgots rīks ir viena izpildāma darbība, prasme ir skriptēta darbplūsma, kurai aģents var sekot soli pa solim: savākt šos failus, palaist šīs komandas, izlemt, ko darīt tālāk, pamatojoties uz izvadi.
+
+Izmantojiet prasmes, kad:
+
+- Jums ir darbplūsma, ko atkārtoti skaidrojat uzvednēs ("vispirms palaidiet linter, tad …").
+- Jūs vēlaties, lai aģents seko konkrētam lēmumu kokam.
+- Jūs vēlaties, lai tā pati darbplūsma būtu pieejama katrai sesijai un katram aģentam projektā.
+
+## Kur tās atrodas
+
+Prasmes ir faili zem `.opencode/skill/` (vai `.opencode/skills/`) projekta saknē. Katrs fails apraksta trigera vārdu, kad aģentam to vajadzētu izmantot, un iesaistītos soļus. `skill` [rīks](/concepts/tools) tās atklāj modelim.
+
+## Saistīts
+
+- [Pielāgoti rīki](/extending/custom-tools) — zemāka līmeņa, vienas darbības paplašinājums.
+- [Pielāgoti aģenti](/extending/custom-agents) — iekļaujiet instrukcijas aģentā.

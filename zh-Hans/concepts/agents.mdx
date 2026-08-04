@@ -1,0 +1,135 @@
+---
+title: "代理——Bolt 的十个内置和自定义 AI 角色"
+sidebarTitle: "代理"
+description: "Bolt 附带十个内置代理，每个都有独特的角色、工具集和访问级别。了解如何切换、配置和创建自己的代理。"
+---
+
+Bolt 将每个 AI 角色视为一个命名**代理**：一个系统提示配上一组精确限定的工具权限。它并不是为每项任务运行一个通用模型，而是让你选择访问权限和关注点与你需要匹配的代理 — 无论是审核安全性、编写文档，还是搭建完整的框架迁移。
+
+## 访问级别
+
+每个内置代理都被分配了三个访问层级之一,决定了它可以调用哪些工具：
+
+| 级别 | 授予的权限 | 典型用途 |
+|-------|---------------------|-------------|
+| **Full** | 读取文件、写入/编辑文件、运行 shell 命令 | 主动编程、调试、重构、迁移 |
+| **Edit** | 读取文件、写入/编辑文件 — 无 shell | 文档编写、注释更新、安全的散文编辑 |
+| **Read** | 仅读取文件 — 无写入、无 shell | 规划、研究、代码审查、审计 |
+
+## 内置代理
+
+Bolt 开箱即用地附带十个专业化代理。在 TUI 中按 <kbd>Tab</kbd> 在它们之间切换。
+
+| 代理 | 访问权限 | 描述 |
+|-------|--------|-------------|
+| `code` | Full | 默认：读取、写入并运行代码 |
+| `plan` | Read | 探索代码库并生成计划，不更改代码 |
+| `ask` | Read | 提问与研究 — 不编辑文件 |
+| `code-review` | Read | 审查变更的正确性、风格和安全性 |
+| `debug` | Full | 调试失败的测试、崩溃和逻辑错误 |
+| `refactor` | Full | 每一步都有测试验证的安全重构 |
+| `docs` | Edit | 撰写和更新文档与注释 |
+| `security` | Read | 安全审计：漏洞、机密和危险模式 |
+| `migrate` | Full | 框架升级和依赖迁移 |
+| `perf` | Full | 性能分析和优化 |
+
+## 子代理
+
+除了十个主代理之外，Bolt 还提供两个内置**子代理**,主代理可以在会话期间将工作委派给它们。你从不手动选择子代理 — 当主代理决定生成一个子代理时，它们会被自动派发。
+
+| 子代理 | 角色 |
+|----------|------|
+| `@general` | 复杂的多步骤任务委派，需要广泛的能力 |
+| `@explore` | 快速、只读的代码库研究 — 无副作用地遍历文件 |
+
+<Tip>
+  当你需要快速了解一个陌生的代码库时,请从 `ask` 或 `plan` 代理开始。在幕后,它们可以派发 `@explore` 子代理以高速索引你的项目,然后再生成答案 — 而不触及一个文件。
+</Tip>
+
+## 切换代理
+
+**在 TUI 中** — 在会话期间随时按 <kbd>Tab</kbd> 循环浏览可用代理列表。当前活动的代理显示在会话页脚。
+
+**非交互式** — 向 `bolt run` 传递 `--agent <name>` 以在该次运行期间固定使用特定代理：
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## 列出代理
+
+查看所有可用代理 — 包括内置和自定义 — 及其模式和权限配置：
+
+```bash
+bolt agent list
+```
+
+## 自定义代理
+
+你可以通过两种方式创建自己的代理。
+
+### 使用 `bolt agent create` 生成
+
+交互式向导使用 LLM 生成代理文件并将其写入磁盘：
+
+```bash
+bolt agent create
+```
+
+所有标志都是可选的。提供它们以非交互方式运行：
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| 标志 | 描述 |
+|------|-------------|
+| `--description` | 代理应该做什么（用作生成的 LLM 提示） |
+| `--path` | 写入生成的代理文件的目录 |
+| `--mode` | `all`（默认）、`primary` 或 `subagent` |
+| `--permissions` | 逗号分隔的允许权限列表。省略则全部允许。 |
+| `--model` / `-m` | 使用的模型，格式为 `provider/model` |
+
+### 手动编写 markdown 文件
+
+代理只是一个带有 YAML frontmatter 的 markdown 文件。将其放在项目的 `.bolt/agents/` 内或全局代理目录中：
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+文件名（不带 `.md`）成为代理的标识符。
+
+### 可用权限
+
+权限是你在创建自定义代理时控制的细粒度工具入口：
+
+| 权限 | 控制 |
+|------------|----------|
+| `bash` | Shell 命令执行 |
+| `read` | 文件读取 |
+| `edit` | 文件写入和编辑（同时门控 `write` 和 `apply_patch`） |
+| `glob` | 文件 glob/目录列表 |
+| `grep` | 通过 ripgrep 进行文件搜索 |
+| `webfetch` | 从 Web 进行 HTTP 获取 |
+| `task` | 派发子代理任务 |
+| `todowrite` | 创建和更新待办事项 |
+| `websearch` | Web 搜索查询 |
+| `lsp` | 语言服务器协议操作 |
+| `skill` | 访问项目技能 |

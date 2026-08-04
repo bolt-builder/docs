@@ -1,0 +1,121 @@
+---
+title: "Telepítsd a Bolt-ot macOS-en, Linuxon vagy Windowson"
+sidebarTitle: "Telepítés"
+description: "Telepítsd a Bolt CLI-t curl-lel, npm-mel, bun-nal, pnpm-mel, yarn-nal, Homebrew-val, Chocolatey-vel vagy Scoop-pal. Kitér a frissítésre, eltávolításra és az asztali alkalmazásra."
+---
+
+A Bolt telepíthető macOS-en, Linuxon és Windowson a munkafolyamatodnak megfelelő módszerrel — egy egysoros curl szkripttel, bármely fontosabb Node.js csomagkezelővel, vagy egy rendszer-csomagkezelővel, mint a Homebrew, Chocolatey vagy Scoop.
+
+## Gyors telepítés (macOS / Linux)
+
+A leggyorsabb módja a hivatalos telepítőszkript. Automatikusan felismeri az operációs rendszert és architektúrát, letölti a megfelelő binárist a `~/.bolt/bin` mappába, és hozzáadja a `$PATH`-hoz.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+A telepítő opcionális hangbeviteli függőségeket is beállít (sox és whisper-cpp offline átíráshoz). Ennek kihagyásához add át a `--no-voice` kapcsolót:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Adott verzió rögzítéséhez:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Csomagkezelők
+
+Telepítsd a Bolt-ot globálisan a választott csomagkezelővel:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## A telepítés ellenőrzése
+
+<Steps>
+  <Step title="Ellenőrizd a telepített verziót">
+    Telepítés után erősítsd meg, hogy a `bolt` elérhető a `$PATH`-odon:
+
+    ```bash
+    bolt --version
+    ```
+
+    Ha a parancs nem található, nyiss egy új terminál-munkamenetet (vagy töltsd újra a shell-konfigurációt), hogy a frissített `$PATH` életbe lépjen.
+  </Step>
+</Steps>
+
+## Frissítés
+
+Futtasd a `bolt upgrade` parancsot a legújabb kiadásra való frissítéshez:
+
+```bash
+bolt upgrade
+```
+
+A Bolt automatikusan felismeri az eredeti telepítési módszert. Felülírhatod a `--method` kapcsolóval:
+
+```bash
+bolt upgrade --method <method>
+```
+
+A támogatott módszerek: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Egy konkrét verzióra is frissíthetsz, ha pozicionális argumentumként átadod a verziót:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Eltávolítás
+
+A Bolt eltávolítása a rendszerről:
+
+```bash
+bolt uninstall
+```
+
+## Környezeti változók
+
+| Változó               | Leírás                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Naplózási részletesség: `DEBUG`, `INFO`, `WARN` vagy `ERROR`    |
+| `BOLT_PRINT_LOGS`      | Naplók kiírása a stderr-re                                  |
+| `BOLT_PURE`            | Futtatás külső pluginek betöltése nélkül                  |
+| `BOLT_SERVER_PASSWORD` | Basic auth jelszó a fej nélküli API-szerverhez       |
+| `BOLT_SERVER_USERNAME` | Basic auth felhasználónév a fej nélküli API-szerverhez       |
+
+<Tip>
+  Állítsd be a `BOLT_PURE=1` értéket, amikor tiszta futtatást szeretnél harmadik féltől származó pluginek nélkül — hasznos hibakereséshez vagy vezérelt CI-környezetekhez.
+</Tip>
+
+## Asztali alkalmazás
+
+<Note>
+  A Bolt natív asztali alkalmazásként is érkezik több ablakos munkamenet-kezeléssel, integrált terminállal és fájlfával, parancspalettával, 28 felületnyelvvel és automatikus frissítésekkel. Töltsd le a legújabb kiadást a [kiadási oldalról](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  macOS-en egy sorban telepítheted Gatekeeper-kerülőút nélkül:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

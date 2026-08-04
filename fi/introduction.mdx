@@ -1,0 +1,107 @@
+---
+title: "Johdanto Boltiin: avoimen lähdekoodin terminaalin AI-agentti"
+sidebarTitle: "Johdanto"
+description: "Tapaa Bolt: avoimen lähdekoodin terminaalin AI-koodausagentti, jossa on kymmenen agenttia, kestävät istunnot, projektimuisti, MCP, yli 75 LLM-tarjoajaa, TUI ja työpöytäsovellus."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Terminaalisi, nyt täydellä AI-insinööritiimillä sisällä.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Verkkosivu</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt on terminaalilähtöinen AI-koodausagentti, joka on rakennettu [Effectin](https://effect.website), [OpenTUI:n](https://github.com/opentui/opentui) ja [SolidJS:n](https://www.solidjs.com) päälle. Osoita se mihin tahansa projektiin ja se ottaa kontekstin automaattisesti: se tutkii koodiasi, seuraa käytäntöjäsi, suorittaa shell-komentoja, muokkaa tiedostoja, ajaa testejä ja toimittaa muutoksia.
+
+Kymmenen sisäänrakennettua agenttia (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) sekä `@general`- ja `@explore`-aliagentit kattavat koko insinöörisilmukan. Istunnot ovat kestäviä: irrottaudu, liity takaisin (myös etäpalvelimeen), haaraudu, jaa, vie ja tuo milloin tahansa. Projektimuisti säilyttää sen, mitä agentti oppii istuntojen välillä. Laajennettavissa MCP-palvelimien (OAuthilla), laajennusten, mukautettujen agenttien ja mukautettujen työkalujen kautta.
+
+Bolt on avoimen lähdekoodin PolyForm Noncommercial 1.0.0 -lisenssin alla.
+
+## Miksi Bolt?
+
+Bolt on suunniteltu sen tavan ympärille, jolla kehittäjät todella työskentelevät: terminaalissa, useiden istuntojen välillä, todellisilla koodikannoilla. Tässä mikä erottaa sen:
+
+- **Terminaalilähtöinen TUI.** Nopea, näppäimistövetoinen käyttöliittymä, joka on rakennettu [Effectillä](https://effect.website), [OpenTUI:lla](https://github.com/opentui/opentui) ja [SolidJS:llä](https://www.solidjs.com). Se tuntuu natiivilta koska se on.
+- **Kokonainen tiimi agentteja.** Kymmenen erikoistunutta agenttia — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` ja `perf` — sekä aliagentit tutkimusta ja monivaiheista delegointia varten. Vaihda niiden välillä `Tab`illa.
+- **Istunnot, joita voit jättää ja joihin voit liittyä uudelleen.** Irrottaudu istunnosta ja liity myöhemmin, myös etäpalvelimelle. Haaraudu, jaa, vie ja tuo työtä milloin tahansa. Istunnot tallennetaan SQLiteen ja ovat täysin tarkastettavissa komennolla `bolt db`.
+- **Laajennettavissa suunnittelun kautta.** MCP-palvelimet täydellä OAuth-tuella, laajennusjärjestelmä, GitHub-integraatio, sisäänrakennettu API-palvelin ja web-käyttöliittymä.
+- **Työpöytäsovellus.** Sama moottori kääritty moni-ikkunaiseen, moni-välilehtiseen työpöytäkokemukseen — integroidulla terminaalilla, tiedostopuulla, komentopaletilla, 28 käyttöliittymän kielellä ja automaattisilla päivityksillä.
+
+## Sisäänrakennetut agentit
+
+Bolt sisältää kymmenen erikoistunutta agenttia. Jokaisella agentilla on määritelty tiedostojärjestelmän käyttöoikeustaso, joka vastaa sen tarkoitusta.
+
+| Agentti | Käyttöoikeus | Kuvaus |
+| --- | --- | --- |
+| `code` | Full | Oletus: lukee, kirjoittaa ja suorittaa koodia |
+| `plan` | Read | Tutkii koodikantaa ja tuottaa suunnitelman muuttamatta tiedostoja |
+| `ask` | Read | Kysymykset ja tutkimus — ei tiedostomuokkauksia |
+| `code-review` | Read | Tarkastelee muutoksia oikeellisuuden, tyylin ja tietoturvan osalta |
+| `debug` | Full | Debuggaa epäonnistuvia testejä, kaatumisia ja logiikkavirheitä |
+| `refactor` | Full | Turvallinen refaktorointi testivarmistuksella jokaisessa vaiheessa |
+| `docs` | Edit | Kirjoittaa ja päivittää dokumentaatiota ja kommentteja |
+| `security` | Read | Tietoturvatarkastus: haavoittuvuudet, salaisuudet, kaavat |
+| `migrate` | Full | Ohjelmistokehysten päivitykset ja riippuvuuksien migraatiot |
+| `perf` | Full | Suorituskykyanalyysi ja optimointi |
+
+Voit myös määrittää omia agentteja Markdown-tiedostoina tai luoda sellaisen komennolla `bolt agent create`.
+
+## Työpöytäsovellus
+
+Bolt toimitetaan myös erillisenä työpöytäsovelluksena, jossa on moni-ikkunainen ja moni-välilehtinen istunnonhallinta, kehotelaatija liite- ja leikepöytäkuvien liittämistuella, integroitu terminaali ja tiedostopuu, komentopaletti, täydelliset asetukset näppäinsidoksille, malleille, tarjoajille ja palvelimille, natiivit ilmoitukset, syvälinkit, WSL-integraatio Windowsissa ja automaattiset päivitykset dev-, beta- ja tuotantokanavien välillä.
+
+Lataa työpöytäsovellus [julkaisusivulta](https://github.com/Bolt-builder/bolt-cli/releases) tai asenna se yhdellä rivillä macOS:llä ilman Gatekeeperin kiertoreittiä:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Tutustu dokumentteihin
+
+<CardGroup cols={2}>
+  <Card title="Asennus" icon="download" href="/installation">
+    Asenna Bolt curlin, npm:n tai järjestelmäpaketinhallintasi kautta macOS:llä, Linuxilla ja Windowsilla.
+  </Card>
+
+  <Card title="Pikaopas" icon="rocket" href="/quickstart">
+    Avaa TUI, suorita ensimmäinen kehotteesi ja toimita AI:n luoma commit alle minuutissa.
+  </Card>
+
+  <Card title="Agentit" icon="users" href="/concepts/agents">
+    Kymmenen sisäänrakennettua agenttia ja aliagentit. Opi, mitä kukin tekee ja miten kirjoitat omasi.
+  </Card>
+
+  <Card title="Projektimuisti" icon="brain" href="/concepts/project-memory">
+    Miten Bolt muistaa projektisi istuntojen välillä ja miten hallitset, mitä tallennetaan.
+  </Card>
+
+  <Card title="MCP-palvelimet" icon="plug" href="/extending/mcp-servers">
+    Yhdistä ulkoiset työkalut ja tietolähteet Boltiin Model Context Protocolin kautta.
+  </Card>
+
+  <Card title="Päätön palvelin" icon="server" href="/server/headless-server">
+    Suorita `bolt serve`, liitä TUI mistä tahansa koneesta ja aja Boltia API:n kautta.
+  </Card>
+</CardGroup>

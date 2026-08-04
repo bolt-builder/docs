@@ -1,0 +1,179 @@
+---
+title: "GitHub-integraatio: Actions, PR:t ja AI-katselmointi"
+sidebarTitle: "GitHub Actions"
+description: "Suorita Bolt GitHub Actionsin sisällä, kloonaa PR:t paikallisesti, luo AI-commit-viestejä ja portita yhdistämiset AI-pohjaisella koodikatselmoinnilla ja poistumiskoodeilla."
+url: "server/github-actions"
+---
+
+Bolt toimittaa neljä komentoa, jotka yhdistävät päivittäisen Git-työnkulkusi AI:hin: GitHub Actions -agentti, jonka voit asentaa yhdellä komennolla, oikotie pull requestien kloonaamiseen, AI-commit-viestien luoja ja AI-koodikatselmoija koneellisesti luettavilla poistumiskoodeilla. Yhdessä ne antavat sinun tuoda Boltin jokaiseen kehitysvaiheeseen — paikalliseen koodaukseen, PR-katselmointiin ja jatkuvaan integrointiin.
+
+---
+
+## `bolt github`
+
+Hallitse GitHub Actions -agenttia, joka suorittaa Boltia CI-tapahtumissa.
+
+### `bolt github install`
+
+Asenna GitHub Actions -työnkulku nykyiseen repositoryyn. Tämä kirjoittaa työnkulun YAML:n hakemistoon `.github/workflows/`, jotta Bolt käynnistyy automaattisesti issue-kommenteissa, uusissa pull requesteissa tai muissa määrittämissäsi tapahtumissa.
+
+```bash
+bolt github install
+```
+
+Suorita tämä git-repositoryn juuresta. Tarvitset kirjoitusoikeuden hakemistoon `.github/workflows/`.
+
+### `bolt github run`
+
+Suorita GitHub-agentti paikallisesti tai CI-vaiheessa toistamalla tietty GitHub-tapahtumadata.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Lippu | Kuvaus |
+|------|-------------|
+| `--event <event>` | GitHub-tapahtuman nimi tai polku JSON-tapahtumadataan |
+| `--token <pat>` | GitHub-henkilökohtainen käyttöoikeustunnus (`github_pat_…`), jota käytetään kommenttien lähettämiseen ja kontekstin noutamiseen |
+
+---
+
+## Määritä GitHub Actions -agentti
+
+<Steps>
+  <Step title="Asenna työnkulku">
+    Repositoryn juuresta:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt kirjoittaa GitHub Actions -työnkulkutiedoston hakemistoon `.github/workflows/`. Sitouta ja työnnä tiedosto.
+  </Step>
+
+  <Step title="Lisää API-avain salaisuutena">
+    Repository-asetuksissa lisää valitsemasi LLM-tarjoajan API-avain repository-salaisuutena (esimerkiksi `ANTHROPIC_API_KEY`). Työnkulku poimii sen automaattisesti.
+  </Step>
+
+  <Step title="Käynnistä agentti">
+    Kommentoi `/bolt <your request>` mihin tahansa issueen tai pull requestiin. Työnkulku käynnistyy, Bolt lukee tapahtumadatan ja lähettää vastauksen tulos kanssa.
+  </Step>
+
+  <Step title="Suorita paikallisesti debuggausta varten">
+    Toista live-tapahtumadata aiemmasta työnkulkuajosta:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Kloonaa GitHub-pull request paikalliseen haaraan ja käynnistä Bolt kyseisessä haarassa — valmiina katselmoimaan, debuggaamaan tai jatkamaan työtä siitä, mihin PR:n tekijä jäi.
+
+```bash
+bolt pr 42
+```
+
+Bolt käyttää `gh`-CLI:tä PR:n hakemiseen, luo haaran nimeltä `pr/<number>` ja kytkee upstream-seurantareferenssin. Repository-rajat ylittäville (fork-) PR:ille se lisää forkin remoteksi automaattisesti. Jos PR-kuvaus sisältää jaetun Bolt-istunnon URL:n (`opncd.ai/s/…`), istunto tuodaan, jotta voit jatkaa tekijän keskustelua.
+
+> Vaatii, että [GitHub CLI (`gh`)](https://cli.github.com/) on asennettu ja todennettu.
+
+---
+
+## `bolt commit`
+
+Luo commit-viesti stagatuista (tai kaikista seuratuista) muutoksistasi ja tee commit yhdessä vaiheessa.
+
+```bash
+bolt commit
+```
+
+Bolt diffaa muutoksesi, syöttää diffin `commit`-agentille yhdessä viimeaikaisten commit-otsikoiden kanssa tyyliviitteeksi ja suorittaa `git commit -m <message>` tuloksella.
+
+### Liput
+
+| Lippu | Alias | Kuvaus |
+|------|-------|-------------|
+| `--all` | `-a` | Committaa kaikki seuratut muutokset, ei vain stagattuja (vastaa `git commit -a`ta) |
+| `--dry-run` | | Tulosta luotu viesti committaamatta |
+| `--model <provider/model>` | `-m` | Ohita viestin luomiseen käytettävä malli |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Käytä `bolt commit --dry-run` esikatsellaksesi luotua viestiä ennen sitoutumista. Jos haluat muokata sitä, kopioi tuloste ja suorita `git commit -m "…"` säädetyllä sanamuodollasi.
+</Tip>
+
+---
+
+## `bolt review`
+
+Suorita `code-review`-agentti diffiä vasten ja poistu koneellisesti luettavalla tuomiolla. Katselmoinnin viimeinen rivi on aina joko `Verdict: PASS` tai `Verdict: FAIL`, mikä tekee `bolt review`istä valmiin CI-putkille.
+
+```bash
+bolt review
+```
+
+Oletuksena `bolt review` diffaa `HEAD`in työskentelypuuta vasten. Käytä alla olevia lippuja diffin rajaamiseksi.
+
+### Liput
+
+| Lippu | Alias | Kuvaus |
+|------|-------|-------------|
+| `--staged` | | Katsele vain stagattuja muutoksia |
+| `--branch <name>` | | Katsele muutoksia nimetyn haaran yhdistämiskohdasta lähtien (oletuksena repositoryn oletushaara) |
+| `--model <provider/model>` | `-m` | Katselmoinnissa käytettävä malli |
+
+### Poistumiskoodit
+
+| Koodi | Merkitys |
+|------|---------|
+| `0` | `Verdict: PASS` — ei kriittisiä tai suuria ongelmia |
+| `1` | `Verdict: FAIL` — yksi tai useampi kriittinen tai suuri ongelma löydetty |
+| `2` | Tuomiota ei voitu määrittää vastauksesta |
+
+### Käyttö GitHub Actions -työnkulussa
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Nollasta poikkeava poistumiskoodi hylkää tarkistuksen, mikä estää yhdistämisen kunnes ongelmat on käsitelty.
+
+<Tip>
+  Suorita `bolt review --staged` ennen committausta havaitaksesi ongelmat, kun niitä on vielä helppo muuttaa — ennen kuin ne edes päätyvät pull requestiin.
+</Tip>

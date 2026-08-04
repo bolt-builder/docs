@@ -1,0 +1,31 @@
+---
+title: "Ordres de barra inclinada del TUI de Bolt"
+sidebarTitle: "Ordres de barra inclinada"
+description: "Les ordres de barra inclinada que pots executar dins del TUI de Bolt — /memory, /plan, /todos, /btw — i com canvien el comportament de la sessió actual."
+---
+
+Les ordres de barra inclinada s'escriuen al prompt del TUI i canvien com es comporta la sessió actual. No envien res al model; s'executen localment contra Bolt mateix.
+
+## Referència
+
+| Ordre | Què fa |
+| --- | --- |
+| `/memory` | Mostra l'estat de la memòria del projecte per a aquesta sessió. |
+| \`/memory use on | off\` | Si aquesta sessió llegeix de la [memòria del projecte](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Si aquesta sessió escriu a la memòria del projecte quan es tanca el torn. |
+| `/plan` | Canvia la sessió actual a mode de planificació (només lectura, produeix un pla). |
+| `/todos` | Mostra la llista de tasques estructurada actual de l'agent. |
+| `/btw` | Injecta una nota fora de banda ("per cert...") que l'agent veurà al seu proper torn sense activar una resposta completa. |
+
+<Tip>
+  Les ordres de barra inclinada tenen abast de sessió. Per fer una preferència duradora, estableix-la a `.bolt/bolt.jsonc`. Vegeu [Configuració](/concepts/configuration).
+</Tip>
+
+## Afegir les teves pròpies
+
+Les ordres de barra inclinada personalitzades poden ser contribuïdes per [plugins](/extending/plugins) i per fitxers a `.opencode/command/`. Cada ordre és un fitxer Markdown el frontmatter del qual descriu el disparador i el comportament.
+
+## Relacionat
+
+- [Combinacions de tecles](/tui/keybinds) — dreceres de teclat per al TUI.
+- [Memòria del projecte](/concepts/project-memory) — què alterna `/memory`.

@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI komut referansı"
+sidebarTitle: "Komutlar"
+description: "TUI, run, serve, session, agent ve daha fazlası için bayraklar, bağımsız değişkenler ve kullanım örnekleri dahil her Bolt CLI komutu için tam referans."
+---
+
+Bolt, zengin bir alt komut kümesine sahip tek bir `bolt` ikili dosyası sunar. `bolt`'u bağımsız değişkensiz çalıştırmak tam terminal arayüzünü açar. Diğer tüm alt komutlar aşağıda listelenmiştir. Satır içi yardım için istediğiniz zaman `bolt <command> --help` kullanın.
+
+<Accordion title="bolt (varsayılan — TUI'yi başlat)">
+  Etkileşimli terminal arayüzünü mevcut dizinde açar. Bolt projenizin bağlamını otomatik olarak keşfeder, yapılandırmayı yükler ve yapılandırılmış sağlayıcılara bağlanır.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Global bayraklar** — her komutta mevcuttur:
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Günlük çıktısını stderr'e yazdır |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Günlük ayrıntı düzeyini ayarla |
+  | `--pure` | boolean | Harici eklentileri yüklemeden çalıştır |
+  | `--help`, `-h` | boolean | Yardım metnini göster |
+  | `--version`, `-v` | boolean | Kurulu sürüm numarasını yazdır |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Bolt'u etkileşimsiz modda tek bir komutla çalıştırın. Bolt süreç içi bir sunucu başlatır, komutu aktif oturuma gönderir, yanıtı stdout'a aktarır ve çıkar. Bağlam eklemek için stdin'i borulayın veya `--file` geçirin.
+
+  ```bash
+  # Temel etkileşimsiz komut
+  bolt run "explain the auth module"
+  
+  # En son oturuma devam et
+  bolt run --continue "now add error handling"
+  
+  # Belirli bir ajanla belirli bir model kullan
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Araç entegrasyonu için ham JSON olaylarını aktar
+  bolt run --format json "summarize changes"
+  
+  # Aynı görevi birden çok modelde çalıştır ve en iyi sonucu tut
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Bağlam olarak bir dosya ekle
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Uzak bir sunucuya bağlan ve orada bir komut çalıştır
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Tüm izin komutlarını atla (tehlikeli)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Yürütülecek eğik çizgi komutu; bağımsız değişkenleri mesaj olarak geçirin |
+  | `--continue` | `-c` | boolean | En son oturuma devam et |
+  | `--session` | `-s` | string | Devam edilecek oturum kimliği |
+  | `--fork` |  | boolean | Devam etmeden önce oturumu çatalla (`--continue` veya `--session` gerektirir) |
+  | `--share` |  | boolean | Tamamlandıktan sonra oturumu paylaş |
+  | `--model` | `-m` | string | `provider/model` formatında kullanılacak model |
+  | `--best-of` |  | string | Virgülle ayrılmış `provider/model` listesi; görevi paralel olarak çalıştırır, sonuçları sıralar, kazananı tutar |
+  | `--agent` |  | string | Kullanılacak ajan (örn. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Çıktı formatı; `json` yeni satırla ayrılmış ham JSON olaylarını aktarır |
+  | `--file` | `-f` | string\[\] | Bağlam olarak eklenecek dosya(lar) |
+  | `--title` |  | string | Oturumun başlığı |
+  | `--attach` |  | string | Uzak bir Bolt sunucusuna karşı çalıştır (örn. `http://localhost:4096`) |
+  | `--password` | `-p` | string | Uzak sunucu için temel kimlik doğrulama parolası |
+  | `--username` | `-u` | string | Uzak sunucu için temel kimlik doğrulama kullanıcı adı |
+  | `--dir` |  | string | Çalışma dizini; `--attach` ayarlıysa, bu uzak sunucudaki dizindir |
+  | `--port` |  | number | Yerel süreç içi sunucu için bağlantı noktası (atlanırsa rastgele) |
+  | `--variant` |  | string | Muhakeme çabası düzeyi, sağlayıcıya özel (örn. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Çıktıda muhakeme/düşünme bloklarını göster |
+  | `--mini` |  | boolean | Minimal split-footer etkileşimli arayüzü başlat (gizli) |
+  | `--interactive` | `-i` | boolean | Doğrudan etkileşimli split-footer modunu zorla |
+  | `--auto` |  | boolean | Açıkça reddedilmeyen izinleri otomatik onayla |
+  | `--yolo` |  | boolean | Tüm izin komutlarını atla (`--auto` takma adı, gizli) |
+  | `--dangerously-skip-permissions` |  | boolean | Tüm izin kontrollerini atla (gizli) |
+  | `--demo` |  | boolean | Doğrudan etkileşimli demo eğik çizgi komutlarını etkinleştir (gizli) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Tam TUI'yi çalışan bir Bolt sunucusuna bağlayın. Sunucu yerel veya uzak olabilir. Tam TUI yerine minimal split-footer arayüzünü kullanmak için `--mini` geçirin.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Uzak sunucudaki dizin |
+  | `--continue` | `-c` | boolean | Uzak sunucudaki en son oturuma devam et |
+  | `--session` | `-s` | string | Devam edilecek oturum kimliği |
+  | `--fork` |  | boolean | Devam ederken oturumu çatalla |
+  | `--password` | `-p` | string | Temel kimlik doğrulama parolası |
+  | `--username` | `-u` | string | Temel kimlik doğrulama kullanıcı adı |
+  | `--mini` |  | boolean | Minimal etkileşimli arayüzü kullan |
+  | `--no-replay` |  | boolean | Devam ederken ve yeniden boyutlandırdıktan sonra oturum geçmişi yeniden oynatmayı devre dışı bırak (`--mini` gerektirir) |
+  | `--replay-limit` |  | number | Görünür yeniden oynatmayı en yeni N mesajla sınırla (`--mini` gerektirir) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Başsız bir Bolt API sunucusu başlatın. Sunucu, TUI, `bolt run --attach` ve `bolt attach`'in bağlanabileceği bir REST\+SSE API'si sunar. Diğer makinelerden erişilebilir olması için `0.0.0.0` üzerinde bağlayın — bunu yaparken her zaman `BOLT_SERVER_PASSWORD` ayarlayın.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--hostname` | string | Bağlanacak adres (varsayılan: `127.0.0.1`) |
+  | `--port` | number | Dinlenecek bağlantı noktası (atlanırsa rastgele) |
+  | `--mdns` | boolean | mDNS hizmet keşfini etkinleştir (ana bilgisayarı `0.0.0.0` olarak varsayar) |
+  | `--mdns-domain` | string | mDNS hizmeti için özel etki alanı adı (varsayılan: `opencode.local`) |
+  | `--cors` | string\[\] | CORS için izin verilecek ek etki alanları |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` varsayılan olarak ayarlı değildir. Ayarlayana kadar sunucu bir uyarı günlüğüne kaydeder ve tüm bağlantıları kabul eder.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Bolt sunucusunu başlatın ve varsayılan tarayıcınızda hemen web arayüzünü açın. `bolt serve` ile aynı ağ bayraklarını kabul eder.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--hostname` | string | Bağlanacak adres (varsayılan: `127.0.0.1`) |
+  | `--port` | number | Dinlenecek bağlantı noktası (atlanırsa rastgele) |
+  | `--mdns` | boolean | mDNS hizmet keşfini etkinleştir (ana bilgisayarı `0.0.0.0` olarak varsayar) |
+  | `--mdns-domain` | string | mDNS hizmeti için özel etki alanı adı (varsayılan: `opencode.local`) |
+  | `--cors` | string\[\] | CORS için izin verilecek ek etki alanları |
+</Accordion>
+
+<Accordion title="bolt session">
+  Yerel SQLite veritabanında depolanan Bolt oturumlarını yönetin.
+
+  **Alt komutlar**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **`bolt session list` bayrakları**
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Çıktıyı en son N oturumla sınırla |
+  | `--format` |  | `table`\|`json` | Çıktı formatı (varsayılan: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Özel ajanları listeleyin ve oluşturun. Ajanlar, bir sistem komutu, izinler ve mod tanımlayan YAML ön verili markdown dosyalarıdır.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` bayrakları**
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Ajan dosyasının yazılacağı dizin yolu |
+  | `--description` |  | string | Ajanın ne yapması gerektiğine dair doğal dil açıklaması |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Ajanın birincil ajan, alt ajan veya her ikisi olarak davranıp davranmayacağı |
+  | `--permissions` | `--tools` | string | İzin verilen izinlerin virgülle ayrılmış listesi (varsayılan: tümü) |
+  | `--model` | `-m` | string | `provider/model` formatında kullanılacak model |
+</Accordion>
+
+<Accordion title="bolt providers (takma ad: auth)">
+  AI sağlayıcı kimlik bilgilerini etkileşimli olarak yönetin. Kimlik bilgileri OS veri dizininizde saklanır (Linux'ta `~/.local/share/bolt/auth.json`, macOS'ta `~/Library/Application Support/bolt/auth.json`).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Yapılandırılmış sağlayıcılarınızdan mevcut olan tüm modelleri listeler.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Her model için JSON maliyet meta verilerini dahil et |
+  | `--refresh` | boolean | Model önbelleğini models.dev'den yenile |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Model Context Protocol (MCP) sunucularını yönetin. Bolt hem OAuth'lu uzak (HTTP/SSE) sunucuları hem de yerel (stdio) sunucuları destekler.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **`bolt mcp add` bayrakları**
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--url` | string | Uzak bir MCP sunucusu için URL |
+  | `--env` | string\[\] | Yerel bir sunucu için ortam değişkeni (`KEY=VALUE`) |
+  | `--header` | string\[\] | Uzak bir sunucu için HTTP başlığı (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  npm'den bir Bolt eklentisi kurun ve ilgili yapılandırma dosyasını güncelleyin. Eklentiler TUI'yi genişletebilir, yeni eğik çizgi komutları ekleyebilir veya yeni sağlayıcılar kaydedebilir.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Eklentiyi proje yapılandırması yerine global yapılandırmaya ekle |
+  | `--force` | `-f` | boolean | Zaten yapılandırılmış bir eklenti sürümünü değiştir |
+</Accordion>
+
+<Accordion title="bolt github">
+  Bolt'un pull request'lere, sorunlara ve diğer GitHub olaylarına yanıt vermesine olanak tanıyan Bolt GitHub Actions entegrasyonunu yönetin.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` bayrakları**
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--event` | string | Simüle edilecek GitHub olay adı (örn. `pull_request`) |
+  | `--token` | string | GitHub kişisel erişim tokenı |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  `gh` CLI'ı kullanarak bir GitHub pull request'i yerel bir dal olarak teslim alın, ardından teslim alınan dizinde Bolt'u başlatın. PR açıklaması bir oturum paylaşım bağlantısı içeriyorsa, Bolt bu oturumu otomatik olarak içe aktarır.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Bu komut [GitHub CLI (`gh`)](https://cli.github.com/)'nın kurulu ve kimlik doğrulanmış olmasını gerektirir.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Bir AI modeli kullanarak sahnelenmiş (veya izlenen tüm) değişiklikler için bir commit mesajı üretin ve ardından commit yapın. Model, stil bağlamı için son commit geçmişini inceler.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Yalnızca sahnelenmişleri değil, izlenen tüm değişiklikleri commit et |
+  | `--dry-run` |  | boolean | Commit etmeden üretilen mesajı yazdır |
+  | `--model` | `-m` | string | `provider/model` formatında kullanılacak model |
+</Accordion>
+
+<Accordion title="bolt review">
+  Bir fark üzerinde AI kod incelemesi çalıştırın ve `0` (geçti) veya `1` (kaldı) koduyla çıkın. `code-review` ajanı farkı doğruluk, stil ve güvenlik sorunları açısından inceler, ardından bir `Verdict: PASS` veya `Verdict: FAIL` satırı yayar.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Yalnızca sahnelenmiş değişiklikleri incele |
+  | `--branch` |  | string | Adlandırılmış dalla birleşme tabanından bu yana değişiklikleri incele |
+  | `--model` | `-m` | string | `provider/model` formatında kullanılacak model |
+
+  <Note>
+    Çıkış kodları: `0` = PASS, `1` = FAIL, `2` = karar belirlenemedi.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Bir oturumu stdout'a JSON olarak dışa aktarın. Arşivleme, paylaşma veya diğer araçlara besleme için kullanışlıdır. Dosya yollarını, komutları ve diğer hassas transkript içeriğini gizlemek için herkese açık paylaşmadan önce `--sanitize` geçirin.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Dışa aktarmadan önce hassas verileri gizle (dosya yolları, komut metni, araç G/Ç) |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Daha önce dışa aktarılmış bir oturumu yerel veritabanına içe aktarın. Yerel bir JSON dosyasını veya bir oturum paylaşım URL'sini kabul eder.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Tüm oturumlar arasında toplu token kullanımı ve maliyet istatistiklerini görüntüler. Çıktı; genel bakış tablosu, maliyet ve token dökümü, model kullanımı ve bir araç kullanım çubuk grafiği içerir.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--days` | number | Son N güne sınırla (varsayılan: tüm zamanlar) |
+  | `--tools` | number | Araç kullanım grafiğinde gösterilecek araç sayısı |
+  | `--models` | boolean\|number | Model istatistiklerini göster; listeyi sınırlamak için bir sayı geçirin |
+  | `--project` | string | Proje kimliğine göre filtrele; boş dize mevcut projeyi belirtir |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Bolt uygulama günlüğünü yazdırın. Günlük OS günlük dizininde saklanır (örn. `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Yazdırılacak sondaki satır sayısı (varsayılan: 1000) |
+  | `--follow` | `-f` | boolean | Yeni günlük satırlarını gerçek zamanlı olarak akıt |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Yerel SQLite oturum veritabanını doğrudan sorgulayın veya inceleyin.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Sorgu sonuçları için çıktı formatı (varsayılan: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Bolt'u en son sürüme veya belirli bir sürüme yükseltin. Bolt kurulum yöntemini otomatik olarak algılar ve uygun paket yöneticisini kullanır.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Bayrak | Takma ad | Tür | Açıklama |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Kullanılacak kurulum yöntemi |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Bolt ikili dosyasını ve tüm ilgili verileri kaldırın.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  `bash`, `zsh` veya `fish` için bir kabuk tamamlama betiği oluşturun.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Sorun giderme ve iç gözlem alt komutları koleksiyonu. Hata raporları oluştururken veya beklenmedik davranışları teşhis ederken kullanışlıdır.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Bir ACP (Agent Client Protocol) sunucusu başlatın. ACP, Bolt ile stdin/stdout üzerinden iletişim kurmak için [Zed](https://zed.dev) gibi editör entegrasyonları tarafından kullanılan protokoldür.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Bayrak | Tür | Açıklama |
+  | --- | --- | --- |
+  | `--cwd` | string | Sunucu için çalışma dizini (varsayılan: `process.cwd()`) |
+  | `--hostname` | string | Bağlanacak ana bilgisayar (varsayılan: `127.0.0.1`) |
+  | `--port` | number | Bağlanacak bağlantı noktası |
+  | `--mdns` | boolean | mDNS hizmet keşfini etkinleştir |
+  | `--mdns-domain` | string | mDNS hizmeti için özel etki alanı adı (varsayılan: `opencode.local`) |
+  | `--cors` | string\[\] | CORS için izin verilecek ek etki alanları |
+</Accordion>

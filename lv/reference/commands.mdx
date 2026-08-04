@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI komandu atsauce"
+sidebarTitle: "Komandas"
+description: "Pilna atsauce katrai Bolt CLI komandai, ieskaitot karogus, argumentus un lietošanas piemērus TUI, run, serve, session, agent un citiem."
+---
+
+Bolt piedāvā vienu `bolt` bināro failu ar bagātīgu apakškomandu kopu. Palaidot `bolt` bez argumentiem, atveras pilnais termināļa UI. Visas pārējās apakškomandas ir uzskaitītas zemāk. Izmantojiet `bolt <command> --help` jebkurā laikā iekļautajai palīdzībai.
+
+<Accordion title="bolt (noklusējums — palaist TUI)">
+  Atver interaktīvo termināļa UI pašreizējā direktorijā. Bolt automātiski atklāj jūsu projekta kontekstu, ielādē konfigurāciju un savienojas ar jebkuriem konfigurētajiem sniedzējiem.
+
+  ```bash
+  bolt
+  bolt --mini          # minimāls sadalīts kājenes interaktīvais režīms
+  bolt --log-level DEBUG
+  ```
+
+  **Globālie karogi** — pieejami katrā komandā:
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Drukāt žurnāla izvadi uz stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Iestatīt žurnāla detalizācijas līmeni |
+  | `--pure` | boolean | Palaist, neielādējot ārējos spraudņus |
+  | `--help`, `-h` | boolean | Rādīt palīdzības tekstu |
+  | `--version`, `-v` | boolean | Izdrukāt instalētās versijas numuru |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Palaidiet Bolt ar vienu uzvedni neinteraktīvā režīmā. Bolt palaiž procesā serveri, nosūta uzvedni aktīvajai sesijai, straumē atbildi uz stdout un pēc tam iziet. Nododiet stdin vai `--file`, lai pievienotu kontekstu.
+
+  ```bash
+  # Pamata neinteraktīva uzvedne
+  bolt run "explain the auth module"
+  
+  # Turpiniet jaunāko sesiju
+  bolt run --continue "now add error handling"
+  
+  # Izmantojiet konkrētu modeli ar konkrētu aģentu
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Straumējiet neapstrādātus JSON notikumus rīku integrācijai
+  bolt run --format json "summarize changes"
+  
+  # Palaidiet to pašu uzdevumu vairākos modeļos un paturiet labāko rezultātu
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Pievienojiet failu kā kontekstu
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Pievienojiet attālinātam serverim un palaidiet tur uzvedni
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Izlaidiet visas atļauju uzvednes (bīstami)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slīpsvītras komanda izpildei; nododiet argumentus kā ziņu |
+  | `--continue` | `-c` | boolean | Turpināt jaunāko sesiju |
+  | `--session` | `-s` | string | Sesijas ID turpināšanai |
+  | `--fork` |  | boolean | Dakšot sesiju pirms turpināšanas (nepieciešams `--continue` vai `--session`) |
+  | `--share` |  | boolean | Dalīties ar sesiju pēc tās pabeigšanas |
+  | `--model` | `-m` | string | Modelis izmantošanai `provider/model` formātā |
+  | `--best-of` |  | string | Ar komatiem atdalīts `provider/model` saraksts; palaiž uzdevumu paralēli, sarindo rezultātus, patur uzvarētāju |
+  | `--agent` |  | string | Aģents, ko izmantot (piem., `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Izvades formāts; `json` straumē neapstrādātus jaunas rindas atdalītus JSON notikumus |
+  | `--file` | `-f` | string\[\] | Fails(-i), ko pievienot kā kontekstu |
+  | `--title` |  | string | Nosaukums sesijai |
+  | `--attach` |  | string | Palaist attālinātam Bolt serverim (piem., `http://localhost:4096`) |
+  | `--password` | `-p` | string | Basic auth parole attālinātam serverim |
+  | `--username` | `-u` | string | Basic auth lietotājvārds attālinātam serverim |
+  | `--dir` |  | string | Darba direktorija; ja iestatīts `--attach`, tā ir direktorija attālinātajā serverī |
+  | `--port` |  | number | Ports lokālajam procesa serverim (nejaušs, ja izlaists) |
+  | `--variant` |  | string | Spriešanas piepūles līmenis, sniedzējam specifisks (piem., `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Rādīt spriešanas/domāšanas blokus izvadē |
+  | `--mini` |  | boolean | Sākt minimālo sadalīto kājenes interaktīvo UI (paslēpts) |
+  | `--interactive` | `-i` | boolean | Piespiedu tiešais interaktīvais sadalītais kājenes režīms |
+  | `--auto` |  | boolean | Automātiski apstiprināt atļaujas, kas nav skaidri liegtas |
+  | `--yolo` |  | boolean | Izlaist visas atļauju uzvednes (aizstājējs `--auto`, paslēpts) |
+  | `--dangerously-skip-permissions` |  | boolean | Izlaist visas atļauju pārbaudes (paslēpts) |
+  | `--demo` |  | boolean | Iespējot tiešās interaktīvās demo slīpsvītras komandas (paslēpts) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Pievienojiet pilno TUI palaistam Bolt serverim. Serveris var būt lokāls vai attālināts. Nododiet `--mini`, lai izmantotu minimālo sadalīto kājenes UI, nevis pilno TUI.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Direktorija attālinātajā serverī |
+  | `--continue` | `-c` | boolean | Turpināt jaunāko sesiju attālinātajā serverī |
+  | `--session` | `-s` | string | Sesijas ID turpināšanai |
+  | `--fork` |  | boolean | Dakšot sesiju, kad turpina |
+  | `--password` | `-p` | string | Basic auth parole |
+  | `--username` | `-u` | string | Basic auth lietotājvārds |
+  | `--mini` |  | boolean | Izmantot minimālo interaktīvo UI |
+  | `--no-replay` |  | boolean | Atspējot sesijas vēstures atkārtošanu atsākšanas laikā un pēc izmēra maiņas (nepieciešams `--mini`) |
+  | `--replay-limit` |  | number | Ierobežot redzamo atkārtojumu līdz jaunākajām N ziņām (nepieciešams `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Palaidiet bezgalvas Bolt API serveri. Serveris atklāj REST\+SSE API, kam TUI, `bolt run --attach` un `bolt attach` var pievienoties. Saistiet uz `0.0.0.0`, lai padarītu to sasniedzamu no citām iekārtām — vienmēr iestatiet `BOLT_SERVER_PASSWORD`, to darot.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--hostname` | string | Adrese, uz kuras saistīties (noklusējums: `127.0.0.1`) |
+  | `--port` | number | Ports klausīšanai (nejaušs, ja izlaists) |
+  | `--mdns` | boolean | Iespējot mDNS pakalpojumu atklāšanu (pēc noklusējuma iestata resursdatoru uz `0.0.0.0`) |
+  | `--mdns-domain` | string | Pielāgots domēna nosaukums mDNS pakalpojumam (noklusējums: `opencode.local`) |
+  | `--cors` | string\[\] | Papildu domēni, ko atļaut CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` nav iestatīts pēc noklusējuma. Serveris žurnalēs brīdinājumu un pieņems visus savienojumus, kamēr jūs to neiestatīsit.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Palaidiet Bolt serveri un nekavējoties atveriet tīmekļa UI savā noklusējuma pārlūkā. Pieņem tos pašus tīkla karogus kā `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--hostname` | string | Adrese, uz kuras saistīties (noklusējums: `127.0.0.1`) |
+  | `--port` | number | Ports klausīšanai (nejaušs, ja izlaists) |
+  | `--mdns` | boolean | Iespējot mDNS pakalpojumu atklāšanu (pēc noklusējuma iestata resursdatoru uz `0.0.0.0`) |
+  | `--mdns-domain` | string | Pielāgots domēna nosaukums mDNS pakalpojumam (noklusējums: `opencode.local`) |
+  | `--cors` | string\[\] | Papildu domēni, ko atļaut CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Pārvaldiet Bolt sesijas, kas saglabātas lokālajā SQLite datubāzē.
+
+  **Apakškomandas**
+
+  ```bash
+  bolt session list                         # uzskaitīt visas saknes sesijas
+  bolt session list --format json           # mašīnlasāma izvade
+  bolt session list -n 20                   # rādīt 20 jaunākās sesijas
+  bolt session delete <sessionID>           # neatgriezeniski dzēst sesiju
+  ```
+
+  **`bolt session list` karogi**
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Ierobežot izvadi līdz N jaunākajām sesijām |
+  | `--format` |  | `table`\|`json` | Izvades formāts (noklusējums: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Uzskaitiet un izveidojiet pielāgotus aģentus. Aģenti ir markdown faili ar YAML priekšstrukturu, kas definē sistēmas uzvedni, atļaujas un režīmu.
+
+  ```bash
+  bolt agent list                           # uzskaitīt visus pieejamos aģentus
+  bolt agent create                         # interaktīvs aģentu izveides vednis
+  
+  # Neinteraktīva izveide
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` karogi**
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Direktorijas ceļš, kur ierakstīt aģenta failu |
+  | `--description` |  | string | Dabiskās valodas apraksts tam, ko aģentam vajadzētu darīt |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Vai aģents darbojas kā primārais aģents, apakšaģents vai abi |
+  | `--permissions` | `--tools` | string | Ar komatiem atdalīts atļauto atļauju saraksts (noklusējums: visas) |
+  | `--model` | `-m` | string | Modelis izmantošanai `provider/model` formātā |
+</Accordion>
+
+<Accordion title="bolt providers (aizstājējs: auth)">
+  Interaktīvi pārvaldiet MI sniedzēju akreditācijas datus. Akreditācijas dati tiek glabāti jūsu OS datu direktorijā (`~/.local/share/bolt/auth.json` uz Linux, `~/Library/Application Support/bolt/auth.json` uz macOS).
+
+  ```bash
+  bolt providers             # interaktīvs akreditācijas datu pārvaldības izvēlne
+  bolt auth                  # aizstājējs bolt providers
+  
+  bolt providers list        # uzskaitīt saglabātos akreditācijas datus un aktīvos env mainīgos
+  bolt providers login       # pievienot akreditācijas datus sniedzējam
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # noņemt saglabātus akreditācijas datus
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Uzskaitiet visus modeļus, kas pieejami no jūsu konfigurētajiem sniedzējiem.
+
+  ```bash
+  bolt models                         # uzskaitīt visus modeļus no visiem sniedzējiem
+  bolt models anthropic               # filtrēt uz vienu sniedzēju
+  bolt models --verbose               # iekļaut izmaksu metadatus izvadē
+  bolt models --refresh               # piespiedu atsvaidzināt models.dev kešu
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Iekļaut JSON izmaksu metadatus katram modelim |
+  | `--refresh` | boolean | Atsvaidzināt modeļu kešu no models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Pārvaldiet Model Context Protocol (MCP) serverus. Bolt atbalsta gan attālinātus (HTTP/SSE) serverus ar OAuth, gan lokālus (stdio) serverus.
+
+  ```bash
+  bolt mcp add                              # interaktīvs vednis servera pievienošanai
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # rādīt visus konfigurētos serverus un statusu
+  bolt mcp auth <name>                      # palaist OAuth plūsmu serverim
+  bolt mcp auth list                        # rādīt OAuth statusu visiem serveriem
+  bolt mcp logout <name>                    # noņemt saglabātos OAuth žetonus
+  bolt mcp debug <name>                     # pārbaudīt savienojamību un OAuth konfigurāciju
+  ```
+
+  **`bolt mcp add` karogi**
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--url` | string | URL attālinātam MCP serverim |
+  | `--env` | string\[\] | Vides mainīgais lokālam serverim (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP galvene attālinātam serverim (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Instalējiet Bolt spraudni no npm un atjauniniet attiecīgo konfigurācijas failu. Spraudņi var paplašināt TUI, pievienot jaunas slīpsvītras komandas vai reģistrēt jaunus sniedzējus.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # instalēt globālajā konfigurācijā
+  bolt plugin install @my-org/bolt-plugin --force        # aizstāt esošu versiju
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Pievienot spraudni globālajai konfigurācijai, nevis projekta konfigurācijai |
+  | `--force` | `-f` | boolean | Aizstāt jau konfigurētu spraudņa versiju |
+</Accordion>
+
+<Accordion title="bolt github">
+  Pārvaldiet Bolt GitHub Actions integrāciju, kas ļauj Bolt reaģēt uz pull request, issue un citiem GitHub notikumiem.
+
+  ```bash
+  bolt github install           # ievietot GitHub Actions darbplūsmu jūsu repozitorijā
+  bolt github run               # palaist GitHub aģentu lokāli (testēšanai)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` karogi**
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--event` | string | GitHub notikuma nosaukums, ko simulēt (piem., `pull_request`) |
+  | `--token` | string | GitHub personal access token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Izņemiet GitHub pull request kā lokālu zaru, izmantojot `gh` CLI, un pēc tam palaidiet Bolt izņemtajā direktorijā. Ja PR aprakstā ir sesijas kopīgošanas saite, Bolt šo sesiju importē automātiski.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Šai komandai nepieciešams, lai būtu instalēts un autentificēts [GitHub CLI (`gh`)](https://cli.github.com/).
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Ģenerējiet commit ziņu staged (vai visām sekotajām) izmaiņām, izmantojot MI modeli, un pēc tam veiciet commit. Modelis pārbauda neseno commit vēsturi stila kontekstam.
+
+  ```bash
+  bolt commit                        # commit staged izmaiņas
+  bolt commit --all                  # staging un commit visas sekotās izmaiņas
+  bolt commit --dry-run              # izdrukāt ģenerēto ziņu bez commit
+  bolt commit --model openai/gpt-4o  # izmantot konkrētu modeli
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Commit visas sekotās izmaiņas, ne tikai staged |
+  | `--dry-run` |  | boolean | Izdrukāt ģenerēto ziņu bez commit |
+  | `--model` | `-m` | string | Modelis izmantošanai `provider/model` formātā |
+</Accordion>
+
+<Accordion title="bolt review">
+  Palaidiet MI koda pārskatu uz diff un izejiet ar kodu `0` (izpildījās) vai `1` (neizpildījās). `code-review` aģents pārbauda diff attiecībā uz pareizību, stilu un drošības problēmām, pēc tam izdod `Verdict: PASS` vai `Verdict: FAIL` rindu.
+
+  ```bash
+  bolt review                          # pārskatīt neuzticētās izmaiņas (git diff HEAD)
+  bolt review --staged                 # pārskatīt tikai staged izmaiņas
+  bolt review --branch main            # pārskatīt izmaiņas kopš apvienošanas bāzes ar main
+  bolt review --model openai/o3        # izmantot konkrētu modeli
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Pārskatīt tikai staged izmaiņas |
+  | `--branch` |  | string | Pārskatīt izmaiņas kopš apvienošanas bāzes ar šo zaru |
+  | `--model` | `-m` | string | Modelis izmantošanai `provider/model` formātā |
+
+  <Note>
+    Izejas kodi: `0` = PASS, `1` = FAIL, `2` = spriedumu nevarēja noteikt.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Eksportējiet sesiju kā JSON uz stdout. Noderīgi arhivēšanai, kopīgošanai vai padošanai citiem rīkiem. Nododiet `--sanitize` pirms publiskas kopīgošanas, lai rediģētu failu ceļus, uzvednes un citu sensitīvu norakstu saturu.
+
+  ```bash
+  bolt export                          # interaktīvs sesijas izvēlētājs, pēc tam rakstīt uz stdout
+  bolt export abc123                   # eksportēt konkrētu sesiju
+  bolt export abc123 --sanitize        # rediģēt noslēpumus un ceļus
+  bolt export abc123 > session.json    # rakstīt failā
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Rediģēt sensitīvus datus (failu ceļus, uzvednes tekstu, rīku I/O) pirms eksportēšanas |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Importējiet iepriekš eksportētu sesiju lokālajā datubāzē. Pieņem gan lokālu JSON failu, gan sesijas kopīgošanas URL.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Parāda apkopoto žetonu izmantošanas un izmaksu statistiku visām sesijām. Izvade ietver pārskata tabulu, izmaksu un žetonu sadalījumu, modeļu izmantošanu un rīku izmantošanas joslu diagrammu.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # tikai pēdējās 7 dienas
+  bolt stats --models             # iekļaut sadalījumu pa modeļiem
+  bolt stats --models 5           # rādīt top 5 modeļus
+  bolt stats --tools 10           # rādīt top 10 rīkus
+  bolt stats --project ""         # filtrēt tikai uz pašreizējo projektu
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--days` | number | Ierobežot uz pēdējām N dienām (noklusējums: viss laiks) |
+  | `--tools` | number | Rīku skaits, ko rādīt rīku izmantošanas diagrammā |
+  | `--models` | boolean\|number | Rādīt modeļu statistiku; nododiet skaitli, lai ierobežotu sarakstu |
+  | `--project` | string | Filtrēt pēc projekta ID; tukša virkne nozīmē pašreizējo projektu |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Izdrukājiet Bolt lietotnes žurnālu. Žurnāls tiek glabāts OS žurnāla direktorijā (piem., `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # izdrukāt pēdējās 1000 rindas
+  bolt logs --tail 200             # izdrukāt pēdējās 200 rindas
+  bolt logs --follow               # straumēt jaunas rindas, kad tās tiek rakstītas
+  bolt logs -f                     # aizstājējs --follow
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Beigu rindu skaits izdrukāšanai (noklusējums: 1000) |
+  | `--follow` | `-f` | boolean | Straumēt jaunas žurnāla rindas reāllaikā |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Vaicājiet vai pārbaudiet lokālo SQLite sesiju datubāzi tieši.
+
+  ```bash
+  bolt db path                                  # izdrukāt datubāzes faila ceļu
+  bolt db "SELECT id, title FROM sessions"      # palaist SQL vaicājumu (TSV izvade)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Izvades formāts vaicājuma rezultātiem (noklusējums: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Jauniniet Bolt uz jaunāko izlaidumu vai konkrētu versiju. Bolt automātiski nosaka instalēšanas metodi un izmanto attiecīgo pakotņu pārvaldnieku.
+
+  ```bash
+  bolt upgrade                         # jaunināt uz jaunāko versiju
+  bolt upgrade 0.2.0                   # jaunināt (vai atgriezties) uz konkrētu versiju
+  bolt upgrade --method npm            # piespiedu konkrētu instalēšanas metodi
+  bolt upgrade --method curl
+  ```
+
+  | Karogs | Aizstājējs | Veids | Apraksts |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Izmantojamā instalēšanas metode |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Noņem Bolt bināro failu un visus saistītos datus.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Ģenerējiet čaulas pabeigšanas skriptu `bash`, `zsh` vai `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Problēmu novēršanas un pašpārbaudes apakškomandu kolekcija. Noderīga, iesniedzot kļūdu ziņojumus vai diagnosticējot negaidītu uzvedību.
+
+  ```bash
+  bolt debug info          # izdrukāt versiju, OS, termināli un ielādētos spraudņus
+  bolt debug config        # izdrukāt pilnīgi atrisināto konfigurāciju
+  bolt debug paths         # izdrukāt visas globālās datu/konfigurācijas/kešatmiņas direktorijas
+  bolt debug lsp           # pārbaudīt LSP stāvokli
+  bolt debug ripgrep       # testēt ripgrep pieejamību
+  bolt debug file          # pārbaudīt faila rīka uzvedību
+  bolt debug scrap         # skrečpads atkļūdošanai
+  bolt debug skill         # pārbaudīt pieejamās prasmes
+  bolt debug snapshot      # pārbaudīt sesiju momentuzņēmumus
+  bolt debug startup       # izmērīt palaišanas laiku
+  bolt debug agents        # uzskaitīt aģentus un to atrisināto konfigurāciju
+  bolt debug v2            # pārbaudīt V2 sesijas kodola stāvokli
+  bolt debug wait          # bloķēt bezgalīgi (procesu atkļūdošanai)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Palaidiet ACP (Agent Client Protocol) serveri. ACP ir protokols, ko izmanto redaktoru integrācijas, piemēram, [Zed](https://zed.dev), lai sazinātos ar Bolt caur stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Karogs | Veids | Apraksts |
+  | --- | --- | --- |
+  | `--cwd` | string | Darba direktorija serverim (noklusējums: `process.cwd()`) |
+  | `--hostname` | string | Saistīšanas resursdators (noklusējums: `127.0.0.1`) |
+  | `--port` | number | Saistīšanas ports |
+  | `--mdns` | boolean | Iespējot mDNS pakalpojumu atklāšanu |
+  | `--mdns-domain` | string | Pielāgots domēna nosaukums mDNS pakalpojumam (noklusējums: `opencode.local`) |
+  | `--cors` | string\[\] | Papildu domēni, ko atļaut CORS |
+</Accordion>

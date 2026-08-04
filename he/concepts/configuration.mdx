@@ -1,0 +1,193 @@
+---
+title: "תצורה — הגדרות bolt.jsonc ודריסות גלובליות"
+sidebarTitle: "תצורה"
+description: "Bolt קורא קבצי תצורה JSONC בשכבות מספריות התצורה של הפרויקט ומערכת ההפעלה. הגדר ספקים, שרתי MCP, הוראות, תוספים ודריסות סביבה."
+---
+
+Bolt משתמש במערכת תצורה בשכבות: קובץ תצורה **גלובלי** לברירות מחדל ברמת המשתמש, וקובץ תצורה **לכל פרויקט** להגדרות ספציפיות למאגר. שני הקבצים משתמשים בפורמט JSONC (JSON עם הערות), ושניהם נוצרים אוטומטית עם מצביע `$schema` שמאפשר השלמה אוטומטית בעורך.
+
+## מיקומי קבצי תצורה
+
+### תצורה לפי פרויקט
+
+נוצר אוטומטית בהרצה הראשונה בתוך הפרויקט שלך:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+בצע commit לקובץ הזה כדי לשתף תצורת ספקים, שרתי MCP והוראות מותאמות אישית עם שאר הצוות. אישורים רגישים אף פעם לא צריכים להיות כאן — השתמש במשתני סביבה או בתצורה הגלובלית במקום.
+
+### תצורה גלובלית
+
+חלה על כל הפרויקטים במחשב שלך. Bolt מחפש את הקובץ המתאים הראשון בספריית התצורה של מערכת ההפעלה שלך:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (מועדף)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="היכן ספריית התצורה הגלובלית?">
+  Bolt עוקב אחר מפרט XDG Base Directory ב-Linux וב-macOS (`~/.config/bolt/`) ו-`%APPDATA%\bolt\` ב-Windows. הרץ `bolt debug config` כדי להדפיס את התצורה המפורשת המלאה במחשב שלך.
+</Accordion>
+
+## דוגמת תצורה מינימלית
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+השדה `$schema` מאפשר IntelliSense ואימות בעורכים שתומכים ב-JSON Schema. Bolt כותב שדה זה אוטומטית אם הוא חסר.
+
+## הפניית תצורה
+
+### `provider`
+
+הגדר אפשרויות ספציפיות לספק כגון כתובות בסיס מותאמות אישית, הגדרות אזור או אישורים בעלי שם:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+רשום שרתי [Model Context Protocol](https://modelcontextprotocol.io) שהסוכן יכול לקרוא כאל כלים:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+נהל שרתי MCP באופן אינטראקטיבי עם `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` ו-`bolt mcp debug`.
+
+### `instructions`
+
+הוסף הוראות מערכת מותאמות אישית שמוזרקות לכל סשן. שימושי לאכיפת מוסכמות קידוד, מדריכי סגנון או כללים ספציפיים לפרויקט:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+הוראות ממספר קבצי תצורה (גלובלי \+ פרויקט) ממוזגות ומוסרות מכפילויות אוטומטית.
+
+### `plugin`
+
+טען תוספי Bolt. תוספים יכולים להוסיף כלים חדשים, ספקים, מקורות הקשר וווים:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### תצורה מרוחקת דרך `url`
+
+שלוף תצורה מכתובת URL מרוחקת בהפעלה. שימושי לתצורת צוות מרכזית:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## החלפת משתנים
+
+ערכי תצורה יכולים להתייחס למשתני סביבה באמצעות תחביר `$VAR_NAME` או `${VAR_NAME}`. ההחלפה מתרחשת בזמן טעינה, לפני שהתצורה מנותחת:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="איך אני משתמש במשתני סביבה בתצורה?">
+  התייחס לכל משתנה סביבה עם `$VAR_NAME` או `${VAR_NAME}` בכל ערך תצורה מסוג מחרוזת. Bolt מחליף את הערך בזמן טעינה. אם המשתנה לא הוגדר, המחרוזת המילולית `$VAR_NAME` נעשית — Bolt לא נכשל בשקט או זורק שגיאה עבור החלפות חסרות.
+</Accordion>
+
+## דריסות משתני סביבה
+
+משתני סביבה אלה מאפשרים לך להפנות מחדש או לדרוס את התצורה לחלוטין, מה שמועיל ל-CI, קונטיינרים ובדיקות:
+
+| משתנה | תיאור |
+| --- | --- |
+| `BOLT_CONFIG` | נתיב מוחלט לקובץ תצורה לטעינה במקום זה המקומי של הפרויקט |
+| `BOLT_CONFIG_DIR` | דרוס את הספרייה ש-Bolt מחפש בה קבצי תצורה |
+| `BOLT_CONFIG_CONTENT` | ספק תוכן תצורה JSONC גולמי כמחרוזת — אין צורך בקובץ |
+
+`BOLT_CONFIG_CONTENT` שימושי במיוחד בסביבות בקונטיינרים שבהן חיבור קובץ אינו נוח:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="איזו תצורה גוברת כאשר מספר מקורות פעילים?">
+  Bolt ממזג תצורות בסדר זה (רשומות מאוחרות יותר גוברות):
+
+  1. קובץ תצורה גלובלי (`bolt.jsonc` / `bolt.json` בספריית התצורה של מערכת ההפעלה)
+  2. תצורות מרוחקות שהובאו מרשומות `url` בתצורה הגלובלית
+  3. קבצי תצורה לכל פרויקט (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. קובץ `BOLT_CONFIG` (אם מוגדר)
+  5. `BOLT_CONFIG_CONTENT` (אם מוגדר)
+
+  שדות מערך כגון `instructions` משורשרים על פני מקורות במקום להיות מוחלפים. שדות אובייקט ממוזגים לעומק כאשר ערכים מאוחרים גוברים בהתנגשויות.
+</Accordion>

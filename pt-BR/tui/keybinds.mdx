@@ -1,0 +1,38 @@
+---
+title: "Atalhos de teclado do TUI do Bolt"
+sidebarTitle: "Atalhos de teclado"
+description: "Os atalhos essenciais do TUI do Bolt: alternar agentes com Tab, modo mini, voz push-to-talk e tudo mais que você pode controlar pelo teclado."
+---
+
+O TUI do Bolt é projetado para ser controlado de ponta a ponta pelo teclado. Esta página lista os atalhos que você mais usará. Para a lista exaustiva, execute `bolt` e abra a ajuda in-app.
+
+## Essenciais
+
+| Teclas | Ação |
+| --- | --- |
+| `Tab` | Cicla para o próximo agente (`code`, `plan`, `ask`, ...). O agente atual é mostrado na barra de status. |
+| `Shift+Tab` | Cicla para o agente anterior. |
+| `Enter` | Envia a mensagem atual. |
+| `Esc` | Cancela o turno em andamento. |
+| `Ctrl+C` | Interrompe a chamada de ferramenta atual. |
+| `Ctrl+D` | Desanexa da sessão (deixa-a rodando no servidor). |
+
+## Modos
+
+### Modo `--mini`
+
+Inicie o Bolt com um layout compacto de split-footer que ocupa menos espaço no terminal, ótimo para painéis divididos:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Voz push-to-talk
+
+Mantenha a tecla configurada de push-to-talk pressionada para ditar um prompt usando speech-to-text e solte para enviar. Configure a tecla e o provedor de STT em `.bolt/bolt.jsonc`.
+
+## Relacionados
+
+- [Slash commands](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` e amigos.
+- [Sessões](/concepts/sessions) — desanexar, retomar, ramificar e compartilhar pelo teclado.

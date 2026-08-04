@@ -1,0 +1,78 @@
+---
+title: "Bolt: AI kódovací agent pro tvůj terminál"
+sidebarTitle: "Domů"
+description: "Bolt je AI kódovací agent určený primárně pro terminál — s deseti specializovanými agenty, trvalými sezeními, podporou MCP a desktopovou aplikací, poháněný libovolným LLM providerem."
+---
+
+Bolt ti přináší celý AI engineering tým přímo do terminálu. Dodává se jako rychlé, klávesnicí ovládané TUI i nativní desktopová aplikace, přičemž obě používají stejný engine: deset specializovaných agentů, trvalá odolná sezení, správa MCP serverů s OAuth, systém pluginů a podpora všech hlavních LLM providerů.
+
+<CardGroup cols={2}>
+  <Card title="Instalace" icon="download" href="/installation">
+    Nainstaluj Bolt během několika sekund pomocí curl, npm, bun nebo svého oblíbeného správce balíčků.
+  </Card>
+  <Card title="Rychlý start" icon="rocket" href="/quickstart">
+    Spusť své první AI kódovací sezení do jedné minuty.
+  </Card>
+  <Card title="Agenti" icon="robot" href="/concepts/agents">
+    Seznam se s deseti vestavěnými agenty: code, plan, ask, review, debug, refactor, docs, security, migrate a perf.
+  </Card>
+  <Card title="Reference příkazů" icon="terminal" href="/reference/commands">
+    Každý CLI příkaz, podpříkaz a přepínač zdokumentovaný do detailu.
+  </Card>
+</CardGroup>
+
+## Co Bolt dělá
+
+Bolt čte tvůj kód, rozumí tomu, co stavíš, a píše kód spolu s tebou — v terminálu nebo jako desktopová aplikace. Každé sezení je trvalé: můžeš se odpojit, znovu připojit z jiného stroje, rozvětvit konverzaci, sdílet odkaz nebo exportovat očištěný záznam.
+
+<CardGroup cols={3}>
+  <Card title="Sezení" icon="clock-rotate-left" href="/concepts/sessions">
+    Trvalá, rozvětvitelná sezení uložená v lokálním SQLite.
+  </Card>
+  <Card title="Provideři a modely" icon="microchip" href="/concepts/providers-and-models">
+    Použij vlastní API klíč pro libovolného hlavního LLM providera.
+  </Card>
+  <Card title="Konfigurace" icon="sliders" href="/concepts/configuration">
+    Konfigurace na úrovni projektu v `.bolt/bolt.jsonc` s plnou podporou schématu.
+  </Card>
+  <Card title="MCP servery" icon="plug" href="/extending/mcp-servers">
+    Přidávej nástroje přes Model Context Protocol, včetně OAuth toků.
+  </Card>
+  <Card title="Pluginy" icon="puzzle-piece" href="/extending/plugins">
+    Rozšiř Bolt o vlastní providery, nástroje a metody autentizace.
+  </Card>
+  <Card title="Integrace s GitHubem" icon="github" href="/server/github-actions">
+    AI commit zprávy, code review a GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Jak začít
+
+<Steps>
+  <Step title="Nainstaluj Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Nebo nainstaluj přes npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Otevři svůj projekt">
+    Přejdi do libovolného adresáře s projektem a spusť TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Nakonfiguruj providera">
+    Při prvním spuštění tě Bolt vyzve k přidání LLM providera. Můžeš také spustit:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Začni kódovat s AI">
+    Napiš svůj prompt do zápatí TUI, stiskni Enter a nech agenty Boltu pracovat. Mezi agenty přepínáš pomocí `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Použij `bolt run "explain this codebase"` pro rychlou neinteraktivní odpověď bez otevírání celého TUI.
+</Tip>

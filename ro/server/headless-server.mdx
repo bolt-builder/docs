@@ -1,0 +1,52 @@
+---
+title: "Rulează Bolt ca server headless"
+sidebarTitle: "Server headless"
+description: "bolt serve expune un runtime complet Bolt prin HTTP, astfel încât orice TUI, UI web, integrare de editor sau script să se poată atașa la el local sau prin rețea."
+---
+
+`bolt serve` rulează un server Bolt headless care expune întregul motor prin HTTP: sesiuni, agenți, instrumente, acces la furnizori, MCP și evenimente în streaming. Orice poate face Bolt interactiv, poate face prin API.
+
+## Pornește un server
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  Legarea la `0.0.0.0` expune Bolt în rețeaua ta. Setează întotdeauna `BOLT_SERVER_USERNAME` și `BOLT_SERVER_PASSWORD` înainte de a face asta.
+</Warning>
+
+## Atașează un TUI
+
+De pe orice mașină care poate ajunge la server:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Sau rulează un prompt one-shot pe un server la distanță:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+Setează credențialele prin variabile de mediu (consultă [Variabile de mediu](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Toți clienții trebuie să trimită credențiale care se potrivesc.
+
+## Legături conexe
+
+- [Sesiuni la distanță](/server/remote-sessions) — atașare, descoperire mDNS și servere partajate.
+- [UI web](/server/web-ui) — front-end-ul din browser.
+- [ACP](/server/acp) — controlul Bolt din Zed și alte editoare.

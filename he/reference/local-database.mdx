@@ -1,0 +1,38 @@
+---
+title: "מסד נתונים מקומי (bolt db)"
+sidebarTitle: "מסד נתונים מקומי"
+description: "Bolt מאחסן כל סשן, הודעה וקריאת כלי במסד נתונים מקומי של SQLite. בדוק אותו, גבה אותו או תשאל אותו ישירות עם bolt db."
+---
+
+Bolt שומר כל סשן, הודעה וקריאת כלי במסד נתונים מקומי של SQLite. הוא ניתן לבדיקה מלאה ושייך לחלוטין לך — שום דבר לא מועלה אלא אם אתה משתף סשן במפורש.
+
+## פעולות נפוצות
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## גיבוי
+
+מכיוון שזהו קובץ SQLite יחיד, גיבוי הוא העתקה:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+לאחסון לטווח ארוך או להעברה, העדף `bolt export` / `bolt import` — הם מייצרים ייצוג JSON נייד ששורד מיגרציות סכמה.
+
+## סכמה במבט מהיר
+
+- `sessions` — שורה אחת לכל סשן, עם כותרת, פרויקט, חותמות זמן וסטטוס.
+- `messages` — יומן הסבבים המלא לכל סשן.
+- `tool_calls` — כל הפעלה עם קלטים, פלטים ומשך.
+
+עמודות מדויקות מתפתחות; השתמש ב-`PRAGMA table_info(<table>)` כדי לראות את הסכמה החיה.
+
+## קשור
+
+- [סשנים](/concepts/sessions) — מה מסד הנתונים מאחסן.
+- [סטטיסטיקות ועלות](/reference/stats-and-cost) — תצוגות מצטברות על אותם נתונים.

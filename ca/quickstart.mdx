@@ -1,0 +1,142 @@
+---
+title: "Comença amb Bolt en menys d'un minut"
+sidebarTitle: "Inici ràpid"
+description: "Instal·la Bolt, obre el teu projecte, connecta un proveïdor i executa el teu primer prompt d'IA — tot en menys de 60 segons amb aquesta guia pas a pas."
+---
+
+Aquesta guia et guia per instal·lar Bolt, llançar-lo en un projecte, connectar un proveïdor d'IA i executar el teu primer prompt. Tot el flux triga menys d'un minut.
+
+<Steps>
+  <Step title="Instal·la Bolt">
+    El camí més ràpid és l'script d'instal·lació oficial, que funciona a macOS i Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Prefereixes un gestor de paquets? Instal·la globalment amb npm, bun, pnpm o yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Per a l'aplicació d'escriptori a macOS (sense el detour de Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Consulta la [guia d'instal·lació](/installation) per a tots els mètodes, incloent Homebrew, Chocolatey, Scoop i notes específiques de Windows.
+  </Step>
+  <Step title="Obre el teu projecte">
+    Navega a qualsevol directori de projecte i llança el TUI interactiu:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt recull el teu context de projecte automàticament — llegint l'arbre de fitxers, entenent l'estac i posant-lo disponible per a cada agent des del moment que l'obres.
+  </Step>
+  <Step title="Configura un proveïdor d'IA">
+    Al primer llançament, Bolt et demanarà configurar un proveïdor si cap està definit. També pots executar això en qualsevol moment:
+
+    ```bash
+    bolt providers
+    ```
+
+    Això obre el flux de gestió de proveïdors on pots afegir claus API per a OpenAI, Anthropic i altres proveïdors LLM suportats. La configuració es desa a `.bolt/bolt.jsonc` a l'arrel del teu projecte.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Escriu un prompt i explora els agents">
+    Un cop dins del TUI, escriu el teu prompt i prem Enter. Utilitza **Tab** per canviar entre els deu agents integrats de Bolt en qualsevol moment — l'agent actual es mostra a la barra d'estat.
+
+    També pots executar prompts directament des de la línia d'ordres sense obrir el TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Agents integrats
+
+Canvia d'agent amb `Tab` al TUI, o passa `--agent <name>` a `bolt run`. Cada agent té un nivell d'accés definit que coincideix amb el seu propòsit.
+
+| Agent | Accés | Descripció |
+| --- | --- | --- |
+| `code` | Full | Predeterminat: llegeix, escriu i executa codi |
+| `plan` | Read | Explora el codi base i produeix un pla sense canviar fitxers |
+| `ask` | Read | Preguntes i recerca — sense edicions de fitxers |
+| `code-review` | Read | Revisa canvis per correcció, estil i seguretat |
+| `debug` | Full | Depura proves fallides, bloquejos i errors de lògica |
+| `refactor` | Full | Refactorització segura amb verificació de proves a cada pas |
+| `docs` | Edit | Escriu i actualitza documentació i comentaris |
+| `security` | Read | Auditoria de seguretat: vulnerabilitats, secrets, patrons |
+| `migrate` | Full | Actualitzacions de framework i migracions de dependències |
+| `perf` | Full | Anàlisi de rendiment i optimització |
+
+També hi ha dos subagents integrats per a delegació: `@general` per a tasques complexes de múltiples passos i `@explore` per a recerca ràpida només de lectura del codi base. Pots definir els teus propis agents com a fitxers Markdown o generar-ne un amb `bolt agent create`.
+
+## Ordres comunes per provar a continuació
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Passa `--mini` a `bolt` o `bolt attach` per obtenir una interfície compacta que ocupa menys espai al terminal — genial per a finestres més petites o disposicions de panell dividit.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` accepta els flags `--auto`, `--yolo` i `--dangerously-skip-permissions` que auto-aproven tots els avisos de permís sense preguntar. Utilitza'ls només en entorns de confiança — permeten a l'agent llegir, escriure i executar sense confirmació.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt suporta la compleció d'ordres per a bash, zsh, fish i altres shells. Genera i instal·la les complecions amb:
+
+  ```bash
+  bolt completion
+  ```
+
+  Segueix les instruccions impreses per carregar l'script de compleció a la configuració del teu shell.
+</Note>

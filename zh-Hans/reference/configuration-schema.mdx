@@ -1,0 +1,192 @@
+---
+title: "Bolt 配置文件参考"
+sidebarTitle: "配置 Schema"
+description: "Bolt 配置文件 schema 的完整参考 — 位置、所有顶级字段、MCP 服务器类型、提供商覆盖以及完整示例。"
+---
+
+Bolt 使用带注释的 JSON（`.jsonc`）文件进行项目和全局配置。schema 已版本化并发布在 `https://opencode.ai/config.json`,编辑器可以使用它来提供自动补全和验证。
+
+## 配置文件位置
+
+Bolt 从两个位置合并配置。当相同的键在两者中都出现时,按项目设置优先于全局设置。
+
+| 范围 | 路径 |
+|---|---|
+| **按项目** | 项目根目录中的 `.bolt/bolt.jsonc`（或 `.bolt/bolt.json`） |
+| **全局** | 操作系统配置目录中的 `bolt.jsonc`（或 `bolt.json`） |
+
+操作系统配置目录为：
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt 还读取相同位置的旧版 `opencode.jsonc` / `opencode.json` 文件。新项目应使用 `bolt.jsonc` 命名约定,该约定优先于旧文件名。
+</Note>
+
+Bolt 在首次运行时创建带有 `$schema` 行的最小全局配置文件,并在你首次在项目目录中打开 TUI 时创建 `.bolt/bolt.jsonc`。
+
+## Schema 字段
+
+<ParamField body="$schema" type="string">
+  指向此配置文件的 JSON schema 的 URL。在支持 JSON Schema 的编辑器（VS Code、Zed、JetBrains IDE 等）中启用自动补全和内联验证。
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  所有会话的默认模型,以 `provider/model` 表示。这可以通过 `bolt run --model` 或 TUI 模型选择器按会话覆盖。
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  运行 `bolt models` 查看你已配置提供商的所有可用 `provider/model` 字符串。
+</ParamField>
+
+<ParamField body="provider" type="object">
+  提供商特定的凭证和设置覆盖。每个键是一个提供商 ID（例如 `anthropic`、`openai`、`google`）。最常见的用法是通过环境变量引用设置 API 密钥,这样密钥就不会以明文存储。
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  以 `${` 开头并以 `}` 结尾的值被视为环境变量引用,并在运行时展开。
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  MCP 服务器配置,按你选择的名称进行键控。Bolt 支持两种服务器类型：
+
+  **远程服务器** — 通过 HTTP/SSE 连接,可选 OAuth：
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | 字段 | 类型 | 描述 |
+  |---|---|---|
+  | `type` | `"remote"` | 将此标识为远程 HTTP 服务器 |
+  | `url` | string | MCP 端点的完整 URL |
+  | `oauth` | object \| `false` | OAuth 配置对象（带可选的 `clientId`、`clientSecret`、`scope`、`redirectUri`）。设置为 `false` 以禁用 OAuth 自动检测。 |
+  | `headers` | object | 每个请求发送的 HTTP 头（`{ "Key": "Value" }`） |
+  | `enabled` | boolean | 在启动时启用或禁用此服务器 |
+  | `timeout` | number | 请求超时（毫秒）（默认：5000） |
+
+  **本地服务器** — 通过 stdio 生成子进程：
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | 字段 | 类型 | 描述 |
+  |---|---|---|
+  | `type` | `"local"` | 将此标识为本地 stdio 服务器 |
+  | `command` | string[] | 要生成的命令和所有参数 |
+  | `cwd` | string | 服务器进程的工作目录（相对路径从工作区目录解析） |
+  | `environment` | object | 传递给子进程的额外环境变量 |
+  | `enabled` | boolean | 在启动时启用或禁用此服务器 |
+  | `timeout` | number | 请求超时（毫秒）（默认：5000） |
+
+  使用 `bolt mcp add` 获得交互式向导,或使用 `bolt mcp list` 检查当前服务器状态。
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  附加到此项目或全局中每个会话的额外系统指令。来自多个配置文件的指令会被合并（去重）。用它注入项目特定的约定、样式规则或每个代理都应遵循的约束。
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  要加载的插件规范。每个条目是一个 npm 包名、本地文件路径或 URL。插件可以扩展 TUI、添加斜杠命令或注册其他提供商。使用 `bolt plugin install <spec>` 安装插件并将其自动添加到此数组。
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## 完整示例
+
+以下 `.bolt/bolt.jsonc` 显示了一个真实的项目配置：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+运行 `bolt debug config` 以查看合并所有文件后完全解析的配置。这是确认你的按项目和全局配置正确组合的最快方式。
+</Tip>

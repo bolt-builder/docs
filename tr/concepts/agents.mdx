@@ -1,0 +1,135 @@
+---
+title: "Ajanlar — Bolt'un Yerleşik On Ajanı ve Özel AI Kişilikleri"
+sidebarTitle: "Ajanlar"
+description: "Bolt, her biri farklı bir role, araç setine ve erişim düzeyine sahip on yerleşik ajanla gelir. Ajanları değiştirmeyi, yapılandırmayı ve kendi ajanlarınızı oluşturmayı öğrenin."
+---
+
+Bolt, her AI kişiliğini adlandırılmış bir **ajan** olarak ele alır: hassas biçimde belirlenmiş bir dizi araç izniyle eşleştirilmiş bir sistem komutu. Her görev için tek bir genel amaçlı model çalıştırmak yerine, erişimi ve odağı ihtiyacınıza uygun olan ajanı siz seçersiniz — güvenlik denetimi yapmak, dokümantasyon yazmak veya tam bir çerçeve göçünü hazırlamak için.
+
+## Erişim düzeyleri
+
+Her yerleşik ajana, hangi araçları çağırabileceğini belirleyen üç erişim kademesinden biri atanır:
+
+| Düzey | Verilen izinler | Tipik kullanım |
+|-------|---------------------|-------------|
+| **Full** | Dosyaları oku, dosyalara yaz/düzenle, kabuk komutları çalıştır | Aktif kodlama, hata ayıklama, yeniden düzenleme, göçler |
+| **Edit** | Dosyaları oku, dosyalara yaz/düzenle — kabuk yok | Dokümantasyon, yorum güncellemeleri, güvenli metin düzenlemeleri |
+| **Read** | Yalnızca dosyaları oku — yazma yok, kabuk yok | Planlama, araştırma, kod incelemesi, denetimler |
+
+## Yerleşik ajanlar
+
+Bolt kutudan çıkar çıkmaz on uzmanlaşmış ajanla gelir. TUI'de <kbd>Tab</kbd> tuşuna basarak aralarında geçiş yapın.
+
+| Ajan | Erişim | Açıklama |
+|-------|--------|-------------|
+| `code` | Full | Varsayılan: kod okur, yazar ve çalıştırır |
+| `plan` | Read | Kod tabanını inceler ve kodu değiştirmeden bir plan üretir |
+| `ask` | Read | Sorular ve araştırma — dosya düzenlemesi yok |
+| `code-review` | Read | Değişiklikleri doğruluk, stil ve güvenlik açısından inceler |
+| `debug` | Full | Başarısız testler, çökmeler ve mantık hatalarını ayıklar |
+| `refactor` | Full | Her adımda test doğrulamasıyla güvenli yeniden düzenleme |
+| `docs` | Edit | Dokümantasyon ve yorumları yazar ve günceller |
+| `security` | Read | Güvenlik denetimi: güvenlik açıkları, sırlar ve tehlikeli desenler |
+| `migrate` | Full | Çerçeve yükseltmeleri ve bağımlılık göçleri |
+| `perf` | Full | Performans analizi ve optimizasyon |
+
+## Alt ajanlar
+
+On birincil ajanın yanı sıra Bolt, birincil ajanların oturum sırasında iş devredebileceği iki yerleşik **alt ajan** sunar. Bir alt ajanı asla manuel olarak seçmezsiniz — birincil bir ajan bir tanesini oluşturmaya karar verdiğinde otomatik olarak gönderilirler.
+
+| Alt ajan | Rol |
+|----------|------|
+| `@general` | Geniş yetenekler gerektiren karmaşık çok adımlı görev devrederi |
+| `@explore` | Hızlı, salt okunur kod tabanı araştırması — yan etki olmadan dosyalarda gezinir |
+
+<Tip>
+  Tanımadığınız bir kod tabanını hızlıca anlamanız gerektiğinde `ask` veya `plan` ajanıyla başlayın. Perde arkasında, bir yanıt üretmeden önce projenizi yüksek hızda dizine eklemek için `@explore` alt ajanını görevlendirebilirler — tek bir dosyaya bile dokunmadan.
+</Tip>
+
+## Ajanları değiştirme
+
+**TUI'de** — bir oturum sırasında istediğiniz zaman mevcut ajanlar listesinde dolaşmak için <kbd>Tab</kbd> tuşuna basın. Aktif ajan oturum altbilgisinde gösterilir.
+
+**Etkileşimsiz olarak** — `bolt run` komutuna `--agent <name>` geçirerek o çalıştırmanın süresi boyunca belirli bir ajanı sabitleyin:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Ajanları listeleme
+
+Tüm mevcut ajanları — hem yerleşik hem özel — modları ve izin yapılandırmalarıyla görmek için:
+
+```bash
+bolt agent list
+```
+
+## Özel ajanlar
+
+Kendi ajanlarınızı iki şekilde oluşturabilirsiniz.
+
+### `bolt agent create` ile üretme
+
+Etkileşimli sihirbaz bir LLM kullanarak bir ajan dosyası üretir ve diske yazar:
+
+```bash
+bolt agent create
+```
+
+Tüm bayraklar isteğe bağlıdır. Etkileşimsiz çalıştırmak için bunları sağlayın:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Bayrak | Açıklama |
+|------|-------------|
+| `--description` | Ajanın ne yapması gerektiği (üretim için LLM komutu olarak kullanılır) |
+| `--path` | Üretilen ajan dosyasının yazılacağı dizin |
+| `--mode` | `all` (varsayılan), `primary` veya `subagent` |
+| `--permissions` | İzin verilecek izinlerin virgülle ayrılmış listesi. Tümü için atlayın. |
+| `--model` / `-m` | `provider/model` formatında kullanılacak model |
+
+### Manuel olarak bir markdown dosyası yazma
+
+Bir ajan yalnızca YAML ön verisi olan bir markdown dosyasıdır. Projenizde `.bolt/agents/` altına veya global ajanlar dizinine yerleştirin:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Dosya adı (`.md` uzantısı olmadan) ajanın tanımlayıcısı olur.
+
+### Mevcut izinler
+
+İzinler, özel bir ajan oluştururken kontrol ettiğiniz ince taneli araç kapılarıdır:
+
+| İzin | Kontroller |
+|------------|----------|
+| `bash` | Kabuk komutu yürütme |
+| `read` | Dosya okuma |
+| `edit` | Dosya yazma ve düzenleme (aynı zamanda `write` ve `apply_patch` kapılarını da kontrol eder) |
+| `glob` | Dosya glob/dizin listeleme |
+| `grep` | ripgrep ile dosya arama |
+| `webfetch` | Webden HTTP alma |
+| `task` | Alt ajan görevleri oluşturma |
+| `todowrite` | Yapılacak öğeleri oluşturma ve güncelleme |
+| `websearch` | Web arama sorguları |
+| `lsp` | Dil sunucusu protokolü işlemleri |
+| `skill` | Proje becerilerine erişim |

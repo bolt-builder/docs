@@ -1,0 +1,38 @@
+---
+title: "Base de dades local (bolt db)"
+sidebarTitle: "Base de dades local"
+description: "Bolt emmagatzema totes les sessions, missatges i crides d'eines en una base de dades SQLite local. Inspecciona-la, fes-ne còpia de seguretat o consulta-la directament amb bolt db."
+---
+
+Bolt manté totes les sessions, missatges i crides d'eines en una base de dades SQLite local. És totalment inspeccionable i totalment teva — res no es puja tret que comparteixis explícitament una sessió.
+
+## Operacions comunes
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Fer-ne còpia de seguretat
+
+Com que és un únic fitxer SQLite, la còpia de seguretat és una còpia:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Per a l'emmagatzematge o transport a llarg termini, prefereix `bolt export` / `bolt import` — produeixen una representació JSON portàtil que sobreviu a les migracions d'esquema.
+
+## Esquema d'un cop d'ull
+
+- `sessions` — una fila per sessió, amb títol, projecte, marques de temps i estat.
+- `messages` — el registre complet de torns per sessió.
+- `tool_calls` — cada invocació amb entrades, sortides i durada.
+
+Les columnes exactes evolucionen; utilitza `PRAGMA table_info(<table>)` per veure l'esquema en viu.
+
+## Relacionat
+
+- [Sessions](/concepts/sessions) — què emmagatzema la base de dades.
+- [Estadístiques i cost](/reference/stats-and-cost) — vistes agregades sobre les mateixes dades.

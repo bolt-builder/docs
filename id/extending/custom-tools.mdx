@@ -1,0 +1,36 @@
+---
+title: "Custom Tools di Bolt"
+sidebarTitle: "Custom Tools"
+description: "Tambahkan tool spesifik proyek ke Bolt dengan menjatuhkan file yang dapat dieksekusi ke .opencode/tool/. Setiap file menjadi tool yang dapat dipanggil agent."
+---
+
+Custom tool memungkinkan kamu mengekspos apa pun yang dapat kamu script (shell script, program Node/Bun/Python, binary kecil) sebagai tool yang dapat dipanggil agent berdasarkan namanya. Ini adalah cara paling sederhana untuk memberi Bolt akses ke alur kerja build, deploy, atau data proyek kamu sendiri.
+
+## Di mana mereka tinggal
+
+Jatuhkan file ke salah satu:
+
+- `.opencode/tool/` — dilingkupi proyek, di-check-in dengan repo.
+- `.opencode/tools/` — diterima sebagai alias untuk di atas.
+
+Setiap file menjadi tool yang dinamai berdasarkan file (tanpa ekstensinya). Tool diambil secara otomatis pada startup Bolt berikutnya.
+
+## Anatomi sebuah tool
+
+Custom tool mendeklarasikan nama, deskripsi, dan skema input-nya di header, lalu mengimplementasikan perilaku. Bentuk pastinya bergantung pada runtime yang kamu pilih (shell script, TypeScript, dll.), tetapi setiap tool harus:
+
+1. Mengiklankan JSON Schema untuk input-nya sehingga model tahu cara memanggilnya.
+2. Mengembalikan nilai (atau kesalahan) yang dapat dirender Bolt di TUI dan diumpankan kembali ke model.
+
+Setelah dimuat, tool muncul di daftar tool agent di samping tool bawaan seperti `bash` dan `grep`, dan dijaga oleh sistem [permission](/concepts/permissions) yang sama.
+
+## Kapan menggunakan custom tool vs. MCP server
+
+- **Custom tool** — kecil, spesifik proyek, tidak digunakan ulang di seluruh proyek. Cepat ditulis.
+- **MCP server** — dibagikan di seluruh proyek, atau membungkus layanan eksternal nyata dengan auth. Lihat [MCP Servers](/extending/mcp-servers).
+- **Plugin tool** — didistribusikan sebagai paket npm bersama poin ekstensi lain. Lihat [Plugins](/extending/plugins).
+
+## Terkait
+
+- [Tools](/concepts/tools) — referensi tool bawaan.
+- [Plugins](/extending/plugins) — permukaan ekstensi untuk tool plus lebih banyak lagi.

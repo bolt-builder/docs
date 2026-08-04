@@ -1,0 +1,58 @@
+---
+title: "Eszközök: mit tehetnek valójában a Bolt ügynökei"
+sidebarTitle: "Eszközök"
+description: "A Bolt ügynökei számára elérhető beépített eszközök teljes listája, valamint hogyan adhatsz hozzá sajátokat pluginokon, MCP-szervereken vagy a .opencode/tool könyvtáron keresztül."
+---
+
+A Bolt ügynökei úgy dolgoznak, hogy eszközöket hívnak. Minden művelet, amit a TUI-ban látsz (fájl olvasása, tesztek futtatása, webes keresés), az a modell eszközválasztása és a Bolt végrehajtása. Minden ügynöknek van egy deklarált hozzáférési szintje, amely meghatározza, mely eszközöket hívhat anélkül, hogy előbb megkérdezné (lásd: [Jogosultságok](/concepts/permissions)).
+
+## Beépített eszközök
+
+| Eszköz | Mit csinál |
+| --- | --- |
+| `read` | Fájl olvasása a lemezről. |
+| `write` | Új fájl létrehozása vagy létező felülírása. |
+| `edit` | Célzott szerkesztés (keresés/csere) alkalmazása egy fájlra. |
+| `apply_patch` | Egységes diff-stílusú javítás alkalmazása egy vagy több fájlra. |
+| `glob` | Egy glob-mintának megfelelő fájlok listázása. |
+| `grep` | Fájltartalom keresése regex/szöveg szerint. |
+| `bash` | Shell parancs futtatása. |
+| `task` | Alfeladat delegálása egy al-ügynöknek (`@general`, `@explore` vagy egyedi al-ügynök). |
+| `todowrite` | Az ügynök strukturált feladatlistájának karbantartása több lépéses munkához. |
+| `webfetch` | URL letöltése és tartalmának visszaadása. |
+| `websearch` | Keresés a weben. |
+| `skill` | Nevesített skill meghívása (lásd: [Skillek](/extending/skills)). |
+| `memory_save` | Tény tartós tárolása a [projektmemóriában](/concepts/project-memory). |
+| `memory_recall` | Korábban mentett memória lekérése. |
+| `question` | Tisztázó kérdés feltevése és várakozás a válaszra. |
+| `bash_background` | Shell parancs indítása felügyelt háttérfolyamatként (dev szerverek, watcherek, hosszú buildek). |
+| `process_output` | Felhalmozódott kimenet és állapot olvasása egy háttérfolyamathoz, opcionálisan várva a befejezésre. |
+| `list_processes` | Háttérfolyamatok listázása azonosítóval, állapottal és paranccsal. |
+| `kill_process` | Háttérfolyamat (és folyamatfájának) leállítása azonosító alapján. |
+| `test_run` | A projekt tesztjeinek felismerése és futtatása, strukturált sikeres/sikertelen eredmények és hibarészletek visszaadása. |
+
+### Kísérleti
+
+| Eszköz | Mit csinál |
+| --- | --- |
+| `lsp` | Language server lekérdezése definíciókért, hivatkozásokért és diagnosztikákért. |
+| `execute` | Kód futtatása egy izolált code-mode homokozóban. |
+| `plan` | Strukturált terv készítése változtatások előtt. |
+
+A kísérleti eszközök változhatnak vagy átnevezhetők a kiadások között.
+
+## Az eszközkészlet bővítése
+
+A beépítetteken túl a Bolt három forrásból hívhat eszközöket:
+
+- **Egyedi eszközök** a `.opencode/tool/` (vagy `.opencode/tools/`) alatt a projekt gyökerében. Lásd: [Egyedi eszközök](/extending/custom-tools).
+- **Plugin-eszközök**, amelyeket bármely telepített [plugin](/extending/plugins) hozzájárul.
+- **MCP-eszközök** bármely a projekthez konfigurált [MCP-szerverről](/extending/mcp-servers).
+
+Mindhárom ugyanúgy néz ki az ügynök szempontjából: megjelennek az eszközlistán, tiszteletben tartják az ügynök hozzáférési szintjét, és megjelennek a TUI eszközhívási kimenetében.
+
+## Kapcsolódó
+
+- [Ügynökök](/concepts/agents) — mely ügynökök milyen eszközöket hívhatnak.
+- [Jogosultságok](/concepts/permissions) — hogyan van korlátozva az eszközhozzáférés ügynökönként.
+- [MCP-szerverek](/extending/mcp-servers) — a legelterjedtebb módja valós eszközök hozzáadásának.

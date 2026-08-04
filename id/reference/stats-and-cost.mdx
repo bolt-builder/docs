@@ -1,0 +1,32 @@
+---
+title: "Stats dan Biaya (bolt stats)"
+sidebarTitle: "Stats & Cost"
+description: "bolt stats mengagregasi penggunaan token dan biaya di seluruh sesi kamu sehingga kamu dapat melihat ke mana pengeluaran kamu pergi dan menyetel model atau agent sesuai kebutuhan."
+---
+
+`bolt stats` mengagregasi jumlah token dan biaya di seluruh database sesi lokal. Karena setiap panggilan tool dicatat (lihat [Local Database](/reference/local-database)), angkanya tepat untuk panggilan LLM yang dijalankan Bolt.
+
+## Penggunaan dasar
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Yang ditampilkannya
+
+- Total token input, output, dan cache.
+- Estimasi biaya per provider (menggunakan tabel harga provider pada saat run).
+- Rincian per-model, per-agent, dan per-hari tergantung pada flag.
+
+## Mengurangi biaya
+
+- Gunakan `--variant minimal` atau `--variant low` pada model yang berat pada reasoning. Lihat [Providers & Models](/concepts/providers-and-models).
+- Utamakan agent `ask` atau `plan` untuk eksplorasi; mereka hanya-baca dan menghindari loop yang berat pada tool.
+- Beralih ke model yang lebih kecil dengan `bolt models` untuk tugas yang tidak memerlukan kemampuan frontier.
+
+## Terkait
+
+- [Providers & Models](/concepts/providers-and-models) — pilih dan setel model yang diukur `stats`.
+- [Troubleshooting](/reference/troubleshooting) — apa yang harus dilakukan tentang tagihan mengejutkan.

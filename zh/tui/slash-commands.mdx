@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI 斜杠命令"
+sidebarTitle: "斜杠命令"
+description: "你可以在 Bolt TUI 内运行的斜杠命令 — /memory、/plan、/todos、/btw — 以及它们如何改变当前会话的行为。"
+---
+
+斜杠命令输入到 TUI 提示中,并更改当前会话的行为方式。它们不会向模型发送任何内容；它们在本地针对 Bolt 本身运行。
+
+## 参考
+
+| 命令 | 功能 |
+| --- | --- |
+| `/memory` | 显示此会话的项目记忆状态。 |
+| \`/memory use on | off\` | 此会话是否从[项目记忆](/concepts/project-memory)读取。 |
+| \`/memory contribute on | off\` | 回合结束时,此会话是否写回项目记忆。 |
+| `/plan` | 将当前会话切换到规划模式（只读,生成计划）。 |
+| `/todos` | 显示代理的当前结构化任务列表。 |
+| `/btw` | 注入一条带外注释（"顺便说一下……"）,代理将在下一回合看到,而不会触发完整响应。 |
+
+<Tip>
+  斜杠命令是会话范围的。要使偏好持久,请在 `.bolt/bolt.jsonc` 中设置它。参见[配置](/concepts/configuration)。
+</Tip>
+
+## 添加你自己的命令
+
+自定义斜杠命令可以由[插件](/extending/plugins)和 `.opencode/command/` 中的文件贡献。每个命令是一个 Markdown 文件,其 frontmatter 描述触发器和行为。
+
+## 相关
+
+- [键绑定](/tui/keybinds) — TUI 的键盘快捷键。
+- [项目记忆](/concepts/project-memory) — `/memory` 切换什么。

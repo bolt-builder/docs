@@ -1,0 +1,475 @@
+---
+title: "Tham chiếu lệnh CLI của Bolt"
+sidebarTitle: "Lệnh"
+description: "Tham chiếu đầy đủ cho mọi lệnh CLI của Bolt, bao gồm cờ, đối số và ví dụ sử dụng cho TUI, run, serve, session, agent và nhiều hơn nữa."
+---
+
+Bolt phơi bày một binary `bolt` duy nhất với một tập lệnh con phong phú. Chạy `bolt` không có đối số sẽ mở giao diện terminal đầy đủ. Mọi lệnh con khác được liệt kê bên dưới. Dùng `bolt <command> --help` bất kỳ lúc nào để có trợ giúp nội tuyến.
+
+<Accordion title="bolt (mặc định — khởi chạy TUI)">
+  Mở giao diện terminal tương tác trong thư mục hiện tại. Bolt tự động khám phá ngữ cảnh dự án, nạp cấu hình và kết nối tới các provider đã cấu hình.
+
+  ```bash
+  bolt
+  bolt --mini          # chế độ tương tác chân tách tối giản
+  bolt --log-level DEBUG
+  ```
+
+  **Cờ toàn cục** — có sẵn trên mọi lệnh:
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | In log ra stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Đặt mức độ chi tiết của log |
+  | `--pure` | boolean | Chạy mà không nạp bất kỳ plugin bên ngoài nào |
+  | `--help`, `-h` | boolean | Hiển thị văn bản trợ giúp |
+  | `--version`, `-v` | boolean | In số phiên bản đã cài |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Chạy Bolt với một prompt đơn ở chế độ không tương tác. Bolt khởi động một server trong tiến trình, gửi prompt tới phiên đang hoạt động, stream phản hồi ra stdout, rồi thoát. Pipe stdin hoặc truyền `--file` để đính kèm ngữ cảnh.
+
+  ```bash
+  # Prompt không tương tác cơ bản
+  bolt run "giải thích mô-đun auth"
+  
+  # Tiếp tục phiên gần đây nhất
+  bolt run --continue "giờ thêm xử lý lỗi"
+  
+  # Dùng một mô hình cụ thể với một agent cụ thể
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream các sự kiện JSON thô để tích hợp công cụ
+  bolt run --format json "tóm tắt các thay đổi"
+  
+  # Gửi cùng tác vụ tới nhiều mô hình và giữ kết quả tốt nhất
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "viết unit test"
+  
+  # Đính kèm tệp làm ngữ cảnh
+  bolt run --file ./openapi.yaml "sinh SDK client"
+  
+  # Gắn vào server từ xa và chạy prompt ở đó
+  bolt run --attach http://my-server:4096 --dir /projects/api "test nào đang thất bại?"
+  
+  # Bỏ qua mọi lời nhắc quyền (nguy hiểm)
+  bolt run --auto "xóa mọi bình luận TODO"
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slash-command để thực thi; truyền đối số làm tin nhắn |
+  | `--continue` | `-c` | boolean | Tiếp tục phiên gần đây nhất |
+  | `--session` | `-s` | string | ID phiên để tiếp tục |
+  | `--fork` |  | boolean | Fork phiên trước khi tiếp tục (yêu cầu `--continue` hoặc `--session`) |
+  | `--share` |  | boolean | Chia sẻ phiên sau khi hoàn thành |
+  | `--model` | `-m` | string | Mô hình để dùng theo định dạng `provider/model` |
+  | `--best-of` |  | string | Danh sách `provider/model` phân cách bằng dấu phẩy; chạy tác vụ song song, xếp hạng kết quả, giữ người thắng |
+  | `--agent` |  | string | Agent để dùng (ví dụ `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Định dạng đầu ra; `json` stream các sự kiện JSON phân cách dòng thô |
+  | `--file` | `-f` | string\[\] | (Các) tệp để đính kèm làm ngữ cảnh |
+  | `--title` |  | string | Tiêu đề cho phiên |
+  | `--attach` |  | string | Chạy đối với server Bolt từ xa (ví dụ `http://localhost:4096`) |
+  | `--password` | `-p` | string | Mật khẩu basic auth cho server từ xa |
+  | `--username` | `-u` | string | Tên người dùng basic auth cho server từ xa |
+  | `--dir` |  | string | Thư mục làm việc; nếu `--attach` được đặt, đây là thư mục trên server từ xa |
+  | `--port` |  | number | Cổng cho server trong tiến trình cục bộ (ngẫu nhiên nếu bỏ qua) |
+  | `--variant` |  | string | Mức nỗ lực suy luận, riêng theo provider (ví dụ `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Hiển thị các khối suy luận/tư duy trong đầu ra |
+  | `--mini` |  | boolean | Khởi động giao diện tương tác chân tách tối giản (ẩn) |
+  | `--interactive` | `-i` | boolean | Ép chế độ chân tách tương tác trực tiếp |
+  | `--auto` |  | boolean | Tự động phê duyệt các quyền không bị từ chối tường minh |
+  | `--yolo` |  | boolean | Bỏ qua mọi lời nhắc quyền (bí danh của `--auto`, ẩn) |
+  | `--dangerously-skip-permissions` |  | boolean | Bỏ qua mọi kiểm tra quyền (ẩn) |
+  | `--demo` |  | boolean | Bật các slash command demo tương tác trực tiếp (ẩn) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Gắn TUI đầy đủ vào một server Bolt đang chạy. Server có thể cục bộ hoặc từ xa. Truyền `--mini` để dùng giao diện chân tách tối giản thay vì TUI đầy đủ.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Thư mục trên server từ xa |
+  | `--continue` | `-c` | boolean | Tiếp tục phiên gần đây nhất trên server từ xa |
+  | `--session` | `-s` | string | ID phiên để tiếp tục |
+  | `--fork` |  | boolean | Fork phiên khi tiếp tục |
+  | `--password` | `-p` | string | Mật khẩu basic auth |
+  | `--username` | `-u` | string | Tên người dùng basic auth |
+  | `--mini` |  | boolean | Dùng giao diện tương tác tối giản |
+  | `--no-replay` |  | boolean | Tắt replay lịch sử phiên khi resume và sau khi thay đổi kích thước (yêu cầu `--mini`) |
+  | `--replay-limit` |  | number | Giới hạn replay hiển thị ở N tin nhắn mới nhất (yêu cầu `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Khởi động một server API Bolt headless. Server phơi bày một API REST\+SSE mà TUI, `bolt run --attach` và `bolt attach` có thể kết nối tới. Bind trên `0.0.0.0` để có thể truy cập từ các máy khác — luôn đặt `BOLT_SERVER_PASSWORD` khi làm vậy.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--hostname` | string | Địa chỉ để bind (mặc định: `127.0.0.1`) |
+  | `--port` | number | Cổng để lắng nghe (ngẫu nhiên nếu bỏ qua) |
+  | `--mdns` | boolean | Bật khám phá dịch vụ mDNS (mặc định hostname thành `0.0.0.0`) |
+  | `--mdns-domain` | string | Tên miền tùy chỉnh cho dịch vụ mDNS (mặc định: `opencode.local`) |
+  | `--cors` | string\[\] | Các miền bổ sung để cho phép CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` không được đặt theo mặc định. Server sẽ log cảnh báo và chấp nhận mọi kết nối cho tới khi bạn đặt nó.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Khởi động server Bolt và ngay lập tức mở giao diện web trong trình duyệt mặc định của bạn. Chấp nhận cùng các cờ mạng như `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--hostname` | string | Địa chỉ để bind (mặc định: `127.0.0.1`) |
+  | `--port` | number | Cổng để lắng nghe (ngẫu nhiên nếu bỏ qua) |
+  | `--mdns` | boolean | Bật khám phá dịch vụ mDNS (mặc định hostname thành `0.0.0.0`) |
+  | `--mdns-domain` | string | Tên miền tùy chỉnh cho dịch vụ mDNS (mặc định: `opencode.local`) |
+  | `--cors` | string\[\] | Các miền bổ sung để cho phép CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Quản lý các phiên Bolt được lưu trong cơ sở dữ liệu SQLite cục bộ.
+
+  **Lệnh con**
+
+  ```bash
+  bolt session list                         # liệt kê tất cả phiên gốc
+  bolt session list --format json           # đầu ra dạng máy đọc được
+  bolt session list -n 20                   # hiển thị 20 phiên gần đây nhất
+  bolt session delete <sessionID>           # xóa vĩnh viễn một phiên
+  ```
+
+  **Cờ `bolt session list`**
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Giới hạn đầu ra ở N phiên gần đây nhất |
+  | `--format` |  | `table`\|`json` | Định dạng đầu ra (mặc định: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Liệt kê và tạo các agent tùy chỉnh. Agent là các tệp markdown có YAML frontmatter định nghĩa system prompt, quyền và mode.
+
+  ```bash
+  bolt agent list                           # liệt kê mọi agent có sẵn
+  bolt agent create                         # trình hướng dẫn tạo agent tương tác
+  
+  # Tạo không tương tác
+  bolt agent create \
+    --description "Kiểm toán code để tìm lỗ hổng bảo mật" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **Cờ `bolt agent create`**
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Đường dẫn thư mục để ghi tệp agent |
+  | `--description` |  | string | Mô tả ngôn ngữ tự nhiên về những gì agent nên làm |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Agent hoạt động như agent chính, subagent hay cả hai |
+  | `--permissions` | `--tools` | string | Danh sách quyền được phép, phân cách bằng dấu phẩy (mặc định: tất cả) |
+  | `--model` | `-m` | string | Mô hình để dùng theo định dạng `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (bí danh: auth)">
+  Quản lý tương tác thông tin xác thực provider AI. Thông tin xác thực được lưu trong thư mục dữ liệu OS của bạn (`~/.local/share/bolt/auth.json` trên Linux, `~/Library/Application Support/bolt/auth.json` trên macOS).
+
+  ```bash
+  bolt providers             # menu quản lý thông tin xác thực tương tác
+  bolt auth                  # bí danh của bolt providers
+  
+  bolt providers list        # liệt kê thông tin xác thực đã lưu và env var đang hoạt động
+  bolt providers login       # thêm thông tin xác thực cho một provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # xóa thông tin xác thực đã lưu
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Liệt kê mọi mô hình có sẵn từ các provider đã cấu hình của bạn.
+
+  ```bash
+  bolt models                         # liệt kê mọi mô hình từ mọi provider
+  bolt models anthropic               # lọc theo một provider
+  bolt models --verbose               # bao gồm metadata chi phí trong đầu ra
+  bolt models --refresh               # ép làm mới cache models.dev
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Bao gồm metadata chi phí JSON cho mỗi mô hình |
+  | `--refresh` | boolean | Làm mới cache mô hình từ models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Quản lý các server Model Context Protocol (MCP). Bolt hỗ trợ cả server từ xa (HTTP/SSE) với OAuth và server cục bộ (stdio).
+
+  ```bash
+  bolt mcp add                              # trình hướng dẫn tương tác để thêm server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # hiển thị mọi server đã cấu hình và trạng thái
+  bolt mcp auth <name>                      # chạy luồng OAuth cho một server
+  bolt mcp auth list                        # hiển thị trạng thái OAuth cho mọi server
+  bolt mcp logout <name>                    # xóa token OAuth đã lưu
+  bolt mcp debug <name>                     # kiểm tra kết nối và cấu hình OAuth
+  ```
+
+  **Cờ `bolt mcp add`**
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--url` | string | URL cho MCP server từ xa |
+  | `--env` | string\[\] | Biến môi trường cho server cục bộ (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP header cho server từ xa (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Cài đặt một plugin Bolt từ npm và cập nhật tệp cấu hình liên quan. Plugin có thể mở rộng TUI, thêm slash command mới hoặc đăng ký provider mới.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # cài đặt vào cấu hình toàn cục
+  bolt plugin install @my-org/bolt-plugin --force        # thay thế phiên bản hiện có
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Thêm plugin vào cấu hình toàn cục thay vì cấu hình dự án |
+  | `--force` | `-f` | boolean | Thay thế phiên bản plugin đã cấu hình |
+</Accordion>
+
+<Accordion title="bolt github">
+  Quản lý tích hợp Bolt GitHub Actions, cho phép Bolt phản hồi các pull request, issue và các sự kiện GitHub khác.
+
+  ```bash
+  bolt github install           # tạo scaffold workflow GitHub Actions trong repo của bạn
+  bolt github run               # chạy GitHub agent cục bộ (để kiểm thử)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **Cờ `bolt github run`**
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--event` | string | Tên sự kiện GitHub để mô phỏng (ví dụ `pull_request`) |
+  | `--token` | string | GitHub personal access token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Checkout một pull request GitHub dưới dạng nhánh cục bộ bằng CLI `gh`, rồi khởi chạy Bolt trong thư mục đã checkout. Nếu mô tả PR chứa liên kết chia sẻ phiên, Bolt sẽ tự động nhập phiên đó.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Lệnh này yêu cầu [GitHub CLI (`gh`)](https://cli.github.com/) được cài đặt và xác thực.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Sinh commit message cho các thay đổi đã staged (hoặc mọi thay đổi được theo dõi) bằng mô hình AI rồi commit. Mô hình kiểm tra lịch sử commit gần đây để lấy ngữ cảnh về phong cách.
+
+  ```bash
+  bolt commit                        # commit các thay đổi đã staged
+  bolt commit --all                  # stage và commit mọi thay đổi được theo dõi
+  bolt commit --dry-run              # in message được tạo mà không commit
+  bolt commit --model openai/gpt-4o  # dùng mô hình cụ thể
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Commit mọi thay đổi được theo dõi, không chỉ những cái đã staged |
+  | `--dry-run` |  | boolean | In message được tạo mà không commit |
+  | `--model` | `-m` | string | Mô hình để dùng theo định dạng `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Chạy AI code review trên một diff và thoát với mã `0` (pass) hoặc `1` (fail). Agent `code-review` kiểm tra diff về tính đúng đắn, phong cách và các vấn đề bảo mật, sau đó phát ra dòng `Verdict: PASS` hoặc `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review các thay đổi chưa commit (git diff HEAD)
+  bolt review --staged                 # chỉ review các thay đổi đã staged
+  bolt review --branch main            # review các thay đổi kể từ merge base với main
+  bolt review --model openai/o3        # dùng mô hình cụ thể
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Chỉ review các thay đổi đã staged |
+  | `--branch` |  | string | Review các thay đổi kể từ merge base với nhánh này |
+  | `--model` | `-m` | string | Mô hình để dùng theo định dạng `provider/model` |
+
+  <Note>
+    Mã thoát: `0` = PASS, `1` = FAIL, `2` = không thể xác định verdict.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Xuất một phiên dưới dạng JSON ra stdout. Hữu ích cho lưu trữ, chia sẻ hoặc nạp vào các công cụ khác. Truyền `--sanitize` trước khi chia sẻ công khai để ẩn đường dẫn tệp, prompt và các nội dung transcript nhạy cảm khác.
+
+  ```bash
+  bolt export                          # bộ chọn phiên tương tác, rồi ghi ra stdout
+  bolt export abc123                   # xuất một phiên cụ thể
+  bolt export abc123 --sanitize        # ẩn bí mật và đường dẫn
+  bolt export abc123 > session.json    # ghi ra tệp
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Ẩn dữ liệu nhạy cảm (đường dẫn tệp, văn bản prompt, I/O công cụ) trước khi xuất |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Nhập một phiên đã xuất trước đó vào cơ sở dữ liệu cục bộ. Chấp nhận cả tệp JSON cục bộ hoặc URL chia sẻ phiên.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Hiển thị thống kê tổng hợp sử dụng token và chi phí trên tất cả các phiên. Đầu ra bao gồm bảng tổng quan, chi tiết chi phí và token, sử dụng mô hình và biểu đồ thanh sử dụng công cụ.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # chỉ 7 ngày gần nhất
+  bolt stats --models             # bao gồm chi tiết theo mô hình
+  bolt stats --models 5           # hiển thị top 5 mô hình
+  bolt stats --tools 10           # hiển thị top 10 công cụ
+  bolt stats --project ""         # lọc chỉ theo dự án hiện tại
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--days` | number | Giới hạn ở N ngày gần nhất (mặc định: mọi thời gian) |
+  | `--tools` | number | Số công cụ để hiển thị trong biểu đồ sử dụng công cụ |
+  | `--models` | boolean\|number | Hiển thị thống kê mô hình; truyền số để giới hạn danh sách |
+  | `--project` | string | Lọc theo ID dự án; chuỗi rỗng nghĩa là dự án hiện tại |
+</Accordion>
+
+<Accordion title="bolt logs">
+  In log ứng dụng Bolt. Log được lưu tại thư mục log OS (ví dụ `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # in 1000 dòng cuối
+  bolt logs --tail 200             # in 200 dòng cuối
+  bolt logs --follow               # stream các dòng mới khi chúng được ghi
+  bolt logs -f                     # bí danh của --follow
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Số dòng cuối để in (mặc định: 1000) |
+  | `--follow` | `-f` | boolean | Stream các dòng log mới theo thời gian thực |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Truy vấn hoặc kiểm tra cơ sở dữ liệu SQLite phiên cục bộ trực tiếp.
+
+  ```bash
+  bolt db path                                  # in đường dẫn tệp cơ sở dữ liệu
+  bolt db "SELECT id, title FROM sessions"      # chạy truy vấn SQL (đầu ra TSV)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Định dạng đầu ra cho kết quả truy vấn (mặc định: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Nâng cấp Bolt lên bản phát hành mới nhất hoặc một phiên bản cụ thể. Bolt phát hiện phương thức cài đặt tự động và dùng trình quản lý gói phù hợp.
+
+  ```bash
+  bolt upgrade                         # nâng cấp lên phiên bản mới nhất
+  bolt upgrade 0.2.0                   # nâng cấp (hoặc hạ cấp) tới phiên bản cụ thể
+  bolt upgrade --method npm            # ép một phương thức cài đặt cụ thể
+  bolt upgrade --method curl
+  ```
+
+  | Cờ | Bí danh | Loại | Mô tả |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Phương thức cài đặt để dùng |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Xóa binary Bolt và mọi dữ liệu liên quan.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Tạo script shell completion cho `bash`, `zsh` hoặc `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Bộ sưu tập các lệnh con để gỡ lỗi và tìm hiểu. Hữu ích khi gửi báo cáo lỗi hoặc chẩn đoán hành vi bất ngờ.
+
+  ```bash
+  bolt debug info          # in phiên bản, OS, terminal và plugin đã nạp
+  bolt debug config        # in cấu hình đã được giải quyết đầy đủ
+  bolt debug paths         # in mọi thư mục dữ liệu/cấu hình/cache toàn cục
+  bolt debug lsp           # kiểm tra trạng thái LSP
+  bolt debug ripgrep       # kiểm tra tính khả dụng của ripgrep
+  bolt debug file          # kiểm tra hành vi công cụ tệp
+  bolt debug scrap         # scratchpad để gỡ lỗi
+  bolt debug skill         # kiểm tra các skill có sẵn
+  bolt debug snapshot      # kiểm tra snapshot phiên
+  bolt debug startup       # đo thời gian khởi động
+  bolt debug agents        # liệt kê agent và cấu hình đã được giải quyết
+  bolt debug v2            # kiểm tra trạng thái core phiên V2
+  bolt debug wait          # chặn vô hạn (để gỡ lỗi tiến trình)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Khởi động server ACP (Agent Client Protocol). ACP là giao thức được các tích hợp trình soạn thảo như [Zed](https://zed.dev) dùng để giao tiếp với Bolt qua stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Cờ | Loại | Mô tả |
+  | --- | --- | --- |
+  | `--cwd` | string | Thư mục làm việc cho server (mặc định: `process.cwd()`) |
+  | `--hostname` | string | Bind hostname (mặc định: `127.0.0.1`) |
+  | `--port` | number | Bind port |
+  | `--mdns` | boolean | Bật khám phá dịch vụ mDNS |
+  | `--mdns-domain` | string | Tên miền tùy chỉnh cho dịch vụ mDNS (mặc định: `opencode.local`) |
+  | `--cors` | string\[\] | Các miền bổ sung để cho phép CORS |
+</Accordion>

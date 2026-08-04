@@ -1,0 +1,53 @@
+---
+title: "Quyền: Kiểm soát những gì agent Bolt có thể làm"
+sidebarTitle: "Quyền"
+description: "Cách mức truy cập theo từng agent, lời nhắc quyền tương tác và quy tắc allow/deny ở mức cấu hình của Bolt ngăn agent làm những điều bạn chưa phê duyệt."
+---
+
+Agent của Bolt có thể đọc tệp, ghi tệp và chạy lệnh shell. Sức mạnh đó được giới hạn qua hai tầng: mức truy cập theo từng agent, và các lời nhắc quyền tương tác mà bạn có thể phê duyệt, từ chối, hoặc cấu hình trước.
+
+## Mức truy cập của agent
+
+Mỗi agent tích hợp sẵn có một mức truy cập được khai báo:
+
+| Mức truy cập | Đọc tệp | Ghi tệp | Chạy lệnh shell |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Ánh xạ tích hợp sẵn:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Chuyển agent bằng `Tab` trong TUI, hoặc truyền `--agent <name>` cho `bolt run`.
+
+## Lời nhắc tương tác
+
+Trong mức truy cập của một agent, các hành động có khả năng phá hủy vẫn nhắc để xác nhận. Bạn có thể phê duyệt một lần, phê duyệt cho phiên, hoặc từ chối. Các lời gọi bị từ chối trả về lỗi cho agent và nó tiếp tục.
+
+## Phê duyệt không tương tác
+
+Với CI, script, hoặc workflow cục bộ đáng tin cậy, `bolt run` hỗ trợ các cờ bỏ qua lời nhắc:
+
+```bash
+bolt run --auto "dọn dẹp các import"                   # tự động phê duyệt mọi thứ không bị từ chối tường minh
+bolt run --yolo "dọn dẹp các import"                   # bí danh cho --auto
+bolt run --dangerously-skip-permissions "..."       # bỏ qua mọi lời nhắc
+```
+
+<Warning>
+  `--auto`, `--yolo`, và `--dangerously-skip-permissions` cho phép agent đọc, ghi và thực thi mà không hỏi. Chỉ dùng chúng trong môi trường đáng tin cậy.
+</Warning>
+
+## Quy tắc ở mức cấu hình
+
+Bạn có thể từ chối trước (hoặc cho phép trước) các công cụ cụ thể cho toàn bộ dự án bằng cách thêm khối `permission` vào `.bolt/bolt.jsonc`. Điều này áp dụng cho mọi phiên trong dự án, kể cả các lời gọi `bolt run` không tương tác. Xem [Cấu hình](/concepts/configuration) cho schema.
+
+## Liên quan
+
+- [Agent](/concepts/agents) — agent nào có mức truy cập nào.
+- [Công cụ](/concepts/tools) — danh sách đầy đủ các công cụ mà quyền kiểm soát.
+- [Cấu hình](/concepts/configuration) — thiết lập các quy tắc quyền lâu dài.

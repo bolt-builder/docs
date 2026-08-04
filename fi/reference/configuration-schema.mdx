@@ -1,0 +1,192 @@
+---
+title: "Boltin konfigurointitiedoston viite"
+sidebarTitle: "Konfig-skeema"
+description: "Täydellinen viite Boltin konfigurointitiedoston skeemalle — sijainnit, kaikki ylätason kentät, MCP-palvelintyypit, tarjoajien ohitukset ja täydellinen esimerkki."
+---
+
+Bolt käyttää JSON with Comments (`.jsonc`) -tiedostoa projektin ja globaaliin konfigurointiin. Skeema on versioitu ja julkaistu osoitteessa `https://opencode.ai/config.json`, jota editorit voivat käyttää tarjoamaan automaattitäydennyksen ja validoinnin.
+
+## Konfigurointitiedostojen sijainnit
+
+Bolt yhdistää konfiguraation kahdesta sijainnista. Projektikohtaiset asetukset voittavat globaalit asetukset, kun sama avain ilmestyy molemmissa.
+
+| Laajuus | Polku |
+|---|---|
+| **Projektikohtainen** | `.bolt/bolt.jsonc` (tai `.bolt/bolt.json`) projektisi juuressa |
+| **Globaali** | `bolt.jsonc` (tai `bolt.json`) käyttöjärjestelmän konfigurointihakemistossasi |
+
+Käyttöjärjestelmän konfigurointihakemisto on:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt lukee myös vanhoja `opencode.jsonc` / `opencode.json` -tiedostoja samoista sijainneista. Uusien projektien tulisi käyttää `bolt.jsonc`-nimeämiskäytäntöä, joka on etusijalla vanhoihin tiedostonimiin nähden.
+</Note>
+
+Bolt luo minimaalisen globaalin konfigurointitiedoston `$schema`-rivillä ensimmäisellä suorituksella ja luo `.bolt/bolt.jsonc`n projektisi juureen ensimmäisellä kerralla, kun avaat TUI:n kyseisessä hakemistossa.
+
+## Skeeman kentät
+
+<ParamField body="$schema" type="string">
+  URL, joka osoittaa tämän konfigurointitiedoston JSON-skeemaan. Mahdollistaa automaattitäydennyksen ja inline-validoinnin editoreissa, jotka tukevat JSON Schemaa (VS Code, Zed, JetBrains IDE:t jne.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Oletusmalli kaikille istunnoille, ilmaistuna muodossa `provider/model`. Tämä voidaan ohittaa istuntokohtaisesti komennolla `bolt run --model` tai TUI:n mallivalitsimessa.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Suorita `bolt models` nähdäksesi kaikki käytettävissä olevat `provider/model`-merkkijonot määritetyille tarjoajillesi.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Tarjoajakohtaiset tunnistetieto- ja asetusohitukset. Jokainen avain on tarjoajan ID (esim. `anthropic`, `openai`, `google`). Yleisin käyttö on asettaa API-avain ympäristömuuttujaviittauksen kautta, jotta avainta ei koskaan tallenneta selkotekstinä.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Arvot, jotka alkavat `${`llä ja päättyvät `}`aan, käsitellään ympäristömuuttujaviittauksina ja laajennetaan ajoaikaisesti.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  MCP-palvelinkonfiguraatiot, avainnettuna valitsemallasi nimellä. Bolt tukee kahta palvelintyyppiä:
+
+  **Etäpalvelin** — yhdistää HTTP/SSE:llä, valinnaisesti OAuthilla:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Kenttä | Tyyppi | Kuvaus |
+  |---|---|---|
+  | `type` | `"remote"` | Tunnistaa tämän etä-HTTP-palvelimeksi |
+  | `url` | string | MCP-päätepisteen täysi URL |
+  | `oauth` | object \| `false` | OAuth-konfiguraatio-objekti (valinnaisilla `clientId`, `clientSecret`, `scope`, `redirectUri`). Aseta arvoon `false` poistaaksesi OAuthin automaattisen havaitsemisen käytöstä. |
+  | `headers` | object | HTTP-otsakkeet, jotka lähetetään jokaisen pyynnön kanssa (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Ota tämä palvelin käyttöön tai poista käytöstä käynnistyksessä |
+  | `timeout` | number | Pyynnön aikakatkaisu millisekunneissa (oletus: 5000) |
+
+  **Paikallinen palvelin** — käynnistää aliprosessin stdion yli:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Kenttä | Tyyppi | Kuvaus |
+  |---|---|---|
+  | `type` | `"local"` | Tunnistaa tämän paikalliseksi stdio-palvelimeksi |
+  | `command` | string[] | Komento ja kaikki käynnistysargumentit |
+  | `cwd` | string | Palvelinprosessin työhakemisto (suhteelliset polut ratkaistaan työtilan hakemistosta) |
+  | `environment` | object | Lisäympäristömuuttujat aliprosessille |
+  | `enabled` | boolean | Ota tämä palvelin käyttöön tai poista käytöstä käynnistyksessä |
+  | `timeout` | number | Pyynnön aikakatkaisu millisekunneissa (oletus: 5000) |
+
+  Käytä `bolt mcp add`ia interaktiiviseen ohjattuun toimintoon tai `bolt mcp list`ia palvelimen nykyisen tilan tarkastamiseen.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Lisäjärjestelmäohjeet, jotka lisätään jokaisen tämän projektin istunnon tai globaalisti. Useiden konfigurointitiedostojen ohjeet yhdistetään (kaksoiskappaleet poistetaan). Käytä tätä syöttääksesi projektikohtaisia käytäntöjä, tyylisääntöjä tai rajoituksia, joita jokaisen agentin tulisi seurata.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Ladattavien laajennusten tiedot. Jokainen merkintä on npm-paketin nimi, paikallinen tiedostopolku tai URL. Laajennukset voivat laajentaa TUI:ta, lisätä kauttaviivakomentoja tai rekisteröidä lisätarjoajia. Käytä `bolt plugin install <spec>` asentaaksesi laajennuksen ja lisätäksesi sen tähän taulukkoon automaattisesti.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Täydellinen esimerkki
+
+Seuraava `.bolt/bolt.jsonc` näyttää realistisen projektikonfiguraation:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Suorita `bolt debug config` nähdäksesi täydellisesti ratkaistun konfiguraation sen jälkeen, kun kaikki tiedostot on yhdistetty. Tämä on nopein tapa vahvistaa, että projektikohtainen ja globaali konfiguraatiosi yhdistyvät oikein.
+</Tip>

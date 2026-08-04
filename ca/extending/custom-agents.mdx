@@ -1,0 +1,68 @@
+---
+title: "Agents personalitzats a Bolt"
+sidebarTitle: "Agents personalitzats"
+description: "Defineix els teus propis agents de Bolt com a fitxers Markdown: tria un model, estableix el nivell d'accés, restringeix les eines i afegeix instruccions específiques del domini."
+---
+
+Més enllà dels deu agents integrats, pots definir els teus propis. Els agents personalitzats són fitxers Markdown amb un bloc de frontmatter que descriu el model, el nivell d'accés i les eines disponibles de l'agent, més un cos que actua com el seu indicador de sistema.
+
+## Crear un agent
+
+El camí més ràpid és el generador integrat, que fa unes quantes preguntes i escriu el fitxer per tu:
+
+```bash
+bolt agent create
+```
+
+Els agents viuen sota `.opencode/agent/` al projecte (o al teu directori de configuració global per a agents personals). Cada agent és un únic fitxer `.md` el nom del qual es converteix en el nom de l'agent.
+
+## Anatomia d'un fitxer d'agent
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Camps comuns del frontmatter:
+
+| Camp | Propòsit |
+| --- | --- |
+| `name` | Nom de l'agent utilitzat amb `--agent`. |
+| `description` | Resum d'una línia mostrat als llistats. |
+| `model` | Model per defecte en format `provider/model`. |
+| `access` | `full`, `edit` o `read` (vegeu [Permisos](/concepts/permissions)). |
+| `tools` | Llista opcional d'autorització que restringeix quines [eines](/concepts/tools) pot cridar l'agent. |
+
+## Utilitzar un agent personalitzat
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+Al TUI, prem `Tab` per recórrer els agents; els agents personalitzats apareixen al costat dels integrats.
+
+## Subagents
+
+Els agents poden delegar a subagents mitjançant l'eina `task`. Bolt inclou `@general` i `@explore`, i qualsevol agent personalitzat el fitxer del qual visqui sota `.opencode/agent/` també es pot invocar com a subagent per nom.
+
+## Relacionat
+
+- [Agents](/concepts/agents) — l'oferta d'agents integrats.
+- [Eines](/concepts/tools) — què pots afegir a `tools:`.
+- [Eines personalitzades](/extending/custom-tools) — construeix l'eina que l'agent cridarà.

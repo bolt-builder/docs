@@ -1,0 +1,191 @@
+---
+title: "Munkamenetek — tartós beszélgetési előzmények a Bolt-ban"
+sidebarTitle: "Munkamenetek"
+description: "A munkamenetek a Bolt tartós munkaegységei: mindegyik teljes beszélgetést tárol helyi SQLite-ban, így bármikor leválaszthatod, folytathatod, elágaztathatod, megoszthatod és exportálhatod."
+---
+
+A **munkamenet** a Bolt elsődleges munkaegysége. Minden általad küldött prompt, minden fájl, amelyet az ügynök olvas vagy szerkeszt, és minden eszközhívás, amelyet a modell tesz, tartósan rögzítésre kerül az adott munkamenet előzményeiben. Mivel a munkamenetek egy helyi SQLite-adatbázisban élnek, túlélik a folyamatújraindításokat, bármikor listázhatók és lekérdezhetők, és soha nem hagyják el a gépedet, hacsak nem osztod meg vagy exportálod őket kifejezetten.
+
+<Note>
+  Az összes munkamenet-adat helyben, egy SQLite-adatbázisban van tárolva a saját gépeden. Semmi nem kerül külső szerverekhez, hacsak nem engedélyezed a megosztást. Használd a `bolt db path` parancsot a pontos adatbázisfájl megtalálásához.
+</Note>
+
+## Munkamenet életciklusa
+
+A munkamenet abban a pillanatban indul, amikor elküldöd az első promptot, és csak akkor ér véget, ha törlöd. E két pont között szabadon leválaszthatod, folytathatod, elágaztathatod vagy átadhatod.
+
+<Steps>
+  <Step title="Munkamenet létrehozása vagy folytatása">
+    Indítsd el a TUI-t, hogy interaktívan új munkamenetet kezdj, vagy add át a promptot a `bolt run` parancsnak nem interaktív létrehozáshoz:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Válaszd le és térj vissza később">
+    Zárd be a TUI-t bármikor — a munkamenet automatikusan megőrződik. Folytasd a legutóbbi munkamenetedet a `--continue` kapcsolóval, vagy célozz meg egy konkrét munkamenetet azonosító alapján a `--session` kapcsolóval:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Ágaztass el egy kísérlet előtt">
+    Használd a `--fork` kapcsolót, hogy elágazz az aktuális munkamenet előzményeiből egy kockázatos változtatás kipróbálása előtt. Az elágazás egy független munkamenet, amely nem érinti az eredetit:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Megosztás és együttműködés">
+    Generálj megosztási URL-t a `--share` kapcsolóval. Bárki, akinek van linkje, böngészőben megtekintheti a munkamenet átiratát:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Munkamenet-kezelő parancsok
+
+### Munkamenetek listázása
+
+```bash
+bolt session list
+```
+
+Formázott táblázatban jeleníti meg az összes munkamenetet azonosítóval, címmel és utolsó frissítési idővel. Add hozzá a `--format json` kapcsolót géppel olvasható kimenetért, vagy `-n <N>` kapcsolót, hogy az N legutóbbi munkamenetre korlátozd:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Munkamenet törlése
+
+```bash
+bolt session delete <sessionID>
+```
+
+Véglegesen eltávolítja a munkamenetet és annak összes üzenetét a helyi adatbázisból.
+
+## Futtatási kapcsolók a munkamenet vezérléséhez
+
+Ezek a kapcsolók elérhetők a `bolt run` parancson:
+
+| Kapcsoló | Alias | Leírás |
+|------|-------|-------------|
+| `--continue` | `-c` | A legutóbbi munkamenet folytatása |
+| `--session <id>` | `-s` | Adott munkamenet folytatása azonosító alapján |
+| `--fork` | | A munkamenet elágaztatása a folytatás előtt (`--continue` vagy `--session` szükséges) |
+| `--share` | | Megosztási URL generálása a munkamenethez |
+| `--title <title>` | | A munkamenet címének beállítása vagy felülírása |
+
+## Munkamenetek exportálása
+
+Egy munkamenet teljes átiratának exportálása JSON-ként:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+A `--sanitize` kapcsoló lecseréli a fájlutakat, a kódtartalmat, az eszközbemeneteket és -kimeneteket, valamint más potenciálisan érzékeny mezőket `[redacted:kind:id]` helyőrzőkkel — hasznos átiratok megosztásához csapattársakkal vagy hibajelentések benyújtásához.
+
+## Munkamenetek importálása
+
+Munkamenet importálása helyi JSON-fájlból vagy közvetlenül megosztási URL-ből:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Az importált munkamenetek megjelennek a helyi munkamenet-listádban, és teljes mértékben folytathatók.
+
+## A munkamenet-adatbázis lekérdezése
+
+A Bolt közvetlenül elérhetővé teszi a mögöttes SQLite-adatbázist a haladó felhasználók számára.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+A kimeneti formátum alapértelmezésben tabulátorral elválasztott érték; adj hozzá `--format json` kapcsolót JSON-kimenethez.
+
+## Token-használat és költségstatisztikák
+
+A `bolt stats` aggregálja a token-használatot és a költségadatokat az összes munkamenet között:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+A kimenet tartalmazza az összes munkamenetet, üzenetet, bemeneti/kimeneti/gondolkodási/gyorsítótár tokeneket, a teljes költséget, a napi átlagköltséget, az átlagos és medián munkamenetenkénti tokenszámot, valamint egy eszközhasználati bontást. Add át a `--models` kapcsolót, hogy modellenkénti bontást is mutasson az üzenetekről, tokenekről és költségekről.
+
+## Elágaztatási és megosztási munkafolyamat
+
+Íme egy teljes példa egy munkamenet elágaztatására és az eredmény megosztására:
+
+<Steps>
+  <Step title="Kezdj munkát új munkamenetben">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Ágaztass el a kockázatos következő lépés előtt">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Az elágaztatott munkamenet azonosítója a konzolra íródik. Az eredeti munkamenet érintetlen marad.
+  </Step>
+  <Step title="Oszd meg az elágazást ellenőrzésre">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    A megosztási URL akkor íródik ki, amikor a munkamenet inaktívvá válik.
+  </Step>
+  <Step title="Importálás egy másik gépen">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

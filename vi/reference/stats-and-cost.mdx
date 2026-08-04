@@ -1,0 +1,32 @@
+---
+title: "Thống kê và Chi phí (bolt stats)"
+sidebarTitle: "Stats & Cost"
+description: "bolt stats tổng hợp sử dụng token và chi phí qua các phiên của bạn để bạn có thể thấy tiền đi đâu và điều chỉnh mô hình hoặc agent phù hợp."
+---
+
+`bolt stats` tổng hợp số lượng token và chi phí trên cơ sở dữ liệu phiên cục bộ. Vì mọi lời gọi công cụ đều được ghi lại (xem [Cơ sở dữ liệu cục bộ](/reference/local-database)), các con số là chính xác cho các lời gọi LLM mà Bolt điều khiển.
+
+## Sử dụng cơ bản
+
+```bash
+bolt stats                       # tổng hợp cho dự án hiện tại
+bolt stats --days 7              # bảy ngày gần nhất
+bolt stats --days 7 --models     # chia theo mô hình
+```
+
+## Nó hiển thị gì
+
+- Tổng token đầu vào, đầu ra và cache.
+- Chi phí ước tính theo provider (dùng bảng giá provider tại thời điểm chạy).
+- Chi tiết theo mô hình, theo agent và theo ngày tùy thuộc vào cờ.
+
+## Giảm chi phí
+
+- Dùng `--variant minimal` hoặc `--variant low` trên các mô hình nặng về suy luận. Xem [Provider & Mô hình](/concepts/providers-and-models).
+- Ưu tiên agent `ask` hoặc `plan` cho khám phá; chúng chỉ-đọc và tránh các vòng lặp nặng công cụ.
+- Chuyển sang mô hình nhỏ hơn với `bolt models` cho các tác vụ không cần khả năng biên giới.
+
+## Liên quan
+
+- [Provider & Mô hình](/concepts/providers-and-models) — chọn và điều chỉnh các mô hình mà `stats` đo.
+- [Xử lý sự cố](/reference/troubleshooting) — làm gì với một hóa đơn bất ngờ.

@@ -1,0 +1,28 @@
+---
+title: "ACP: Bolt'ni Zed va boshqa muharrirlardan boshqarish"
+sidebarTitle: "ACP (Muharrirlar)"
+description: "Bolt Agent Client Protocol (ACP) bilan gaplashadi, bu Zed kabi muharrirlarga uni alohida ilova yoki TUI ishlatmasdan native AI kodlash backend'i sifatida joylashtirish imkonini beradi."
+---
+
+Bolt Agent Client Protocol (ACP) ni amalga oshiradi, bu Zed kabi muharrirlar AI agentlar bilan qanday gaplashishi. Sozlangandan so'ng, muharrir `bolt acp` ni subprocess sifatida spawn qiladi va uni to'g'ridan-to'g'ri boshqaradi — muharriringizni tark etmasdan Bolt'ning agentlari, asboblari, sessiyalari va provayder stack'ini olasiz.
+
+## ACP ni yoqing
+
+Muharriringizning AI sozlamalarida Bolt'ni ACP-mos agent sifatida qo'shing va uni quyidagiga yo'naltiring:
+
+```bash
+bolt acp
+```
+
+Muharrir jarayon hayot davrini boshqaradi. Provayderlar, modellar va MCP serverlarini odatdagidek `.bolt/bolt.jsonc` da sozlang — ular bu yerga ham qo'llaniladi.
+
+## Nima olasiz
+
+- Muharrirning AI panelidan chaqiriladigan har bir Bolt agenti.
+- TUI va web UI bilan bo'lishilgan sessiyalar (mahalliy ma'lumotlar bazasi orqali).
+- Har qanday boshqa Bolt kirish nuqtasi bilan bir xil asboblar to'plami, ruxsatlar modeli va loyiha xotirasi.
+
+## Aloqador
+
+- [Headless Server](/server/headless-server) — parallel HTTP interfeysi.
+- [Configuration](/concepts/configuration) — ACP meros oladigan konfiguratsiya fayli.

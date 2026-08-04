@@ -1,0 +1,145 @@
+---
+title: "使用外掛擴充 Bolt"
+sidebarTitle: "外掛"
+description: "安裝與建置 Bolt 外掛,為任何專案或全域新增自訂 AI 供應商、驗證方法、工具與工作區配接器。"
+url: "extending/plugins"
+---
+
+外掛讓你可以將 Bolt 擴充至其內建功能之外。外掛是一個匯出 Bolt 外掛清單的 Node 或 Bun 模組;載入時它可以註冊新的 LLM 供應商、自訂驗證方法、額外的工具與工作區配接器。外掛可以安裝到單一專案,或跨你所有工作全域套用。
+
+## 安裝外掛
+
+使用 `bolt plugin install`(別名:`bolt plug`)從 npm 安裝外掛並自動在你的設定中註冊:
+
+```bash
+bolt plugin install <module>
+```
+
+### 旗標
+
+| 旗標 | 別名 | 描述 |
+|------|-------|-------------|
+| `--global` | `-g` | 安裝到全域設定,而不是目前的專案 |
+| `--force` | `-f` | 取代同一模組的現有項目 |
+
+### 範圍:專案 vs. 全域
+
+預設情況下,`bolt plugin install` 會將外掛加入到專案層級的 `.bolt/bolt.jsonc`。傳入 `--global` 可將它加入到使用者範圍的設定,讓它在每個專案中都會載入。
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  執行 `bolt --pure`(或設定 `OPENCODE_PURE=1`)可在停用所有外部外掛的情況下啟動 Bolt。這對於除錯外掛是否造成非預期行為很有用,而不需要解除安裝它。
+</Note>
+
+---
+
+## 安裝已發佈的外掛
+
+<Steps>
+  <Step title="尋找外掛套件">
+    在 npm 搜尋名稱含有 `bolt-plugin` 或 `opencode-plugin` 的套件,或從供應商文件中的連結進入。
+  </Step>
+
+  <Step title="安裝到你的專案">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt 會安裝該套件、讀取其 manifest 以偵測伺服器與 TUI 目標,然後將項目寫入 `.bolt/bolt.jsonc`。
+  </Step>
+
+  <Step title="驗證設定">
+    開啟 `.bolt/bolt.jsonc` 並確認外掛項目已加入:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="啟動工作階段">
+    ```bash
+    bolt
+    ```
+
+    Bolt 會在啟動時載入外掛。它註冊的任何供應商或工具都會立即可用。
+  </Step>
+</Steps>
+
+---
+
+## 手動外掛設定
+
+你可以直接編輯 `.bolt/bolt.jsonc` 註冊外掛。這對於開發中的本機外掛很有用:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+相對路徑會從專案根目錄解析。支援 TypeScript 與 JavaScript 進入點。
+
+---
+
+## 建置外掛
+
+外掛以 `@opencode-ai/plugin` 套件為基礎撰寫,該套件提供你的模組必須滿足的 `Hooks` 介面。
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+一個最小的外掛匯出一個函式,該函式接收 `PluginInput` 物件並回傳 `Hooks` 物件:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### 可用的 hook 類型
+
+| Hook | 用途 |
+|------|---------|
+| `auth` | 註冊自訂驗證供應商,使用 `methods` 陣列 |
+| `event` | 對工作階段事件(訊息、工具呼叫、完成)做出反應 |
+| `config` | 在執行時對設定變更做出反應 |
+| `dispose` | 外掛卸載時清理資源 |
+
+`PluginInput` 物件公開 `client`(具型別的 Bolt API 用戶端)、`project`、`worktree`、`directory` 與 `serverUrl`,讓你的外掛可與正在執行的伺服器互動。
+
+---
+
+## 環境變數
+
+| 變數 | 描述 |
+|----------|-------------|
+| `OPENCODE_PURE` | 設為 `1` 可在不載入任何外部外掛的情況下執行 |

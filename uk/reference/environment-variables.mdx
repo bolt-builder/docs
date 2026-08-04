@@ -1,0 +1,61 @@
+---
+title: "Довідник змінних середовища Bolt"
+sidebarTitle: "Змінні середовища"
+description: "Кожна змінна середовища, яку розпізнає Bolt, включно з керуванням логами, автентифікацією сервера, перевизначенням конфігурації та угодами API-ключів провайдерів."
+---
+
+Змінні середовища дозволяють вам налаштовувати Bolt без зачіпання файлів конфігурації — корисно в CI-конвеєрах, Docker-контейнерах і спільних середовищах, де ви не можете комітити облікові дані. Вони зчитуються один раз під час запуску й не можуть змінюватися, поки Bolt працює.
+
+## Довідник
+
+| Змінна | Опис |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Встановлює деталізацію логів. Прийнятні значення: `DEBUG`, `INFO`, `WARN`, `ERROR`. Еквівалент прапорця `--log-level`. |
+| `BOLT_PRINT_LOGS` | Встановіть будь-яке непорожнє значення, щоб друкувати вивід логів у stderr. Еквівалент `--print-logs`. |
+| `BOLT_PURE` | Встановіть будь-яке непорожнє значення, щоб вимкнути всі зовнішні плагіни. Еквівалент `--pure`. |
+| `BOLT_SERVER_USERNAME` | Ім'я користувача базової автентифікації для `bolt serve` і `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Пароль базової автентифікації для `bolt serve` і `bolt web`. Усі під'єднувані клієнти повинні надавати цей пароль. |
+| `BOLT_CONFIG` | Перевизначає шлях до файлу конфігурації, який завантажує Bolt. Bolt не шукатиме у розташуваннях за замовчуванням, коли це встановлено. |
+| `BOLT_CONFIG_DIR` | Перевизначає каталог конфігурації. Bolt шукатиме файли конфігурації у цьому каталозі замість каталогу за замовчуванням ОС. |
+| `BOLT_CONFIG_CONTENT` | Надає всю конфігурацію як вбудований JSON-рядок. Корисно у CI, де запис файлів непрактичний. Має найвищий пріоритет серед джерел конфігурації. |
+| `BOLT_GIT_BASH_PATH` | Шлях до каталогу `bin` Git Bash на Windows, використовується для пошуку Unix-утиліт, таких як `less`. |
+
+## API-ключі провайдерів
+
+Bolt автоматично виявляє облікові дані провайдерів зі змінних середовища — крок `bolt providers login` не потрібен. Кожен провайдер шукає конкретну змінну середовища, і Bolt її використає, якщо змінна встановлена, незалежно від того, що зберігається в `auth.json`.
+
+<Tip>
+  Встановлюйте API-ключі провайдерів у профілі оболонки (наприклад, `~/.zshrc`, `~/.bashrc`) або у файлі `.env`, завантажуваному оболонкою. Ви також можете посилатися на них із файлу конфігурації, використовуючи синтаксис `${VAR_NAME}` у полі `provider.*.apiKey`, щоб ключі ніколи не зберігалися у відкритому вигляді.
+</Tip>
+
+Поширені змінні провайдерів:
+
+| Змінна | Провайдер |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-серія) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Запустіть `bolt models --verbose`, щоб побачити, яку змінну середовища очікує кожен налаштований провайдер.
+
+## Приклади використання
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

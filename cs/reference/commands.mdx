@@ -1,0 +1,475 @@
+---
+title: "Reference CLI příkazů Boltu"
+sidebarTitle: "Příkazy"
+description: "Kompletní reference pro každý CLI příkaz Boltu, včetně přepínačů, argumentů a příkladů použití pro TUI, run, serve, session, agent a další."
+---
+
+Bolt vystavuje jednu binárku `bolt` s bohatou sadou podpříkazů. Spuštění `bolt` bez argumentů otevře plnohodnotné terminálové UI. Všechny další podpříkazy jsou uvedeny níže. Použij kdykoliv `bolt <command> --help` pro inline nápovědu.
+
+<Accordion title="bolt (výchozí — spuštění TUI)">
+  Otevře interaktivní terminálové UI v aktuálním adresáři. Bolt automaticky rozpozná kontext projektu, načte konfiguraci a připojí se ke všem nakonfigurovaným providerům.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Globální přepínače** — dostupné u každého příkazu:
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Tisknout výstup logů na stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Nastavení podrobnosti logování |
+  | `--pure` | boolean | Spustit bez načítání externích pluginů |
+  | `--help`, `-h` | boolean | Zobrazit text nápovědy |
+  | `--version`, `-v` | boolean | Vytisknout číslo nainstalované verze |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Spustí Bolt s jedním promptem v neinteraktivním režimu. Bolt zahájí in-process server, pošle prompt aktivnímu sezení, streamuje odpověď na stdout a poté ukončí. Přesměruj stdin nebo předej `--file` pro připojení kontextu.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slash-command k vykonání; argumenty předej jako zprávu |
+  | `--continue` | `-c` | boolean | Pokračovat v nejnovějším sezení |
+  | `--session` | `-s` | string | ID sezení, ve kterém pokračovat |
+  | `--fork` |  | boolean | Rozvětvit sezení před pokračováním (vyžaduje `--continue` nebo `--session`) |
+  | `--share` |  | boolean | Sdílet sezení po jeho dokončení |
+  | `--model` | `-m` | string | Model k použití ve formátu `provider/model` |
+  | `--best-of` |  | string | Čárkami oddělený seznam `provider/model`; spustí úlohu paralelně, seřadí výsledky, ponechá vítěze |
+  | `--agent` |  | string | Agent k použití (např. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Formát výstupu; `json` streamuje surové newline-delimited JSON události |
+  | `--file` | `-f` | string\[\] | Soubor(y) k připojení jako kontext |
+  | `--title` |  | string | Název sezení |
+  | `--attach` |  | string | Spustit proti vzdálenému Bolt serveru (např. `http://localhost:4096`) |
+  | `--password` | `-p` | string | Heslo pro basic auth vzdáleného serveru |
+  | `--username` | `-u` | string | Uživatelské jméno pro basic auth vzdáleného serveru |
+  | `--dir` |  | string | Pracovní adresář; pokud je nastaven `--attach`, jde o adresář na vzdáleném serveru |
+  | `--port` |  | number | Port pro lokální in-process server (náhodný, pokud vynechán) |
+  | `--variant` |  | string | Úroveň reasoning effortu, provider-specifická (např. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Zobrazit bloky uvažování/myšlení ve výstupu |
+  | `--mini` |  | boolean | Spustit minimální interaktivní UI se split-footerem (skryté) |
+  | `--interactive` | `-i` | boolean | Vynutit přímý interaktivní režim se split-footerem |
+  | `--auto` |  | boolean | Automaticky schvalovat oprávnění, která nejsou explicitně zakázána |
+  | `--yolo` |  | boolean | Přeskočit všechny prompty oprávnění (alias pro `--auto`, skryté) |
+  | `--dangerously-skip-permissions` |  | boolean | Přeskočit všechny kontroly oprávnění (skryté) |
+  | `--demo` |  | boolean | Povolit přímé interaktivní demo slash příkazy (skryté) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Připojí plné TUI k běžícímu Bolt serveru. Server může být lokální nebo vzdálený. Předej `--mini` pro použití minimálního UI se split-footerem místo plného TUI.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Adresář na vzdáleném serveru |
+  | `--continue` | `-c` | boolean | Pokračovat v nejnovějším sezení na vzdáleném serveru |
+  | `--session` | `-s` | string | ID sezení, ve kterém pokračovat |
+  | `--fork` |  | boolean | Rozvětvit sezení při pokračování |
+  | `--password` | `-p` | string | Heslo pro basic auth |
+  | `--username` | `-u` | string | Uživatelské jméno pro basic auth |
+  | `--mini` |  | boolean | Použít minimální interaktivní UI |
+  | `--no-replay` |  | boolean | Vypnout replay historie sezení při obnovení a po změně velikosti (vyžaduje `--mini`) |
+  | `--replay-limit` |  | number | Omezit viditelný replay na nejnovějších N zpráv (vyžaduje `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Spustí bezhlavý Bolt API server. Server vystavuje REST\+SSE API, ke kterému se mohou připojit TUI, `bolt run --attach` a `bolt attach`. Bind na `0.0.0.0`, aby byl dostupný z jiných strojů — když to děláš, vždy nastav `BOLT_SERVER_PASSWORD`.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--hostname` | string | Adresa k bindování (výchozí: `127.0.0.1`) |
+  | `--port` | number | Port pro naslouchání (náhodný, pokud vynechán) |
+  | `--mdns` | boolean | Povolit mDNS service discovery (výchozí hostname je `0.0.0.0`) |
+  | `--mdns-domain` | string | Vlastní doménové jméno pro mDNS službu (výchozí: `opencode.local`) |
+  | `--cors` | string\[\] | Další domény povolené pro CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` není ve výchozím stavu nastaveno. Server vypíše varování a bude přijímat všechna spojení, dokud ho nenastavíš.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Spustí Bolt server a okamžitě otevře webové UI ve výchozím prohlížeči. Přijímá stejné síťové přepínače jako `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--hostname` | string | Adresa k bindování (výchozí: `127.0.0.1`) |
+  | `--port` | number | Port pro naslouchání (náhodný, pokud vynechán) |
+  | `--mdns` | boolean | Povolit mDNS service discovery (výchozí hostname je `0.0.0.0`) |
+  | `--mdns-domain` | string | Vlastní doménové jméno pro mDNS službu (výchozí: `opencode.local`) |
+  | `--cors` | string\[\] | Další domény povolené pro CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Spravuj Bolt sezení uložená v lokální SQLite databázi.
+
+  **Podpříkazy**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **Přepínače `bolt session list`**
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Omezit výstup na N nejnovějších sezení |
+  | `--format` |  | `table`\|`json` | Formát výstupu (výchozí: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Vypiš a vytvářej vlastní agenty. Agenti jsou markdown soubory s YAML frontmatterem, které definují systémový prompt, oprávnění a režim.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **Přepínače `bolt agent create`**
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Cesta k adresáři pro zápis souboru agenta |
+  | `--description` |  | string | Popis v přirozeném jazyce toho, co má agent dělat |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Zda agent působí jako primární, subagent nebo obojí |
+  | `--permissions` | `--tools` | string | Čárkami oddělený seznam povolených oprávnění (výchozí: všechna) |
+  | `--model` | `-m` | string | Model k použití ve formátu `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  Interaktivně spravuj přihlašovací údaje AI providerů. Přihlašovací údaje jsou uloženy v OS datovém adresáři (`~/.local/share/bolt/auth.json` na Linuxu, `~/Library/Application Support/bolt/auth.json` na macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Vypiš všechny modely dostupné od tvých nakonfigurovaných providerů.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Zahrnout JSON metadata o cenách pro každý model |
+  | `--refresh` | boolean | Obnovit cache modelů z models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Spravuj servery Model Context Protocolu (MCP). Bolt podporuje vzdálené (HTTP/SSE) servery s OAuth i lokální (stdio) servery.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **Přepínače `bolt mcp add`**
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--url` | string | URL vzdáleného MCP serveru |
+  | `--env` | string\[\] | Proměnná prostředí pro lokální server (`KEY=VALUE`) |
+  | `--header` | string\[\] | HTTP hlavička pro vzdálený server (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Nainstaluj Bolt plugin z npm a aktualizuj příslušný konfigurační soubor. Pluginy mohou rozšířit TUI, přidávat nové slash-commandy nebo registrovat nové providery.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Přidat plugin do globální konfigurace místo do projektové |
+  | `--force` | `-f` | boolean | Nahradit už nakonfigurovanou verzi pluginu |
+</Accordion>
+
+<Accordion title="bolt github">
+  Spravuj integraci Boltu s GitHub Actions, která umožňuje Boltu reagovat na pull requesty, issues a další události GitHubu.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **Přepínače `bolt github run`**
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--event` | string | Jméno GitHub události k simulaci (např. `pull_request`) |
+  | `--token` | string | GitHub personal access token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Stáhne GitHub pull request jako lokální větev pomocí `gh` CLI a poté spustí Bolt v aktivované složce. Pokud popis PR obsahuje odkaz na sdílené sezení, Bolt to sezení automaticky importuje.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Tento příkaz vyžaduje nainstalované a autentizované [GitHub CLI (`gh`)](https://cli.github.com/).
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Vygeneruje pomocí AI modelu commit zprávu pro staged (nebo všechny sledované) změny a poté commitne. Model prozkoumá nedávnou historii commitů pro kontext stylu.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Commitnout všechny sledované změny, ne jen staged |
+  | `--dry-run` |  | boolean | Vytisknout vygenerovanou zprávu bez commitu |
+  | `--model` | `-m` | string | Model k použití ve formátu `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Spustí AI code review na diffu a ukončí se s kódem `0` (pass) nebo `1` (fail). Agent `code-review` prozkoumá diff na správnost, styl a bezpečnostní problémy a poté vypíše řádek `Verdict: PASS` nebo `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Reviewovat pouze staged změny |
+  | `--branch` |  | string | Reviewovat změny od merge base s touto větví |
+  | `--model` | `-m` | string | Model k použití ve formátu `provider/model` |
+
+  <Note>
+    Ukončovací kódy: `0` = PASS, `1` = FAIL, `2` = verdikt nebylo možné určit.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Exportuje sezení jako JSON na stdout. Užitečné pro archivaci, sdílení nebo předávání do jiných nástrojů. Před veřejným sdílením předej `--sanitize` pro redakci cest, promptů a dalšího citlivého obsahu přepisu.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Redigovat citlivá data (cesty k souborům, text promptů, I/O nástrojů) před exportem |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Importuje dříve exportované sezení do lokální databáze. Přijímá buď lokální JSON soubor, nebo URL sdíleného sezení.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Zobrazí agregované statistiky spotřeby tokenů a nákladů napříč všemi sezeními. Výstup obsahuje přehledovou tabulku, rozpis nákladů a tokenů, využití modelů a sloupcový graf využití nástrojů.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--days` | number | Omezit na posledních N dnů (výchozí: veškerý čas) |
+  | `--tools` | number | Počet nástrojů k zobrazení v grafu využití |
+  | `--models` | boolean\|number | Zobrazit statistiky modelů; předej číslo pro omezení seznamu |
+  | `--project` | string | Filtrovat podle ID projektu; prázdný řetězec znamená aktuální projekt |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Vytiskne aplikační log Boltu. Log je uložen v OS log adresáři (např. `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Počet posledních řádků k vytištění (výchozí: 1000) |
+  | `--follow` | `-f` | boolean | Streamovat nové řádky logu v reálném čase |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Dotazuje se nebo prohlíží lokální SQLite databázi sezení přímo.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Formát výstupu pro výsledky dotazu (výchozí: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Upgraduje Bolt na nejnovější vydání nebo konkrétní verzi. Bolt automaticky detekuje instalační metodu a použije odpovídající správce balíčků.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Přepínač | Alias | Typ | Popis |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Instalační metoda k použití |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Odstraní binárku Boltu a všechna přidružená data.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Vygeneruje shell completion skript pro `bash`, `zsh` nebo `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Sada podpříkazů pro řešení problémů a introspekci. Užitečné při zakládání bug reportů nebo diagnostice neočekávaného chování.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Spustí ACP (Agent Client Protocol) server. ACP je protokol používaný integracemi editorů jako [Zed](https://zed.dev) ke komunikaci s Boltem přes stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Přepínač | Typ | Popis |
+  | --- | --- | --- |
+  | `--cwd` | string | Pracovní adresář pro server (výchozí: `process.cwd()`) |
+  | `--hostname` | string | Bind hostname (výchozí: `127.0.0.1`) |
+  | `--port` | number | Bind port |
+  | `--mdns` | boolean | Povolit mDNS service discovery |
+  | `--mdns-domain` | string | Vlastní doménové jméno pro mDNS službu (výchozí: `opencode.local`) |
+  | `--cors` | string\[\] | Další domény povolené pro CORS |
+</Accordion>

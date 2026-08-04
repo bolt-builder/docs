@@ -1,0 +1,192 @@
+---
+title: "Referensi file konfigurasi Bolt"
+sidebarTitle: "Config Schema"
+description: "Referensi lengkap untuk skema file konfigurasi Bolt — lokasi, semua field tingkat atas, tipe MCP server, override provider, dan contoh lengkap."
+---
+
+Bolt menggunakan file JSON with Comments (`.jsonc`) untuk konfigurasi proyek dan global. Skema diberi versi dan dipublikasikan di `https://opencode.ai/config.json`, yang dapat digunakan editor untuk menyediakan autocompletion dan validasi.
+
+## Lokasi file config
+
+Bolt menggabungkan konfigurasi dari dua lokasi. Pengaturan per-proyek menang atas pengaturan global ketika kunci yang sama muncul di keduanya.
+
+| Scope | Path |
+|---|---|
+| **Per-project** | `.bolt/bolt.jsonc` (atau `.bolt/bolt.json`) di root proyek kamu |
+| **Global** | `bolt.jsonc` (atau `bolt.json`) di direktori config OS kamu |
+
+Direktori config OS adalah:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt juga membaca file legacy `opencode.jsonc` / `opencode.json` di lokasi yang sama. Proyek baru harus menggunakan konvensi penamaan `bolt.jsonc`, yang lebih diprioritaskan daripada nama file legacy.
+</Note>
+
+Bolt membuat file config global minimal dengan baris `$schema` pada run pertama, dan membuat `.bolt/bolt.jsonc` di root proyek kamu pertama kali kamu membuka TUI di direktori tersebut.
+
+## Field skema
+
+<ParamField body="$schema" type="string">
+  URL yang menunjuk ke JSON schema untuk file config ini. Mengaktifkan autocompletion dan validasi inline di editor yang mendukung JSON Schema (VS Code, Zed, JetBrains IDE, dll.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Model default untuk semua sesi, dinyatakan sebagai `provider/model`. Ini dapat di-override per-sesi dengan `bolt run --model` atau di pemilih model TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Jalankan `bolt models` untuk melihat semua string `provider/model` yang tersedia untuk provider yang telah kamu konfigurasi.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Override kredensial dan pengaturan spesifik-provider. Setiap kunci adalah ID provider (misal `anthropic`, `openai`, `google`). Penggunaan paling umum adalah mengatur API key via referensi variabel lingkungan sehingga kunci tidak pernah disimpan dalam plaintext.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Nilai yang dimulai dengan `${` dan diakhiri dengan `}` diperlakukan sebagai referensi variabel lingkungan dan diperluas saat runtime.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Konfigurasi MCP server, dikunci dengan nama yang kamu pilih. Bolt mendukung dua tipe server:
+
+  **Server remote** — terhubung melalui HTTP/SSE, dengan OAuth opsional:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Field | Tipe | Deskripsi |
+  |---|---|---|
+  | `type` | `"remote"` | Mengidentifikasi ini sebagai server HTTP remote |
+  | `url` | string | URL lengkap endpoint MCP |
+  | `oauth` | object \| `false` | Objek konfigurasi OAuth (dengan opsional `clientId`, `clientSecret`, `scope`, `redirectUri`). Atur ke `false` untuk menonaktifkan deteksi otomatis OAuth. |
+  | `headers` | object | Header HTTP yang dikirim dengan setiap permintaan (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Aktifkan atau nonaktifkan server ini saat startup |
+  | `timeout` | number | Timeout permintaan dalam milidetik (default: 5000) |
+
+  **Server lokal** — memunculkan subproses melalui stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Field | Tipe | Deskripsi |
+  |---|---|---|
+  | `type` | `"local"` | Mengidentifikasi ini sebagai server stdio lokal |
+  | `command` | string[] | Perintah dan semua argumen untuk di-spawn |
+  | `cwd` | string | Direktori kerja untuk proses server (path relatif diselesaikan dari direktori workspace) |
+  | `environment` | object | Variabel lingkungan tambahan yang diteruskan ke subproses |
+  | `enabled` | boolean | Aktifkan atau nonaktifkan server ini saat startup |
+  | `timeout` | number | Timeout permintaan dalam milidetik (default: 5000) |
+
+  Gunakan `bolt mcp add` untuk wizard interaktif, atau `bolt mcp list` untuk memeriksa status server saat ini.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Instruksi sistem tambahan yang ditambahkan ke setiap sesi dalam proyek ini atau secara global. Instruksi dari beberapa file config digabungkan (dideduplikasi). Gunakan ini untuk menyuntikkan konvensi spesifik proyek, aturan gaya, atau batasan yang harus diikuti setiap agent.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Spesifikasi plugin yang akan dimuat. Setiap entri adalah nama paket npm, path file lokal, atau URL. Plugin dapat memperluas TUI, menambahkan slash command, atau mendaftarkan provider tambahan. Gunakan `bolt plugin install <spec>` untuk memasang plugin dan menambahkannya ke array ini secara otomatis.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Contoh lengkap
+
+`.bolt/bolt.jsonc` berikut menunjukkan konfigurasi proyek yang realistis:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Jalankan `bolt debug config` untuk melihat konfigurasi yang terselesaikan sepenuhnya setelah semua file digabungkan. Ini adalah cara tercepat untuk memastikan config per-proyek dan global kamu digabungkan dengan benar.
+</Tip>

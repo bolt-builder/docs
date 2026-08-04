@@ -1,0 +1,145 @@
+---
+title: "Bolt'ni plaginlar bilan kengaytiring"
+sidebarTitle: "Plaginlar"
+description: "Har qanday loyihaga yoki global tarzda custom AI provayderlari, autentifikatsiya usullari, asboblar va workspace adapterlarini qo'shish uchun Bolt plaginlarini o'rnating va yarating."
+url: "extending/plugins"
+---
+
+Plaginlar Bolt'ni uning o'rnatilgan imkoniyatlaridan tashqarida kengaytirish imkonini beradi. Plagin — bu Bolt plagin manifestini eksport qiladigan Node yoki Bun moduli; yuklanganda u yangi LLM provayderlari, custom autentifikatsiya usullari, qo'shimcha asboblar va workspace adapterlarini ro'yxatga olishi mumkin. Plaginlar bitta loyiha uchun o'rnatilishi yoki barcha ishingizga global tarzda qo'llanilishi mumkin.
+
+## Plaginni o'rnatish
+
+npm dan plaginni o'rnatish va uni konfiguratsiyangizda avtomatik ro'yxatga olish uchun `bolt plugin install` (alias: `bolt plug`) dan foydalaning:
+
+```bash
+bolt plugin install <module>
+```
+
+### Bayroqlar
+
+| Bayroq | Alias | Tavsif |
+|------|-------|-------------|
+| `--global` | `-g` | Joriy loyiha o'rniga global konfiguratsiyaga o'rnatish |
+| `--force` | `-f` | Bir xil modul uchun mavjud yozuvni almashtirish |
+
+### Qamrov: loyiha va global
+
+Standart bo'yicha `bolt plugin install` plaginni loyiha darajasidagi `.bolt/bolt.jsonc` ga qo'shadi. Uni har bir loyihada yuklashi uchun foydalanuvchi darajasidagi konfiguratsiyaga qo'shish uchun `--global` ni uzating.
+
+```bash
+# Loyiha qamrovida (standart)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — har bir loyihada yuklanadi
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Barcha tashqi plaginlar o'chirilgan holda Bolt'ni ishga tushirish uchun `bolt --pure` ni ishga tushiring (yoki `OPENCODE_PURE=1` ni o'rnating). Bu plaginni uninstall qilmasdan kutilmagan xatti-harakatga plagin sabab bo'layotganini debug qilish uchun foydali.
+</Note>
+
+---
+
+## Nashr etilgan plaginni o'rnatish
+
+<Steps>
+  <Step title="Plagin paketini toping">
+    Nomida `bolt-plugin` yoki `opencode-plugin` bo'lgan paketlar uchun npm da qidiring yoki provayderning hujjatlaridan havolaga rioya qiling.
+  </Step>
+
+  <Step title="Loyihangizga o'rnating">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt paketni o'rnatadi, server va TUI maqsadlarini aniqlash uchun uning manifestini o'qiydi, so'ngra yozuvni `.bolt/bolt.jsonc` ga yozadi.
+  </Step>
+
+  <Step title="Konfiguratsiyani tekshiring">
+    `.bolt/bolt.jsonc` ni oching va plagin yozuvi qo'shilganini tasdiqlang:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Sessiyani boshlang">
+    ```bash
+    bolt
+    ```
+
+    Bolt ishga tushirishda plaginni yuklaydi. U ro'yxatga oladigan har qanday provayderlar yoki asboblar darhol mavjud bo'ladi.
+  </Step>
+</Steps>
+
+---
+
+## Qo'lda plagin konfiguratsiyasi
+
+Plaginlarni to'g'ridan-to'g'ri `.bolt/bolt.jsonc` ni tahrirlash orqali ro'yxatga olishingiz mumkin. Bu ishlab chiqilayotgan mahalliy plaginlar uchun foydali:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Nisbiy yo'llar loyiha ildizidan hal qilinadi. Ham TypeScript ham JavaScript kirish nuqtalari qo'llab-quvvatlanadi.
+
+---
+
+## Plagin yaratish
+
+Plaginlar `@opencode-ai/plugin` paketiga qarshi mualliflik qilinadi, u sizning modulingiz qondirishi kerak bo'lgan `Hooks` interfeysini beradi.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Minimal plagin `PluginInput` obyektini qabul qiladigan va `Hooks` obyektini qaytaradigan funktsiyani eksport qiladi:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Mavjud hook turlari
+
+| Hook | Maqsad |
+|------|---------|
+| `auth` | `methods` massivi bilan custom autentifikatsiya provayderlarini ro'yxatga olish |
+| `event` | Sessiya voqealariga (xabarlar, asbob chaqiruvlari, tugatishlar) javob berish |
+| `config` | Runtime da konfiguratsiya o'zgarishlariga javob berish |
+| `dispose` | Plagin yuklamalanganda resurslarni tozalash |
+
+`PluginInput` obyekti sizning plaginingiz ishlaydigan server bilan o'zaro ta'sir qilishi uchun `client` (tiplashtirilgan Bolt API mijozi), `project`, `worktree`, `directory` va `serverUrl` ni ochadi.
+
+---
+
+## Environment variable'lar
+
+| O'zgaruvchi | Tavsif |
+|----------|-------------|
+| `OPENCODE_PURE` | Har qanday tashqi plaginsiz ishga tushirish uchun `1` ga o'rnating |

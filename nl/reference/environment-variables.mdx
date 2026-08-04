@@ -1,0 +1,61 @@
+---
+title: "Referentie voor Bolt-omgevingsvariabelen"
+sidebarTitle: "Env-variabelen"
+description: "Elke omgevingsvariabele die door Bolt wordt herkend, inclusief log-controle, server-auth, config-overrides en conventies voor provider-API-sleutels."
+---
+
+Met omgevingsvariabelen kun je Bolt configureren zonder configuratiebestanden aan te raken — handig in CI-pipelines, Docker-containers en gedeelde omgevingen waar je geen credentials kunt committen. Ze worden één keer bij het opstarten gelezen en kunnen niet worden gewijzigd terwijl Bolt draait.
+
+## Referentie
+
+| Variabele | Beschrijving |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Stel de log-uitgebreidheid in. Geaccepteerde waarden: `DEBUG`, `INFO`, `WARN`, `ERROR`. Equivalent aan de `--log-level`-flag. |
+| `BOLT_PRINT_LOGS` | Zet op een niet-lege waarde om log-output naar stderr te printen. Equivalent aan `--print-logs`. |
+| `BOLT_PURE` | Zet op een niet-lege waarde om alle externe plugins uit te schakelen. Equivalent aan `--pure`. |
+| `BOLT_SERVER_USERNAME` | Basic auth-gebruikersnaam voor `bolt serve` en `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Basic auth-wachtwoord voor `bolt serve` en `bolt web`. Alle verbindende clients moeten dit wachtwoord meesturen. |
+| `BOLT_CONFIG` | Overschrijf het pad naar het configuratiebestand dat Bolt laadt. Bolt zoekt niet op de standaardlocaties wanneer dit is ingesteld. |
+| `BOLT_CONFIG_DIR` | Overschrijf de configuratiemap. Bolt zoekt naar configuratiebestanden in deze map in plaats van de standaard OS-configuratiemap. |
+| `BOLT_CONFIG_CONTENT` | Lever de volledige config als inline JSON-string. Handig in CI waar bestanden schrijven onhandig is. Heeft de hoogste voorrang onder configuratiebronnen. |
+| `BOLT_GIT_BASH_PATH` | Pad naar de `bin`-map van Git Bash op Windows, gebruikt om Unix-utilities zoals `less` te vinden. |
+
+## Provider-API-sleutels
+
+Bolt ontdekt provider-credentials automatisch uit omgevingsvariabelen — geen `bolt providers login`-stap vereist. Elke provider zoekt naar een specifieke omgevingsvariabele en Bolt zal die gebruiken als de variabele is ingesteld, ongeacht wat is opgeslagen in `auth.json`.
+
+<Tip>
+  Stel provider-API-sleutels in in je shell-profiel (bv. `~/.zshrc`, `~/.bashrc`) of in een `.env`-bestand dat door je shell wordt geladen. Je kunt er ook naar verwijzen vanuit het configuratiebestand met de `${VAR_NAME}`-syntax in een `provider.*.apiKey`-veld zodat sleutels nooit in plaintext worden opgeslagen.
+</Tip>
+
+Veelvoorkomende provider-variabelen:
+
+| Variabele | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Voer `bolt models --verbose` uit om te zien welke omgevingsvariabele elke geconfigureerde provider verwacht.
+
+## Gebruiksvoorbeelden
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

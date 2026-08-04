@@ -1,0 +1,185 @@
+---
+title: "Csatlakozás távoli Bolt-munkamenetekhez HTTP-n keresztül"
+sidebarTitle: "Távoli munkamenetek"
+description: "Indíts egy fej nélküli Bolt-szervert, csatlakoztass egy TUI-t bármely gépről, és fedezz fel szervereket a helyi hálózaton mDNS-sel — opcionális basic auth-tal."
+url: "server/remote-sessions"
+---
+
+A Bolt beépített HTTP-szerverrel rendelkezik, amely teljesen szétválasztja a motort az interfésztől. Indíthatsz egy fej nélküli szervert egy erős távoli gépen (egy felhő VM, egy dev-konténer, egy éjszakára hagyott asztali gép), és csatlakoztathatod a TUI-t a laptopodról, egy második terminálból vagy akár egy böngészőből — mindegyik ugyanarra az élő munkamenetre mutat. Ez teszi a Bolt-ot csapatokhoz, távoli munkaterheléshez és hosszan futó feladatokhoz alkalmassá, amelyekre rá szeretnél nézni anélkül, hogy SSH-znál egy dobozba.
+
+---
+
+## `bolt serve`
+
+Egy fej nélküli Bolt-szerver indítása, amely a teljes API-t HTTP-n keresztül elérhetővé teszi, és elfogad TUI-kapcsolatokat.
+
+```bash
+bolt serve
+```
+
+### Kapcsolók
+
+| Kapcsoló | Alapértelmezett | Leírás |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Hostname vagy IP-cím, amelyhez köt |
+| `--port <n>` | `0` (auto) | Figyelendő port; a Bolt kiírja a hozzárendelt portot indításkor |
+| `--mdns` | `false` | A szerver hirdetése mDNS-en keresztül nulla-konfigurációs helyi hálózati felfedezéshez; a hostname-t is `0.0.0.0`-ra állítja |
+| `--mdns-domain <name>` | `opencode.local` | Egyedi mDNS szolgáltatási domain |
+| `--cors <origin>` | `[]` | További origin-ek engedélyezése CORS-on keresztül (többször megismételhető) |
+
+<Warning>
+  Ha az `OPENCODE_SERVER_PASSWORD` nincs beállítva, a Bolt figyelmeztetést ír ki, és a szerver teljesen nyitva áll bárki előtt, aki elérheti. Mindig állíts be jelszót, mielőtt a `127.0.0.1`-en kívüli felülethez kötsz.
+</Warning>
+
+### Hitelesítés
+
+Biztosítsd a szervert HTTP Basic Auth-tal környezeti változók használatával:
+
+| Változó | Leírás |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Basic auth jelszó |
+| `OPENCODE_SERVER_USERNAME` | Basic auth felhasználónév (alapértelmezésben `opencode`, ha kihagyva) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+A teljes TUI csatlakoztatása egy futó Bolt-szerverhez. Ez bármely HTTP-n elérhető szerveren működik — helyi vagy távoli.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Kapcsolók
+
+| Kapcsoló | Alias | Leírás |
+|------|-------|-------------|
+| `--dir <path>` | | Könyvtár, amelyben a távoli szerveren futtatunk |
+| `--continue` | `-c` | A legutóbbi munkamenet folytatása a szerveren |
+| `--session <id>` | `-s` | Folytatandó munkamenet-azonosító |
+| `--fork` | | Munkamenet elágaztatása folytatáskor (`--continue` vagy `--session` mellé) |
+| `--password <pw>` | `-p` | Basic auth jelszó (felülírja az `OPENCODE_SERVER_PASSWORD`-öt) |
+| `--username <user>` | `-u` | Basic auth felhasználónév (felülírja az `OPENCODE_SERVER_USERNAME`-t) |
+| `--mini` | | A minimális interaktív felület használata a teljes TUI helyett |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Indíts egy Bolt-szervert, és azonnal nyisd meg a webes felületet az alapértelmezett böngésződben. Ez a leggyorsabb módja egy böngészőalapú felület helyben történő futtatásának.
+
+```bash
+bolt web
+```
+
+A `bolt web` ugyanazokat a hálózati kapcsolókat fogadja, mint a `bolt serve`.
+
+---
+
+## mDNS-felfedezés
+
+Add át a `--mdns` kapcsolót a `bolt serve` parancsnak, hogy a szerver címét a helyi hálózaton mDNS-sel közvetítsd. Ugyanazon a hálózaton lévő bármely gép ekkor csatlakozhat az mDNS-hostname használatával anélkül, hogy tudná az IP-címet vagy a portot.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+Az alapértelmezett mDNS-domain az `opencode.local`. Írd felül a `--mdns-domain` kapcsolóval:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Szerver indítása és távoli csatlakozás
+
+<Steps>
+  <Step title="Állíts be jelszót a szergép gépen">
+    Exportáld az `OPENCODE_SERVER_PASSWORD`-öt a szerver indítása előtt. Enélkül a Bolt figyelmeztetést ír ki, és az API hitelesítés nélkül marad.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Indítsd el a fej nélküli szervert">
+    Kösd az összes interfészhez, hogy a laptopod elérje, és opcionálisan válassz egy rögzített portot:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Hagyd nyitva ezt a terminált (vagy futtasd `tmux`-ban / `screen`-ben / egy systemd-egységben).
+  </Step>
+
+  <Step title="Csatlakozz a laptopodról">
+    Bármely gépről, amely elérheti a szervert, futtasd:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    A teljes TUI megnyílik, és csatlakozik a távoli motorhoz. A munkamenetek, előzmények és eszközállapot mind a szerveren élnek.
+  </Step>
+
+  <Step title="Folytasd a munkamenetet később">
+    Válaszd le a TUI-t kilépéssel (`q` vagy `Ctrl-C`). A munkamenet tovább fut a szerveren. Az újracsatlakozáshoz:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Vagy ágaztasd el, hogy elágazz az eredeti érintése nélkül:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Távoli munkafolyamat példa
+
+Gyakori minta, hogy egy Bolt-szervert futtatunk egy nagy magszámú dev-gépen, és egy vékony laptopról csatlakozunk.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Az összes munkamenet-adat a szerver SQLite-adatbázisában van tárolva. A laptop csak a TUI-t rendereli — bármikor lecsatlakozhat és újracsatlakozhat munka elvesztése nélkül.

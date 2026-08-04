@@ -1,0 +1,145 @@
+---
+title: "Rozszerzaj Bolta wtyczkami"
+sidebarTitle: "Wtyczki"
+description: "Instaluj i buduj wtyczki Bolta, aby dodawać niestandardowych dostawców AI, metody uwierzytelniania, narzędzia i adaptery przestrzeni roboczej do dowolnego projektu lub globalnie."
+url: "extending/plugins"
+---
+
+Wtyczki pozwalają Ci rozszerzać Bolta poza jego wbudowane możliwości. Wtyczka to moduł Node lub Bun eksportujący manifest wtyczki Bolta; po załadowaniu może rejestrować nowych dostawców LLM, niestandardowe metody uwierzytelniania, dodatkowe narzędzia i adaptery przestrzeni roboczej. Wtyczki mogą być instalowane dla pojedynczego projektu lub stosowane globalnie w całej Twojej pracy.
+
+## Instalowanie wtyczki
+
+Użyj `bolt plugin install` (alias: `bolt plug`), aby zainstalować wtyczkę z npm i automatycznie zarejestrować ją w swojej konfiguracji:
+
+```bash
+bolt plugin install <module>
+```
+
+### Flagi
+
+| Flaga | Alias | Opis |
+|------|-------|-------------|
+| `--global` | `-g` | Zainstaluj do globalnej konfiguracji zamiast bieżącego projektu |
+| `--force` | `-f` | Zastąp istniejący wpis dla tego samego modułu |
+
+### Zasięg: projekt vs. globalny
+
+Domyślnie `bolt plugin install` dodaje wtyczkę do konfiguracji na poziomie projektu `.bolt/bolt.jsonc`. Przekaż `--global`, aby dodać ją do konfiguracji użytkownika, tak aby ładowała się w każdym projekcie.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Uruchom `bolt --pure` (lub ustaw `OPENCODE_PURE=1`), aby uruchomić Bolta z wyłączonymi wszystkimi zewnętrznymi wtyczkami. Jest to przydatne do debugowania, czy wtyczka nie powoduje nieoczekiwanego zachowania, bez jej odinstalowywania.
+</Note>
+
+---
+
+## Instalowanie opublikowanej wtyczki
+
+<Steps>
+  <Step title="Znajdź pakiet wtyczki">
+    Przeszukaj npm w poszukiwaniu pakietów z `bolt-plugin` lub `opencode-plugin` w nazwie lub podążaj za linkiem z dokumentacji dostawcy.
+  </Step>
+
+  <Step title="Zainstaluj do swojego projektu">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt instaluje pakiet, czyta jego manifest, aby wykryć cele serwera i TUI, po czym zapisuje wpis do `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Zweryfikuj konfigurację">
+    Otwórz `.bolt/bolt.jsonc` i potwierdź, że wpis wtyczki został dodany:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Uruchom sesję">
+    ```bash
+    bolt
+    ```
+
+    Bolt ładuje wtyczkę przy uruchamianiu. Wszelcy dostawcy lub narzędzia, które rejestruje, są natychmiast dostępni.
+  </Step>
+</Steps>
+
+---
+
+## Ręczna konfiguracja wtyczek
+
+Możesz rejestrować wtyczki, edytując `.bolt/bolt.jsonc` bezpośrednio. Jest to przydatne dla lokalnych wtyczek w trakcie tworzenia:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Ścieżki względne są rozstrzygane od katalogu głównego projektu. Wspierane są zarówno punkty wejścia TypeScript, jak i JavaScript.
+
+---
+
+## Budowanie wtyczki
+
+Wtyczki są tworzone względem pakietu `@opencode-ai/plugin`, który dostarcza interfejs `Hooks`, jaki musi spełnić Twój moduł.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Minimalna wtyczka eksportuje funkcję, która otrzymuje obiekt `PluginInput` i zwraca obiekt `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Dostępne typy hooków
+
+| Hook | Cel |
+|------|---------|
+| `auth` | Rejestruj niestandardowych dostawców uwierzytelniania z tablicą `methods` |
+| `event` | Reaguj na zdarzenia sesji (wiadomości, wywołania narzędzi, zakończenia) |
+| `config` | Reaguj na zmiany konfiguracji w czasie działania |
+| `dispose` | Czyść zasoby, gdy wtyczka jest wyładowywana |
+
+Obiekt `PluginInput` udostępnia `client` (typowanego klienta API Bolta), `project`, `worktree`, `directory` i `serverUrl`, aby Twoja wtyczka mogła wchodzić w interakcję z działającym serwerem.
+
+---
+
+## Zmienne środowiskowe
+
+| Zmienna | Opis |
+|----------|-------------|
+| `OPENCODE_PURE` | Ustaw na `1`, aby uruchamiać bez żadnych zewnętrznych wtyczek |

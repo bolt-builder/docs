@@ -1,0 +1,179 @@
+---
+title: "GitHub-integration: Actions, PR'er og AI-gennemgang"
+sidebarTitle: "GitHub Actions"
+description: "Kør Bolt inde i GitHub Actions, tjek PR'er ud lokalt, generér AI-commit-beskeder og styr sammenfletninger med AI-drevet kodegennemgang og exit-koder."
+url: "server/github-actions"
+---
+
+Bolt leverer fire kommandoer, der forbinder dit daglige Git-workflow med AI: en GitHub Actions-agent du kan installere med en enkelt kommando, en genvej til at tjekke pull requests ud, en AI-commit-besked-generator og en AI-kodegennemgang med maskinlæsbare exit-koder. Sammen lader de dig bringe Bolt ind i hvert udviklingstrin — lokal kodning, PR-gennemgang og kontinuerlig integration.
+
+---
+
+## `bolt github`
+
+Administrér GitHub Actions-agenten, der kører Bolt på CI-hændelser.
+
+### `bolt github install`
+
+Installér GitHub Actions-workflowet i det aktuelle repository. Dette skriver workflow-YAML til `.github/workflows/`, så Bolt starter automatisk på issue-kommentarer, nye pull requests eller andre hændelser, du konfigurerer.
+
+```bash
+bolt github install
+```
+
+Kør dette fra roden af et git-repository. Du skal have skriveadgang til `.github/workflows/`.
+
+### `bolt github run`
+
+Kør GitHub-agenten lokalt eller inde i et CI-trin, og genafspil en specifik GitHub-hændelses-payload.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flag | Beskrivelse |
+|------|-------------|
+| `--event <event>` | GitHub-hændelsesnavn eller sti til en JSON-hændelses-payload |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) brugt til at poste kommentarer og hente kontekst |
+
+---
+
+## Opsæt GitHub Actions-agenten
+
+<Steps>
+  <Step title="Installér workflowet">
+    Fra roden af dit repository:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt skriver en GitHub Actions-workflow-fil til `.github/workflows/`. Commit og push filen.
+  </Step>
+
+  <Step title="Tilføj din API-nøgle som en secret">
+    I dine repository-indstillinger, tilføj API-nøglen til din foretrukne LLM-udbyder som en repository-secret (fx `ANTHROPIC_API_KEY`). Workflowet vil opsamle den automatisk.
+  </Step>
+
+  <Step title="Udløs agenten">
+    Kommentér `/bolt <your request>` på ethvert issue eller pull request. Workflowet affyres, Bolt læser hændelses-payload'en og poster et svar med resultatet.
+  </Step>
+
+  <Step title="Kør lokalt til fejlfinding">
+    Genafspil en live-hændelses-payload fra en tidligere workflow-kørsel:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Tjek en GitHub pull request ud i en lokal branch og start Bolt i den branch — klar til at gennemgå, debugge eller fortsætte arbejdet fra hvor PR-forfatteren slap.
+
+```bash
+bolt pr 42
+```
+
+Bolt bruger `gh`-CLI'en til at hente PR'en, opretter en branch ved navn `pr/<number>` og opsætter upstream-tracking-referencen. For pull requests på tværs af repositories (fork) tilføjer den forken som en remote automatisk. Hvis PR-beskrivelsen indeholder en delt Bolt-sessions-URL (`opncd.ai/s/…`), importeres sessionen, så du kan fortsætte forfatterens samtale.
+
+> Kræver, at [GitHub CLI (`gh`)](https://cli.github.com/) er installeret og godkendt.
+
+---
+
+## `bolt commit`
+
+Generér en commit-besked ud fra dine staged (eller alle sporede) ændringer og commit i ét trin.
+
+```bash
+bolt commit
+```
+
+Bolt diff'er dine ændringer, sender diff'en til `commit`-agenten sammen med de seneste commit-emner til stilreference og kører `git commit -m <message>` med resultatet.
+
+### Flag
+
+| Flag | Alias | Beskrivelse |
+|------|-------|-------------|
+| `--all` | `-a` | Commit alle sporede ændringer, ikke kun staged (svarer til `git commit -a`) |
+| `--dry-run` | | Udskriv den genererede besked uden at committe |
+| `--model <provider/model>` | `-m` | Tilsidesæt den model, der bruges til at generere beskeden |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Brug `bolt commit --dry-run` for at forhåndsvise den genererede besked, før den commits. Hvis du vil redigere den, kopiér outputtet og kør `git commit -m "…"` med din justerede formulering.
+</Tip>
+
+---
+
+## `bolt review`
+
+Kør `code-review`-agenten mod en diff og afslut med en maskinlæsbar dom. Den sidste linje i gennemgangen er altid enten `Verdict: PASS` eller `Verdict: FAIL`, hvilket gør `bolt review` drop-in-klar til CI-pipelines.
+
+```bash
+bolt review
+```
+
+Som standard diff'er `bolt review` `HEAD` mod arbejdstræet. Brug flagene nedenfor til at afgrænse diff'en.
+
+### Flag
+
+| Flag | Alias | Beskrivelse |
+|------|-------|-------------|
+| `--staged` | | Gennemgå kun staged ændringer |
+| `--branch <name>` | | Gennemgå ændringer siden merge base med den navngivne branch (standarden er repository'ets standard-branch) |
+| `--model <provider/model>` | `-m` | Model at bruge til gennemgangen |
+
+### Exit-koder
+
+| Kode | Betydning |
+|------|---------|
+| `0` | `Verdict: PASS` — ingen kritiske eller store problemer |
+| `1` | `Verdict: FAIL` — et eller flere kritiske eller store problemer fundet |
+| `2` | Dom kunne ikke bestemmes fra svaret |
+
+### Brug i et GitHub Actions-workflow
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+En ikke-nul exit-kode får kontrollen til at fejle og blokerer sammenfletningen, indtil problemerne er løst.
+
+<Tip>
+  Kør `bolt review --staged`, før du committer, for at fange problemer, mens de stadig er lette at ændre — før de nogensinde når en pull request.
+</Tip>

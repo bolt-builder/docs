@@ -1,0 +1,179 @@
+---
+title: "GitHub 連携: Actions、PR、AI レビュー"
+sidebarTitle: "GitHub Actions"
+description: "GitHub Actions 内で Bolt を実行、PR をローカルにチェックアウト、AI コミットメッセージを生成、AI 駆動のコードレビューと終了コードでマージをゲートします。"
+url: "server/github-actions"
+---
+
+Bolt は日々の Git ワークフローと AI をつなげる 4 つのコマンドを同梱しています。単一コマンドでインストールできる GitHub Actions エージェント、プルリクエストをチェックアウトするショートカット、AI コミットメッセージジェネレータ、そしてマシン可読な終了コードを持つ AI コードレビュアーです。これらを組み合わせることで、開発のあらゆる段階 — ローカルコーディング、PR レビュー、継続的インテグレーション — に Bolt を持ち込めます。
+
+---
+
+## `bolt github`
+
+CI イベントで Bolt を実行する GitHub Actions エージェントを管理します。
+
+### `bolt github install`
+
+現在のリポジトリに GitHub Actions ワークフローをインストールします。これはワークフロー YAML を `.github/workflows/` に書き込み、issue コメント、新しいプルリクエスト、または設定した他のイベントで Bolt が自動的に起動するようにします。
+
+```bash
+bolt github install
+```
+
+これは git リポジトリのルートから実行してください。`.github/workflows/` への書き込みアクセスが必要です。
+
+### `bolt github run`
+
+ローカルまたは CI ステップ内で GitHub エージェントを実行し、特定の GitHub イベントペイロードを再生します。
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| フラグ | 説明 |
+|------|-------------|
+| `--event <event>` | GitHub イベント名または JSON イベントペイロードへのパス |
+| `--token <pat>` | コメント投稿とコンテキスト取得に使用される GitHub パーソナルアクセストークン (`github_pat_…`) |
+
+---
+
+## GitHub Actions エージェントを設定する
+
+<Steps>
+  <Step title="ワークフローをインストール">
+    リポジトリのルートから:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt は GitHub Actions ワークフローファイルを `.github/workflows/` に書き込みます。ファイルをコミットしてプッシュしてください。
+  </Step>
+
+  <Step title="API キーをシークレットとして追加">
+    リポジトリ設定で、好みの LLM プロバイダの API キーをリポジトリシークレットとして追加してください (例: `ANTHROPIC_API_KEY`)。ワークフローはそれを自動的にピックアップします。
+  </Step>
+
+  <Step title="エージェントをトリガー">
+    任意の issue またはプルリクエストで `/bolt <your request>` とコメントしてください。ワークフローが発火し、Bolt がイベントペイロードを読み、結果と共に返信を投稿します。
+  </Step>
+
+  <Step title="デバッグ用にローカルで実行">
+    以前のワークフロー実行からのライブイベントペイロードを再生します。
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+GitHub プルリクエストをローカルブランチにチェックアウトし、そのブランチで Bolt を起動します — レビュー、デバッグ、または PR 作者が終わったところから作業を続けられる状態です。
+
+```bash
+bolt pr 42
+```
+
+Bolt は `gh` CLI を使って PR を取得し、`pr/<number>` という名前のブランチを作成し、upstream 追跡参照を配線します。クロスリポジトリ (fork) PR の場合、フォークをリモートとして自動的に追加します。PR 説明が共有された Bolt セッション URL (`opncd.ai/s/…`) を含む場合、セッションがインポートされるので、作者の会話を継続できます。
+
+> [GitHub CLI (`gh`)](https://cli.github.com/) がインストールされ認証されている必要があります。
+
+---
+
+## `bolt commit`
+
+ステージ済み (またはすべての追跡中の) 変更からコミットメッセージを生成し、1 ステップでコミットします。
+
+```bash
+bolt commit
+```
+
+Bolt は変更を diff し、スタイル参照のための最近のコミット件名と共に diff を `commit` エージェントにフィードし、結果と共に `git commit -m <message>` を実行します。
+
+### フラグ
+
+| フラグ | エイリアス | 説明 |
+|------|-------|-------------|
+| `--all` | `-a` | ステージ済みだけでなく、追跡中のすべての変更をコミット (`git commit -a` と同等) |
+| `--dry-run` | | コミットせずに生成されたメッセージを出力 |
+| `--model <provider/model>` | `-m` | メッセージ生成に使用するモデルをオーバーライド |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  コミット前に生成されたメッセージをプレビューするには `bolt commit --dry-run` を使用してください。編集したい場合は、出力をコピーし、調整した文言で `git commit -m "…"` を実行してください。
+</Tip>
+
+---
+
+## `bolt review`
+
+`code-review` エージェントを diff に対して実行し、マシン可読の判定と共に終了します。レビューの最終行は常に `Verdict: PASS` または `Verdict: FAIL` のいずれかで、`bolt review` は CI パイプラインですぐに使えます。
+
+```bash
+bolt review
+```
+
+デフォルトでは、`bolt review` は `HEAD` を作業ツリーに対して diff します。diff の範囲を絞るには以下のフラグを使用してください。
+
+### フラグ
+
+| フラグ | エイリアス | 説明 |
+|------|-------|-------------|
+| `--staged` | | ステージ済み変更のみをレビュー |
+| `--branch <name>` | | 名前付きブランチとのマージベース以降の変更をレビュー (デフォルトはリポジトリのデフォルトブランチ) |
+| `--model <provider/model>` | `-m` | レビューに使用するモデル |
+
+### 終了コード
+
+| コード | 意味 |
+|------|---------|
+| `0` | `Verdict: PASS` — 重大または主要な問題なし |
+| `1` | `Verdict: FAIL` — 1 つ以上の重大または主要な問題が見つかった |
+| `2` | 応答から判定を決定できなかった |
+
+### GitHub Actions ワークフローでの使用
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+非ゼロの終了コードはチェックを失敗させ、問題が対処されるまでマージをブロックします。
+
+<Tip>
+  コミット前に `bolt review --staged` を実行して、まだ変更しやすいうちに問題を発見してください — プルリクエストに到達する前に。
+</Tip>

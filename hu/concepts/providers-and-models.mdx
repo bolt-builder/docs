@@ -1,0 +1,139 @@
+---
+title: "Szolgáltatók és modellek — LLM-hitelesítés és kiválasztás"
+sidebarTitle: "Szolgáltatók és modellek"
+description: "A Bolt bármely LLM-szolgáltatót támogatja a Vercel AI SDK-n keresztül. Hitelesíts szolgáltatókat, listázz modelleket, hangold a gondolkodási erőfeszítést, és futtass N-legjobb párhuzamos összehasonlításokat."
+---
+
+A Bolt tervezésénél fogva modell-agnosztikus. A háttérben a **Vercel AI SDK**-t használja, hogy kommunikáljon a szolgáltatókkal, ami azt jelenti, hogy minden olyan szolgáltató, amelyet az SDK támogat — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter és mások — dobozon kívül működik. A szolgáltatói és modellkatalógus a [models.dev](https://models.dev) forrásból származik, amely egy közösség által karbantartott adatbázis a szolgáltatók metaadatairól és árazásáról.
+
+## Szolgáltatói hitelesítő adatok kezelése
+
+Használd a `bolt providers` parancsot (`bolt auth` néven is aliasolva) szolgáltatói hitelesítő adatok hozzáadásához, listázásához és eltávolításához.
+
+### Hitelesítő adatok hozzáadása vagy frissítése
+
+```bash
+bolt providers login
+# or equivalently:
+bolt auth login
+```
+
+Ez interaktív promptot indít egy szolgáltató kiválasztásához és a hitelesítő adatok megadásához. Az interaktív folyamat kihagyásához add át közvetlenül a kapcsolókat:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Beállított szolgáltatók listázása
+
+```bash
+bolt providers list
+# or:
+bolt auth list
+```
+
+Megjeleníti az összes tárolt hitelesítő adatot és a környezeti változókból észlelt szolgáltatói API-kulcsokat.
+
+### Hitelesítő adatok eltávolítása
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Környezeti változós hitelesítés
+
+CI-pipeline-ekhez vagy fej nélküli környezetekhez állítsd be a szolgáltató API-kulcs környezeti változóját közvetlenül — nincs szükség interaktív bejelentkezésre. Gyakori példák:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+A Bolt indításkor automatikusan olvassa ezeket a változókat. A `bolt providers list` megmutatja, mely környezeti változókat észlelte.
+
+## Elérhető modellek böngészése
+
+A `bolt models` felsorol minden modellt, amely elérhető a beállított szolgáltatóidon keresztül.
+
+```bash
+# List all models
+bolt models
+
+# Filter to one provider
+bolt models anthropic
+
+# Show cost and capability metadata
+bolt models --verbose
+
+# Refresh the model catalog from models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Futtasd a `bolt models --verbose` parancsot, hogy lásd a bemeneti/kimeneti token árazást minden modellhez. Ez megkönnyíti a költség-kompromisszumok összehasonlítását, mielőtt hosszú futású feladathoz kötelezed magad egy modell mellett.
+</Tip>
+
+### Modellazonosító formátuma
+
+A modellekre mindig `provider/model` formátumban hivatkozunk:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Használd ezt a formátumot bárhol, ahol a Bolt modellt fogad — CLI-kapcsolókban, konfigurációs fájlokban és ügynökdefiníciókban.
+
+## Modell kiválasztása futásidőben
+
+### `--model` / `-m` kapcsoló
+
+A `--model` kapcsoló elérhető a `bolt run`, `bolt commit` és `bolt review` parancsokon:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — gondolkodási erőfeszítés vezérlése
+
+Néhány modell támogatja a konfigurálható gondolkodási erőfeszítés-szinteket (pl. az Anthropic extended thinking, az OpenAI reasoning modelljei). Használd a `--variant` kapcsolót az erőfeszítési szint kiválasztásához:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Az elérhető variant-értékek a szolgáltatótól és modelltől függenek. Gyakori értékek a `minimal`, `low`, `medium`, `high` és `max`, de a pontos halmaz változik. Ellenőrizd a szolgáltatód dokumentációját, vagy használd a `bolt models --verbose` parancsot, hogy lásd egy adott modell támogatott variant-jait.
+</Note>
+
+### `--thinking` — gondolkodási blokkok megjelenítése
+
+Amikor extended thinkinget támogató modellt használsz, add át a `--thinking` kapcsolót, hogy a modell gondolatmenete megjelenjen a kimenetben:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## N-legjobb párhuzamos futtatás
+
+A `--best-of` ugyanazt a promptot több modellhez küldi párhuzamosan, majd egy bíró modell rangsorolja a válaszokat, és megtartja a legjobbat:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+A bíró alapértelmezésben a `--model` kapcsolóban átadott modell, vagy a `--best-of` lista első bejegyzése, ha a `--model` nincs beállítva. A kapcsoló vesszővel elválasztott listát fogad `provider/model` azonosítókkal.
+
+<Tip>
+  Az N-legjobb különösen hasznos összetett algoritmikus problémákhoz vagy architekturális döntésekhez, ahol különböző modellek valóban különböző megközelítéseket hozhatnak. Hagyd, hogy a Bolt párhuzamosan futtassa őket, és automatikusan válassza ki a győztest.
+</Tip>

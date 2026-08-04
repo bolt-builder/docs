@@ -1,0 +1,215 @@
+---
+title: "Lisää työkaluja Boltiin MCP-palvelimilla"
+sidebarTitle: "MCP-palvelimet"
+description: "Yhdistä ulkoiset työkalut ja resurssit Boltiin Model Context Protocolin avulla. Lisää, todenna ja debuggaa MCP-palvelimia CLI:stä."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) on avoin standardi, joka mahdollistaa AI-agenttien kommunikoinnin ulkoisten työkalujen ja tietolähteiden kanssa yhteisen rajapinnan kautta. Bolt käyttää MCP:tä laajentaakseen sitä, mitä agentit voivat tehdä — yhdistetty MCP-palvelin voi paljastaa mitä tahansa tietokantakyselytyökalusta täyteen verkkohakuun API:in. Bolt hallitsee koko elinkaaren: palvelinten lisäämisen, OAuth-virtojen ajamisen, tokenien päivittämisen ja yhteydellisyyden luotaamisen.
+
+## Palvelintyypit
+
+Bolt tukee kahta MCP-palvelintyyppiä.
+
+| Tyyppi | Siirto | Kuvaus |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Palvelin, joka toimii URL:ssa, jonka voit tavoittaa verkon yli |
+| `local` | stdio | Paikallinen komento, jonka Bolt käynnistää lapsiprosessina |
+
+Etäpalvelimet tukevat OAuth-todennusta heti valmiiksi. Bolt hoitaa tokenien hankkimisen, tallennuksen ja automaattisen päivityksen — et koskaan käsittele tokeneita käsin.
+
+---
+
+## Komennot
+
+### `bolt mcp add`
+
+Lisää uusi MCP-palvelin interaktiivisesti tai yhdellä komennolla.
+
+**Interaktiivinen** — suorita `bolt mcp add` ilman argumentteja astuaksesi kehote-ohjatun toiminnon läpi, joka kysyy nimen, laajuuden (projekti tai globaali), tyypin, URL:n tai komennon ja käyttääkö palvelin OAuthia.
+
+**Ei-interaktiivinen** — anna nimi ja joko `--url` etäpalvelinta varten tai komento `--`:n jälkeen paikallista varten:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**Liput komennolle `bolt mcp add`**
+
+| Lippu | Kuvaus |
+|------|-------------|
+| `--url <url>` | Etä-MCP-palvelimen URL |
+| `--header <KEY=VALUE>` | HTTP-otsake lähetettäväksi etäpalvelimelle (toistettavissa) |
+| `--env <KEY=VALUE>` | Ympäristömuuttuja paikalliselle palvelimelle (toistettavissa) |
+
+---
+
+### `bolt mcp list`
+
+Listaa jokainen määritetty MCP-palvelin sen yhteys- ja todennustilan kanssa.
+
+```bash
+bolt mcp list
+```
+
+Jokainen merkintä näyttää tilakuvakkeen:
+
+| Kuvake | Merkitys |
+|------|---------|
+| `✓` | Yhdistetty (ja todennettu, jos OAuth on käytössä) |
+| `⚠` | Vaatii todennusta tai tunnistetiedot ovat vanhentuneet |
+| `✗` | Yhteys epäonnistui tai vaadittavaa asiakasrekisteröintiä ei tehty |
+| `○` | Ei vielä alustettu tai poistettu käytöstä |
+
+---
+
+### `bolt mcp auth <name>`
+
+Todenna OAuth-käytössä olevalla etä-MCP-palvelimella. Jos jätät nimen pois, Bolt näyttää interaktiivisen valitsimen, joka listaa kaikki OAuth-kykyiset palvelimet niiden nykyisen todennustilan kanssa (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+Bolt avaa selaimesi tarjoajan valtuutus-URL:iin ja odottaa takaisinsoittoa — täydellinen OAuth-kättely, mukaan lukien dynaaminen asiakasrekisteröinti tarvittaessa, tapahtuu automaattisesti.
+
+<Note>
+  Bolt hoitaa täyden OAuth-virran, mukaan lukien tokenien tallennuksen ja automaattisen tokenien päivityksen. Sinun ei tarvitse kopioida tokeneita tai hallita vanhenemista käsin. Jos palvelin vaatii esirekisteröidyn asiakas-ID:n, lisää `oauth.clientId` (ja valinnaisesti `oauth.clientSecret`) palvelimen konfigurointimerkintään tiedostossa `.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Poista palvelimelle tallennetut OAuth-tunnistetiedot. Jos jätät nimen pois, Bolt kehottaa sinua valitsemaan listasta palvelimia, joilla on tallennettuja tokeneita.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Luotaa etäpalvelimen yhteydellisyyttä ja tarkastele sen OAuth-tilaa käynnistämättä täyttä istuntoa. Tämä on ensimmäinen työkalu, johon tarttua, kun palvelin näyttää `✗ failed` tai `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` raportoi:
+- Palvelimen URL:n ja nykyisen todennustilan
+- Käyttötokenin yksityiskohdat (maskattuna) ja vanhentumisaikaleiman
+- Onko päivitystoken läsnä
+- Raa'an HTTP-vastauskoodin palvelimelta
+- `WWW-Authenticate`-otsakkeen sisällön
+- OAuth-havaitsemisluotauksen tuloksen (ilman virran suorittamista loppuun)
+
+---
+
+## Manuaalinen konfigurointi
+
+Voit lisätä tai muokata MCP-palvelimia suoraan tiedostossa `.bolt/bolt.jsonc` käyttämättä CLI-komentoja. Bolt poimii muutokset seuraavan istunnon käynnistyksessä.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Paikallinen stdio-palvelin näyttää tältä:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Antaaksesi mukautettuja HTTP-otsakkeita tai poistaaksesi OAuthin käytöstä etäpalvelimella:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Lisää ja todenna etä-MCP-palvelin
+
+<Steps>
+  <Step title="Lisää palvelin">
+    Suorita `bolt mcp add` ja seuraa kehotteita tai käytä ei-interaktiivista muotoa:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt kirjoittaa merkinnän tiedostoon `.bolt/bolt.jsonc` (projektin laajuus) tai globaaliin konfiguraatioosi.
+  </Step>
+
+  <Step title="Tarkista yhteyden tila">
+    ```bash
+    bolt mcp list
+    ```
+
+    Jos palvelin vaatii todennusta, näet `⚠ needs authentication` sen nimen vieressä.
+  </Step>
+
+  <Step title="Todenna OAuthilla">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt avaa selaimesi. Kun hyväksyt käytön, terminaali vahvistaa, että todennus onnistui, ja palvelimen tila muuttuu muotoon `✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="Varmista, että työkalut ovat käytettävissä">
+    Käynnistä Bolt-istunto. Palvelimen paljastamat työkalut ovat nyt kaikkien agenttien käytettävissä. Voit tarkastella niitä milloin tahansa:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

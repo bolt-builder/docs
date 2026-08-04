@@ -1,0 +1,33 @@
+---
+title: "UI Web Bolt"
+sidebarTitle: "Web UI"
+description: "bolt web menyajikan UI berbasis browser di atas server Bolt yang sedang berjalan — berguna untuk mesin tim bersama, mesin remote, dan di mana pun TUI tidak praktis."
+---
+
+`bolt web` memulai server Bolt dan menyajikan UI browser di depannya. Ia adalah engine yang sama dengan TUI, hanya dirender dalam tab browser.
+
+## Mulai
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Kemudian buka URL yang dicetak. Saat mengekspos melalui jaringan, atur basic auth terlebih dahulu:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Kapan menggunakan UI web
+
+- Menjalankan Bolt di mesin remote yang mumpuni tetapi mengendalikannya dari laptop.
+- Berbagi sesi live dengan rekan tim untuk pair-debugging.
+- Lingkungan di mana TUI penuh terasa canggung (Chromebook, tablet, mesin coworking).
+
+## Terkait
+
+- [Headless Server](/server/headless-server) — server API yang mendasarinya.
+- [Remote Sessions](/server/remote-sessions) — attach TUI ke server yang sama yang disajikan UI web.

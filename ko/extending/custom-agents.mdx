@@ -1,0 +1,68 @@
+---
+title: "Bolt의 커스텀 에이전트"
+sidebarTitle: "Custom Agents"
+description: "자신의 Bolt 에이전트를 Markdown 파일로 정의하세요 — 모델 선택, 접근 수준 설정, 도구 제한, 도메인별 지침 추가."
+---
+
+10개의 내장 에이전트 외에도 자신만의 에이전트를 정의할 수 있습니다. 커스텀 에이전트는 에이전트의 모델, 접근 수준, 사용 가능한 도구를 설명하는 프론트매터 블록과 시스템 프롬프트 역할을 하는 본문이 있는 Markdown 파일입니다.
+
+## 에이전트 만들기
+
+가장 빠른 경로는 몇 가지 질문을 하고 파일을 작성해 주는 내장 생성기입니다:
+
+```bash
+bolt agent create
+```
+
+에이전트는 프로젝트의 `.opencode/agent/` 아래(개인 에이전트의 경우 전역 설정 디렉터리)에 위치합니다. 각 에이전트는 파일 이름이 에이전트의 이름이 되는 단일 `.md` 파일입니다.
+
+## 에이전트 파일 구조
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+일반적인 프론트매터 필드:
+
+| Field | Purpose |
+| --- | --- |
+| `name` | `--agent`와 함께 사용되는 에이전트 이름. |
+| `description` | 목록에 표시되는 한 줄 요약. |
+| `model` | `provider/model` 형식의 기본 모델. |
+| `access` | `full`, `edit`, 또는 `read` ([Permissions](/concepts/permissions) 참조). |
+| `tools` | 에이전트가 호출할 수 있는 [도구](/concepts/tools)를 제한하는 선택적 허용 목록. |
+
+## 커스텀 에이전트 사용
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+TUI에서 `Tab`을 눌러 에이전트를 순환하세요. 커스텀 에이전트는 내장 에이전트와 함께 나타납니다.
+
+## 서브에이전트
+
+에이전트는 `task` 도구를 통해 서브에이전트에 위임할 수 있습니다. Bolt는 `@general`과 `@explore`를 기본 제공하며, 파일이 `.opencode/agent/` 아래에 있는 모든 커스텀 에이전트도 이름으로 서브에이전트로 호출될 수 있습니다.
+
+## 관련 항목
+
+- [Agents](/concepts/agents) — 내장 에이전트 라인업.
+- [Tools](/concepts/tools) — `tools:`에 추가할 수 있는 것.
+- [Custom Tools](/extending/custom-tools) — 에이전트가 호출할 도구를 만드세요.

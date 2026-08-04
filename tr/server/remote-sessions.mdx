@@ -1,0 +1,185 @@
+---
+title: "HTTP üzerinden uzak Bolt oturumlarına bağlanın"
+sidebarTitle: "Uzak Oturumlar"
+description: "Başsız bir Bolt sunucusu başlatın, herhangi bir makineden bir TUI bağlayın ve mDNS ile yerel ağınızdaki sunucuları keşfedin — isteğe bağlı temel kimlik doğrulama ile."
+url: "server/remote-sessions"
+---
+
+Bolt, motoru arayüzden tamamen ayıran yerleşik bir HTTP sunucusuna sahiptir. Güçlü bir uzak makinede (bir bulut VM'i, bir geliştirme konteyneri, gece boyunca çalışır bırakılmış bir masaüstü) başsız bir sunucu başlatabilir ve TUI'yi dizüstünüzden, ikinci bir terminalden, hatta bir tarayıcıdan bağlayabilirsiniz — hepsi aynı canlı oturuma işaret eder. Bu, Bolt'u ekipler, uzak iş yükleri ve bir kutuya SSH yapmadan kontrol etmek istediğiniz uzun süre çalışan görevler için uygun kılar.
+
+---
+
+## `bolt serve`
+
+Tam API'yi HTTP üzerinden sunan ve TUI bağlantılarını kabul eden başsız bir Bolt sunucusu başlatın.
+
+```bash
+bolt serve
+```
+
+### Bayraklar
+
+| Bayrak | Varsayılan | Açıklama |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | Bağlanacak ana bilgisayar adı veya IP adresi |
+| `--port <n>` | `0` (otomatik) | Dinlenecek bağlantı noktası; Bolt başlangıçta atanan bağlantı noktasını yazdırır |
+| `--mdns` | `false` | Sıfır yapılandırma yerel ağ keşfi için sunucuyu mDNS aracılığıyla duyur; ayrıca ana bilgisayarı `0.0.0.0` olarak ayarlar |
+| `--mdns-domain <name>` | `opencode.local` | Özel mDNS hizmeti etki alanı |
+| `--cors <origin>` | `[]` | CORS aracılığıyla izin verilecek ek kaynaklar (tekrar edilebilir) |
+
+<Warning>
+  `OPENCODE_SERVER_PASSWORD` ayarlanmamışsa Bolt bir uyarı yazdırır ve sunucu ona ulaşabilen herkese tamamen açıktır. `127.0.0.1` dışında bir arabirime bağlanmadan önce her zaman bir parola ayarlayın.
+</Warning>
+
+### Kimlik doğrulama
+
+Sunucuyu ortam değişkenleri kullanarak HTTP Basic Auth ile güvenceye alın:
+
+| Değişken | Açıklama |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | Temel kimlik doğrulama parolası |
+| `OPENCODE_SERVER_USERNAME` | Temel kimlik doğrulama kullanıcı adı (atlanırsa varsayılan `opencode`) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+Tam TUI'yi çalışan bir Bolt sunucusuna bağlayın. Bu, HTTP üzerinden erişilebilen herhangi bir sunucuya karşı çalışır — yerel veya uzak.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### Bayraklar
+
+| Bayrak | Takma ad | Açıklama |
+|------|-------|-------------|
+| `--dir <path>` | | Uzak sunucuda çalıştırılacak dizin |
+| `--continue` | `-c` | Sunucudaki son oturuma devam et |
+| `--session <id>` | `-s` | Devam edilecek oturum kimliği |
+| `--fork` | | Devam ederken oturumu çatalla (`--continue` veya `--session` ile kullanın) |
+| `--password <pw>` | `-p` | Temel kimlik doğrulama parolası (`OPENCODE_SERVER_PASSWORD`'ü geçersiz kılar) |
+| `--username <user>` | `-u` | Temel kimlik doğrulama kullanıcı adı (`OPENCODE_SERVER_USERNAME`'i geçersiz kılar) |
+| `--mini` | | Tam TUI yerine minimal etkileşimli arayüzü kullan |
+
+```bash
+# Uzak bir sunucudaki son oturuma devam et
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Belirli bir oturumu çatalla
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal arayüz — kısıtlı terminallerde kullanışlıdır
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+Bir Bolt sunucusu başlatın ve varsayılan tarayıcınızda hemen web arayüzünü açın. Yerel olarak tarayıcı tabanlı bir arabirim çalıştırmanın en hızlı yolu budur.
+
+```bash
+bolt web
+```
+
+`bolt web`, `bolt serve` ile aynı ağ bayraklarını kabul eder.
+
+---
+
+## mDNS keşfi
+
+Sunucunun adresini mDNS kullanarak yerel ağınızda yayınlamak için `bolt serve` komutuna `--mdns` geçirin. Aynı ağdaki herhangi bir makine, IP adresini veya bağlantı noktasını bilmeden mDNS ana bilgisayar adını kullanarak bağlanabilir.
+
+```bash
+# Sunucu makinesinde
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# Aynı LAN'daki başka bir makineden
+bolt attach http://opencode.local --password my-secret
+```
+
+Varsayılan mDNS etki alanı `opencode.local`'dir. `--mdns-domain` ile geçersiz kılın:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## Sunucu başlatın ve uzaktan bağlanın
+
+<Steps>
+  <Step title="Sunucu makinesinde bir parola ayarlayın">
+    Sunucuyu başlatmadan önce `OPENCODE_SERVER_PASSWORD`'ü dışa aktarın. O olmadan Bolt bir uyarı yazdırır ve API kimlik doğrulanmamış olur.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="Başsız sunucuyu başlatın">
+    Dizüstünüzün ulaşabilmesi için tüm arabirimlere bağlayın ve isteğe bağlı olarak sabit bir bağlantı noktası seçin:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    Bu terminali açık bırakın (veya `tmux` / `screen` / bir systemd birimi içinde çalıştırın).
+  </Step>
+
+  <Step title="Dizüstünüzden bağlanın">
+    Sunucuya ulaşabilen herhangi bir makinede çalıştırın:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    Tam TUI açılır ve uzak motora bağlanır. Oturumlar, geçmiş ve araç durumunun tümü sunucuda yaşar.
+  </Step>
+
+  <Step title="Daha sonra bir oturuma devam edin">
+    TUI'den çıkarak (`q` veya `Ctrl-C`) ayrılın. Oturum sunucuda çalışmaya devam eder. Yeniden katılmak için:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    Veya orijinali etkilemeden dallanmak için çatallayın:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Uzak iş akışı örneği
+
+Yaygın bir kalıp, yüksek çekirdek sayılı bir geliştirme makinesinde çalışan bir Bolt sunucusu bırakmak ve ince bir dizüstünden bağlanmaktır.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+Tüm oturum verileri sunucunun SQLite veritabanında saklanır. Dizüstü yalnızca TUI'yi işler — çalışmayı kaybetmeden istediği zaman bağlantısını kesip yeniden bağlanabilir.

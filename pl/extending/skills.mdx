@@ -1,0 +1,22 @@
+---
+title: "Skille: wielokrotnego użytku playbooki agenta"
+sidebarTitle: "Skille"
+description: "Skille to nazwane, wielokrotnego użytku playbooki, które agent Bolta wywołuje przez narzędzie skill — przydatne do zapamiętanych workflowów jak wypuszczanie wydań lub uruchamianie zestawów lintów."
+---
+
+Skille to nazwane, wielokrotnego użytku playbooki, które żyją obok Twojego projektu i są wywoływane przez narzędzie `skill`. Podczas gdy niestandardowe narzędzie jest pojedynczą wykonywalną akcją, skill jest oskryptowanym workflowem, za którym agent może podążać krok po kroku: zbierz te pliki, uruchom te komendy, zdecyduj co dalej na podstawie wyjścia.
+
+Używaj skilli, kiedy:
+
+- Masz workflow, który wciąż na nowo wyjaśniasz w promptach („najpierw uruchom linter, potem…").
+- Chcesz, aby agent podążał za konkretnym drzewem decyzyjnym.
+- Chcesz, aby ten sam workflow był dostępny dla każdej sesji i każdego agenta w projekcie.
+
+## Gdzie żyją
+
+Skille to pliki w `.opencode/skill/` (lub `.opencode/skills/`) w katalogu głównym projektu. Każdy plik opisuje nazwę wyzwalacza, kiedy agent powinien go użyć oraz zaangażowane kroki. [Narzędzie](/concepts/tools) `skill` udostępnia je modelowi.
+
+## Powiązane
+
+- [Niestandardowe narzędzia](/extending/custom-tools) — niżej poziomowe rozszerzenie pojedynczej akcji.
+- [Niestandardowi agenci](/extending/custom-agents) — wpiecz instrukcje w agenta zamiast tego.

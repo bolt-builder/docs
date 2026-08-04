@@ -1,0 +1,179 @@
+---
+title: "GitHub integratsiyasi: Actions, PR'lar va AI ko'rib chiqish"
+sidebarTitle: "GitHub Actions"
+description: "GitHub Actions ichida Bolt'ni ishga tushiring, PR'larni mahalliy checkout qiling, AI commit xabarlarini yarating va mergelarni AI quvvatidagi kod ko'rib chiqish va exit kodlari bilan boshqaring."
+url: "server/github-actions"
+---
+
+Bolt kundalik Git workflow'ingizni AI'ga ulaydigan to'rtta buyruq bilan keladi: bir buyruq bilan o'rnatishingiz mumkin bo'lgan GitHub Actions agenti, pull request'larni checkout qilish uchun yorliq, AI commit-xabar generatori va mashina uchun o'qiladigan exit kodlariga ega AI kod ko'rib chiqish. Birgalikda ular Bolt'ni ishlab chiqishning har bir bosqichiga olib kelishga imkon beradi — mahalliy kodlash, PR ko'rib chiqish va uzluksiz integratsiya.
+
+---
+
+## `bolt github`
+
+CI voqealarida Bolt'ni ishga tushiradigan GitHub Actions agentini boshqaring.
+
+### `bolt github install`
+
+GitHub Actions workflow'ni joriy repositoryga o'rnating. Bu workflow YAML'ni `.github/workflows/` ga yozadi, shuning uchun Bolt issue kommentariyalari, yangi pull request'lar yoki siz sozlagan boshqa voqealarda avtomatik boshlanadi.
+
+```bash
+bolt github install
+```
+
+Buni git repository ildizidan ishga tushiring. Sizga `.github/workflows/` ga yozish kirish kerak bo'ladi.
+
+### `bolt github run`
+
+GitHub agentini mahalliy yoki CI qadam ichida ishga tushiring, muayyan GitHub voqea payload'ni takrorlab.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Bayroq | Tavsif |
+|------|-------------|
+| `--event <event>` | GitHub voqea nomi yoki JSON voqea payload'ga yo'l |
+| `--token <pat>` | Kommentariyalar joylashtirish va kontekst olib kelish uchun ishlatiladigan GitHub shaxsiy kirish tokeni (`github_pat_…`) |
+
+---
+
+## GitHub Actions agentini sozlash
+
+<Steps>
+  <Step title="Workflow'ni o'rnating">
+    Repositoryingiz ildizidan:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt GitHub Actions workflow faylini `.github/workflows/` ga yozadi. Faylni commit va push qiling.
+  </Step>
+
+  <Step title="API kalitingizni sir sifatida qo'shing">
+    Repository sozlamalaringizda afzal ko'rgan LLM provayderingiz uchun API kalitni repository siri sifatida qo'shing (masalan, `ANTHROPIC_API_KEY`). Workflow uni avtomatik oladi.
+  </Step>
+
+  <Step title="Agentni ishga tushiring">
+    Har qanday issue yoki pull request'ga `/bolt <sizning so'rovingiz>` deb kommentariya qiling. Workflow ishga tushadi, Bolt voqea payload'ni o'qiydi va natija bilan javob joylashtiradi.
+  </Step>
+
+  <Step title="Debug qilish uchun mahalliy ishga tushiring">
+    Oldingi workflow ishga tushirishdan jonli voqea payload'ni takrorlang:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+GitHub pull request'ni mahalliy filialga checkout qiling va bu filialda Bolt'ni ishga tushiring — PR muallifi qoldirgan joydan ko'rib chiqish, debug qilish yoki ishni davom ettirishga tayyor.
+
+```bash
+bolt pr 42
+```
+
+Bolt PR'ni olib kelish uchun `gh` CLI dan foydalanadi, `pr/<number>` deb nomlangan filialni yaratadi va upstream tracking ref'ini o'rnatadi. Cross-repository (fork) PR'lar uchun u fork'ni remote sifatida avtomatik qo'shadi. Agar PR tavsifi bo'lishilgan Bolt sessiya URL'ini (`opncd.ai/s/…`) o'z ichiga olsa, sessiya import qilinadi, shunda siz muallifning suhbatini davom ettirishingiz mumkin.
+
+> [GitHub CLI (`gh`)](https://cli.github.com/) o'rnatilgan va autentifikatsiya qilinganini talab qiladi.
+
+---
+
+## `bolt commit`
+
+Staged (yoki barcha kuzatilayotgan) o'zgarishlaringizdan commit xabarini yarating va bir bosqichda commit qiling.
+
+```bash
+bolt commit
+```
+
+Bolt o'zgarishlaringizni diff qiladi, diff'ni uslub uchun so'nggi commit subject'lari bilan birga `commit` agentiga yuboradi va natija bilan `git commit -m <message>` ni ishga tushiradi.
+
+### Bayroqlar
+
+| Bayroq | Alias | Tavsif |
+|------|-------|-------------|
+| `--all` | `-a` | Faqat staged emas, balki barcha kuzatilayotgan o'zgarishlarni commit qilish (`git commit -a` ga teng) |
+| `--dry-run` | | Commit qilmasdan yaratilgan xabarni chop etish |
+| `--model <provider/model>` | `-m` | Xabarni yaratish uchun ishlatiladigan modelni override qilish |
+
+```bash
+# Hammasini stage qiling va commit qiling
+bolt commit --all
+
+# Commit qilmasdan xabarni ko'rib chiqing
+bolt commit --dry-run
+
+# Muayyan modeldan foydalaning
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Yaratilgan xabarni commit qilishdan oldin ko'rib chiqish uchun `bolt commit --dry-run` dan foydalaning. Agar uni tahrirlashni istasangiz, chiqishni nusxa oling va tuzatilgan matnli `git commit -m "…"` ni ishga tushiring.
+</Tip>
+
+---
+
+## `bolt review`
+
+Diff'ga qarshi `code-review` agentini ishga tushiring va mashina uchun o'qiladigan qaror bilan chiqing. Sharh oxirgi qatori har doim `Verdict: PASS` yoki `Verdict: FAIL`, bu esa `bolt review` ni CI pipelinelariga drop-in-tayyor qiladi.
+
+```bash
+bolt review
+```
+
+Standart bo'yicha, `bolt review` `HEAD` ni ishlaydigan daraxtga qarshi diff qiladi. Diff'ni qamrab olish uchun quyidagi bayroqlardan foydalaning.
+
+### Bayroqlar
+
+| Bayroq | Alias | Tavsif |
+|------|-------|-------------|
+| `--staged` | | Faqat staged o'zgarishlarni ko'rib chiqish |
+| `--branch <name>` | | Nomlangan filial bilan merge base'dan beri o'zgarishlarni ko'rib chiqish (standart bo'yicha repositoryning standart filiali) |
+| `--model <provider/model>` | `-m` | Ko'rib chiqish uchun foydalaniladigan model |
+
+### Exit kodlari
+
+| Kod | Ma'nosi |
+|------|---------|
+| `0` | `Verdict: PASS` — hech qanday kritik yoki katta muammolar yo'q |
+| `1` | `Verdict: FAIL` — bir yoki bir nechta kritik yoki katta muammolar topildi |
+| `2` | Javobdan qaror aniqlanmadi |
+
+### GitHub Actions workflow'da foydalanish
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Nol bo'lmagan exit kod tekshiruvni muvaffaqiyatsiz qiladi, muammolar hal qilinmaguncha mergeni bloklaydi.
+
+<Tip>
+  Muammolar o'zgartirish oson bo'lgan paytda ularni ushlash uchun — pull request'ga yetib borishdan oldin — commit qilishdan oldin `bolt review --staged` ni ishga tushiring.
+</Tip>

@@ -1,0 +1,191 @@
+---
+title: "Oturumlar — Bolt'ta Kalıcı Konuşma Geçmişi"
+sidebarTitle: "Oturumlar"
+description: "Oturumlar Bolt'un kalıcı iş birimidir: her biri tam bir konuşmayı yerel SQLite'ta saklar; böylece istediğiniz zaman ayrılabilir, devam ettirebilir, çatallayabilir, paylaşabilir ve dışa aktarabilirsiniz."
+---
+
+Bir **oturum**, Bolt'un birincil iş birimidir. Gönderdiğiniz her komut, ajanın okuduğu veya düzenlediği her dosya ve modelin yaptığı her araç çağrısı o oturumun geçmişine kalıcı olarak kaydedilir. Oturumlar yerel bir SQLite veritabanında yaşadığından, süreç yeniden başlatmalarından kurtulur, istenildiğinde listelenip sorgulanabilir ve siz açıkça paylaşıp dışa aktarmadıkça makinenizden asla ayrılmaz.
+
+<Note>
+  Tüm oturum verileri kendi makinenizde yerel bir SQLite veritabanında saklanır. Paylaşımı etkinleştirmediğiniz sürece dış sunuculara hiçbir şey gönderilmez. Veritabanı dosyasının tam yolunu bulmak için `bolt db path` komutunu kullanın.
+</Note>
+
+## Oturum yaşam döngüsü
+
+Bir oturum ilk komutunuzu gönderdiğiniz anda başlar ve yalnızca sildiğinizde biter. Bu iki nokta arasında serbestçe ayrılabilir, devam ettirebilir, dallandırabilir veya devredebilirsiniz.
+
+<Steps>
+  <Step title="Bir oturum oluşturun veya sürdürün">
+    Etkileşimli olarak yeni bir oturum başlatmak için TUI'yi başlatın veya etkileşimsiz olarak bir oturum oluşturmak için `bolt run` komutuna bir komut geçirin:
+
+    ```bash
+    # TUI'de yeni oturum
+    bolt
+
+    # Etkileşimsiz yeni oturum
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Ayrılın ve daha sonra dönün">
+    TUI'yi istediğiniz zaman kapatın — oturum otomatik olarak kalıcılaştırılır. `--continue` ile en son oturumunuza devam edin veya kimlikle belirli bir oturumu hedeflemek için `--session` kullanın:
+
+    ```bash
+    # En son oturuma devam et
+    bolt run --continue "now write the tests too"
+
+    # Belirli bir oturuma devam et
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Denemeden önce çatallayın">
+    Riskli bir değişikliği denemeden önce mevcut oturum geçmişinden dallanmak için `--fork` kullanın. Çatal, orijinali etkilemeyen bağımsız bir oturumdur:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Paylaşın ve iş birliği yapın">
+    `--share` ile bir paylaşım URL'si oluşturun. Bağlantıya sahip olan herkes oturum transkriptini tarayıcıda görüntüleyebilir:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Oturum yönetim komutları
+
+### Oturumları listeleme
+
+```bash
+bolt session list
+```
+
+Kimliği, başlığı ve son güncellenme zamanıyla tüm oturumların biçimlendirilmiş bir tablosunu çıkarır. Makine tarafından okunabilir çıktı için `--format json` veya en son N oturumla sınırlamak için `-n <N>` ekleyin:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Bir oturumu silme
+
+```bash
+bolt session delete <sessionID>
+```
+
+Oturumu ve tüm mesajlarını yerel veritabanından kalıcı olarak kaldırır.
+
+## Oturum kontrolü için çalıştırma bayrakları
+
+Bu bayraklar `bolt run` üzerinde mevcuttur:
+
+| Bayrak | Takma ad | Açıklama |
+|------|-------|-------------|
+| `--continue` | `-c` | En son oturuma devam et |
+| `--session <id>` | `-s` | Kimliğe göre belirli bir oturuma devam et |
+| `--fork` | | Devam etmeden önce oturumu çatalla (`--continue` veya `--session` gerektirir) |
+| `--share` | | Oturum için bir paylaşım URL'si oluştur |
+| `--title <title>` | | Oturum başlığını ayarla veya geçersiz kıl |
+
+## Oturumları dışa aktarma
+
+Bir oturumun tam transkriptini JSON olarak dışa aktarın:
+
+```bash
+# En son oturumu dışa aktar
+bolt export
+
+# Belirli bir oturumu dışa aktar
+bolt export <sessionID>
+
+# Hassas veriler gizlenmiş olarak dışa aktar
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` bayrağı dosya yollarını, kod içeriğini, araç girişlerini ve çıkışlarını ve diğer potansiyel olarak hassas alanları `[redacted:kind:id]` yer tutucularıyla değiştirir — transkriptleri takım arkadaşlarıyla paylaşmak veya hata raporları oluşturmak için kullanışlıdır.
+
+## Oturumları içe aktarma
+
+Yerel bir JSON dosyasından veya doğrudan bir paylaşım URL'sinden bir oturumu içe aktarın:
+
+```bash
+# Yerel bir dosyadan
+bolt import ./transcript.json
+
+# Paylaşım URL'sinden
+bolt import https://opncd.ai/share/abc123
+```
+
+İçe aktarılan oturumlar yerel oturum listenizde görünür ve tamamen devam ettirilebilir.
+
+## Oturum veritabanını sorgulama
+
+Bolt, temel SQLite veritabanını güç kullanıcılarına doğrudan sunar.
+
+```bash
+# Veritabanı dosyasının yolunu yazdır
+bolt db path
+
+# Etkileşimli SQLite kabuğunu aç
+bolt db
+
+# Anlık bir sorgu çalıştır
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Çıktı formatı varsayılan olarak sekmeyle ayrılmış değerlerdir; JSON çıktısı için `--format json` ekleyin.
+
+## Token kullanımı ve maliyet istatistikleri
+
+`bolt stats`, tüm oturumlarınızda token kullanımını ve maliyet verilerini toplar:
+
+```bash
+# Tüm zamanların istatistikleri
+bolt stats
+
+# Son 7 gün
+bolt stats --days 7
+
+# Yalnızca mevcut proje
+bolt stats --project ""
+
+# Model başına döküm göster (en iyi 5 model)
+bolt stats --models 5
+
+# Araç kullanım tablosunu en iyi 10 araca sınırla
+bolt stats --tools 10
+```
+
+Çıktı; toplam oturumları, mesajları, giriş/çıkış/muhakeme/önbellek tokenlarını, toplam maliyeti, günlük ortalama maliyeti, oturum başına ortalama ve medyan tokenları ve bir araç kullanım dökümünü içerir. Mesajlar, tokenlar ve maliyet için model başına bir döküm de göstermek için `--models` geçirin.
+
+## Çatallama ve paylaşma iş akışı
+
+Bir oturumu çatallamak ve sonucu paylaşmak için tam bir örnek:
+
+<Steps>
+  <Step title="Yeni bir oturumda çalışmaya başlayın">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Riskli bir sonraki adımdan önce çatallayın">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Çatallanmış oturum kimliği konsola yazdırılır. Orijinal oturuma dokunulmamıştır.
+  </Step>
+  <Step title="İnceleme için çatalı paylaşın">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Paylaşım URL'si, oturum boşta kaldığında yazdırılır.
+  </Step>
+  <Step title="Başka bir makinede içe aktarın">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

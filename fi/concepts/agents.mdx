@@ -1,0 +1,135 @@
+---
+title: "Agentit — Boltin kymmenen sisäänrakennettua ja mukautettua AI-persoonaa"
+sidebarTitle: "Agentit"
+description: "Bolt sisältää kymmenen sisäänrakennettua agenttia, joilla kullakin on erillinen rooli, työkalusarja ja käyttöoikeustaso. Opi, miten agentteja vaihdetaan, määritetään ja luodaan omat."
+---
+
+Bolt käsittelee jokaista AI-persoonaa nimettynä **agenttina**: järjestelmäkehote yhdistettynä tarkasti rajattuun työkaluoikeusjoukkoon. Sen sijaan, että ajaisit yhtä yleiskäyttöistä mallia jokaiseen tehtävään, valitset agentin, jonka pääsy ja fokus vastaavat tarpeitasi — olipa kyseessä sitten tietoturvatarkastus, dokumentaation kirjoittaminen tai kokonaisen ohjelmistokehyksen migraation kytkeminen.
+
+## Käyttöoikeustasot
+
+Jokaiselle sisäänrakennetulle agentille on määritetty yksi kolmesta käyttöoikeustasosta, jotka määrittävät, mitä työkaluja se voi käyttää:
+
+| Taso | Myönnetyt oikeudet | Tyypillinen käyttö |
+|-------|---------------------|-------------|
+| **Full** | Lue tiedostoja, kirjoita/muokkaa tiedostoja, suorita shell-komentoja | Aktiivinen koodaus, virheenkorjaus, refaktorointi, migraatiot |
+| **Edit** | Lue tiedostoja, kirjoita/muokkaa tiedostoja — ei shelliä | Dokumentaatio, kommenttien päivitykset, turvalliset tekstin muokkaukset |
+| **Read** | Lue vain tiedostoja — ei kirjoituksia, ei shelliä | Suunnittelu, tutkimus, koodikatselmointi, auditoinnit |
+
+## Sisäänrakennetut agentit
+
+Bolt sisältää kymmenen erikoistunutta agenttia valmiina. Vaihda niiden välillä TUI:ssa painamalla <kbd>Tab</kbd>.
+
+| Agentti | Käyttöoikeus | Kuvaus |
+|-------|--------|-------------|
+| `code` | Full | Oletus: lukee, kirjoittaa ja suorittaa koodia |
+| `plan` | Read | Tutkii koodikantaa ja tuottaa suunnitelman muuttamatta koodia |
+| `ask` | Read | Kysymykset ja tutkimus — ei tiedostomuokkauksia |
+| `code-review` | Read | Tarkastelee muutoksia oikeellisuuden, tyylin ja tietoturvan osalta |
+| `debug` | Full | Debuggaa epäonnistuvia testejä, kaatumisia ja logiikkavirheitä |
+| `refactor` | Full | Turvallinen refaktorointi testivarmistuksella jokaisessa vaiheessa |
+| `docs` | Edit | Kirjoittaa ja päivittää dokumentaatiota ja kommentteja |
+| `security` | Read | Tietoturvatarkastus: haavoittuvuudet, salaisuudet ja vaaralliset kaavat |
+| `migrate` | Full | Ohjelmistokehysten päivitykset ja riippuvuuksien migraatiot |
+| `perf` | Full | Suorituskykyanalyysi ja optimointi |
+
+## Aliagentit
+
+Kymmenen ensisijaisen agentin lisäksi Bolt tarjoaa kaksi sisäänrakennettua **aliagenttia**, joille ensisijaiset agentit voivat delegoida työtä istunnon aikana. Aliagenttia ei valita manuaalisesti — ne käynnistyvät automaattisesti, kun ensisijainen agentti päättää luoda sellaisen.
+
+| Aliagentti | Rooli |
+|----------|------|
+| `@general` | Monimutkaisten monivaiheisten tehtävien delegointi, joka vaatii laajoja kyvykkyyksiä |
+| `@explore` | Nopea, vain luku -tyyppinen koodikannan tutkimus — käy läpi tiedostot ilman sivuvaikutuksia |
+
+<Tip>
+  Kun sinun on ymmärrettävä tuntematon koodikanta nopeasti, aloita `ask`- tai `plan`-agentilla. Taustalla ne voivat lähettää `@explore`-aliagentin indeksoimaan projektisi suurella nopeudella ennen vastauksen tuottamista — koskematta yhteenkään tiedostoon.
+</Tip>
+
+## Agenttien vaihtaminen
+
+**TUI:ssa** — paina <kbd>Tab</kbd> selataksesi käytettävissä olevien agenttien luetteloa milloin tahansa istunnon aikana. Aktiivinen agentti näkyy istunnon alatunnisteessa.
+
+**Ei-interaktiivisesti** — anna `--agent <name>` `bolt run` -komennolle kiinnittääksesi tietyn agentin kyseisen ajon ajaksi:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Agenttien listaus
+
+Nähdäksesi kaikki käytettävissä olevat agentit — sekä sisäänrakennetut että mukautetut — tiloineen ja käyttöoikeusmäärityksineen:
+
+```bash
+bolt agent list
+```
+
+## Mukautetut agentit
+
+Voit luoda omia agentteja kahdella tavalla.
+
+### Luo komennolla `bolt agent create`
+
+Interaktiivinen ohjattu toiminto luo agenttitiedoston LLM:n avulla ja kirjoittaa sen levylle:
+
+```bash
+bolt agent create
+```
+
+Kaikki liput ovat valinnaisia. Anna ne suorittaaksesi ei-interaktiivisesti:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Lippu | Kuvaus |
+|------|-------------|
+| `--description` | Mitä agentin tulisi tehdä (käytetään LLM:n kehotteena luonnissa) |
+| `--path` | Hakemisto, johon luotu agenttitiedosto kirjoitetaan |
+| `--mode` | `all` (oletus), `primary` tai `subagent` |
+| `--permissions` | Pilkulla eroteltu luettelo sallituista oikeuksista. Jätä pois salliaksesi kaikki. |
+| `--model` / `-m` | Käytettävä malli muodossa `provider/model` |
+
+### Kirjoita markdown-tiedosto manuaalisesti
+
+Agentti on vain markdown-tiedosto YAML-frontmatterin kanssa. Sijoita se projektisi sisällä hakemistoon `.bolt/agents/` tai globaaliin agenttihakemistoon:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Tiedostonimestä (ilman `.md`-päätettä) tulee agentin tunniste.
+
+### Käytettävissä olevat oikeudet
+
+Oikeudet ovat hienojakoisia työkaluportteja, joita hallitset mukautettua agenttia luodessasi:
+
+| Oikeus | Ohjaa |
+|------------|----------|
+| `bash` | Shell-komentojen suoritus |
+| `read` | Tiedostojen lukeminen |
+| `edit` | Tiedostojen kirjoittaminen ja muokkaaminen (portittaa myös `write`in ja `apply_patch`in) |
+| `glob` | Tiedostojen glob/hakemiston listaus |
+| `grep` | Tiedostohaku ripgrepin kautta |
+| `webfetch` | HTTP-nouto verkosta |
+| `task` | Aliagenttitehtävien käynnistys |
+| `todowrite` | Tehtäväkohteiden luonti ja päivitys |
+| `websearch` | Verkkohakukyselyt |
+| `lsp` | Language server protocol -operaatiot |
+| `skill` | Projektin taitojen käyttö |

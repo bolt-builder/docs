@@ -1,0 +1,38 @@
+---
+title: "Local Database (bolt db)"
+sidebarTitle: "Local Database"
+description: "Bolt हर session, message, और tool call को एक स्थानीय SQLite डेटाबेस में संग्रहीत करता है। इसे inspect करें, backup करें, या bolt db के साथ सीधे query करें।"
+---
+
+Bolt हर session, message, और tool call को एक स्थानीय SQLite डेटाबेस में रखता है। यह पूरी तरह से inspectable है और पूरी तरह से आपका है — जब तक आप स्पष्ट रूप से किसी session को साझा नहीं करते तब तक कुछ भी अपलोड नहीं किया जाता।
+
+## सामान्य ऑपरेशन
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## इसका backup लेना
+
+क्योंकि यह एक single SQLite फ़ाइल है, backup एक copy है:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+लंबे समय के स्टोरेज या ट्रांसपोर्ट के लिए, `bolt export` / `bolt import` को प्राथमिकता दें — वे एक portable JSON representation उत्पन्न करते हैं जो schema migrations से बचे रहते हैं।
+
+## एक नज़र में Schema
+
+- `sessions` — प्रति session एक row, शीर्षक, project, timestamps, और स्थिति के साथ।
+- `messages` — प्रति session पूरा turn log।
+- `tool_calls` — inputs, outputs, और duration के साथ हर invocation।
+
+सटीक columns विकसित होते हैं; live schema देखने के लिए `PRAGMA table_info(<table>)` का उपयोग करें।
+
+## संबंधित
+
+- [Sessions](/concepts/sessions) — डेटाबेस क्या संग्रहीत करता है।
+- [Stats & Cost](/reference/stats-and-cost) — उसी डेटा पर aggregated views।

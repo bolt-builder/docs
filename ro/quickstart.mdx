@@ -1,0 +1,142 @@
+---
+title: "Începe cu Bolt în mai puțin de un minut"
+sidebarTitle: "Ghid rapid"
+description: "Instalează Bolt, deschide-ți proiectul, conectează un furnizor și rulează primul prompt AI — totul în mai puțin de 60 de secunde cu acest ghid pas cu pas."
+---
+
+Acest ghid te conduce prin instalarea Bolt, lansarea într-un proiect, conectarea unui furnizor AI și rularea primului prompt. Întregul flux durează mai puțin de un minut.
+
+<Steps>
+  <Step title="Instalează Bolt">
+    Cea mai rapidă cale este scriptul oficial de instalare, care funcționează pe macOS și Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Preferi un manager de pachete? Instalează global cu npm, bun, pnpm sau yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Pentru aplicația desktop pe macOS (fără ocol prin Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Consultă [Ghidul de instalare](/installation) pentru toate metodele, inclusiv Homebrew, Chocolatey, Scoop și note specifice Windows.
+  </Step>
+  <Step title="Deschide-ți proiectul">
+    Navighează în orice director de proiect și lansează TUI-ul interactiv:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt îți preia automat contextul proiectului — citindu-ți arborele de fișiere, înțelegând stack-ul și punându-l la dispoziția fiecărui agent din momentul în care îl deschizi.
+  </Step>
+  <Step title="Configurează un furnizor AI">
+    La prima lansare, Bolt îți va cere să configurezi un furnizor dacă niciunul nu este setat. Poți rula asta oricând:
+
+    ```bash
+    bolt providers
+    ```
+
+    Aceasta deschide fluxul de gestionare a furnizorilor, unde poți adăuga chei de API pentru OpenAI, Anthropic și alți furnizori LLM acceptați. Configurația este salvată în `.bolt/bolt.jsonc` la rădăcina proiectului tău.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Scrie un prompt și explorează agenții">
+    Odată intrat în TUI, scrie promptul și apasă Enter. Folosește **Tab** pentru a comuta între cei zece agenți încorporați ai Bolt oricând — agentul curent este afișat în bara de stare.
+
+    De asemenea, poți rula prompturi direct din linia de comandă fără a deschide TUI-ul:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Agenți încorporați
+
+Comută agenții cu `Tab` în TUI sau transmite `--agent <name>` către `bolt run`. Fiecare agent are un nivel de acces definit pentru a se potrivi cu scopul său.
+
+| Agent | Acces | Descriere |
+| --- | --- | --- |
+| `code` | Full | Implicit: citește, scrie și rulează cod |
+| `plan` | Read | Explorează baza de cod și produce un plan fără a modifica fișierele |
+| `ask` | Read | Întrebări și cercetare — fără editări de fișiere |
+| `code-review` | Read | Revizuiește modificările pentru corectitudine, stil și securitate |
+| `debug` | Full | Depanează teste eșuate, blocări și erori de logică |
+| `refactor` | Full | Refactorizare sigură cu verificare a testelor la fiecare pas |
+| `docs` | Edit | Scrie și actualizează documentația și comentariile |
+| `security` | Read | Audit de securitate: vulnerabilități, secrete, tipare |
+| `migrate` | Full | Actualizări de framework și migrări de dependențe |
+| `perf` | Full | Analiză și optimizare a performanței |
+
+Există și doi subagenți încorporați pentru delegare: `@general` pentru sarcini complexe în mai mulți pași și `@explore` pentru cercetare rapidă a bazei de cod doar în citire. Îți poți defini proprii agenți ca fișiere Markdown sau poți genera unul cu `bolt agent create`.
+
+## Comenzi comune de încercat în continuare
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Transmite `--mini` către `bolt` sau `bolt attach` pentru un UI compact care ocupă mai puțin spațiu în terminal — grozav pentru ferestre mai mici sau layout-uri cu panouri divizate.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` acceptă opțiunile `--auto`, `--yolo` și `--dangerously-skip-permissions` care aprobă automat toate solicitările de permisiune fără să întrebe. Folosește-le doar în medii de încredere — permit agentului să citească, să scrie și să execute fără confirmare.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt acceptă completări shell pentru bash, zsh, fish și alte shell-uri. Generează și instalează completările cu:
+
+  ```bash
+  bolt completion
+  ```
+
+  Urmează instrucțiunile tipărite pentru a sursa scriptul de completare în configurarea shell-ului tău.
+</Note>

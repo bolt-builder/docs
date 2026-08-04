@@ -1,0 +1,116 @@
+---
+title: "Bolt desktop app: बहु-विंडो AI कोडिंग sessions"
+sidebarTitle: "Install"
+description: "बहु-विंडो sessions, इंटीग्रेटेड टर्मिनल, इमेज पेस्ट के साथ prompt composer, ऑटो-अपडेट और 28 UI भाषाओं के लिए Bolt डेस्कटॉप ऐप इंस्टॉल करें।"
+url: "desktop/install"
+---
+
+Bolt डेस्कटॉप ऐप CLI के समान इंजन को पूर्ण Electron शेल में लपेटता है। टर्मिनल में उपलब्ध हर सुविधा — agents, MCP servers, plugins, रिमोट sessions, sessions जिन्हें आप fork और साझा कर सकते हैं — डेस्कटॉप ऐप में एक जैसी काम करती है, बहु-विंडो और बहु-टैब अनुभव, ग्राफ़िकल settings UI, नेटिव नोटिफ़िकेशन, और ऑटो-अपडेट के जोड़ के साथ। यदि आप पहले से CLI का उपयोग करते हैं, तो डेस्कटॉप ऐप एक drop-in पूरक है, प्रतिस्थापन नहीं।
+
+---
+
+## इंस्टॉलेशन
+
+### macOS
+
+<Steps>
+  <Step title="One-liner से इंस्टॉल करें (अनुशंसित)">
+    एक टर्मिनल खोलें और चलाएँ:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    स्क्रिप्ट नवीनतम रिलीज़ डाउनलोड करती है, इसे verify करती है, और ऐप को `/Applications` में रखती है। कोई Gatekeeper पॉप-अप नहीं।
+  </Step>
+
+  <Step title="ऐप लॉन्च करें">
+    `/Applications` या Spotlight से **Bolt** खोलें। पहले लॉन्च पर, Bolt आपसे एक डिफ़ॉल्ट LLM provider चुनने के लिए कहता है और एक global config फ़ाइल बनाता है।
+  </Step>
+</Steps>
+
+<Tip>
+  One-liner ऐप को इस तरह इंस्टॉल करता है जो macOS Gatekeeper "unidentified developer" डायलॉग को बायपास कर देता है, ताकि आप अतिरिक्त सुरक्षा prompts के बिना सीधे कोडिंग में जा सकें।
+</Tip>
+
+### सभी प्लेटफ़ॉर्म — रिलीज़ से डाउनलोड करें
+
+अपने प्लेटफ़ॉर्म के लिए नवीनतम इंस्टॉलर [Bolt releases page](https://github.com/Bolt-builder/bolt-cli/releases) से डाउनलोड करें।
+
+| प्लेटफ़ॉर्म | इंस्टॉलर प्रकार |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` इंस्टॉलर |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Windows पर, Bolt में WSL (Windows Subsystem for Linux) इंटीग्रेशन शामिल है। जब WSL उपलब्ध हो, Bolt आपके WSL वितरण के अंदर सीधे sessions खोल सकता है — आपको इसके चारों ओर एक नेटिव Windows UI के साथ Linux-नेटिव agent वातावरण देता है।
+</Note>
+
+---
+
+## विशेषताएँ
+
+### बहु-विंडो और बहु-टैब session प्रबंधन
+
+अपनी इच्छानुसार कितनी भी विंडो खोलें, प्रत्येक का अपना टैब सेट। टैब सीधे Bolt sessions से मैप होते हैं, ताकि आप एक टैब में एक रिफ़ैक्टर पर agent चला सकें, दूसरे में एक प्रश्न पूछ सकें, और तीसरे में एक पृष्ठभूमि कार्य चला सकें — सभी एक साथ।
+
+### Prompt composer
+
+Prompt composer समृद्ध इनपुट का समर्थन करता है: टेक्स्ट पेस्ट करें, फ़ाइलें attachments के रूप में ड्रैग करें, या क्लिपबोर्ड से सीधे इमेज पेस्ट करें। Bolt इमेज को एन्कोड करता है और स्वचालित रूप से किसी भी vision-सक्षम मॉडल को भेजता है।
+
+### इंटीग्रेटेड टर्मिनल और फ़ाइल tree
+
+Split-pane लेआउट एक तरफ agent बातचीत देता है और दूसरी तरफ लाइव टर्मिनल और प्रोजेक्ट फ़ाइल tree। आप कमांड चला सकते हैं, आउटपुट का निरीक्षण कर सकते हैं, और ऐप्स स्विच किए बिना परिणामों को वापस agent को दे सकते हैं।
+
+### Command palette
+
+Command palette खोलने के लिए `Cmd/Ctrl+K` दबाएँ। यहाँ से आप sessions स्विच कर सकते हैं, agents बदल सकते हैं, settings खोल सकते हैं, या माउस तक पहुँचने के बिना कोई भी क्रिया शुरू कर सकते हैं।
+
+### पूर्ण settings UI
+
+Settings पैनल हर उस विकल्प को कवर करता है जो `.bolt/bolt.jsonc` में रहता है — keybindings, model चयन, LLM providers, MCP servers, और auth — dropdowns, toggles, और inline validation के साथ। आपको शायद ही कभी config फ़ाइल को हाथ से एडिट करने की ज़रूरत पड़े।
+
+### नेटिव नोटिफ़िकेशन
+
+जब कोई लंबे समय तक चलने वाला कार्य समाप्त होता है तो Bolt एक नेटिव OS नोटिफ़िकेशन फ़ायर करता है। सेशन पर सीधे जाने के लिए नोटिफ़िकेशन पर क्लिक करें।
+
+### Deep links
+
+किसी `bolt://` URL पर नेविगेट करके किसी विशिष्ट सेशन को खोलें। सहकर्मियों के साथ session लिंक साझा करने या work-in-progress को bookmark करने के लिए उपयोगी।
+
+### ऑटो-अपडेट
+
+डेस्कटॉप ऐप तीन चैनलों में खुद को अपडेट करता है:
+
+| चैनल | विवरण |
+|---------|-------------|
+| `prod` | Stable रिलीज़, प्रत्येक प्रोडक्शन tag पर अपडेट |
+| `beta` | नई सुविधाओं के लिए pre-release builds |
+| `dev` | `dev` branch से नाइटली builds |
+
+**Settings → About** में चैनल बदलें।
+
+### 28 UI भाषाएँ
+
+Bolt का इंटरफ़ेस 28 भाषाओं में स्थानीयकृत है। **Settings → Appearance → Language** में डिस्प्ले भाषा बदलें।
+
+---
+
+## संबंधित docs
+
+<CardGroup cols={2}>
+  <Card title="Remote sessions" icon="server" href="/server/remote-sessions">
+    रिमोट मशीन पर हेडलेस सर्वर चलाएँ और डेस्कटॉप ऐप या CLI से attach करें।
+  </Card>
+  <Card title="MCP servers" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol का उपयोग करके अपने agents में बाहरी tools और APIs जोड़ें।
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    कस्टम providers, auth methods, और workspace adapters के साथ Bolt का विस्तार करें।
+  </Card>
+  <Card title="GitHub integration" icon="github" href="/server/github-actions">
+    डेस्कटॉप ऐप या CI से PRs, commit messages, और कोड समीक्षा को स्वचालित करें।
+  </Card>
+</CardGroup>

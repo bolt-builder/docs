@@ -1,0 +1,121 @@
+---
+title: "在 macOS、Linux 或 Windows 上安裝 Bolt"
+sidebarTitle: "安裝"
+description: "透過 curl、npm、bun、pnpm、yarn、Homebrew、Chocolatey 或 Scoop 安裝 Bolt CLI。涵蓋升級、解除安裝與桌面應用。"
+---
+
+Bolt 可在 macOS、Linux 與 Windows 上以最適合你工作流程的方式安裝 — 一行 curl 指令碼、任何主流 Node.js 套件管理工具,或像 Homebrew、Chocolatey 或 Scoop 這樣的系統套件管理工具。
+
+## 快速安裝(macOS / Linux)
+
+最快上手的方式是官方安裝指令碼。它會自動偵測你的 OS 與架構,將正確的二進位檔下載到 `~/.bolt/bin`,並將它加入你的 `$PATH`。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+安裝程式也會設定選用的語音輸入相依套件(sox 與 whisper-cpp 用於離線轉錄)。若要略過,請傳入 `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+若要固定特定版本:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## 套件管理工具
+
+以你選擇的套件管理工具全域安裝 Bolt:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## 驗證安裝
+
+<Steps>
+  <Step title="檢查已安裝的版本">
+    安裝後,確認 `bolt` 已在你的 `$PATH` 上可用:
+
+    ```bash
+    bolt --version
+    ```
+
+    若找不到命令,請開啟新的終端機工作階段(或重新載入你的 shell 設定),讓更新後的 `$PATH` 生效。
+  </Step>
+</Steps>
+
+## 升級
+
+執行 `bolt upgrade` 以更新到最新發行版:
+
+```bash
+bolt upgrade
+```
+
+Bolt 會自動偵測你原本的安裝方法。你可以用 `--method` 旗標覆寫它:
+
+```bash
+bolt upgrade --method <method>
+```
+
+支援的方法:`curl`、`npm`、`pnpm`、`bun`、`brew`、`choco`、`scoop`。
+
+你也可以將版本作為位置參數,升級到特定版本:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## 解除安裝
+
+從系統移除 Bolt:
+
+```bash
+bolt uninstall
+```
+
+## 環境變數
+
+| 變數               | 描述                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | 日誌詳細程度:`DEBUG`、`INFO`、`WARN` 或 `ERROR`    |
+| `BOLT_PRINT_LOGS`      | 將日誌列印到 stderr                                  |
+| `BOLT_PURE`            | 執行時不載入外部外掛                  |
+| `BOLT_SERVER_PASSWORD` | 無介面 API 伺服器的 basic auth 密碼       |
+| `BOLT_SERVER_USERNAME` | 無介面 API 伺服器的 basic auth 使用者名稱       |
+
+<Tip>
+  當你想要不含任何第三方外掛的乾淨執行時,請設定 `BOLT_PURE=1` — 適用於除錯或受控 CI 環境。
+</Tip>
+
+## 桌面應用
+
+<Note>
+  Bolt 也以原生桌面應用的形式發佈,具備多視窗工作階段管理、整合終端機與檔案樹、命令面板、28 種介面語言與自動更新。從 [releases 頁面](https://github.com/Bolt-builder/bolt-cli/releases) 下載最新發行版。
+
+  在 macOS 上,你可以用一行命令安裝而不必繞過 Gatekeeper:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

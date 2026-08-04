@@ -1,0 +1,58 @@
+---
+title: "Nástroje: co agenti Boltu skutečně dokážou"
+sidebarTitle: "Nástroje"
+description: "Úplný seznam vestavěných nástrojů dostupných agentům Boltu, plus jak přidat vlastní nástroje přes pluginy, MCP servery nebo adresář .opencode/tool."
+---
+
+Agenti v Boltu pracují voláním nástrojů. Každá akce, kterou vidíš v TUI (čtení souboru, spouštění testů, hledání na webu), je model vybírající nástroj a Bolt ho vykonávající. Každý agent má deklarovanou úroveň přístupu, která určuje, které nástroje smí volat bez toho, aby se tě předem zeptal (viz [Oprávnění](/concepts/permissions)).
+
+## Vestavěné nástroje
+
+| Nástroj | Co dělá |
+| --- | --- |
+| `read` | Přečte soubor z disku. |
+| `write` | Vytvoří nový soubor nebo přepíše existující. |
+| `edit` | Aplikuje cílenou úpravu (find/replace) v souboru. |
+| `apply_patch` | Aplikuje patch ve stylu unified diff napříč jedním nebo více soubory. |
+| `glob` | Vypíše soubory odpovídající glob vzoru. |
+| `grep` | Vyhledá obsah souborů regexem/textem. |
+| `bash` | Spustí shellový příkaz. |
+| `task` | Deleguje podúlohu na subagenta (`@general`, `@explore` nebo vlastního subagenta). |
+| `todowrite` | Udržuje strukturovaný seznam úkolů agenta pro vícekrokovou práci. |
+| `webfetch` | Načte URL a vrátí její obsah. |
+| `websearch` | Prohledá web. |
+| `skill` | Vyvolá pojmenovaný skill (viz [Skills](/extending/skills)). |
+| `memory_save` | Uloží fakt do [paměti projektu](/concepts/project-memory). |
+| `memory_recall` | Vyhledá dříve uloženou paměť. |
+| `question` | Položí ti upřesňující otázku a čeká na odpověď. |
+| `bash_background` | Spustí shellový příkaz jako spravovaný proces na pozadí (dev servery, watchery, dlouhé buildy). |
+| `process_output` | Přečte nashromážděný výstup a stav procesu na pozadí, volitelně čeká na jeho dokončení. |
+| `list_processes` | Vypíše procesy na pozadí s jejich id, stavem a příkazem. |
+| `kill_process` | Ukončí proces na pozadí (a jeho procesní strom) podle id. |
+| `test_run` | Detekuje a spustí testy projektu a vrátí strukturované výsledky pass/fail a detaily selhání. |
+
+### Experimentální
+
+| Nástroj | Co dělá |
+| --- | --- |
+| `lsp` | Dotazuje language server na definice, reference a diagnostiku. |
+| `execute` | Spustí kód v izolovaném code-mode sandboxu. |
+| `plan` | Vytvoří strukturovaný plán před provedením změn. |
+
+Experimentální nástroje se mohou mezi vydáními měnit nebo být přejmenovány.
+
+## Rozšíření sady nástrojů
+
+Kromě vestavěných může Bolt volat nástroje ze tří zdrojů:
+
+- **Vlastní nástroje** v `.opencode/tool/` (nebo `.opencode/tools/`) v kořeni projektu. Viz [Vlastní nástroje](/extending/custom-tools).
+- **Nástroje z pluginů** poskytované libovolným nainstalovaným [pluginem](/extending/plugins).
+- **MCP nástroje** z jakéhokoli [MCP serveru](/extending/mcp-servers) nakonfigurovaného pro projekt.
+
+Všechny tři jsou z pohledu agenta nerozlišitelné: objeví se v seznamu nástrojů, respektují úroveň přístupu agenta a zobrazí se ve výstupu volání nástroje v TUI.
+
+## Související
+
+- [Agenti](/concepts/agents) — kteří agenti mohou volat které nástroje.
+- [Oprávnění](/concepts/permissions) — jak je přístup k nástrojům řízen pro každého agenta.
+- [MCP servery](/extending/mcp-servers) — nejběžnější způsob přidávání skutečných nástrojů.

@@ -1,0 +1,32 @@
+---
+title: "Estadístiques i cost (bolt stats)"
+sidebarTitle: "Estadístiques i cost"
+description: "bolt stats agrega l'ús de tokens i el cost entre les teves sessions perquè puguis veure on va la teva despesa i ajustar models o agents en conseqüència."
+---
+
+`bolt stats` agrega recomptes de tokens i cost a través de la base de dades local de sessions. Com que cada crida d'eina es registra (vegeu [Base de dades local](/reference/local-database)), els números són exactes per a les crides LLM que Bolt va conduir.
+
+## Ús bàsic
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Què mostra
+
+- Tokens totals d'entrada, sortida i cache.
+- Cost estimat per proveïdor (utilitzant les taules de preus del proveïdor en el moment de l'execució).
+- Desglossaments per model, per agent i per dia depenent dels flags.
+
+## Reduir el cost
+
+- Utilitza `--variant minimal` o `--variant low` en models pesats de raonament. Vegeu [Proveïdors i models](/concepts/providers-and-models).
+- Prefereix l'agent `ask` o `plan` per a l'exploració; són només de lectura i eviten bucles pesats d'eines.
+- Canvia a un model més petit amb `bolt models` per a tasques que no necessiten capacitat de frontera.
+
+## Relacionat
+
+- [Proveïdors i models](/concepts/providers-and-models) — tria i ajusta els models que `stats` mesura.
+- [Resolució de problemes](/reference/troubleshooting) — què fer davant d'una factura sorpresa.

@@ -1,0 +1,135 @@
+---
+title: "Agents — Els deu agents integrats i personalitzats d'IA de Bolt"
+sidebarTitle: "Agents"
+description: "Bolt inclou deu agents integrats, cadascun amb un rol, un conjunt d'eines i un nivell d'accés diferents. Aprèn a canviar, configurar i crear els teus propis agents."
+---
+
+Bolt tracta cada persona d'IA com un **agent** amb nom: un indicador de sistema aparellat amb un conjunt d'ús d'eines amb un abast precís. En lloc d'executar un únic model d'ús general per a cada tasca, tries l'agent l'accés i enfocament del qual coincideix amb el que necessites — ja sigui auditar la seguretat, escriure documentació o dur a terme una migració completa de framework.
+
+## Nivells d'accés
+
+Cada agent integrat té assignat un dels tres nivells d'accés que determinen quines eines pot invocar:
+
+| Nivell | Permisos concedits | Ús típic |
+|-------|---------------------|-------------|
+| **Full** | Llegir fitxers, escriure/editar fitxers, executar ordres de shell | Codificació activa, depuració, refactorització, migracions |
+| **Edit** | Llegir fitxers, escriure/editar fitxers — sense shell | Documentació, actualitzacions de comentaris, edicions segures de prosa |
+| **Read** | Només lectura de fitxers — sense escriptures ni shell | Planificació, recerca, revisió de codi, auditories |
+
+## Agents integrats
+
+Bolt inclou deu agents especialitzats. Canvia entre ells al TUI prement <kbd>Tab</kbd>.
+
+| Agent | Accés | Descripció |
+|-------|--------|-------------|
+| `code` | Full | Predeterminat: llegeix, escriu i executa codi |
+| `plan` | Read | Explora el codi base i produeix un pla sense canviar codi |
+| `ask` | Read | Preguntes i recerca — sense edicions de fitxers |
+| `code-review` | Read | Revisa canvis per correcció, estil i seguretat |
+| `debug` | Full | Depura proves fallides, bloquejos i errors de lògica |
+| `refactor` | Full | Refactorització segura amb verificació de proves a cada pas |
+| `docs` | Edit | Escriu i actualitza documentació i comentaris |
+| `security` | Read | Auditoria de seguretat: vulnerabilitats, secrets i patrons perillosos |
+| `migrate` | Full | Actualitzacions de framework i migracions de dependències |
+| `perf` | Full | Anàlisi de rendiment i optimització |
+
+## Subagents
+
+A més dels deu agents primaris, Bolt exposa dos **subagents** integrats als quals els agents primaris poden delegar treball durant una sessió. Mai selecciones un subagent manualment: es despatxen automàticament quan un agent primari decideix generar-ne un.
+
+| Subagent | Rol |
+|----------|------|
+| `@general` | Delegació de tasques complexes de múltiples passos que requereixen amplis conjunts de capacitats |
+| `@explore` | Recerca ràpida i només de lectura del codi base — recorre fitxers sense efectes secundaris |
+
+<Tip>
+  Quan hagis d'entendre un codi base desconegut ràpidament, comença amb l'agent `ask` o `plan`. Darrere de les escenes poden despatxar el subagent `@explore` per indexar el teu projecte a alta velocitat abans de produir una resposta, sense tocar cap fitxer.
+</Tip>
+
+## Canviar d'agent
+
+**Al TUI** — prem <kbd>Tab</kbd> per recórrer la llista d'agents disponibles en qualsevol moment durant una sessió. L'agent actiu es mostra al peu de la sessió.
+
+**No interactivament** — passa `--agent <name>` a `bolt run` per fixar un agent específic durant la durada d'aquesta execució:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Llistar agents
+
+Per veure tots els agents disponibles — tant integrats com personalitzats — amb els seus modes i la seva configuració de permisos:
+
+```bash
+bolt agent list
+```
+
+## Agents personalitzats
+
+Pots crear els teus propis agents de dues maneres.
+
+### Generar amb `bolt agent create`
+
+L'assistent interactiu genera un fitxer d'agent utilitzant un LLM i l'escriu al disc:
+
+```bash
+bolt agent create
+```
+
+Tots els flags són opcionals. Proporciona-los per executar-ho de manera no interactiva:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | Descripció |
+|------|-------------|
+| `--description` | Què hauria de fer l'agent (utilitzat com a prompt LLM per a la generació) |
+| `--path` | Directori on escriure el fitxer d'agent generat |
+| `--mode` | `all` (predeterminat), `primary` o `subagent` |
+| `--permissions` | Llista separada per comes de permisos a permetre. Omet per a tots. |
+| `--model` / `-m` | Model a utilitzar en format `provider/model` |
+
+### Escriure un fitxer markdown manualment
+
+Un agent és simplement un fitxer markdown amb frontmatter YAML. Col·loca'l a `.bolt/agents/` dins del teu projecte o al directori global d'agents:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+El nom del fitxer (sense `.md`) es converteix en l'identificador de l'agent.
+
+### Permisos disponibles
+
+Els permisos són les portes d'eines de gra fi que controles quan crees un agent personalitzat:
+
+| Permís | Controla |
+|------------|----------|
+| `bash` | Execució d'ordres de shell |
+| `read` | Lectura de fitxers |
+| `edit` | Escriptura i edició de fitxers (també controla `write` i `apply_patch`) |
+| `glob` | Llistat de fitxers per glob/directori |
+| `grep` | Cerca de fitxers via ripgrep |
+| `webfetch` | Recuperació HTTP des del web |
+| `task` | Generació de tasques de subagent |
+| `todowrite` | Creació i actualització d'elements de tasques pendents |
+| `websearch` | Consultes de cerca web |
+| `lsp` | Operacions del Language Server Protocol |
+| `skill` | Accés a habilitats del projecte |

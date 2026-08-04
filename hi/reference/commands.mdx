@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI कमांड संदर्भ"
+sidebarTitle: "Commands"
+description: "TUI, run, serve, session, agent और अधिक के लिए flags, arguments, और उपयोग उदाहरणों सहित हर Bolt CLI कमांड के लिए पूर्ण संदर्भ।"
+---
+
+Bolt एक single `bolt` binary उजागर करता है जिसमें subcommands का समृद्ध सेट है। बिना arguments के `bolt` चलाना पूर्ण टर्मिनल UI खोलता है। अन्य सभी subcommands नीचे सूचीबद्ध हैं। inline सहायता के लिए किसी भी समय `bolt <command> --help` का उपयोग करें।
+
+<Accordion title="bolt (default — launch TUI)">
+  वर्तमान डायरेक्टरी में इंटरैक्टिव टर्मिनल UI खोलता है। Bolt स्वचालित रूप से आपके प्रोजेक्ट संदर्भ की खोज करता है, कॉन्फ़िगरेशन लोड करता है, और किसी भी कॉन्फ़िगर किए गए providers से जुड़ता है।
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Global flags** — हर कमांड पर उपलब्ध:
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | stderr पर log आउटपुट प्रिंट करें |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | log verbosity स्तर सेट करें |
+  | `--pure` | boolean | बिना किसी बाहरी plugins के चलाएँ |
+  | `--help`, `-h` | boolean | सहायता टेक्स्ट दिखाएँ |
+  | `--version`, `-v` | boolean | इंस्टॉल किए गए वर्ज़न नंबर को प्रिंट करें |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  non-interactive mode में एकल prompt के साथ Bolt चलाएँ। Bolt एक in-process सर्वर शुरू करता है, prompt को सक्रिय सेशन को भेजता है, प्रतिक्रिया को stdout पर stream करता है, फिर बाहर निकल जाता है। संदर्भ जोड़ने के लिए stdin पाइप करें या `--file` पास करें।
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slash-command execute करें; arguments को message के रूप में पास करें |
+  | `--continue` | `-c` | boolean | सबसे हाल के सेशन को जारी रखें |
+  | `--session` | `-s` | string | जारी रखने के लिए Session ID |
+  | `--fork` |  | boolean | जारी रखने से पहले सेशन को fork करें (`--continue` या `--session` की आवश्यकता) |
+  | `--share` |  | boolean | पूरा होने के बाद सेशन साझा करें |
+  | `--model` | `-m` | string | `provider/model` फ़ॉर्मैट में उपयोग करने के लिए मॉडल |
+  | `--best-of` |  | string | Comma-separated `provider/model` सूची; task को समानांतर में चलाता है, परिणामों को रैंक करता है, विजेता को रखता है |
+  | `--agent` |  | string | उपयोग करने के लिए Agent (उदा. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | आउटपुट फ़ॉर्मैट; `json` raw newline-delimited JSON events stream करता है |
+  | `--file` | `-f` | string\[\] | संदर्भ के रूप में attach करने के लिए फ़ाइल(ें) |
+  | `--title` |  | string | सेशन का शीर्षक |
+  | `--attach` |  | string | रिमोट Bolt सर्वर के विरुद्ध चलाएँ (उदा. `http://localhost:4096`) |
+  | `--password` | `-p` | string | रिमोट सर्वर के लिए Basic auth password |
+  | `--username` | `-u` | string | रिमोट सर्वर के लिए Basic auth username |
+  | `--dir` |  | string | Working directory; यदि `--attach` सेट है, तो यह रिमोट सर्वर पर डायरेक्टरी है |
+  | `--port` |  | number | स्थानीय in-process सर्वर के लिए Port (छोड़ने पर random) |
+  | `--variant` |  | string | Reasoning effort स्तर, provider-विशिष्ट (उदा. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | आउटपुट में reasoning/thinking blocks दिखाएँ |
+  | `--mini` |  | boolean | न्यूनतम split-footer इंटरैक्टिव UI शुरू करें (छिपा हुआ) |
+  | `--interactive` | `-i` | boolean | direct interactive split-footer mode को force करें |
+  | `--auto` |  | boolean | उन permissions को auto-approve करें जो स्पष्ट रूप से अस्वीकृत नहीं हैं |
+  | `--yolo` |  | boolean | सभी permission prompts छोड़ें (`--auto` का alias, छिपा हुआ) |
+  | `--dangerously-skip-permissions` |  | boolean | सभी permission जाँच छोड़ें (छिपा हुआ) |
+  | `--demo` |  | boolean | direct interactive demo slash commands सक्षम करें (छिपा हुआ) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  पूर्ण TUI को एक चल रहे Bolt सर्वर से attach करें। सर्वर local या remote हो सकता है। पूर्ण TUI के बजाय न्यूनतम split-footer UI का उपयोग करने के लिए `--mini` पास करें।
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | रिमोट सर्वर पर Directory |
+  | `--continue` | `-c` | boolean | रिमोट सर्वर पर सबसे हाल के सेशन को जारी रखें |
+  | `--session` | `-s` | string | जारी रखने के लिए Session ID |
+  | `--fork` |  | boolean | जारी रखते समय सेशन को fork करें |
+  | `--password` | `-p` | string | Basic auth password |
+  | `--username` | `-u` | string | Basic auth username |
+  | `--mini` |  | boolean | न्यूनतम इंटरैक्टिव UI का उपयोग करें |
+  | `--no-replay` |  | boolean | resume पर और resize के बाद session history replay अक्षम करें (`--mini` की आवश्यकता) |
+  | `--replay-limit` |  | number | दृश्यमान replay को नवीनतम N messages तक सीमित करें (`--mini` की आवश्यकता) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  एक headless Bolt API सर्वर शुरू करें। सर्वर एक REST\+SSE API उजागर करता है जिससे TUI, `bolt run --attach`, और `bolt attach` कनेक्ट हो सकते हैं। इसे अन्य मशीनों से पहुँच योग्य बनाने के लिए `0.0.0.0` पर बांधें — ऐसा करते समय हमेशा `BOLT_SERVER_PASSWORD` सेट करें।
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--hostname` | string | बांधने के लिए Address (डिफ़ॉल्ट: `127.0.0.1`) |
+  | `--port` | number | सुनने के लिए Port (छोड़ने पर random) |
+  | `--mdns` | boolean | mDNS service discovery सक्षम करें (hostname को `0.0.0.0` पर डिफ़ॉल्ट करता है) |
+  | `--mdns-domain` | string | mDNS service के लिए कस्टम डोमेन नाम (डिफ़ॉल्ट: `opencode.local`) |
+  | `--cors` | string\[\] | CORS के लिए अनुमति देने के लिए अतिरिक्त डोमेन |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` डिफ़ॉल्ट रूप से सेट नहीं है। जब तक आप इसे सेट नहीं करते तब तक सर्वर एक चेतावनी log करेगा और सभी कनेक्शन स्वीकार करेगा।
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Bolt सर्वर शुरू करें और तुरंत अपने डिफ़ॉल्ट ब्राउज़र में वेब UI खोलें। `bolt serve` के समान नेटवर्क flags स्वीकार करता है।
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--hostname` | string | बांधने के लिए Address (डिफ़ॉल्ट: `127.0.0.1`) |
+  | `--port` | number | सुनने के लिए Port (छोड़ने पर random) |
+  | `--mdns` | boolean | mDNS service discovery सक्षम करें (hostname को `0.0.0.0` पर डिफ़ॉल्ट करता है) |
+  | `--mdns-domain` | string | mDNS service के लिए कस्टम डोमेन नाम (डिफ़ॉल्ट: `opencode.local`) |
+  | `--cors` | string\[\] | CORS के लिए अनुमति देने के लिए अतिरिक्त डोमेन |
+</Accordion>
+
+<Accordion title="bolt session">
+  स्थानीय SQLite डेटाबेस में संग्रहीत Bolt sessions प्रबंधित करें।
+
+  **Subcommands**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **`bolt session list` flags**
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | आउटपुट को N सबसे हाल के sessions तक सीमित करें |
+  | `--format` |  | `table`\|`json` | आउटपुट फ़ॉर्मैट (डिफ़ॉल्ट: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  कस्टम agents की सूची बनाएँ और बनाएँ। Agents YAML frontmatter वाली markdown फ़ाइलें हैं जो एक system prompt, permissions, और mode परिभाषित करती हैं।
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` flags**
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | agent फ़ाइल लिखने के लिए Directory path |
+  | `--description` |  | string | agent को क्या करना चाहिए इसका प्राकृतिक भाषा विवरण |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | agent primary, subagent, या दोनों के रूप में कार्य करता है |
+  | `--permissions` | `--tools` | string | अनुमत permissions की comma-separated सूची (डिफ़ॉल्ट: सभी) |
+  | `--model` | `-m` | string | `provider/model` फ़ॉर्मैट में उपयोग करने के लिए मॉडल |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  AI provider क्रेडेंशियल्स को इंटरैक्टिवली प्रबंधित करें। क्रेडेंशियल्स आपकी OS data directory (`~/.local/share/bolt/auth.json` Linux पर, `~/Library/Application Support/bolt/auth.json` macOS पर) में संग्रहीत हैं।
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  आपके कॉन्फ़िगर किए गए providers से उपलब्ध सभी models की सूची बनाएँ।
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--verbose` | boolean | प्रत्येक मॉडल के लिए JSON cost metadata शामिल करें |
+  | `--refresh` | boolean | models.dev से models cache refresh करें |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Model Context Protocol (MCP) servers प्रबंधित करें। Bolt OAuth के साथ remote (HTTP/SSE) servers और local (stdio) servers दोनों का समर्थन करता है।
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **`bolt mcp add` flags**
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--url` | string | remote MCP सर्वर के लिए URL |
+  | `--env` | string\[\] | local सर्वर के लिए Environment variable (`KEY=VALUE`) |
+  | `--header` | string\[\] | remote सर्वर के लिए HTTP header (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  npm से एक Bolt plugin इंस्टॉल करें और प्रासंगिक config फ़ाइल को अपडेट करें। Plugins TUI का विस्तार कर सकते हैं, नए slash-commands जोड़ सकते हैं, या नए providers रजिस्टर कर सकते हैं।
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | project config के बजाय global config में plugin जोड़ें |
+  | `--force` | `-f` | boolean | पहले से कॉन्फ़िगर किए गए plugin वर्ज़न को बदलें |
+</Accordion>
+
+<Accordion title="bolt github">
+  Bolt GitHub Actions integration प्रबंधित करें, जो Bolt को pull requests, issues, और अन्य GitHub events का जवाब देने की अनुमति देता है।
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` flags**
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--event` | string | simulate करने के लिए GitHub event नाम (उदा. `pull_request`) |
+  | `--token` | string | GitHub personal access token |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  `gh` CLI का उपयोग करके एक GitHub pull request को स्थानीय branch के रूप में checkout करें, फिर checked-out डायरेक्टरी में Bolt लॉन्च करें। यदि PR विवरण में session share link होता है, Bolt उस session को स्वचालित रूप से इम्पोर्ट करता है।
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    इस कमांड को [GitHub CLI (`gh`)](https://cli.github.com/) इंस्टॉल और authenticated होने की आवश्यकता है।
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  AI मॉडल का उपयोग करके staged (या सभी tracked) बदलावों के लिए एक commit message जनरेट करें और फिर commit करें। मॉडल शैली संदर्भ के लिए हाल की commit history का निरीक्षण करता है।
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | सभी tracked बदलावों को commit करें, केवल staged नहीं |
+  | `--dry-run` |  | boolean | commit किए बिना जनरेट किया गया message प्रिंट करें |
+  | `--model` | `-m` | string | `provider/model` फ़ॉर्मैट में उपयोग करने के लिए मॉडल |
+</Accordion>
+
+<Accordion title="bolt review">
+  एक diff पर AI कोड समीक्षा चलाएँ और कोड `0` (pass) या `1` (fail) के साथ बाहर निकलें। `code-review` agent शुद्धता, शैली, और सुरक्षा मुद्दों के लिए diff की जाँच करता है, फिर एक `Verdict: PASS` या `Verdict: FAIL` line उत्सर्जित करता है।
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | केवल staged बदलावों की समीक्षा करें |
+  | `--branch` |  | string | इस branch के साथ merge base से बदलावों की समीक्षा करें |
+  | `--model` | `-m` | string | `provider/model` फ़ॉर्मैट में उपयोग करने के लिए मॉडल |
+
+  <Note>
+    Exit codes: `0` = PASS, `1` = FAIL, `2` = verdict निर्धारित नहीं किया जा सका।
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  एक सेशन को stdout पर JSON के रूप में एक्सपोर्ट करें। संग्रहित करने, साझा करने, या अन्य tools में फ़ीड करने के लिए उपयोगी। सार्वजनिक रूप से साझा करने से पहले फ़ाइल पथ, prompts, और अन्य संवेदनशील transcript सामग्री को redact करने के लिए `--sanitize` पास करें।
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | एक्सपोर्ट करने से पहले संवेदनशील डेटा (फ़ाइल पथ, prompt text, tool I/O) redact करें |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  पहले एक्सपोर्ट किए गए सेशन को स्थानीय डेटाबेस में इम्पोर्ट करें। एक स्थानीय JSON फ़ाइल या session share URL स्वीकार करता है।
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  सभी sessions में aggregate token usage और cost आँकड़े प्रदर्शित करें। आउटपुट में एक overview तालिका, cost और token breakdown, model usage, और एक tool usage bar chart शामिल है।
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--days` | number | अंतिम N दिनों तक सीमित करें (डिफ़ॉल्ट: सभी समय) |
+  | `--tools` | number | tool usage chart में दिखाने के लिए tools की संख्या |
+  | `--models` | boolean\|number | model आँकड़े दिखाएँ; सूची को सीमित करने के लिए एक संख्या पास करें |
+  | `--project` | string | project ID के अनुसार filter करें; खाली string का अर्थ है वर्तमान प्रोजेक्ट |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Bolt application log प्रिंट करें। Log OS log directory (उदा. `~/.local/state/bolt/opencode.log`) पर संग्रहीत है।
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | प्रिंट करने के लिए trailing lines की संख्या (डिफ़ॉल्ट: 1000) |
+  | `--follow` | `-f` | boolean | नई log lines को real time में stream करें |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  स्थानीय SQLite session डेटाबेस को सीधे query या inspect करें।
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | query परिणामों के लिए आउटपुट फ़ॉर्मैट (डिफ़ॉल्ट: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Bolt को नवीनतम रिलीज़ या किसी विशिष्ट वर्ज़न पर अपग्रेड करें। Bolt इंस्टॉलेशन विधि का स्वचालित रूप से पता लगाता है और उचित package manager का उपयोग करता है।
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Flag | Alias | Type | विवरण |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | उपयोग करने के लिए इंस्टॉलेशन विधि |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Bolt binary और सभी संबंधित डेटा हटाएँ।
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  `bash`, `zsh`, या `fish` के लिए एक shell completion script जनरेट करें।
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  troubleshooting और introspection subcommands का एक संग्रह। bug reports दायर करते समय या अनपेक्षित व्यवहार का निदान करते समय उपयोगी।
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  ACP (Agent Client Protocol) सर्वर शुरू करें। ACP वह protocol है जिसका उपयोग [Zed](https://zed.dev) जैसे editor integrations Bolt के साथ stdin/stdout पर संवाद करने के लिए करते हैं।
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Flag | Type | विवरण |
+  | --- | --- | --- |
+  | `--cwd` | string | सर्वर के लिए Working directory (डिफ़ॉल्ट: `process.cwd()`) |
+  | `--hostname` | string | Bind hostname (डिफ़ॉल्ट: `127.0.0.1`) |
+  | `--port` | number | Bind port |
+  | `--mdns` | boolean | mDNS service discovery सक्षम करें |
+  | `--mdns-domain` | string | mDNS service के लिए कस्टम डोमेन नाम (डिफ़ॉल्ट: `opencode.local`) |
+  | `--cors` | string\[\] | CORS के लिए अनुमति देने के लिए अतिरिक्त डोमेन |
+</Accordion>

@@ -1,0 +1,38 @@
+---
+title: "本機資料庫 (bolt db)"
+sidebarTitle: "本機資料庫"
+description: "Bolt 將每個工作階段、訊息與工具呼叫儲存在本機 SQLite 資料庫。使用 bolt db 檢視、備份或直接查詢它。"
+---
+
+Bolt 將每個工作階段、訊息與工具呼叫都保存在本機 SQLite 資料庫中。它完全可以檢視,而且完全屬於你 — 除非你明確分享工作階段,否則沒有任何內容會上傳。
+
+## 常見操作
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## 備份
+
+因為它是單一 SQLite 檔案,備份就是複製:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+對於長期儲存或傳輸,請優先使用 `bolt export` / `bolt import` — 它們產生可攜的 JSON 表示形式,能經受 schema 遷移。
+
+## Schema 一覽
+
+- `sessions` — 每個工作階段一列,包含標題、專案、時間戳記與狀態。
+- `messages` — 每個工作階段的完整回合日誌。
+- `tool_calls` — 每次呼叫及其輸入、輸出與時長。
+
+確切欄位會演變;使用 `PRAGMA table_info(<table>)` 可看到即時的 schema。
+
+## 相關
+
+- [工作階段](/concepts/sessions) — 資料庫儲存的內容。
+- [統計與成本](/reference/stats-and-cost) — 相同資料的彙總檢視。

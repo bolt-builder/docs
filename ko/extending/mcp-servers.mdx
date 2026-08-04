@@ -1,0 +1,215 @@
+---
+title: "MCP 서버로 Bolt에 도구 추가하기"
+sidebarTitle: "MCP Servers"
+description: "Model Context Protocol을 사용해 외부 도구와 리소스를 Bolt에 연결하세요. CLI에서 MCP 서버 추가, 인증, 디버깅하기."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol(MCP)은 AI 에이전트가 공통 인터페이스를 통해 외부 도구 및 데이터 소스와 통신할 수 있도록 하는 오픈 표준입니다. Bolt는 에이전트의 기능을 확장하기 위해 MCP를 사용합니다 — 연결된 MCP 서버는 데이터베이스 쿼리 도구부터 완전한 웹 검색 API까지 무엇이든 노출할 수 있습니다. Bolt는 전체 수명 주기를 관리합니다: 서버 추가, OAuth 흐름 실행, 토큰 갱신, 연결 프로빙.
+
+## 서버 유형
+
+Bolt는 두 종류의 MCP 서버를 지원합니다.
+
+| Type | Transport | Description |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | 네트워크를 통해 도달할 수 있는 URL에서 실행되는 서버 |
+| `local` | stdio | Bolt가 자식 프로세스로 스폰하는 로컬 명령 |
+
+원격 서버는 기본적으로 OAuth 인증을 지원합니다. Bolt는 토큰 획득, 저장, 자동 갱신을 처리합니다 — 토큰을 수동으로 관리할 필요가 없습니다.
+
+---
+
+## 명령
+
+### `bolt mcp add`
+
+대화형 또는 한 번에 새 MCP 서버를 추가합니다.
+
+**대화형** — 인수 없이 `bolt mcp add`를 실행하면 이름, 범위(프로젝트 또는 전역), 유형, URL 또는 명령, OAuth 사용 여부를 묻는 프롬프트 기반 마법사를 진행합니다.
+
+**비대화형** — 이름과 함께 원격 서버의 경우 `--url`을, 로컬 서버의 경우 `--` 뒤에 명령을 제공하세요:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**`bolt mcp add`의 플래그**
+
+| Flag | Description |
+|------|-------------|
+| `--url <url>` | 원격 MCP 서버의 URL |
+| `--header <KEY=VALUE>` | 원격 서버에 보낼 HTTP 헤더 (반복 가능) |
+| `--env <KEY=VALUE>` | 로컬 서버의 환경 변수 (반복 가능) |
+
+---
+
+### `bolt mcp list`
+
+구성된 모든 MCP 서버를 연결 및 인증 상태와 함께 나열합니다.
+
+```bash
+bolt mcp list
+```
+
+각 항목에는 상태 아이콘이 표시됩니다:
+
+| Icon | Meaning |
+|------|---------|
+| `✓` | 연결됨 (OAuth를 사용 중이면 인증됨) |
+| `⚠` | 인증 필요 또는 자격 증명 만료 |
+| `✗` | 연결 실패 또는 클라이언트 등록 필요 |
+| `○` | 아직 초기화되지 않았거나 비활성화됨 |
+
+---
+
+### `bolt mcp auth <name>`
+
+OAuth를 활성화한 원격 MCP 서버로 인증합니다. 이름을 생략하면 Bolt는 OAuth를 지원하는 모든 서버와 현재 인증 상태(`✓ authenticated`, `⚠ expired`, `✗ not authenticated`)를 나열하는 대화형 선택기를 표시합니다.
+
+```bash
+# 특정 서버 인증
+bolt mcp auth my-server
+
+# OAuth를 지원하는 서버 목록에서 선택
+bolt mcp auth
+```
+
+Bolt는 프로바이더의 승인 URL에서 브라우저를 열고 콜백을 기다립니다 — 필요할 때의 동적 클라이언트 등록을 포함한 전체 OAuth 핸드셰이크가 자동으로 발생합니다.
+
+<Note>
+  Bolt는 토큰 저장 및 자동 토큰 갱신을 포함해 전체 OAuth 흐름을 처리합니다. 토큰을 복사하거나 만료를 수동으로 관리할 필요가 없습니다. 서버가 사전 등록된 클라이언트 ID를 필요로 하는 경우, `.bolt/bolt.jsonc`의 서버 설정 항목에 `oauth.clientId`(및 선택적으로 `oauth.clientSecret`)를 추가하세요.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+서버에 대해 저장된 OAuth 자격 증명을 제거합니다. 이름을 생략하면 Bolt는 토큰이 저장된 서버 목록에서 선택하도록 프롬프트합니다.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+전체 세션을 시작하지 않고 원격 서버의 연결과 OAuth 상태를 프로빙합니다. 서버가 `✗ failed` 또는 `⚠ needs authentication`을 표시할 때 가장 먼저 사용할 도구입니다.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug`는 다음을 보고합니다:
+- 서버 URL 및 현재 인증 상태
+- 액세스 토큰 세부 정보(마스킹됨) 및 만료 타임스탬프
+- 리프레시 토큰의 존재 여부
+- 서버로부터의 원시 HTTP 응답 코드
+- `WWW-Authenticate` 헤더 콘텐츠
+- OAuth 검색 프로브 결과 (흐름을 완료하지 않고)
+
+---
+
+## 수동 구성
+
+CLI 명령을 사용하지 않고 `.bolt/bolt.jsonc`에서 MCP 서버를 직접 추가하거나 편집할 수 있습니다. Bolt는 다음 세션 시작 시 변경 사항을 인식합니다.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+로컬 stdio 서버는 다음과 같이 생겼습니다:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+원격 서버에 커스텀 HTTP 헤더를 제공하거나 OAuth를 비활성화하려면:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## 원격 MCP 서버 추가 및 인증
+
+<Steps>
+  <Step title="서버 추가">
+    `bolt mcp add`를 실행하고 프롬프트를 따르거나 비대화형 형식을 사용하세요:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt는 항목을 `.bolt/bolt.jsonc`(프로젝트 범위) 또는 전역 설정에 씁니다.
+  </Step>
+
+  <Step title="연결 상태 확인">
+    ```bash
+    bolt mcp list
+    ```
+
+    서버가 인증을 필요로 하면 이름 옆에 `⚠ needs authentication`이 표시됩니다.
+  </Step>
+
+  <Step title="OAuth로 인증">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt가 브라우저를 엽니다. 접근을 승인하면 터미널이 인증 성공을 확인하고 서버 상태가 `✓ connected (OAuth)`로 변경됩니다.
+  </Step>
+
+  <Step title="도구 사용 가능성 확인">
+    Bolt 세션을 시작하세요. 서버가 노출하는 도구는 이제 모든 에이전트에서 사용할 수 있습니다. 언제든지 검사할 수 있습니다:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,475 @@
+---
+title: "Bolt CLI buyruqlar ma'lumotnomasi"
+sidebarTitle: "Buyruqlar"
+description: "TUI, run, serve, session, agent va boshqalar uchun bayroqlar, argumentlar va foydalanish misollari, jumladan har bir Bolt CLI buyrug'i uchun to'liq ma'lumotnoma."
+---
+
+Bolt subbuyruqlarning boy to'plami bilan bitta `bolt` binaryni ochib beradi. `bolt` ni argumentlarsiz ishga tushirish to'liq terminal UI ni ochadi. Barcha boshqa subbuyruqlar quyida ro'yxatga olingan. Inline yordam uchun istalgan vaqtda `bolt <command> --help` dan foydalaning.
+
+<Accordion title="bolt (standart — TUI ni ishga tushirish)">
+  Joriy katalogda interaktiv terminal UI ni ochadi. Bolt loyiha kontekstingizni avtomatik topadi, konfiguratsiyani yuklaydi va sozlangan har qanday provayderlarga ulanadi.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Global bayroqlar** — har bir buyruqda mavjud:
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Log chiqishni stderr'ga chop etish |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Log batafsillik darajasini o'rnatish |
+  | `--pure` | boolean | Hech qanday tashqi plaginlarsiz ishga tushirish |
+  | `--help`, `-h` | boolean | Yordam matnini ko'rsatish |
+  | `--version`, `-v` | boolean | O'rnatilgan versiya raqamini chop etish |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Bolt'ni interaktiv bo'lmagan rejimda bitta prompt bilan ishga tushiring. Bolt in-process serverni boshlaydi, promptni faol sessiyaga yuboradi, javobni stdout'ga stream qiladi, so'ngra chiqadi. Kontekst biriktirish uchun stdin'ni pipe qiling yoki `--file` ni uzating.
+
+  ```bash
+  # Asosiy interaktiv bo'lmagan prompt
+  bolt run "explain the auth module"
+  
+  # Eng so'nggi sessiyani davom ettirish
+  bolt run --continue "now add error handling"
+  
+  # Muayyan agent bilan muayyan modeldan foydalanish
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Tooling integratsiyasi uchun xom JSON eventlar oqimini olish
+  bolt run --format json "summarize changes"
+  
+  # Bir xil vazifani bir nechta modelga uzatib eng yaxshi natijani saqlash
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Kontekst sifatida faylni biriktirish
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Remote serverga biriktirish va u yerda promptni ishga tushirish
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Barcha ruxsat so'rovlarini o'tkazib yuborish (xavfli)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Bajarish uchun Slash-command; argumentlarni xabar sifatida uzating |
+  | `--continue` | `-c` | boolean | Eng so'nggi sessiyani davom ettirish |
+  | `--session` | `-s` | string | Davom ettirish uchun sessiya ID |
+  | `--fork` |  | boolean | Davom ettirishdan oldin sessiyani fork qilish (`--continue` yoki `--session` talab qiladi) |
+  | `--share` |  | boolean | Sessiya tugagach uni bo'lishish |
+  | `--model` | `-m` | string | `provider/model` formatida foydalanilishi kerak bo'lgan model |
+  | `--best-of` |  | string | Vergul bilan ajratilgan `provider/model` ro'yxati; vazifani parallel ishga tushiradi, natijalarni tartiblaydi, g'olibni saqlaydi |
+  | `--agent` |  | string | Foydalaniladigan agent (masalan, `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Chiqish formati; `json` xom newline bilan ajratilgan JSON eventlarni stream qiladi |
+  | `--file` | `-f` | string\[\] | Kontekst sifatida biriktiriladigan fayl(lar) |
+  | `--title` |  | string | Sessiya uchun sarlavha |
+  | `--attach` |  | string | Remote Bolt serverga qarshi ishga tushirish (masalan, `http://localhost:4096`) |
+  | `--password` | `-p` | string | Remote server uchun basic auth paroli |
+  | `--username` | `-u` | string | Remote server uchun basic auth foydalanuvchi nomi |
+  | `--dir` |  | string | Ish katalogi; agar `--attach` o'rnatilgan bo'lsa, bu remote serverdagi katalog |
+  | `--port` |  | number | Mahalliy in-process server porti (tashlab qo'yilsa tasodifiy) |
+  | `--variant` |  | string | Reasoning effort darajasi, provayderga xos (masalan, `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Chiqishda reasoning/thinking bloklarini ko'rsatish |
+  | `--mini` |  | boolean | Minimal split-footer interaktiv UI ni ishga tushirish (yashirin) |
+  | `--interactive` | `-i` | boolean | To'g'ridan-to'g'ri interaktiv split-footer rejimini majburiy qilish |
+  | `--auto` |  | boolean | Aniq rad etilmagan ruxsatlarni avtomatik tasdiqlash |
+  | `--yolo` |  | boolean | Barcha ruxsat so'rovlarini o'tkazib yuborish (`--auto` uchun alias, yashirin) |
+  | `--dangerously-skip-permissions` |  | boolean | Barcha ruxsat tekshiruvlarini o'tkazib yuborish (yashirin) |
+  | `--demo` |  | boolean | To'g'ridan-to'g'ri interaktiv demo slash buyruqlarini yoqish (yashirin) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  To'liq TUI ni ishlayotgan Bolt serverga biriktiring. Server mahalliy yoki remote bo'lishi mumkin. To'liq TUI o'rniga minimal split-footer UI dan foydalanish uchun `--mini` ni uzating.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Remote serverdagi katalog |
+  | `--continue` | `-c` | boolean | Remote serverdagi eng so'nggi sessiyani davom ettirish |
+  | `--session` | `-s` | string | Davom ettirish uchun sessiya ID |
+  | `--fork` |  | boolean | Davom ettirganda sessiyani fork qilish |
+  | `--password` | `-p` | string | Basic auth paroli |
+  | `--username` | `-u` | string | Basic auth foydalanuvchi nomi |
+  | `--mini` |  | boolean | Minimal interaktiv UI dan foydalanish |
+  | `--no-replay` |  | boolean | Resume va o'lchamdan keyin sessiya tarixi replay'ini o'chirish (`--mini` talab qiladi) |
+  | `--replay-limit` |  | number | Ko'rinadigan replay'ni eng yangi N xabarga cheklash (`--mini` talab qiladi) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Headless Bolt API serverni boshlash. Server TUI, `bolt run --attach` va `bolt attach` ulanadigan REST\+SSE API'ni ochib beradi. Boshqa mashinalardan yetib bo'ladigan qilish uchun `0.0.0.0` da bog'lang — bunda har doim `BOLT_SERVER_PASSWORD` ni o'rnating.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--hostname` | string | Bog'lash uchun manzil (standart: `127.0.0.1`) |
+  | `--port` | number | Tinglash uchun port (tashlab qo'yilsa tasodifiy) |
+  | `--mdns` | boolean | mDNS xizmat topilishini yoqish (hostname'ni standart bo'yicha `0.0.0.0` ga o'rnatadi) |
+  | `--mdns-domain` | string | mDNS xizmati uchun custom domen nomi (standart: `opencode.local`) |
+  | `--cors` | string\[\] | CORS uchun ruxsat berish uchun qo'shimcha domenlar |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` standart bo'yicha o'rnatilmagan. Server ogohlantirish log'ini yozadi va uni o'rnatmaguningizcha barcha ulanishlarni qabul qiladi.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Bolt serverni boshlash va darhol standart brauzeringizda web UI ni ochish. `bolt serve` bilan bir xil tarmoq bayroqlarini qabul qiladi.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--hostname` | string | Bog'lash uchun manzil (standart: `127.0.0.1`) |
+  | `--port` | number | Tinglash uchun port (tashlab qo'yilsa tasodifiy) |
+  | `--mdns` | boolean | mDNS xizmat topilishini yoqish (hostname'ni standart bo'yicha `0.0.0.0` ga o'rnatadi) |
+  | `--mdns-domain` | string | mDNS xizmati uchun custom domen nomi (standart: `opencode.local`) |
+  | `--cors` | string\[\] | CORS uchun ruxsat berish uchun qo'shimcha domenlar |
+</Accordion>
+
+<Accordion title="bolt session">
+  Mahalliy SQLite ma'lumotlar bazasida saqlangan Bolt sessiyalarini boshqaring.
+
+  **Subbuyruqlar**
+
+  ```bash
+  bolt session list                         # barcha ildiz sessiyalarni ro'yxatga olish
+  bolt session list --format json           # mashina uchun o'qiladigan chiqish
+  bolt session list -n 20                   # 20 ta eng so'nggi sessiyani ko'rsatish
+  bolt session delete <sessionID>           # sessiyani doimiy o'chirish
+  ```
+
+  **`bolt session list` bayroqlari**
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Chiqishni N ta eng so'nggi sessiyaga cheklash |
+  | `--format` |  | `table`\|`json` | Chiqish formati (standart: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Custom agentlarni ro'yxatga oling va yarating. Agentlar system prompt, ruxsatlar va rejimni aniqlaydigan YAML frontmatter bilan markdown fayllar.
+
+  ```bash
+  bolt agent list                           # barcha mavjud agentlarni ro'yxatga olish
+  bolt agent create                         # interaktiv agent yaratish sehrgari
+  
+  # Interaktiv bo'lmagan yaratish
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **`bolt agent create` bayroqlari**
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Agent faylini yozish uchun katalog yo'li |
+  | `--description` |  | string | Agent nima qilishi kerakligi haqida tabiiy til tavsifi |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Agent asosiy agent, subagent yoki ikkalasi sifatida ishlaydimi |
+  | `--permissions` | `--tools` | string | Ruxsat berilgan ruxsatlarning vergul bilan ajratilgan ro'yxati (standart: barchasi) |
+  | `--model` | `-m` | string | `provider/model` formatida foydalanilishi kerak bo'lgan model |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  AI provayder hisob ma'lumotlarini interaktiv boshqaring. Hisob ma'lumotlari OS ma'lumotlar katalogingizda saqlanadi (Linux'da `~/.local/share/bolt/auth.json`, macOS'da `~/Library/Application Support/bolt/auth.json`).
+
+  ```bash
+  bolt providers             # interaktiv hisob ma'lumotlarini boshqarish menyusi
+  bolt auth                  # bolt providers uchun alias
+  
+  bolt providers list        # saqlangan hisob ma'lumotlari va faol env var'larni ro'yxatga olish
+  bolt providers login       # provayder uchun hisob ma'lumotini qo'shish
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # saqlangan hisob ma'lumotini olib tashlash
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Sozlangan provayderlaringizdan mavjud barcha modellarni ro'yxatga oling.
+
+  ```bash
+  bolt models                         # barcha provayderlardan barcha modellarni ro'yxatga olish
+  bolt models anthropic               # bitta provayderga filtrlash
+  bolt models --verbose               # chiqishga xarajat metama'lumotlarini qo'shish
+  bolt models --refresh               # models.dev keshini majburiy yangilash
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Har bir model uchun JSON xarajat metama'lumotlarini qo'shish |
+  | `--refresh` | boolean | Modellar keshini models.dev dan yangilash |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Model Context Protocol (MCP) serverlarini boshqaring. Bolt OAuth bilan remote (HTTP/SSE) serverlarni va mahalliy (stdio) serverlarni qo'llab-quvvatlaydi.
+
+  ```bash
+  bolt mcp add                              # server qo'shish uchun interaktiv sehrgar
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # barcha sozlangan serverlar va statusni ko'rsatish
+  bolt mcp auth <name>                      # server uchun OAuth oqimini ishga tushirish
+  bolt mcp auth list                        # barcha serverlar uchun OAuth statusini ko'rsatish
+  bolt mcp logout <name>                    # saqlangan OAuth tokenlarini olib tashlash
+  bolt mcp debug <name>                     # ulanish va OAuth konfiguratsiyasini tekshirish
+  ```
+
+  **`bolt mcp add` bayroqlari**
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--url` | string | Remote MCP server uchun URL |
+  | `--env` | string\[\] | Mahalliy server uchun environment variable (`KEY=VALUE`) |
+  | `--header` | string\[\] | Remote server uchun HTTP header (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  npm dan Bolt pluginini o'rnating va tegishli konfiguratsiya faylini yangilang. Plaginlar TUI ni kengaytirishi, yangi slash-buyruqlar qo'shishi yoki yangi provayderlarni ro'yxatga olishi mumkin.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # global konfiguratsiyaga o'rnatish
+  bolt plugin install @my-org/bolt-plugin --force        # mavjud versiyani almashtirish
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Loyiha konfiguratsiyasi o'rniga plaginni global konfiguratsiyaga qo'shish |
+  | `--force` | `-f` | boolean | Allaqachon sozlangan plagin versiyasini almashtirish |
+</Accordion>
+
+<Accordion title="bolt github">
+  Bolt'ga pull request'lar, issue'lar va boshqa GitHub voqealariga javob berishga imkon beruvchi Bolt GitHub Actions integratsiyasini boshqaring.
+
+  ```bash
+  bolt github install           # repoingizda GitHub Actions workflow'ni skaffold qilish
+  bolt github run               # GitHub agentini mahalliy ishga tushirish (testlash uchun)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **`bolt github run` bayroqlari**
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--event` | string | Simulyatsiya qilinadigan GitHub voqea nomi (masalan, `pull_request`) |
+  | `--token` | string | GitHub shaxsiy kirish tokeni |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  `gh` CLI yordamida GitHub pull request'ni mahalliy filial sifatida checkout qiling, so'ngra checkout qilingan katalogda Bolt'ni ishga tushiring. Agar PR tavsifi sessiya share havolasini o'z ichiga olsa, Bolt bu sessiyani avtomatik import qiladi.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Bu buyruq [GitHub CLI (`gh`)](https://cli.github.com/) ni o'rnatilgan va autentifikatsiya qilingan bo'lishini talab qiladi.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  AI model yordamida staged (yoki barcha kuzatilayotgan) o'zgarishlar uchun commit xabarini yarating va so'ngra commit qiling. Model uslub konteksti uchun so'nggi commit tarixini tekshiradi.
+
+  ```bash
+  bolt commit                        # staged o'zgarishlarni commit qilish
+  bolt commit --all                  # barcha kuzatilayotgan o'zgarishlarni stage va commit qilish
+  bolt commit --dry-run              # commit qilmasdan yaratilgan xabarni chop etish
+  bolt commit --model openai/gpt-4o  # muayyan modeldan foydalanish
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Faqat staged emas, balki barcha kuzatilayotgan o'zgarishlarni commit qilish |
+  | `--dry-run` |  | boolean | Commit qilmasdan yaratilgan xabarni chop etish |
+  | `--model` | `-m` | string | `provider/model` formatida foydalanilishi kerak bo'lgan model |
+</Accordion>
+
+<Accordion title="bolt review">
+  Diff'ga qarshi AI kod ko'rib chiqishni ishga tushiring va `0` (pass) yoki `1` (fail) kodi bilan chiqing. `code-review` agenti diff'ni to'g'rilik, uslub va xavfsizlik muammolari uchun ko'rib chiqadi, so'ngra `Verdict: PASS` yoki `Verdict: FAIL` qatorini chiqaradi.
+
+  ```bash
+  bolt review                          # commit qilinmagan o'zgarishlarni ko'rib chiqish (git diff HEAD)
+  bolt review --staged                 # faqat staged o'zgarishlarni ko'rib chiqish
+  bolt review --branch main            # main bilan merge base'dan beri o'zgarishlarni ko'rib chiqish
+  bolt review --model openai/o3        # muayyan modeldan foydalanish
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Faqat staged o'zgarishlarni ko'rib chiqish |
+  | `--branch` |  | string | Bu filial bilan merge base'dan beri o'zgarishlarni ko'rib chiqish |
+  | `--model` | `-m` | string | `provider/model` formatida foydalanilishi kerak bo'lgan model |
+
+  <Note>
+    Chiqish kodlari: `0` = PASS, `1` = FAIL, `2` = qaror aniqlanmadi.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Sessiyani JSON sifatida stdout'ga eksport qiling. Arxivlash, bo'lishish yoki boshqa asboblarga uzatish uchun foydali. Fayl yo'llari, promptlar va boshqa maxfiy transkript mazmunini tuzatish uchun ochiq bo'lishishdan oldin `--sanitize` ni uzating.
+
+  ```bash
+  bolt export                          # interaktiv sessiya tanlagichi, keyin stdout'ga yozish
+  bolt export abc123                   # muayyan sessiyani eksport qilish
+  bolt export abc123 --sanitize        # sirlar va yo'llarni tuzatish
+  bolt export abc123 > session.json    # faylga yozish
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Eksport qilishdan oldin maxfiy ma'lumotlarni (fayl yo'llari, prompt matni, asbob I/O) tuzatish |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Ilgari eksport qilingan sessiyani mahalliy ma'lumotlar bazasiga import qiling. Mahalliy JSON fayl yoki sessiya share URL'ini qabul qiladi.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Barcha sessiyalar bo'ylab yig'ilgan token foydalanishi va xarajat statistikasini ko'rsating. Chiqish umumiy ko'rinish jadvali, xarajat va token taqsimlanishi, model foydalanishi va asbob foydalanishi bar chart'ini o'z ichiga oladi.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # faqat so'nggi 7 kun
+  bolt stats --models             # har bir model bo'yicha taqsimlashni qo'shish
+  bolt stats --models 5           # top 5 modelni ko'rsatish
+  bolt stats --tools 10           # top 10 asbobni ko'rsatish
+  bolt stats --project ""         # faqat joriy loyihaga filtrlash
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--days` | number | So'nggi N kunga cheklash (standart: barcha vaqt) |
+  | `--tools` | number | Asbob foydalanishi jadvalida ko'rsatiladigan asboblar soni |
+  | `--models` | boolean\|number | Model statistikasini ko'rsatish; ro'yxatni cheklash uchun raqamni uzating |
+  | `--project` | string | Loyiha ID bo'yicha filtrlash; bo'sh satr joriy loyihani anglatadi |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Bolt ilova log'ini chop eting. Log OS log katalogida saqlanadi (masalan, `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # so'nggi 1000 qatorni chop etish
+  bolt logs --tail 200             # so'nggi 200 qatorni chop etish
+  bolt logs --follow               # yozilgan yangi qatorlarni stream qilish
+  bolt logs -f                     # --follow uchun alias
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Chop etiladigan trailing qatorlar soni (standart: 1000) |
+  | `--follow` | `-f` | boolean | Real vaqtda yangi log qatorlarni stream qilish |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Mahalliy SQLite sessiya ma'lumotlar bazasini to'g'ridan-to'g'ri so'rang yoki tekshiring.
+
+  ```bash
+  bolt db path                                  # ma'lumotlar bazasi fayl yo'lini chop etish
+  bolt db "SELECT id, title FROM sessions"      # SQL so'rovni ishga tushirish (TSV chiqish)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | So'rov natijalari uchun chiqish formati (standart: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Bolt'ni eng so'nggi relizga yoki muayyan versiyaga yangilang. Bolt o'rnatish usulini avtomatik aniqlaydi va tegishli paket menejeridan foydalanadi.
+
+  ```bash
+  bolt upgrade                         # eng so'nggi versiyaga yangilash
+  bolt upgrade 0.2.0                   # muayyan versiyaga yangilash (yoki tushirish)
+  bolt upgrade --method npm            # muayyan o'rnatish usulini majburiy qilish
+  bolt upgrade --method curl
+  ```
+
+  | Bayroq | Alias | Turi | Tavsif |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Foydalaniladigan o'rnatish usuli |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Bolt binary va uning barcha aloqador ma'lumotlarini olib tashlash.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  `bash`, `zsh` yoki `fish` uchun shell completion skriptini yarating.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Troubleshoot va introspeksiya subbuyruqlar to'plami. Xatolar haqida hisobot tayyorlashda yoki kutilmagan xatti-harakatlarni diagnostika qilishda foydali.
+
+  ```bash
+  bolt debug info          # versiya, OS, terminal va yuklangan plaginlarni chop etish
+  bolt debug config        # to'liq hal qilingan konfiguratsiyani chop etish
+  bolt debug paths         # barcha global data/config/cache kataloglarini chop etish
+  bolt debug lsp           # LSP holatini tekshirish
+  bolt debug ripgrep       # ripgrep mavjudligini sinash
+  bolt debug file          # fayl asbobi xatti-harakatini tekshirish
+  bolt debug scrap         # debug qilish uchun scratchpad
+  bolt debug skill         # mavjud skillarni tekshirish
+  bolt debug snapshot      # sessiya snapshotlarini tekshirish
+  bolt debug startup       # ishga tushirish vaqtini o'lchash
+  bolt debug agents        # agentlar va ularning hal qilingan konfiguratsiyasini ro'yxatga olish
+  bolt debug v2            # V2 sessiya yadro holatini tekshirish
+  bolt debug wait          # cheksiz bloklash (jarayonni debug qilish uchun)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  ACP (Agent Client Protocol) serverini boshlash. ACP — bu [Zed](https://zed.dev) kabi muharrir integratsiyalari tomonidan Bolt bilan stdin/stdout orqali aloqa qilish uchun ishlatiladigan protokol.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Bayroq | Turi | Tavsif |
+  | --- | --- | --- |
+  | `--cwd` | string | Server uchun ish katalogi (standart: `process.cwd()`) |
+  | `--hostname` | string | Bog'lash hostname (standart: `127.0.0.1`) |
+  | `--port` | number | Bog'lash porti |
+  | `--mdns` | boolean | mDNS xizmat topilishini yoqish |
+  | `--mdns-domain` | string | mDNS xizmati uchun custom domen nomi (standart: `opencode.local`) |
+  | `--cors` | string\[\] | CORS uchun ruxsat berish uchun qo'shimcha domenlar |
+</Accordion>

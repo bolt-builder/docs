@@ -1,0 +1,179 @@
+---
+title: "Tích hợp GitHub: Actions, PR và AI review"
+sidebarTitle: "GitHub Actions"
+description: "Chạy Bolt bên trong GitHub Actions, checkout PR cục bộ, sinh commit message AI và kiểm soát merge với AI code review và mã thoát."
+url: "server/github-actions"
+---
+
+Bolt cung cấp bốn lệnh kết nối workflow Git hàng ngày của bạn với AI: một agent GitHub Actions bạn có thể cài đặt bằng một lệnh duy nhất, một shortcut để checkout pull request, trình sinh commit message AI và trình review code AI với mã thoát có thể máy đọc được. Cùng nhau chúng cho phép bạn đưa Bolt vào mọi giai đoạn phát triển — lập trình cục bộ, review PR và tích hợp liên tục.
+
+---
+
+## `bolt github`
+
+Quản lý GitHub Actions agent chạy Bolt trên các sự kiện CI.
+
+### `bolt github install`
+
+Cài đặt workflow GitHub Actions vào repository hiện tại. Lệnh này ghi workflow YAML vào `.github/workflows/` để Bolt khởi động tự động trên các bình luận issue, pull request mới hoặc các sự kiện khác bạn cấu hình.
+
+```bash
+bolt github install
+```
+
+Chạy lệnh này từ gốc của một git repository. Bạn cần quyền ghi vào `.github/workflows/`.
+
+### `bolt github run`
+
+Chạy GitHub agent cục bộ hoặc bên trong một bước CI, replay một payload sự kiện GitHub cụ thể.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Cờ | Mô tả |
+|------|-------------|
+| `--event <event>` | Tên sự kiện GitHub hoặc đường dẫn tới payload sự kiện JSON |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) được dùng để đăng bình luận và lấy ngữ cảnh |
+
+---
+
+## Cài đặt GitHub Actions agent
+
+<Steps>
+  <Step title="Cài đặt workflow">
+    Từ gốc repository của bạn:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt ghi tệp workflow GitHub Actions vào `.github/workflows/`. Commit và push tệp.
+  </Step>
+
+  <Step title="Thêm API key của bạn làm secret">
+    Trong cài đặt repository của bạn, thêm API key cho provider LLM ưa thích của bạn làm secret repository (ví dụ `ANTHROPIC_API_KEY`). Workflow sẽ nhận nó tự động.
+  </Step>
+
+  <Step title="Kích hoạt agent">
+    Bình luận `/bolt <yêu cầu của bạn>` trên bất kỳ issue hoặc pull request nào. Workflow kích hoạt, Bolt đọc payload sự kiện và đăng phản hồi với kết quả.
+  </Step>
+
+  <Step title="Chạy cục bộ để gỡ lỗi">
+    Replay một payload sự kiện thực từ một lần chạy workflow trước đó:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Checkout một pull request GitHub vào một nhánh cục bộ và khởi chạy Bolt trong nhánh đó — sẵn sàng để review, gỡ lỗi hoặc tiếp tục công việc từ nơi tác giả PR đã dừng lại.
+
+```bash
+bolt pr 42
+```
+
+Bolt dùng CLI `gh` để lấy PR, tạo một nhánh có tên `pr/<number>` và thiết lập upstream tracking ref. Với các PR liên repository (fork), nó tự động thêm fork làm remote. Nếu mô tả PR chứa URL phiên Bolt được chia sẻ (`opncd.ai/s/…`), phiên được nhập để bạn có thể tiếp tục hội thoại của tác giả.
+
+> Yêu cầu [GitHub CLI (`gh`)](https://cli.github.com/) được cài đặt và xác thực.
+
+---
+
+## `bolt commit`
+
+Sinh commit message từ các thay đổi đã staged (hoặc mọi thay đổi được theo dõi) và commit trong một bước.
+
+```bash
+bolt commit
+```
+
+Bolt diff các thay đổi của bạn, đưa diff cho agent `commit` cùng với các tiêu đề commit gần đây làm tham chiếu phong cách, và chạy `git commit -m <message>` với kết quả.
+
+### Cờ
+
+| Cờ | Bí danh | Mô tả |
+|------|-------|-------------|
+| `--all` | `-a` | Commit mọi thay đổi được theo dõi, không chỉ những cái đã staged (tương đương `git commit -a`) |
+| `--dry-run` | | In message được tạo mà không commit |
+| `--model <provider/model>` | `-m` | Ghi đè mô hình dùng để sinh message |
+
+```bash
+# Stage mọi thứ và commit
+bolt commit --all
+
+# Xem trước message mà không commit
+bolt commit --dry-run
+
+# Dùng mô hình cụ thể
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Dùng `bolt commit --dry-run` để xem trước message được sinh trước khi nó được commit. Nếu bạn muốn chỉnh sửa nó, sao chép đầu ra và chạy `git commit -m "…"` với cách diễn đạt đã điều chỉnh của bạn.
+</Tip>
+
+---
+
+## `bolt review`
+
+Chạy agent `code-review` với một diff và thoát với verdict có thể máy đọc được. Dòng cuối cùng của review luôn là `Verdict: PASS` hoặc `Verdict: FAIL`, khiến `bolt review` sẵn sàng dùng ngay cho các pipeline CI.
+
+```bash
+bolt review
+```
+
+Theo mặc định, `bolt review` diff `HEAD` với working tree. Dùng các cờ bên dưới để giới hạn phạm vi diff.
+
+### Cờ
+
+| Cờ | Bí danh | Mô tả |
+|------|-------|-------------|
+| `--staged` | | Chỉ review các thay đổi đã staged |
+| `--branch <name>` | | Review các thay đổi kể từ merge base với nhánh có tên (mặc định là nhánh mặc định của repository) |
+| `--model <provider/model>` | `-m` | Mô hình để dùng cho review |
+
+### Mã thoát
+
+| Mã | Ý nghĩa |
+|------|---------|
+| `0` | `Verdict: PASS` — không có vấn đề nghiêm trọng hoặc lớn |
+| `1` | `Verdict: FAIL` — một hoặc nhiều vấn đề nghiêm trọng hoặc lớn được tìm thấy |
+| `2` | Không thể xác định verdict từ phản hồi |
+
+### Dùng trong workflow GitHub Actions
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Mã thoát khác không làm check thất bại, chặn merge cho tới khi các vấn đề được xử lý.
+
+<Tip>
+  Chạy `bolt review --staged` trước khi commit để bắt các vấn đề khi chúng vẫn còn dễ thay đổi — trước khi chúng đến pull request.
+</Tip>

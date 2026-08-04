@@ -1,0 +1,116 @@
+---
+title: "Bolt-skrivebordsapp: flervinduers AI-kodeøkter"
+sidebarTitle: "Installer"
+description: "Installer skrivebordsappen Bolt for flervinduers økter, integrert terminal, ledetekst-komponist med bildeinnliming, automatiske oppdateringer og 28 grensesnittspråk."
+url: "desktop/install"
+---
+
+Bolt-skrivebordsappen pakker samme motor som CLI-en inn i et fullt Electron-skall. Alle funksjoner som er tilgjengelige i terminalen – agenter, MCP-servere, plugins, eksterne økter, økter du kan forgrene og dele – fungerer identisk i skrivebordsappen, med tillegg av en flervinduers og flerfaners opplevelse, et grafisk innstillingsgrensesnitt, native varsler og automatiske oppdateringer. Hvis du allerede bruker CLI-en, er skrivebordsappen et drop-in-supplement, ikke en erstatning.
+
+---
+
+## Installasjon
+
+### macOS
+
+<Steps>
+  <Step title="Installer med engangskommandoen (anbefalt)">
+    Åpne en terminal og kjør:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skriptet laster ned siste utgave, verifiserer den og plasserer appen i `/Applications`. Ingen Gatekeeper-popup.
+  </Step>
+
+  <Step title="Start appen">
+    Åpne **Bolt** fra `/Applications` eller Spotlight. Ved første oppstart ber Bolt deg om å velge en standard LLM-leverandør og oppretter en global konfigurasjonsfil.
+  </Step>
+</Steps>
+
+<Tip>
+  Engangskommandoen installerer appen på en måte som omgår macOS Gatekeeper-dialogen "unidentified developer", slik at du kommer rett i gang med kodingen uten ekstra sikkerhetsforespørsler.
+</Tip>
+
+### Alle plattformer — last ned fra utgivelser
+
+Last ned det siste installasjonsprogrammet for plattformen din fra [Bolt-utgivelsessiden](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Plattform | Installasjonstype |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe`-installasjonsprogram |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  På Windows inkluderer Bolt WSL-integrasjon (Windows Subsystem for Linux). Når WSL er tilgjengelig, kan Bolt åpne økter direkte inne i WSL-distribusjonen din – og gi deg et Linux-nativt agentmiljø med et nativt Windows-grensesnitt rundt.
+</Note>
+
+---
+
+## Funksjoner
+
+### Flervinduers og flerfaners økthåndtering
+
+Åpne så mange vinduer du vil, hvert med sitt eget sett med faner. Faner mapper direkte til Bolt-økter, slik at du kan kjøre en agent på en refaktorering i én fane, stille et spørsmål i en annen og kjøre en bakgrunnsjobb i en tredje – alt samtidig.
+
+### Ledetekst-komponist
+
+Ledetekst-komponisten støtter rikt inntak: lim inn tekst, dra inn filer som vedlegg, eller lim inn et bilde direkte fra utklippstavlen. Bolt koder bildet og sender det til enhver synscompatible modell automatisk.
+
+### Integrert terminal og filtre
+
+Et layoutet med delte ruter gir deg agentsamtalen på den ene siden og en live terminal og prosjektfiltre på den andre. Du kan kjøre kommandoer, inspisere utdata og mate resultatene tilbake til agenten uten å bytte app.
+
+### Kommandopalett
+
+Trykk `Cmd/Ctrl+K` for å åpne kommandopaletten. Herfra kan du bytte økter, endre agenter, åpne innstillinger eller utløse enhver handling uten å måtte gripe etter musen.
+
+### Fullstendig innstillingsgrensesnitt
+
+Innstillingspanelet dekker alle alternativer som bor i `.bolt/bolt.jsonc` — hurtigtaster, modellvalg, LLM-leverandører, MCP-servere og autentisering — med rullegardinmenyer, brytere og innebygd validering. Du trenger sjelden å redigere konfigurasjonsfilen manuelt.
+
+### Native varsler
+
+Bolt utløser et nativt OS-varsel når en langvarig oppgave er ferdig. Klikk på varselet for å hoppe direkte til økten.
+
+### Dype lenker
+
+Åpne en bestemt økt ved å navigere til en `bolt://`-URL. Nyttig for å dele øktlenker med lagkamerater eller bokmerke pågående arbeid.
+
+### Auto-oppdateringer
+
+Skrivebordsappen oppdaterer seg selv på tvers av tre kanaler:
+
+| Kanal | Beskrivelse |
+|---------|-------------|
+| `prod` | Stabile utgivelser, oppdatert ved hver produksjonstag |
+| `beta` | Forhåndsutgaver for tidlig tilgang til nye funksjoner |
+| `dev` | Nattlige bygg fra `dev`-grenen |
+
+Bytt kanaler under **Innstillinger → Om**.
+
+### 28 grensesnittspråk
+
+Bolt-grensesnittet er lokalisert til 28 språk. Endre visningsspråket under **Innstillinger → Utseende → Språk**.
+
+---
+
+## Relaterte dokumenter
+
+<CardGroup cols={2}>
+  <Card title="Eksterne økter" icon="server" href="/server/remote-sessions">
+    Kjør en headless server på en ekstern maskin og koble til fra skrivebordsappen eller CLI-en.
+  </Card>
+  <Card title="MCP-servere" icon="plug" href="/extending/mcp-servers">
+    Legg til eksterne verktøy og API-er til agentene dine ved hjelp av Model Context Protocol.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Utvid Bolt med egendefinerte leverandører, autentiseringsmetoder og arbeidsområdeadaptere.
+  </Card>
+  <Card title="GitHub-integrasjon" icon="github" href="/server/github-actions">
+    Automatiser PR-er, commit-meldinger og kodegjennomgang fra skrivebordsappen eller CI.
+  </Card>
+</CardGroup>

@@ -1,0 +1,192 @@
+---
+title: "Bolt 設定檔參考"
+sidebarTitle: "設定 Schema"
+description: "Bolt 設定檔 schema 的完整參考 — 位置、所有頂層欄位、MCP 伺服器類型、供應商覆寫與完整範例。"
+---
+
+Bolt 使用 JSON with Comments(`.jsonc`)檔案作為專案與全域設定。Schema 有版本控制並發佈於 `https://opencode.ai/config.json`,編輯器可用來提供自動完成與驗證。
+
+## 設定檔位置
+
+Bolt 合併來自兩個位置的設定。當相同索引鍵同時出現於兩者時,每專案設定優先於全域設定。
+
+| 範圍 | 路徑 |
+|---|---|
+| **每專案** | 專案根目錄中的 `.bolt/bolt.jsonc`(或 `.bolt/bolt.json`) |
+| **全域** | OS 設定目錄中的 `bolt.jsonc`(或 `bolt.json`) |
+
+OS 設定目錄為:
+
+- **macOS**:`~/Library/Application Support/bolt/`
+- **Linux**:`~/.config/bolt/`
+- **Windows**:`%APPDATA%\bolt\`
+
+<Note>
+Bolt 也會在相同位置讀取舊有的 `opencode.jsonc` / `opencode.json` 檔案。新專案應使用 `bolt.jsonc` 命名慣例,它優先於舊有檔名。
+</Note>
+
+Bolt 首次執行時會建立一個包含 `$schema` 行的最小全域設定檔,並在你首次在該目錄開啟 TUI 時於專案根目錄建立 `.bolt/bolt.jsonc`。
+
+## Schema 欄位
+
+<ParamField body="$schema" type="string">
+  指向此設定檔的 JSON schema URL。可在支援 JSON Schema 的編輯器(VS Code、Zed、JetBrains IDE 等)中啟用自動完成與行內驗證。
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  所有工作階段的預設模型,以 `provider/model` 表示。可透過 `bolt run --model` 或 TUI 模型選擇器在每個工作階段中覆寫。
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  執行 `bolt models` 可看到已設定供應商所有可用的 `provider/model` 字串。
+</ParamField>
+
+<ParamField body="provider" type="object">
+  供應商特定的憑證與設定覆寫。每個索引鍵是供應商 ID(例如 `anthropic`、`openai`、`google`)。最常見的用法是透過環境變數參考設定 API 金鑰,讓金鑰永遠不會以明文儲存。
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  以 `${` 開頭並以 `}` 結尾的值會被視為環境變數參考,並在執行時展開。
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  MCP 伺服器設定,以你選擇的名稱作為索引鍵。Bolt 支援兩種伺服器類型:
+
+  **遠端伺服器** — 透過 HTTP/SSE 連接,可選 OAuth:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | 欄位 | 類型 | 描述 |
+  |---|---|---|
+  | `type` | `"remote"` | 將此標識為遠端 HTTP 伺服器 |
+  | `url` | string | MCP 端點的完整 URL |
+  | `oauth` | object \| `false` | OAuth 設定物件(含選用的 `clientId`、`clientSecret`、`scope`、`redirectUri`)。設為 `false` 可停用 OAuth 自動偵測。 |
+  | `headers` | object | 每次請求都會送出的 HTTP header(`{ "Key": "Value" }`) |
+  | `enabled` | boolean | 啟動時啟用或停用此伺服器 |
+  | `timeout` | number | 請求逾時毫秒數(預設:5000) |
+
+  **本機伺服器** — 透過 stdio 衍生子程序:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | 欄位 | 類型 | 描述 |
+  |---|---|---|
+  | `type` | `"local"` | 將此標識為本機 stdio 伺服器 |
+  | `command` | string[] | 要衍生的命令與所有參數 |
+  | `cwd` | string | 伺服器程序的工作目錄(相對路徑會從工作區目錄解析) |
+  | `environment` | object | 要傳給子程序的額外環境變數 |
+  | `enabled` | boolean | 啟動時啟用或停用此伺服器 |
+  | `timeout` | number | 請求逾時毫秒數(預設:5000) |
+
+  使用 `bolt mcp add` 進行互動式精靈,或使用 `bolt mcp list` 檢視目前伺服器狀態。
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  附加到此專案或全域每個工作階段的額外系統指示。來自多個設定檔的指示會合併(去重)。使用此欄位注入每個代理都應遵循的專案特定慣例、風格規則或約束。
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  要載入的外掛規格。每個項目是 npm 套件名稱、本機檔案路徑或 URL。外掛可以擴充 TUI、新增斜線命令或註冊額外供應商。使用 `bolt plugin install <spec>` 安裝外掛,並讓它自動加入此陣列。
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## 完整範例
+
+以下 `.bolt/bolt.jsonc` 展示了實際的專案設定:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+執行 `bolt debug config` 可查看所有檔案合併後完整解析的設定。這是確認你的每專案與全域設定是否正確合併的最快方法。
+</Tip>

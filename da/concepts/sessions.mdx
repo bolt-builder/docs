@@ -1,0 +1,191 @@
+---
+title: "Sessioner — vedvarende samtalehistorik i Bolt"
+sidebarTitle: "Sessioner"
+description: "Sessioner er Bolts enhed af vedvarende arbejde: hver gemmer en fuld samtale i lokal SQLite, så du kan koble fra, genoptage, forgrene, dele og eksportere når som helst."
+---
+
+En **session** er Bolts primære enhed af arbejde. Hver prompt du sender, hver fil agenten læser eller redigerer, og hvert værktøjskald modellen udfører registreres varigt i den sessions historik. Fordi sessioner lever i en lokal SQLite-database, overlever de proces-genstarter, kan listes og forespørges når som helst og forlader aldrig din maskine, medmindre du eksplicit deler eller eksporterer dem.
+
+<Note>
+  Alle sessionsdata gemmes lokalt i en SQLite-database på din egen maskine. Intet sendes til eksterne servere, medmindre du aktiverer deling. Brug `bolt db path` for at finde den nøjagtige databasefil.
+</Note>
+
+## Sessions-livscyklus
+
+En session starter i det øjeblik, du sender din første prompt, og slutter først, når du sletter den. Mellem de to punkter kan du frit koble fra, genoptage, forgrene eller aflevere den.
+
+<Steps>
+  <Step title="Opret eller fortsæt en session">
+    Start TUI'en for at starte en ny session interaktivt, eller send en prompt til `bolt run` for at oprette en ikke-interaktivt:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Kobl fra og kom tilbage senere">
+    Luk TUI'en når som helst — sessionen bevares automatisk. Genoptag din seneste session med `--continue`, eller målret en specifik session efter ID med `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Forgren før du eksperimenterer">
+    Brug `--fork` til at forgrene fra den aktuelle sessions historik, før du prøver en risikabel ændring. Forken er en uafhængig session, der ikke påvirker originalen:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Del og samarbejd">
+    Generér en delings-URL med `--share`. Alle med linket kan se sessions-transkriptet i en browser:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Sessions-administrationskommandoer
+
+### Vis sessioner
+
+```bash
+bolt session list
+```
+
+Udskriver en formateret tabel over alle sessioner med deres ID, titel og sidst-opdaterede tidspunkt. Tilføj `--format json` for at få maskinlæsbart output, eller `-n <N>` for at begrænse til de nyeste N sessioner:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Slet en session
+
+```bash
+bolt session delete <sessionID>
+```
+
+Fjerner permanent sessionen og alle dens beskeder fra den lokale database.
+
+## Run-flag til session-kontrol
+
+Disse flag er tilgængelige på `bolt run`:
+
+| Flag | Alias | Beskrivelse |
+|------|-------|-------------|
+| `--continue` | `-c` | Fortsæt den seneste session |
+| `--session <id>` | `-s` | Fortsæt en specifik session efter ID |
+| `--fork` | | Forgren sessionen før fortsættelse (kræver `--continue` eller `--session`) |
+| `--share` | | Generér en delings-URL for sessionen |
+| `--title <title>` | | Sæt eller tilsidesæt sessions-titlen |
+
+## Eksport af sessioner
+
+Eksportér en sessions fulde transkript som JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+Flaget `--sanitize` erstatter filstier, kodeindhold, værktøjsinput og -output og andre potentielt følsomme felter med `[redacted:kind:id]`-pladsholdere — nyttigt til deling af transkripter med kolleger eller ved indsendelse af fejlrapporter.
+
+## Import af sessioner
+
+Importér en session fra en lokal JSON-fil eller direkte fra en delings-URL:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Importerede sessioner vises på din lokale sessionsliste og kan genoptages fuldt ud.
+
+## Forespørgsel på sessionsdatabasen
+
+Bolt eksponerer den underliggende SQLite-database direkte til power-brugere.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Outputformatet er som standard tab-separerede værdier; tilføj `--format json` for JSON-output.
+
+## Statistik for token-forbrug og omkostninger
+
+`bolt stats` aggregerer token-forbrug og omkostningsdata på tværs af alle dine sessioner:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Outputtet inkluderer samlede sessioner, beskeder, input/output/reasoning/cache-tokens, samlede omkostninger, gennemsnitlige omkostninger pr. dag, gennemsnitlige og median-tokens pr. session og en opdeling af værktøjsforbrug. Send `--models` for også at vise en per-model-opdeling af beskeder, tokens og omkostninger.
+
+## Fork- og delings-workflow
+
+Her er et komplet eksempel på forgrening af en session og deling af resultatet:
+
+<Steps>
+  <Step title="Start arbejde i en ny session">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Forgren før det risikable næste skridt">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Den forgrenede sessions ID udskrives til konsollen. Den oprindelige session er urørt.
+  </Step>
+  <Step title="Del forken til review">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Delings-URL'en udskrives, når sessionen bliver inaktiv.
+  </Step>
+  <Step title="Importér på en anden maskine">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

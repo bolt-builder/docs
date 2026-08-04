@@ -1,0 +1,179 @@
+---
+title: "Integrasi GitHub: Actions, PR, dan tinjauan AI"
+sidebarTitle: "GitHub Actions"
+description: "Jalankan Bolt di dalam GitHub Actions, check out PR secara lokal, hasilkan pesan commit AI, dan gate merge dengan tinjauan kode berbasis AI dan kode exit."
+url: "server/github-actions"
+---
+
+Bolt menyertakan empat perintah yang menghubungkan alur kerja Git harian kamu ke AI: agent GitHub Actions yang dapat kamu pasang dengan satu perintah, jalan pintas untuk melakukan check out pull request, generator pesan commit AI, dan reviewer kode AI dengan kode exit yang dapat dibaca mesin. Bersama-sama mereka memungkinkan kamu membawa Bolt ke setiap tahap pengembangan — coding lokal, tinjauan PR, dan continuous integration.
+
+---
+
+## `bolt github`
+
+Kelola agent GitHub Actions yang menjalankan Bolt pada event CI.
+
+### `bolt github install`
+
+Instal workflow GitHub Actions ke repositori saat ini. Ini menulis workflow YAML ke `.github/workflows/` sehingga Bolt dimulai secara otomatis pada komentar issue, pull request baru, atau event lain yang kamu konfigurasikan.
+
+```bash
+bolt github install
+```
+
+Jalankan ini dari root repositori git. Kamu memerlukan akses write ke `.github/workflows/`.
+
+### `bolt github run`
+
+Jalankan agent GitHub secara lokal atau di dalam langkah CI, memutar ulang payload event GitHub tertentu.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flag | Deskripsi |
+|------|-------------|
+| `--event <event>` | Nama event GitHub atau path ke payload event JSON |
+| `--token <pat>` | Personal access token GitHub (`github_pat_…`) yang digunakan untuk memposting komentar dan mengambil konteks |
+
+---
+
+## Menyiapkan agent GitHub Actions
+
+<Steps>
+  <Step title="Install the workflow">
+    Dari root repositori kamu:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt menulis file workflow GitHub Actions ke `.github/workflows/`. Commit dan push file tersebut.
+  </Step>
+
+  <Step title="Add your API key as a secret">
+    Di setelan repositori kamu, tambahkan API key untuk provider LLM pilihanmu sebagai secret repositori (misalnya, `ANTHROPIC_API_KEY`). Workflow akan mengambilnya secara otomatis.
+  </Step>
+
+  <Step title="Trigger the agent">
+    Beri komentar `/bolt <your request>` pada issue atau pull request mana pun. Workflow akan menyala, Bolt membaca payload event, dan memposting balasan dengan hasilnya.
+  </Step>
+
+  <Step title="Run locally for debugging">
+    Putar ulang payload event langsung dari run workflow sebelumnya:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Check out pull request GitHub ke branch lokal dan luncurkan Bolt di branch tersebut — siap untuk meninjau, men-debug, atau melanjutkan pekerjaan dari tempat penulis PR berhenti.
+
+```bash
+bolt pr 42
+```
+
+Bolt menggunakan CLI `gh` untuk mengambil PR, membuat branch bernama `pr/<number>`, dan menyambungkan upstream tracking ref. Untuk PR lintas repositori (fork), ia menambahkan fork sebagai remote secara otomatis. Jika deskripsi PR berisi URL sesi Bolt yang dibagikan (`opncd.ai/s/…`), sesi tersebut diimpor sehingga kamu dapat melanjutkan percakapan penulis.
+
+> Memerlukan [GitHub CLI (`gh`)](https://cli.github.com/) untuk terpasang dan terautentikasi.
+
+---
+
+## `bolt commit`
+
+Hasilkan pesan commit dari perubahan yang di-stage (atau semua yang di-track) dan commit dalam satu langkah.
+
+```bash
+bolt commit
+```
+
+Bolt melakukan diff terhadap perubahan kamu, memasukkan diff ke agent `commit` bersama dengan subjek commit terbaru sebagai referensi gaya, dan menjalankan `git commit -m <message>` dengan hasilnya.
+
+### Flag
+
+| Flag | Alias | Deskripsi |
+|------|-------|-------------|
+| `--all` | `-a` | Commit semua perubahan yang di-track, bukan hanya yang di-stage (setara dengan `git commit -a`) |
+| `--dry-run` | | Cetak pesan yang dihasilkan tanpa commit |
+| `--model <provider/model>` | `-m` | Override model yang digunakan untuk menghasilkan pesan |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Gunakan `bolt commit --dry-run` untuk mempratinjau pesan yang dihasilkan sebelum di-commit. Jika kamu ingin mengeditnya, salin output dan jalankan `git commit -m "…"` dengan kata-kata yang telah kamu sesuaikan.
+</Tip>
+
+---
+
+## `bolt review`
+
+Jalankan agent `code-review` terhadap diff dan keluar dengan verdict yang dapat dibaca mesin. Baris terakhir dari tinjauan selalu adalah `Verdict: PASS` atau `Verdict: FAIL`, membuat `bolt review` siap drop-in untuk pipeline CI.
+
+```bash
+bolt review
+```
+
+Secara default, `bolt review` melakukan diff `HEAD` terhadap working tree. Gunakan flag di bawah untuk melingkupi diff.
+
+### Flag
+
+| Flag | Alias | Deskripsi |
+|------|-------|-------------|
+| `--staged` | | Tinjau perubahan yang di-stage saja |
+| `--branch <name>` | | Tinjau perubahan sejak merge base dengan branch bernama (default ke branch default repositori) |
+| `--model <provider/model>` | `-m` | Model yang digunakan untuk tinjauan |
+
+### Kode exit
+
+| Kode | Arti |
+|------|---------|
+| `0` | `Verdict: PASS` — tanpa masalah kritis atau mayor |
+| `1` | `Verdict: FAIL` — satu atau lebih masalah kritis atau mayor ditemukan |
+| `2` | Verdict tidak dapat ditentukan dari respons |
+
+### Penggunaan dalam workflow GitHub Actions
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Kode exit non-nol menggagalkan pemeriksaan, memblokir merge sampai masalah ditangani.
+
+<Tip>
+  Jalankan `bolt review --staged` sebelum commit untuk menangkap masalah saat masih mudah diubah — sebelum pernah mencapai pull request.
+</Tip>

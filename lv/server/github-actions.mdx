@@ -1,0 +1,179 @@
+---
+title: "GitHub integrācija: Actions, PRs un MI pārskats"
+sidebarTitle: "GitHub Actions"
+description: "Palaidiet Bolt iekšpus GitHub Actions, izņemiet PR lokāli, ģenerējiet MI commit ziņas un kontrolējiet apvienošanas ar MI darbinātu koda pārskatu un izejas kodiem."
+url: "server/github-actions"
+---
+
+Bolt piegādā četras komandas, kas savieno jūsu ikdienas Git darbplūsmu ar MI: GitHub Actions aģents, ko varat instalēt ar vienu komandu, saīsne pull request izņemšanai, MI commit-ziņu ģenerators un MI koda pārskatītājs ar mašīnlasāmiem izejas kodiem. Kopā tie ļauj jums ienest Bolt katrā izstrādes posmā — lokālā kodēšanā, PR pārskatīšanā un nepārtrauktā integrācijā.
+
+---
+
+## `bolt github`
+
+Pārvaldiet GitHub Actions aģentu, kas palaiž Bolt uz CI notikumiem.
+
+### `bolt github install`
+
+Instalējiet GitHub Actions darbplūsmu pašreizējā repozitorijā. Tas ieraksta darbplūsmas YAML failu mapē `.github/workflows/`, lai Bolt automātiski sāktu darboties, saņemot issue komentārus, jaunus pull requests vai citus notikumus, kurus jūs konfigurējat.
+
+```bash
+bolt github install
+```
+
+Palaidiet to no git repozitorija saknes. Jums būs nepieciešama rakstīšanas piekļuve mapei `.github/workflows/`.
+
+### `bolt github run`
+
+Palaidiet GitHub aģentu lokāli vai iekšpus CI soļa, atkārtojot konkrētu GitHub notikuma payload.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Karogs | Apraksts |
+|------|-------------|
+| `--event <event>` | GitHub notikuma nosaukums vai ceļš uz JSON notikuma payload |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`), ko izmanto, lai publicētu komentārus un izgūtu kontekstu |
+
+---
+
+## Iestatiet GitHub Actions aģentu
+
+<Steps>
+  <Step title="Instalējiet darbplūsmu">
+    No sava repozitorija saknes:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt ieraksta GitHub Actions darbplūsmas failu mapē `.github/workflows/`. Commit un push failu.
+  </Step>
+
+  <Step title="Pievienojiet savu API atslēgu kā noslēpumu">
+    Sava repozitorija iestatījumos pievienojiet API atslēgu savam vēlamajam LLM sniedzējam kā repozitorija noslēpumu (piemēram, `ANTHROPIC_API_KEY`). Darbplūsma to uztvers automātiski.
+  </Step>
+
+  <Step title="Aktivizējiet aģentu">
+    Komentējiet `/bolt <your request>` uz jebkura issue vai pull request. Darbplūsma tiek palaista, Bolt nolasa notikuma payload un publicē atbildi ar rezultātu.
+  </Step>
+
+  <Step title="Palaidiet lokāli atkļūdošanai">
+    Atkārtojiet tiešraides notikuma payload no iepriekšējās darbplūsmas palaišanas:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Izņemiet GitHub pull request lokālā zarā un palaidiet Bolt tajā zarā — gatavu pārskatīt, atkļūdot vai turpināt darbu no vietas, kur PR autors palika.
+
+```bash
+bolt pr 42
+```
+
+Bolt izmanto `gh` CLI, lai izgūtu PR, izveido zaru ar nosaukumu `pr/<number>` un savieno augšupējo sekošanas atsauci. Krusteniskiem-repozitorijas (fork) PR tas automātiski pievieno fork kā attālināto. Ja PR aprakstā ir kopīgota Bolt sesijas URL (`opncd.ai/s/…`), sesija tiek importēta, lai jūs varētu turpināt autora sarunu.
+
+> Nepieciešams, lai būtu instalēts un autentificēts [GitHub CLI (`gh`)](https://cli.github.com/).
+
+---
+
+## `bolt commit`
+
+Ģenerējiet commit ziņu no jūsu staged (vai visām sekotajām) izmaiņām un veiciet commit vienā solī.
+
+```bash
+bolt commit
+```
+
+Bolt izveido diff no jūsu izmaiņām, padod diff `commit` aģentam kopā ar nesenajiem commit tematiem stila atsaucei un palaiž `git commit -m <message>` ar rezultātu.
+
+### Karogi
+
+| Karogs | Aizstājējs | Apraksts |
+|------|-------|-------------|
+| `--all` | `-a` | Commit visas sekotās izmaiņas, ne tikai staged (līdzvērtīgs `git commit -a`) |
+| `--dry-run` | | Izdrukāt ģenerēto ziņu bez commit |
+| `--model <provider/model>` | `-m` | Ignorē modeli, ko izmanto ziņas ģenerēšanai |
+
+```bash
+# Stage viss un commit
+bolt commit --all
+
+# Priekšskatiet ziņu bez commit
+bolt commit --dry-run
+
+# Izmantojiet konkrētu modeli
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Izmantojiet `bolt commit --dry-run`, lai priekšskatītu ģenerēto ziņu, pirms tā tiek commit. Ja vēlaties to rediģēt, nokopējiet izvadi un palaidiet `git commit -m "…"` ar savu pielāgoto formulējumu.
+</Tip>
+
+---
+
+## `bolt review`
+
+Palaidiet `code-review` aģentu pret diff un izejiet ar mašīnlasāmu spriedumu. Pārskata pēdējā rinda vienmēr ir `Verdict: PASS` vai `Verdict: FAIL`, padarot `bolt review` gatavu izmantošanai CI konveijeros.
+
+```bash
+bolt review
+```
+
+Pēc noklusējuma `bolt review` salīdzina `HEAD` ar darba koku. Izmantojiet zemāk esošos karogus, lai norādītu diff apjomu.
+
+### Karogi
+
+| Karogs | Aizstājējs | Apraksts |
+|------|-------|-------------|
+| `--staged` | | Pārskatīt tikai staged izmaiņas |
+| `--branch <name>` | | Pārskatīt izmaiņas kopš apvienošanas bāzes ar nosaukto zaru (pēc noklusējuma repozitorija noklusējuma zars) |
+| `--model <provider/model>` | `-m` | Modelis izmantošanai pārskatīšanai |
+
+### Izejas kodi
+
+| Kods | Nozīme |
+|------|---------|
+| `0` | `Verdict: PASS` — nav kritisku vai lielu problēmu |
+| `1` | `Verdict: FAIL` — atrasta viena vai vairākas kritiskas vai lielas problēmas |
+| `2` | Spriedumu nevarēja noteikt no atbildes |
+
+### Izmantošana GitHub Actions darbplūsmā
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Ne-nulles izejas kods neizdodas pārbaudi, bloķējot apvienošanu, līdz problēmas ir atrisinātas.
+
+<Tip>
+  Palaidiet `bolt review --staged` pirms commit, lai noķertu problēmas, kamēr tās vēl ir viegli mainīt — pirms tās kādreiz sasniedz pull request.
+</Tip>

@@ -1,0 +1,46 @@
+---
+title: "Project Memory: Persistenter Kontext über Bolt-Sitzungen hinweg"
+sidebarTitle: "Project Memory"
+description: "Bolt hält am Ende jeder Runde fest, was es über Ihr Projekt gelernt hat, und speist es in neue Sitzungen ein, damit der Agent Ihre Codebasis nicht jedes Mal neu lernen muss."
+---
+
+Project Memory ist das, was Bolt das Gefühl gibt, Ihr Projekt bereits zu kennen. Wenn eine Sitzung eine Runde beendet, destilliert Bolt heraus, was nützlich war, und schreibt es in einen projektspezifischen Speicher. Beim Öffnen einer neuen Sitzung fügt Bolt einen Speicherindex sowie die neueste Sitzungszusammenfassung in das System-Prompt ein, sodass der Agent mit echtem Kontext startet statt mit einem leeren Blatt.
+
+## So funktioniert die Erfassung
+
+Am Ende jeder Gesprächsrunde bittet Bolt das Modell, dauerhafte Fakten zusammenzufassen, die beim nächsten Mal nützlich sein werden: Konventionen, Architekturhinweise, Dateilayout, Build-/Test-Befehle, Fallstricke und offene Punkte. Diese werden im Speicherverzeichnis des Projekts auf der Festplatte abgelegt, zusammen mit einer laufenden Zusammenfassung der jüngsten Sitzung.
+
+Der Speicher ist projektspezifisch. Zwei Checkouts desselben Repos auf demselben Rechner teilen sich den Speicher; nicht verwandte Projekte sehen niemals gegenseitig ihren Speicher.
+
+## Explizite Tools
+
+Agents können den Speicher während einer Sitzung auch direkt lesen und schreiben:
+
+- `memory_save` – hält einen bestimmten Fakt fest, den sich der Agent beim nächsten Mal merken soll.
+- `memory_recall` – schlägt etwas nach, das der Agent (oder Sie) zuvor erfasst hat.
+
+Sie können den Agent bitten, „remember that we use pnpm, not npm" zu speichern, und er wird `memory_save` für Sie aufrufen.
+
+## Steuerung pro Sitzung
+
+Innerhalb des TUI können Sie das Speicherverhalten der aktuellen Sitzung mit Slash-Befehlen umschalten:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Das ist nützlich, wenn Sie eine explorative Wegwerf-Sitzung möchten, die Ihren Speicher nicht verschmutzt, oder eine schreibgeschützte Sitzung, die trotzdem vom vorherigen Kontext profitiert.
+
+## Speicher inspizieren und bearbeiten
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Der Speicher wird als einfache Dateien auf der Festplatte im Bolt-Datenverzeichnis des Projekts abgelegt, sodass Sie Einträge direkt greppen, bearbeiten oder löschen können. Um den genauen Pfad auf Ihrem Rechner zu finden, führen Sie `bolt debug paths` aus.
+
+## Verwandt
+
+- [Sessions](/concepts/sessions) – die dauerhaften Konversationen, die Speichereinträge erzeugen.
+- [Konfiguration](/concepts/configuration) – wo der Speicher abgelegt wird und wie der Pfad überschrieben werden kann.

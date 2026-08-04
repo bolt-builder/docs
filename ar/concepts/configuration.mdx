@@ -1,0 +1,193 @@
+---
+title: "الإعدادات — إعدادات bolt.jsonc والتجاوزات العامة"
+sidebarTitle: "الإعدادات"
+description: "يقرأ Bolt ملفات إعدادات JSONC مطبقّة على طبقات من مجلدات مشروعك ونظامك. اضبط المزوّدين وخوادم MCP والتعليمات والإضافات وتجاوزات البيئة."
+---
+
+يستخدم Bolt نظام إعدادات على طبقات: ملف إعدادات **عام** لإعدادات المستخدم الافتراضية على مستوى النظام، وملف إعدادات **لكل مشروع** للإعدادات الخاصّة بالمستودع. يستخدم كلا الملفين تنسيق JSONC (JSON مع تعليقات)، ويُنشآن تلقائيًا مع مؤشّر `$schema` يتيح الإكمال التلقائي في المحرّر.
+
+## مواقع ملفات الإعدادات
+
+### إعدادات لكل مشروع
+
+تُنشأ تلقائيًا عند التشغيل الأول داخل مشروعك:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+أودع هذا الملف لمشاركة إعدادات المزوّد وخوادم MCP والتعليمات المخصّصة مع بقية فريقك. لا ينبغي أن تذهب بيانات الاعتماد الحساسة إلى هنا أبدًا — استخدم متغيرات البيئة أو الإعدادات العامة بدلًا من ذلك.
+
+### الإعدادات العامة
+
+تنطبق على جميع المشاريع على جهازك. يبحث Bolt عن أول ملف مطابق في مجلد إعدادات نظام التشغيل:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferred)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="أين يقع مجلد الإعدادات العام؟">
+  يتّبع Bolt مواصفات مجلد XDG الأساسي على Linux وmacOS (`~/.config/bolt/`) و`%APPDATA%\bolt\` على Windows. شغّل `bolt debug config` لطباعة الإعدادات المحلولة بالكامل على جهازك.
+</Accordion>
+
+## مثال إعدادات بسيط
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+يفعّل حقل `$schema` الإكمال التلقائي والتحقق في المحرّرات التي تدعم JSON Schema. يكتب Bolt هذا الحقل تلقائيًا إذا كان مفقودًا.
+
+## مرجع الإعدادات
+
+### `provider`
+
+اضبط الخيارات الخاصّة بالمزوّد مثل عناوين URL الأساسية المخصّصة أو إعدادات المنطقة أو بيانات الاعتماد المسمّاة:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+سجّل خوادم [Model Context Protocol](https://modelcontextprotocol.io) التي يمكن للوكيل استدعاؤها كأدوات:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+أدر خوادم MCP تفاعليًا عبر `bolt mcp add` و`bolt mcp list` و`bolt mcp auth` و`bolt mcp debug`.
+
+### `instructions`
+
+أضف تعليمات نظام مخصّصة تُحقن في كل جلسة. مفيد لفرض اصطلاحات البرمجة أو أدلة الأسلوب أو القواعد الخاصّة بالمشروع:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+تُدمج التعليمات من ملفات إعدادات متعدّدة (عام \+ مشروع) وتُزال منها التكرارات تلقائيًا.
+
+### `plugin`
+
+حمّل إضافات Bolt. يمكن للإضافات إضافة أدوات ومزوّدين ومصادر سياق وربطات (hooks) جديدة:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### إعدادات بعيدة عبر `url`
+
+اجلب الإعدادات من عنوان URL بعيد عند بدء التشغيل. مفيد لإعدادات الفريق المركزية:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## استبدال المتغيرات
+
+يمكن لقيم الإعدادات الإشارة إلى متغيرات البيئة باستخدام صياغة `$VAR_NAME` أو `${VAR_NAME}`. يحدث الاستبدال عند وقت التحميل، قبل تحليل الإعدادات:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="كيف أستخدم متغيرات البيئة في الإعدادات؟">
+  أشِر إلى أي متغير بيئة بـ `$VAR_NAME` أو `${VAR_NAME}` في أي مكان داخل قيمة نصية للإعدادات. يستبدل Bolt القيمة عند التحميل. إذا لم يكن المتغير مضبوطًا، تُستخدم السلسلة الحرفية `$VAR_NAME` — لا يفشل Bolt بصمت ولا يطرح خطأ للاستبدالات المفقودة.
+</Accordion>
+
+## تجاوزات متغيرات البيئة
+
+تتيح لك متغيرات البيئة التالية إعادة توجيه الإعدادات أو تجاوزها بالكامل، وهو مفيد لـ CI والحاويات والاختبار:
+
+| المتغير | الوصف |
+| --- | --- |
+| `BOLT_CONFIG` | مسار مطلق لملف إعدادات يتم تحميله بدلًا من الملف المحلي للمشروع |
+| `BOLT_CONFIG_DIR` | تجاوز المجلد الذي يبحث فيه Bolt عن ملفات الإعدادات |
+| `BOLT_CONFIG_CONTENT` | تقديم محتوى JSONC خام كسلسلة — دون الحاجة إلى ملف |
+
+`BOLT_CONFIG_CONTENT` مفيد بشكل خاص في البيئات المُحتواة حيث يكون تركيب الملفات غير مريح:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="أي إعدادات لها الأولوية عند تفعيل مصادر متعدّدة؟">
+  يدمج Bolt الإعدادات بهذا الترتيب (المدخلات اللاحقة تفوز):
+
+  1. ملف الإعدادات العام (`bolt.jsonc` / `bolt.json` في مجلد إعدادات نظام التشغيل)
+  2. الإعدادات البعيدة المُجلَبة من مدخلات `url` في الإعدادات العامة
+  3. ملفات إعدادات لكل مشروع (`.bolt/bolt.jsonc`، `.bolt/bolt.json`)
+  4. ملف `BOLT_CONFIG` (إذا كان مضبوطًا)
+  5. `BOLT_CONFIG_CONTENT` (إذا كان مضبوطًا)
+
+  حقول المصفوفات مثل `instructions` تُلحق عبر المصادر بدلًا من استبدالها. حقول الكائنات تُدمج بعمق مع فوز القيم اللاحقة في التعارضات.
+</Accordion>

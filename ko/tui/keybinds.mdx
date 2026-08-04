@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI 키바인딩"
+sidebarTitle: "Keybinds"
+description: "필수 Bolt TUI 단축키: Tab으로 에이전트 전환, 미니 모드, 푸시 투 토크 음성, 키보드로 구동할 수 있는 모든 것."
+---
+
+Bolt TUI는 키보드로 처음부터 끝까지 구동되도록 설계되었습니다. 이 페이지는 가장 자주 사용할 단축키를 나열합니다. 전체 목록을 보려면 `bolt`를 실행하고 앱 내 도움말을 여세요.
+
+## 필수
+
+| Keys | Action |
+| --- | --- |
+| `Tab` | 다음 에이전트로 순환 (`code`, `plan`, `ask`, ...). 현재 에이전트는 상태 바에 표시됨. |
+| `Shift+Tab` | 이전 에이전트로 순환. |
+| `Enter` | 현재 메시지 전송. |
+| `Esc` | 진행 중인 턴 취소. |
+| `Ctrl+C` | 현재 도구 호출 중단. |
+| `Ctrl+D` | 세션에서 분리 (서버에서 계속 실행됨). |
+
+## 모드
+
+### `--mini` 모드
+
+터미널 공간을 덜 차지하는 컴팩트한 split-footer 레이아웃으로 Bolt를 시작하세요. 분할 창에 유용합니다:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### 푸시 투 토크 음성
+
+구성된 푸시 투 토크 키를 눌러 음성-텍스트 변환을 사용해 프롬프트를 받아쓰고, 놓으면 전송합니다. `.bolt/bolt.jsonc`에서 키와 STT 프로바이더를 구성하세요.
+
+## 관련 항목
+
+- [Slash commands](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` 및 관련 명령.
+- [Sessions](/concepts/sessions) — 키보드로 분리, 재개, 포크, 공유.

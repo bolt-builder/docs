@@ -1,0 +1,38 @@
+---
+title: "Combinazioni di tasti del TUI di Bolt"
+sidebarTitle: "Combinazioni di tasti"
+description: "Le scorciatoie essenziali del TUI di Bolt: cambiare agenti con Tab, modalità mini, voce push-to-talk e tutto ciò che puoi guidare dalla tastiera."
+---
+
+Il TUI di Bolt è progettato per essere guidato end-to-end dalla tastiera. Questa pagina elenca le scorciatoie a cui ricorrerai più spesso. Per l'elenco esaustivo, esegui `bolt` e apri l'aiuto in-app.
+
+## Essenziali
+
+| Tasti | Azione |
+| --- | --- |
+| `Tab` | Passa all'agente successivo (`code`, `plan`, `ask`, ...). L'agente corrente viene mostrato nella barra di stato. |
+| `Shift+Tab` | Passa all'agente precedente. |
+| `Enter` | Invia il messaggio corrente. |
+| `Esc` | Annulla il turno in corso. |
+| `Ctrl+C` | Interrompe la chiamata di strumento corrente. |
+| `Ctrl+D` | Staccati dalla sessione (la lascia in esecuzione sul server). |
+
+## Modalità
+
+### Modalità `--mini`
+
+Avvia Bolt con un layout compatto con footer diviso che occupa meno spazio nel terminale, ottimo per i pannelli divisi:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Voce push-to-talk
+
+Tieni premuto il tasto push-to-talk configurato per dettare un prompt utilizzando la trascrizione da voce a testo, poi rilascia per inviare. Configura il tasto e il provider STT in `.bolt/bolt.jsonc`.
+
+## Correlati
+
+- [Comandi slash](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` e simili.
+- [Sessioni](/concepts/sessions) — staccati, riprendi, biforca e condividi dalla tastiera.

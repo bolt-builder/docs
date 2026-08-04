@@ -1,0 +1,135 @@
+---
+title: "Agentes — As Dez Personas de IA Incorporadas e Personalizadas do Bolt"
+sidebarTitle: "Agentes"
+description: "O Bolt inclui dez agentes incorporados, cada um com um papel, conjunto de ferramentas e nível de acesso distintos. Saiba como alternar, configurar e criar os seus próprios agentes."
+---
+
+O Bolt trata cada persona de IA como um **agente** nomeado: um prompt de sistema associado a um conjunto de permissões de ferramentas com escopo preciso. Em vez de executar um único modelo generalista para cada tarefa, escolhe o agente cujo acesso e foco correspondem ao que necessita — seja para auditar segurança, escrever documentação ou orquestrar uma migração completa de framework.
+
+## Níveis de acesso
+
+A cada agente incorporado é atribuído um de três níveis de acesso que determinam quais as ferramentas que pode invocar:
+
+| Nível | Permissões concedidas | Utilização típica |
+|-------|---------------------|-------------|
+| **Full** | Ler ficheiros, escrever/editar ficheiros, executar comandos de shell | Codificação ativa, depuração, refatoração, migrações |
+| **Edit** | Ler ficheiros, escrever/editar ficheiros — sem shell | Documentação, atualizações de comentários, edições seguras de texto |
+| **Read** | Apenas leitura de ficheiros — sem escritas, sem shell | Planeamento, pesquisa, revisão de código, auditorias |
+
+## Agentes incorporados
+
+O Bolt inclui dez agentes especializados por predefinição. Alterne entre eles no TUI premindo <kbd>Tab</kbd>.
+
+| Agente | Acesso | Descrição |
+|-------|--------|-------------|
+| `code` | Full | Predefinição: lê, escreve e executa código |
+| `plan` | Read | Explora o código-fonte e produz um plano sem alterar código |
+| `ask` | Read | Perguntas e investigação — sem edições de ficheiros |
+| `code-review` | Read | Revê alterações quanto a correção, estilo e segurança |
+| `debug` | Full | Depura testes que falham, crashes e erros de lógica |
+| `refactor` | Full | Refatoração segura com verificação de testes em cada passo |
+| `docs` | Edit | Escreve e atualiza documentação e comentários |
+| `security` | Read | Auditoria de segurança: vulnerabilidades, segredos e padrões perigosos |
+| `migrate` | Full | Atualizações de frameworks e migrações de dependências |
+| `perf` | Full | Análise de desempenho e otimização |
+
+## Subagentes
+
+Para além dos dez agentes principais, o Bolt expõe dois **subagentes** incorporados aos quais os agentes principais podem delegar trabalho durante uma sessão. Nunca seleciona um subagente manualmente — são despachados automaticamente quando um agente principal decide invocar um.
+
+| Subagente | Papel |
+|----------|------|
+| `@general` | Delegação de tarefas complexas de vários passos que exigem capacidades amplas |
+| `@explore` | Investigação rápida e apenas de leitura do código-fonte — percorre ficheiros sem efeitos colaterais |
+
+<Tip>
+  Quando precisa de compreender rapidamente um código-fonte desconhecido, comece com o agente `ask` ou `plan`. Nos bastidores, podem despachar o subagente `@explore` para indexar o seu projeto a alta velocidade antes de produzirem uma resposta — sem tocar num único ficheiro.
+</Tip>
+
+## Alternar entre agentes
+
+**No TUI** — prima <kbd>Tab</kbd> para percorrer a lista de agentes disponíveis a qualquer momento durante uma sessão. O agente ativo é mostrado no rodapé da sessão.
+
+**Não interativamente** — passe `--agent <name>` a `bolt run` para fixar um agente específico durante a execução:
+
+```bash
+bolt run --agent ask "o que faz o fluxo de autenticação?"
+bolt run --agent security "audita a camada de API quanto a vulnerabilidades de injeção"
+bolt run --agent docs "adiciona comentários JSDoc a cada função exportada em src/utils"
+```
+
+## Listar agentes
+
+Para ver todos os agentes disponíveis — incorporados e personalizados — com os respetivos modos e configuração de permissões:
+
+```bash
+bolt agent list
+```
+
+## Agentes personalizados
+
+Pode criar os seus próprios agentes de duas formas.
+
+### Gerar com `bolt agent create`
+
+O assistente interativo gera um ficheiro de agente utilizando um LLM e escreve-o em disco:
+
+```bash
+bolt agent create
+```
+
+Todas as flags são opcionais. Forneça-as para executar de forma não interativa:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | Descrição |
+|------|-------------|
+| `--description` | O que o agente deve fazer (utilizado como prompt do LLM para a geração) |
+| `--path` | Diretório onde escrever o ficheiro do agente gerado |
+| `--mode` | `all` (predefinição), `primary` ou `subagent` |
+| `--permissions` | Lista separada por vírgulas de permissões a autorizar. Omita para todas. |
+| `--model` / `-m` | Modelo a utilizar no formato `provider/model` |
+
+### Escrever um ficheiro Markdown manualmente
+
+Um agente é simplesmente um ficheiro Markdown com frontmatter YAML. Coloque-o em `.bolt/agents/` dentro do seu projeto ou no diretório global de agentes:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+O nome do ficheiro (sem `.md`) passa a ser o identificador do agente.
+
+### Permissões disponíveis
+
+As permissões são os controlos granulares de ferramentas que gere ao criar um agente personalizado:
+
+| Permissão | Controla |
+|------------|----------|
+| `bash` | Execução de comandos de shell |
+| `read` | Leitura de ficheiros |
+| `edit` | Escrita e edição de ficheiros (também controla `write` e `apply_patch`) |
+| `glob` | Listagem de ficheiros por padrão glob/diretório |
+| `grep` | Pesquisa de ficheiros via ripgrep |
+| `webfetch` | Pedidos HTTP à Web |
+| `task` | Criação de tarefas de subagentes |
+| `todowrite` | Criação e atualização de itens de tarefas |
+| `websearch` | Consultas de pesquisa na Web |
+| `lsp` | Operações do protocolo Language Server |
+| `skill` | Acesso a skills do projeto |

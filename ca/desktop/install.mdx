@@ -1,0 +1,116 @@
+---
+title: "Aplicació d'escriptori Bolt: sessions de codificació d'IA multifinestra"
+sidebarTitle: "Instal·lació"
+description: "Instal·la l'aplicació d'escriptori Bolt per obtenir sessions multifinestra, un terminal integrat, un compositor de prompt amb enganxament d'imatges, actualitzacions automàtiques i 28 idiomes d'interfície."
+url: "desktop/install"
+---
+
+L'aplicació d'escriptori Bolt embolica el mateix motor que la CLI en una carcassa Electron completa. Cada funció disponible al terminal — agents, servidors MCP, plugins, sessions remotes, sessions que pots bifurcar i compartir — funciona de manera idèntica a l'aplicació d'escriptori, amb l'afegit d'una experiència multifinestra i multipestanya, una interfície gràfica de configuració, notificacions natives i actualitzacions automàtiques. Si ja utilitzes la CLI, l'aplicació d'escriptori és un complement, no un reemplaçament.
+
+---
+
+## Instal·lació
+
+### macOS
+
+<Steps>
+  <Step title="Instal·la amb l'una-línia (recomanat)">
+    Obre un terminal i executa:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    L'script descarrega l'últim llançament, el verifica i col·loca l'aplicació a `/Applications`. Sense finestra emergent de Gatekeeper.
+  </Step>
+
+  <Step title="Llança l'aplicació">
+    Obre **Bolt** des de `/Applications` o Spotlight. Al primer llançament, Bolt et demana que triïs un proveïdor LLM per defecte i crea un fitxer de configuració global.
+  </Step>
+</Steps>
+
+<Tip>
+  L'una-línia instal·la l'aplicació d'una manera que evita el diàleg "desenvolupador no identificat" del Gatekeeper de macOS, de manera que passes directament a la codificació sense avisos de seguretat addicionals.
+</Tip>
+
+### Totes les plataformes — descarregar des dels llançaments
+
+Descarrega l'últim instal·lador per a la teva plataforma des de la [pàgina de llançaments de Bolt](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Plataforma | Tipus d'instal·lador |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | Instal·lador `.exe` |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  A Windows, Bolt inclou integració amb WSL (Windows Subsystem for Linux). Quan WSL està disponible, Bolt pot obrir sessions directament dins de la teva distribució WSL — dona't un entorn d'agent natiu de Linux amb una interfície nativa de Windows al voltant.
+</Note>
+
+---
+
+## Funcions
+
+### Gestió de sessions multifinestra i multipestanya
+
+Obre tantes finestres com vulguis, cadascuna amb el seu propi conjunt de pestanyes. Les pestanyes es mapen directament a sessions de Bolt, de manera que pots executar un agent en una refactorització en una pestanya, fer una pregunta a una altra i executar una feina en segon pla en una tercera, tot alhora.
+
+### Compositor de prompt
+
+El compositor de prompt suporta entrada rica: enganxa text, arrossega fitxers com a adjunts o enganxa una imatge directament des del teu porta-retalls. Bolt codifica la imatge i l'envia automàticament a qualsevol model capaç de visió.
+
+### Terminal integrat i arbre de fitxers
+
+Una disposició de panell dividit et dona la conversa de l'agent a un costat i un terminal en viu i arbre de fitxers del projecte a l'altre. Pots executar ordres, inspeccionar la sortida i retornar els resultats a l'agent sense canviar d'aplicació.
+
+### Paleta d'ordres
+
+Prem `Cmd/Ctrl+K` per obrir la paleta d'ordres. Des d'aquí pots canviar de sessions, canviar d'agents, obrir la configuració o activar qualsevol acció sense agafar el ratolí.
+
+### Interfície de configuració completa
+
+El panell de configuració cobreix cada opció que viu a `.bolt/bolt.jsonc` — combinacions de tecles, selecció de model, proveïdors LLM, servidors MCP i autenticació — amb desplegables, commutadors i validació en línia. Rarament necessites editar el fitxer de configuració a mà.
+
+### Notificacions natives
+
+Bolt dispara una notificació nativa del sistema operatiu quan una tasca de llarga durada acaba. Fes clic a la notificació per saltar directament a la sessió.
+
+### Enllaços profunds
+
+Obre una sessió específica navegant a una URL `bolt://`. Útil per compartir enllaços de sessió amb companys d'equip o marcar treball en curs.
+
+### Actualitzacions automàtiques
+
+L'aplicació d'escriptori s'actualitza a través de tres canals:
+
+| Canal | Descripció |
+|---------|-------------|
+| `prod` | Llançaments estables, actualitzats a cada etiqueta de producció |
+| `beta` | Compilacions preliminars per a accés anticipat a noves funcions |
+| `dev` | Compilacions nocturnes de la branca `dev` |
+
+Canvia de canal a **Configuració → Sobre**.
+
+### 28 idiomes d'interfície
+
+La interfície de Bolt està localitzada a 28 idiomes. Canvia l'idioma de la pantalla a **Configuració → Aparença → Idioma**.
+
+---
+
+## Documents relacionats
+
+<CardGroup cols={2}>
+  <Card title="Sessions remotes" icon="server" href="/server/remote-sessions">
+    Executa un servidor sense capçalera en una màquina remota i connecta des de l'aplicació d'escriptori o la CLI.
+  </Card>
+  <Card title="Servidors MCP" icon="plug" href="/extending/mcp-servers">
+    Afegeix eines i APIs externes als teus agents utilitzant el Model Context Protocol.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Amplia Bolt amb proveïdors, mètodes d'autenticació i adaptadors d'espai de treball personalitzats.
+  </Card>
+  <Card title="Integració amb GitHub" icon="github" href="/server/github-actions">
+    Automatitza PRs, missatges de commit i revisió de codi des de l'aplicació d'escriptori o CI.
+  </Card>
+</CardGroup>

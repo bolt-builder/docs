@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI-tastebindinger"
+sidebarTitle: "Tastebindinger"
+description: "De essentielle Bolt TUI-genveje: skift agenter med Tab, mini-tilstand, push-to-talk-stemme og alt andet du kan styre fra tastaturet."
+---
+
+Bolt TUI'en er designet til at kunne styres end-to-end fra tastaturet. Denne side lister de genveje, du oftest vil bruge. For den udtømmende liste kan du køre `bolt` og åbne den indbyggede hjælp.
+
+## Essentielle
+
+| Taster | Handling |
+| --- | --- |
+| `Tab` | Cykl til næste agent (`code`, `plan`, `ask`, ...). Den aktuelle agent vises i statuslinjen. |
+| `Shift+Tab` | Cykl til forrige agent. |
+| `Enter` | Send den aktuelle besked. |
+| `Esc` | Annullér den igangværende tur. |
+| `Ctrl+C` | Afbryd det aktuelle værktøjskald. |
+| `Ctrl+D` | Kobl fra sessionen (den fortsætter på serveren). |
+
+## Tilstande
+
+### `--mini`-tilstand
+
+Start Bolt med et kompakt split-footer-layout, der fylder mindre i terminalen, godt til opdelte ruder:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk-stemme
+
+Hold den konfigurerede push-to-talk-tast for at diktere en prompt ved hjælp af tale-til-tekst, og slip derefter for at sende. Konfigurér tasten og STT-udbyderen i `.bolt/bolt.jsonc`.
+
+## Relateret
+
+- [Slash-kommandoer](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` og deres venner.
+- [Sessioner](/concepts/sessions) — kobl fra, genoptag, forgren og del fra tastaturet.

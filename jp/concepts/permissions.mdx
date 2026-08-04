@@ -1,0 +1,53 @@
+---
+title: "権限: Bolt エージェントができることを制御する"
+sidebarTitle: "権限"
+description: "Bolt のエージェントごとのアクセスレベル、権限プロンプト、設定レベルの許可/拒否ルールにより、承認していないことをエージェントが行わないようにする方法。"
+---
+
+Bolt のエージェントはファイルの読み込み、ファイルの書き込み、シェルコマンドの実行が可能です。その力は 2 つのレイヤーでスコープされます。エージェントごとのアクセスレベルと、承認・拒否または事前設定可能な対話型権限プロンプトです。
+
+## エージェントのアクセスレベル
+
+各組み込みエージェントには宣言されたアクセスレベルがあります。
+
+| アクセスレベル | ファイル読み込み | ファイル書き込み | シェルコマンド実行 |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+組み込みのマッピング:
+
+- **Full** — `code`、`debug`、`refactor`、`migrate`、`perf`
+- **Edit** — `docs`
+- **Read** — `plan`、`ask`、`code-review`、`security`
+
+TUI では `Tab` でエージェントを切り替えるか、`bolt run` に `--agent <name>` を渡してください。
+
+## 対話型プロンプト
+
+エージェントのアクセスレベル内であっても、破壊的な可能性のあるアクションはやはり確認を求めます。1 回承認する、セッションに対して承認する、または拒否することができます。拒否された呼び出しはエージェントにエラーを返し、エージェントは次に進みます。
+
+## 非対話的な承認
+
+CI、スクリプト、または信頼されたローカルワークフロー用に、`bolt run` はプロンプトをスキップするフラグをサポートします。
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`、`--yolo`、`--dangerously-skip-permissions` はエージェントが尋ねずに読み書きや実行できるようにします。信頼された環境でのみ使用してください。
+</Warning>
+
+## 設定レベルのルール
+
+`.bolt/bolt.jsonc` に `permission` ブロックを追加することで、プロジェクト全体で特定のツールを事前拒否 (または事前許可) できます。これは非対話的な `bolt run` 呼び出しを含む、プロジェクトのすべてのセッションに適用されます。スキーマについては [設定](/concepts/configuration) を参照してください。
+
+## 関連
+
+- [エージェント](/concepts/agents) — どのエージェントがどのアクセスレベルを持つか。
+- [ツール](/concepts/tools) — 権限がゲートするツールの全リスト。
+- [設定](/concepts/configuration) — 永続的な権限ルールの設定。

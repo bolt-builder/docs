@@ -1,0 +1,58 @@
+---
+title: "Rīki: ko Bolt aģenti patiešām var darīt"
+sidebarTitle: "Rīki"
+description: "Pilns iebūvēto rīku saraksts, kas pieejams Bolt aģentiem, kā arī tas, kā pievienot savus rīkus, izmantojot spraudņus, MCP serverus vai .opencode/tool direktoriju."
+---
+
+Aģenti Bolt veic darbu, izsaucot rīkus. Katra darbība, ko redzat TUI (faila lasīšana, testu izpilde, meklēšana tīmeklī), ir modeļa izvēlēts rīks, ko Bolt izpilda. Katram aģentam ir deklarēts piekļuves līmenis, kas nosaka, kurus rīkus tas var izsaukt, iepriekš nejautājot (skatiet [Atļaujas](/concepts/permissions)).
+
+## Iebūvētie rīki
+
+| Rīks | Ko tas dara |
+| --- | --- |
+| `read` | Nolasa failu no diska. |
+| `write` | Izveido jaunu failu vai pārraksta esošu. |
+| `edit` | Piemēro mērķtiecīgu rediģēšanu (atrast/aizstāt) failā. |
+| `apply_patch` | Piemēro unified-diff stila ielāpu vienā vai vairākos failos. |
+| `glob` | Uzskaita failus, kas atbilst glob rakstam. |
+| `grep` | Meklē failu saturu pēc regex/teksta. |
+| `bash` | Palaidiet čaulas komandu. |
+| `task` | Deleģē apakšuzdevumu apakšaģentam (`@general`, `@explore` vai pielāgotam apakšaģentam). |
+| `todowrite` | Uztur aģenta strukturēto uzdevumu sarakstu daudzsoļu darbam. |
+| `webfetch` | Izgūst URL un atgriež tā saturu. |
+| `websearch` | Meklē tīmeklī. |
+| `skill` | Izsauc nosauktu prasmi (skatiet [Prasmes](/extending/skills)). |
+| `memory_save` | Saglabā faktu [projekta atmiņā](/concepts/project-memory). |
+| `memory_recall` | Uzmeklē iepriekš saglabātu atmiņu. |
+| `question` | Uzdod jums precizējošu jautājumu un gaida atbildi. |
+| `bash_background` | Palaiž čaulas komandu kā pārvaldītu fona procesu (izstrādes serveri, vērotāji, garas būvēšanas). |
+| `process_output` | Nolasa uzkrāto izvadi un statusu fona procesam, pēc izvēles gaidot, kamēr tas beigsies. |
+| `list_processes` | Uzskaita fona procesus ar to id, statusu un komandu. |
+| `kill_process` | Pārtrauc fona procesu (un tā procesu koku) pēc id. |
+| `test_run` | Nosaka un palaiž projekta testus, atgriežot strukturētus izpildījās/neizpildījās rezultātus un neizdošanās detaļas. |
+
+### Eksperimentālie
+
+| Rīks | Ko tas dara |
+| --- | --- |
+| `lsp` | Vaicā valodas serverim par definīcijām, atsaucēm un diagnostiku. |
+| `execute` | Palaiž kodu izolētā code-mode smilškastē. |
+| `plan` | Izveido strukturētu plānu, pirms veic izmaiņas. |
+
+Eksperimentālie rīki var mainīties vai tikt pārsaukti starp izlaidumiem.
+
+## Rīku kopas paplašināšana
+
+Papildus iebūvētajiem Bolt var izsaukt rīkus no trim avotiem:
+
+- **Pielāgoti rīki** direktorijā `.opencode/tool/` (vai `.opencode/tools/`) projekta saknē. Skatiet [Pielāgotie rīki](/extending/custom-tools).
+- **Spraudņu rīki**, kurus nodrošina jebkurš instalēts [spraudnis](/extending/plugins).
+- **MCP rīki** no jebkura [MCP servera](/extending/mcp-servers), kas konfigurēts projektam.
+
+Visi trīs no aģenta viedokļa jūtas identiski: tie parādās rīku sarakstā, ievēro aģenta piekļuves līmeni un parādās TUI rīku izsaukumu izvadē.
+
+## Saistīts
+
+- [Aģenti](/concepts/agents) — kuri aģenti var izsaukt kurus rīkus.
+- [Atļaujas](/concepts/permissions) — kā rīku piekļuve tiek kontrolēta katram aģentam.
+- [MCP serveri](/extending/mcp-servers) — visizplatītākais veids, kā pievienot reālus rīkus.

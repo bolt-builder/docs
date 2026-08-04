@@ -1,0 +1,139 @@
+---
+title: "Provideři a modely — autentizace a výběr LLM"
+sidebarTitle: "Provideři a modely"
+description: "Bolt podporuje libovolného LLM providera přes Vercel AI SDK. Autentizuj providery, vypisuj modely, laď míru uvažování a spouštěj paralelní best-of-N srovnání."
+---
+
+Bolt je záměrně model-agnostický. Pod pokličkou používá **Vercel AI SDK** ke komunikaci s providery, což znamená, že libovolný provider, kterého SDK podporuje — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter a další — funguje out of the box. Katalog providerů a modelů pochází z [models.dev](https://models.dev), komunitně udržované databáze metadat providerů a cen.
+
+## Správa přihlašovacích údajů providera
+
+Použij `bolt providers` (s aliasem `bolt auth`) k přidávání, výpisu a odebírání přihlašovacích údajů providera.
+
+### Přidat nebo aktualizovat přihlašovací údaje
+
+```bash
+bolt providers login
+# or equivalently:
+bolt auth login
+```
+
+To spustí interaktivní prompt pro výběr providera a zadání údajů. Chceš-li interaktivní tok přeskočit, předej přepínače přímo:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Výpis nakonfigurovaných providerů
+
+```bash
+bolt providers list
+# or:
+bolt auth list
+```
+
+Zobrazí všechny uložené přihlašovací údaje a jakékoli API klíče providera detekované z proměnných prostředí.
+
+### Odebrání přihlašovacích údajů
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Autentizace přes proměnné prostředí
+
+Pro CI pipelines nebo bezhlavá prostředí nastav proměnnou prostředí s API klíčem providera přímo — žádný interaktivní login není nutný. Běžné příklady:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt tyto proměnné čte automaticky při startu. `bolt providers list` ukáže, které proměnné prostředí detekoval.
+
+## Procházení dostupných modelů
+
+`bolt models` vypíše každý model dostupný napříč tvými nakonfigurovanými providery.
+
+```bash
+# List all models
+bolt models
+
+# Filter to one provider
+bolt models anthropic
+
+# Show cost and capability metadata
+bolt models --verbose
+
+# Refresh the model catalog from models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Spuštěním `bolt models --verbose` uvidíš ceny vstupních/výstupních tokenů pro každý model. Díky tomu snadno porovnáš cenové kompromisy, než se rozhodneš pro model při dlouho běžící úloze.
+</Tip>
+
+### Formát identifikátoru modelu
+
+Modely jsou vždy odkazovány ve formátu `provider/model`:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Tento formát použij všude, kde Bolt přijímá model — CLI přepínače, konfigurační soubory a definice agentů.
+
+## Výběr modelu za běhu
+
+### Přepínač `--model` / `-m`
+
+Přepínač `--model` je dostupný v `bolt run`, `bolt commit` a `bolt review`:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — řízení míry uvažování
+
+Některé modely podporují konfigurovatelné úrovně reasoning effortu (např. rozšířené myšlení Anthropicu, reasoning modely OpenAI). Použij `--variant` pro výběr úrovně effortu:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Dostupné hodnoty variantů závisí na providerovi a modelu. Běžné hodnoty jsou `minimal`, `low`, `medium`, `high` a `max`, ale přesná sada se liší. Podívej se do dokumentace providera nebo použij `bolt models --verbose` pro zobrazení podporovaných variantů daného modelu.
+</Note>
+
+### `--thinking` — zobrazení bloků uvažování
+
+Při použití modelu, který podporuje rozšířené myšlení, předej `--thinking`, aby se ve výstupu zobrazil myšlenkový řetězec modelu:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Paralelní běhy best-of-N
+
+`--best-of` odešle stejný prompt paralelně více modelům, poté použije rozhodujícího (judge) modelu k seřazení odpovědí a ponechá tu nejlepší:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+Judge se ve výchozím stavu nastavuje na model předaný přes `--model`, nebo na první položku v seznamu `--best-of`, pokud `--model` není nastaven. Přepínač přijímá čárkami oddělený seznam identifikátorů `provider/model`.
+
+<Tip>
+  Best-of-N je zvlášť užitečné pro složité algoritmické problémy nebo architekturní rozhodnutí, kde různé modely mohou přinést skutečně odlišné přístupy. Nech je Bolt spustit paralelně a automaticky vybrat vítěze.
+</Tip>

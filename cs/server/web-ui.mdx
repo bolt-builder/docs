@@ -1,0 +1,33 @@
+---
+title: "Webové UI Boltu"
+sidebarTitle: "Webové UI"
+description: "bolt web servíruje UI v prohlížeči nad běžícím Bolt serverem — užitečné pro sdílené týmové stroje, vzdálené stroje a kdekoli, kde TUI není praktické."
+---
+
+`bolt web` spustí Bolt server a servíruje před ním UI v prohlížeči. Je to stejný engine jako TUI, jen vykreslený v záložce prohlížeče.
+
+## Spuštění
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Poté otevři vytištěnou URL. Při vystavování do sítě nejdřív nastav basic auth:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Kdy použít webové UI
+
+- Když Bolt běží na výkonném vzdáleném stroji, ale řídíš ho z laptopu.
+- Sdílení živého sezení s kolegou pro pair-debugging.
+- Prostředí, kde je plnohodnotné TUI nepohodlné (Chromebooky, tablety, coworkingové stroje).
+
+## Související
+
+- [Bezhlavý server](/server/headless-server) — podkladový API server.
+- [Vzdálená sezení](/server/remote-sessions) — připoj TUI ke stejnému serveru, který servíruje webové UI.

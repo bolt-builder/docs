@@ -1,0 +1,58 @@
+---
+title: "Instrumente: ce pot face de fapt agenții Bolt"
+sidebarTitle: "Instrumente"
+description: "Lista completă a instrumentelor încorporate disponibile pentru agenții Bolt, plus cum să îți adaugi propriile instrumente prin plugin-uri, servere MCP sau directorul .opencode/tool."
+---
+
+Agenții din Bolt fac treaba apelând instrumente. Fiecare acțiune pe care o vezi în TUI (citirea unui fișier, rularea testelor, căutarea pe web) este modelul care alege un instrument, iar Bolt îl execută. Fiecare agent are un nivel de acces declarat care determină ce instrumente poate apela fără să te întrebe mai întâi (consultă [Permisiuni](/concepts/permissions)).
+
+## Instrumente încorporate
+
+| Instrument | Ce face |
+| --- | --- |
+| `read` | Citește un fișier de pe disc. |
+| `write` | Creează un fișier nou sau suprascrie unul existent. |
+| `edit` | Aplică o editare țintită (find/replace) unui fișier. |
+| `apply_patch` | Aplică un patch în stil unified diff pe unul sau mai multe fișiere. |
+| `glob` | Listează fișierele care se potrivesc cu un tipar glob. |
+| `grep` | Caută conținut de fișier prin regex/text. |
+| `bash` | Rulează o comandă shell. |
+| `task` | Deleagă o subsarcină unui subagent (`@general`, `@explore` sau un subagent personalizat). |
+| `todowrite` | Menține lista structurată de sarcini a agentului pentru lucru în mai mulți pași. |
+| `webfetch` | Preia un URL și returnează conținutul lui. |
+| `websearch` | Caută pe web. |
+| `skill` | Invocă un skill numit (consultă [Skills](/extending/skills)). |
+| `memory_save` | Persistă un fapt în [memoria proiectului](/concepts/project-memory). |
+| `memory_recall` | Caută o memorie salvată anterior. |
+| `question` | Îți pune o întrebare de clarificare și așteaptă un răspuns. |
+| `bash_background` | Pornește o comandă shell ca proces gestionat în fundal (servere de dezvoltare, watchers, build-uri lungi). |
+| `process_output` | Citește ieșirea acumulată și starea unui proces din fundal, opțional așteptând să se termine. |
+| `list_processes` | Listează procesele din fundal cu id-ul, starea și comanda lor. |
+| `kill_process` | Termină un proces din fundal (și arborele său de procese) după id. |
+| `test_run` | Detectează și rulează testele proiectului, returnând rezultate pass/fail structurate și detalii despre eșec. |
+
+### Experimentale
+
+| Instrument | Ce face |
+| --- | --- |
+| `lsp` | Interoghează un language server pentru definiții, referințe și diagnostice. |
+| `execute` | Rulează cod într-un sandbox izolat de tip code-mode. |
+| `plan` | Produce un plan structurat înainte de a face modificări. |
+
+Instrumentele experimentale se pot schimba sau redenumi între versiuni.
+
+## Extinderea setului de instrumente
+
+Dincolo de cele încorporate, Bolt poate apela instrumente din trei surse:
+
+- **Instrumente personalizate** în `.opencode/tool/` (sau `.opencode/tools/`) la rădăcina proiectului. Consultă [Instrumente personalizate](/extending/custom-tools).
+- **Instrumente din plugin-uri** contribuite de orice [plugin](/extending/plugins) instalat.
+- **Instrumente MCP** din orice [server MCP](/extending/mcp-servers) configurat pentru proiect.
+
+Toate cele trei se simt identic din punctul de vedere al agentului: apar în lista de instrumente, respectă nivelul de acces al agentului și apar în ieșirea de apel de instrument din TUI.
+
+## Legături conexe
+
+- [Agenți](/concepts/agents) — ce agenți pot apela ce instrumente.
+- [Permisiuni](/concepts/permissions) — cum este controlat accesul la instrumente per agent.
+- [Servere MCP](/extending/mcp-servers) — cel mai comun mod de a adăuga instrumente din lumea reală.

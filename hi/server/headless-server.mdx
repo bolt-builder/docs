@@ -1,0 +1,52 @@
+---
+title: "Bolt को Headless Server के रूप में चलाएँ"
+sidebarTitle: "Headless Server"
+description: "bolt serve HTTP पर पूर्ण Bolt runtime उजागर करता है ताकि कोई भी TUI, वेब UI, editor integration, या script इससे स्थानीय रूप से या नेटवर्क में attach कर सके।"
+---
+
+`bolt serve` एक headless Bolt server चलाता है जो पूरे engine को HTTP पर उजागर करता है: sessions, agents, tools, provider access, MCP, और streaming events। जो कुछ भी Bolt इंटरैक्टिवली कर सकता है, वह API पर कर सकता है।
+
+## एक सर्वर शुरू करें
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  `0.0.0.0` पर binding आपके नेटवर्क पर Bolt को उजागर करती है। ऐसा करने से पहले हमेशा `BOLT_SERVER_USERNAME` और `BOLT_SERVER_PASSWORD` सेट करें।
+</Warning>
+
+## एक TUI attach करें
+
+किसी भी मशीन से जो सर्वर तक पहुँच सकती है:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+या रिमोट सर्वर के विरुद्ध एक one-shot prompt चलाएँ:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+Environment variables (देखें [Env Variables](/reference/environment-variables)) के माध्यम से credentials सेट करें:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+सभी clients को मेल खाते credentials भेजने चाहिए।
+
+## संबंधित
+
+- [Remote Sessions](/server/remote-sessions) — attach करना, mDNS discovery, और साझा servers।
+- [Web UI](/server/web-ui) — ब्राउज़र front-end।
+- [ACP](/server/acp) — Zed और अन्य editors से Bolt चलाना।

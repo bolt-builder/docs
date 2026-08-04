@@ -1,0 +1,395 @@
+---
+title: "Xử lý các sự cố phổ biến trong Bolt"
+sidebarTitle: "Xử lý sự cố"
+description: "Giải pháp cho những vấn đề phổ biến nhất của Bolt: lỗi khởi động, lỗi xác thực provider, kết nối MCP, vấn đề phiên, quyền, chi phí và hơn thế."
+---
+
+Hầu hết các vấn đề Bolt rơi vào một số ít danh mục. Đi qua accordion liên quan bên dưới và kiểm tra đầu ra log với `bolt logs` mỗi khi có gì đó bất ngờ xảy ra.
+
+<Note>
+  Với các câu hỏi không được trả lời ở đây, hãy tìm kiếm hoặc bắt đầu một cuộc thảo luận trong [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Kèm theo đầu ra của `bolt debug info` và `bolt logs --tail 50` trong bài viết của bạn để cộng đồng có thể giúp nhanh hơn.
+</Note>
+
+## Những điều đầu tiên để thử
+
+Trước khi đi sâu vào một mục cụ thể, bốn lệnh này giải quyết hầu hết các vấn đề:
+
+| Triệu chứng | Lệnh đầu tiên | Vì sao |
+| --- | --- | --- |
+| Bất cứ điều gì lạ | `bolt debug info` | Tổng quan hệ thống \+ plugin trong một lần. |
+| Trước đây hoạt động, giờ không | `bolt logs --tail 100` | Các lỗi gần đây, thường ở gần đầu. |
+| Nghi ngờ một plugin | `bolt --pure` | Bắt đầu với mọi plugin bị vô hiệu hóa. |
+| Cấu hình không được nhận | `bolt debug config` | In cấu hình đã được giải quyết đầy đủ. |
+
+<Tip>
+  Nhóm `bolt debug` là điểm dừng đầu tiên cho mọi hành vi bí ẩn. `bolt debug info` cho tổng quan hệ thống, `bolt debug config` cho cấu hình đã giải quyết, `bolt debug paths` cho các vị trí trên đĩa và `bolt debug snapshot` để kiểm tra trạng thái phiên.
+</Tip>
+
+<Accordion title="Bolt không khởi động / crash khi khởi chạy">
+  **Triệu chứng:** Terminal nhấp nháy và thoát ngay lập tức, hoặc bạn thấy stack trace trước khi TUI hiển thị.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Thu thập thông tin hệ thống">
+      ```bash
+      bolt debug info
+      ```
+
+      Lệnh này in phiên bản Bolt, OS, terminal emulator và các plugin đã nạp. Sao chép đầu ra này khi báo cáo lỗi.
+    </Step>
+    <Step title="Kiểm tra đầu ra log gần đây">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Tìm các dòng `ERROR`. Nguyên nhân phổ biến là một plugin không nạp được — trong trường hợp đó bạn sẽ thấy lỗi đề cập tên plugin.
+    </Step>
+    <Step title="Tắt các plugin để cô lập vấn đề">
+      ```bash
+      bolt --pure
+      ```
+
+      Nếu Bolt khởi động sạch với `--pure`, một plugin đang gây crash. Xóa plugin gây lỗi khỏi cấu hình của bạn, hoặc báo cáo cho tác giả plugin.
+    </Step>
+    <Step title="Kiểm tra cấu hình bị hỏng">
+      ```bash
+      bolt debug config
+      ```
+
+      Nếu lệnh này in ra lỗi về JSON không hợp lệ, mở tệp cấu hình mà nó đề cập và sửa cú pháp. Chạy `bolt db path` để xác nhận đường dẫn cơ sở dữ liệu có thể truy cập.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Xác thực provider thất bại">
+  **Triệu chứng:** Bolt hiển thị "No providers configured", các yêu cầu API thất bại với lỗi 401, hoặc `bolt run` thoát ngay lập tức mà không tạo ra bất kỳ đầu ra nào.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Chạy lại luồng đăng nhập provider">
+      ```bash
+      bolt providers login
+      ```
+
+      Chọn provider của bạn và làm theo các lời nhắc. Bolt sẽ dẫn bạn qua việc nhập API key hoặc OAuth.
+    </Step>
+    <Step title="Xác minh biến môi trường API key">
+      Nếu bạn dùng env var (ví dụ `ANTHROPIC_API_KEY`), xác nhận rằng nó thực sự được đặt trong shell hiện tại:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Nếu nó rỗng, hãy thêm nó vào profile shell của bạn và mở lại terminal.
+    </Step>
+    <Step title="Kiểm tra cấu hình đã giải quyết">
+      ```bash
+      bolt debug config
+      ```
+
+      Xem phần `provider`. Nếu provider của bạn xuất hiện với `apiKey` trống, tham chiếu biến môi trường trong tệp cấu hình của bạn không được mở rộng.
+    </Step>
+    <Step title="Liệt kê thông tin xác thực đã lưu">
+      ```bash
+      bolt providers list
+      ```
+
+      Điều này hiển thị mọi thông tin xác thực được lưu trong `auth.json` và mọi biến môi trường liên quan tới provider mà Bolt đã phát hiện.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP server không kết nối được">
+  **Triệu chứng:** `bolt mcp list` hiển thị một server là `failed` hoặc `needs authentication`, hoặc agent không thể dùng bất kỳ công cụ nào từ server đó.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Chạy probe debug MCP">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Lệnh này kiểm tra kết nối HTTP cơ bản, kiểm tra header `WWW-Authenticate` và đi qua luồng khám phá OAuth nếu có. Đầu ra sẽ cho bạn biết server có thể truy cập được không và có cần auth không.
+    </Step>
+    <Step title="Kiểm tra URL server">
+      Xác minh URL trong `.bolt/bolt.jsonc` của bạn. Với các server từ xa, đảm bảo URL kết thúc bằng đường dẫn MCP (ví dụ `/mcp` hoặc `/tools`), không chỉ host.
+    </Step>
+    <Step title="Xác thực lại cho các server OAuth">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Làm theo luồng trình duyệt. Nếu server yêu cầu client ID đã đăng ký trước, hãy thêm nó vào cấu hình:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Kiểm tra lệnh server cục bộ">
+      Với các server `local`, chạy lệnh thủ công trong terminal của bạn để xác nhận nó khởi động không có lỗi:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Không tìm thấy phiên">
+  **Triệu chứng:** `bolt run --session <id>` thoát với "Session not found", hoặc một phiên bạn nhớ đã làm việc đã biến mất.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Liệt kê mọi phiên có sẵn">
+      ```bash
+      bolt session list
+      ```
+
+      Các phiên được sắp xếp theo cập nhật gần nhất trước. Nếu phiên của bạn bị xóa hoặc cơ sở dữ liệu bị di chuyển, nó sẽ không xuất hiện ở đây.
+    </Step>
+    <Step title="Tìm đường dẫn cơ sở dữ liệu">
+      ```bash
+      bolt db path
+      ```
+
+      Lệnh này in đường dẫn đầy đủ tới tệp SQLite. Xác minh tệp tồn tại và không rỗng.
+    </Step>
+    <Step title="Truy vấn cơ sở dữ liệu trực tiếp">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Nếu phiên của bạn xuất hiện trong cơ sở dữ liệu nhưng không trong `bolt session list`, có thể có sự không khớp ID dự án — các phiên bị giới hạn theo dự án.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Lỗi quyền trong TUI">
+  **Triệu chứng:** Agent xin quyền liên tục, từ chối ghi tệp, hoặc bạn thấy banner "Permission denied".
+
+  **Hiểu về các mức truy cập:**
+
+  Mỗi agent tích hợp sẵn có mức truy cập được khai báo kiểm soát những gì nó có thể làm mà không hỏi:
+
+  | Mức truy cập | Được phép |
+  | --- | --- |
+  | **Full** | Đọc tệp, ghi tệp, chạy lệnh shell |
+  | **Edit** | Đọc và ghi tệp, không có lệnh shell |
+  | **Read** | Chỉ đọc tệp, không ghi hoặc chạy lệnh |
+
+  Các agent `code`, `debug`, `refactor`, `migrate` và `perf` có truy cập **Full**. `docs` có truy cập **Edit**. `plan`, `ask`, `code-review` và `security` có truy cập **Read**.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Chuyển sang agent có truy cập Full">
+      Nếu bạn cần ghi tệp, dùng agent `code`:
+
+      ```bash
+      bolt run --agent code "cài đặt tính năng"
+      ```
+
+      Hoặc nhấn `Tab` trong TUI để duyệt qua các agent.
+    </Step>
+    <Step title="Dùng --auto để phê duyệt lời nhắc không tương tác">
+      Trong CI hoặc các ngữ cảnh scripted, truyền `--auto` cho `bolt run` để tự động phê duyệt các quyền không bị từ chối tường minh trong cấu hình.
+    </Step>
+    <Step title="Cấu hình quyền trong tệp cấu hình">
+      Bạn có thể từ chối các công cụ cụ thể cho mọi phiên trong một dự án bằng cách thêm khối `permission` vào `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sử dụng token cao hoặc chi phí bất ngờ">
+  **Triệu chứng:** `bolt stats` hiển thị số token cao hơn dự kiến, hoặc hóa đơn API của bạn tăng nhanh hơn dự đoán.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Xem thống kê sử dụng của bạn">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Đầu ra chia chi phí theo ngày, token trung bình mỗi phiên và sử dụng theo mô hình.
+    </Step>
+    <Step title="Giảm mức nỗ lực suy luận">
+      Với các mô hình hỗ trợ, giảm nỗ lực suy luận với `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "review nhanh"
+      ```
+
+      Các giá trị được hỗ trợ là riêng theo provider (ví dụ `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Chuyển sang mô hình rẻ hơn">
+      Dùng `bolt models` để tìm mô hình nhỏ hơn. Các mô hình nhỏ hơn (ví dụ `claude-haiku`, `gpt-4o-mini`) rẻ hơn đáng kể mỗi token và hoạt động tốt cho nhiều tác vụ.
+    </Step>
+    <Step title="Dùng agent ask hoặc plan cho khám phá">
+      Các agent `ask` và `plan` có truy cập **Read** và không gọi các công cụ ghi, nghĩa là chúng tránh các vòng lặp nặng công cụ tạo ra token đầu ra lớn.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Xung đột plugin hoặc hành vi bất ngờ">
+  **Triệu chứng:** Một slash command hành xử bất ngờ, TUI hiển thị không đúng, hoặc điều gì đó thay đổi sau khi cài đặt một plugin.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Tắt mọi plugin để thiết lập baseline">
+      ```bash
+      bolt --pure
+      ```
+
+      Nếu vấn đề biến mất, một plugin có trách nhiệm.
+    </Step>
+    <Step title="Xác định plugin gây lỗi">
+      ```bash
+      bolt debug info
+      ```
+
+      Đầu ra liệt kê mọi plugin đã nạp. Tạm thời xóa chúng từng cái một khỏi cấu hình và khởi động lại Bolt cho tới khi vấn đề biến mất.
+    </Step>
+    <Step title="Kiểm tra tính không tương thích phiên bản">
+      ```bash
+      bolt upgrade
+      ```
+
+      Plugin khai báo phạm vi phiên bản Bolt tương thích. Nếu bạn vừa nâng cấp Bolt, một plugin có thể cần được cập nhật.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Vấn đề đường dẫn WSL / Windows">
+  **Triệu chứng:** Trên Windows với WSL, Bolt không thể tìm thấy `less`, đường dẫn tệp chứa các dấu gạch chéo ngược bất ngờ, hoặc pager cho `bolt session list` không khởi chạy.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Đặt đường dẫn Git Bash">
+      Bolt tìm các tiện ích Unix (bao gồm `less`) tương đối so với cài đặt Git for Windows. Đặt biến môi trường vào thư mục Git Bash của bạn:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Thêm cái này vào profile PowerShell (`$PROFILE`) để giữ lâu dài.
+    </Step>
+    <Step title="Xác minh với debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Xác nhận phát hiện OS và các đường dẫn Bolt đang dùng.
+    </Step>
+    <Step title="Chạy Bolt bên trong WSL trực tiếp">
+      Để có trải nghiệm tốt nhất trên Windows, hãy chạy `bolt` từ trong terminal WSL thay vì từ PowerShell hoặc Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Không thể nâng cấp Bolt">
+  **Triệu chứng:** `bolt upgrade` báo lỗi hoặc âm thầm không làm gì, hoặc số phiên bản không thay đổi sau khi chạy nó.
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Chỉ định phương thức cài đặt tường minh">
+      Bolt cố phát hiện cách nó được cài đặt. Nếu phát hiện thất bại, ghi đè nó:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Cài đặt lại qua script cài đặt">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: chạy với quyền Administrator cho Chocolatey">
+      Nếu bạn cài qua `choco`, các bản nâng cấp yêu cầu terminal có quyền cao. Mở PowerShell với quyền Administrator trước khi chạy `bolt upgrade`.
+    </Step>
+    <Step title="Xác nhận phiên bản mới đang hoạt động">
+      ```bash
+      bolt --version
+      which bolt    # xác minh PATH đang chọn đúng binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agent không tìm được tệp (hoặc tìm quá nhiều)">
+  **Triệu chứng:** Agent than phiền không thể thấy các tệp tồn tại, hoặc liên tục chọn các tệp bạn không muốn nó đụng vào (như `node_modules`, đầu ra build hoặc bí mật).
+
+  **Các bước:**
+
+  <Steps>
+    <Step title="Kiểm tra tệp .boltignore">
+      Bolt tôn trọng tệp `.boltignore` ở gốc dự án kiểm soát các tệp mà công cụ tìm kiếm tệp của agent có thể thấy. Nó dùng cú pháp giống `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Xác nhận thư mục làm việc">
+      ```bash
+      bolt debug info
+      ```
+
+      Xác minh rằng `cwd` khớp với gốc dự án. Nếu bạn khởi chạy Bolt từ một thư mục con, tìm kiếm tệp của agent bắt nguồn ở đó.
+    </Step>
+    <Step title="Yêu cầu agent grep, đừng đoán">
+      Nếu agent tuyên bố một tệp không tồn tại, hãy yêu cầu nó chạy `grep` hoặc `glob` tường minh. Điều này bỏ qua bất kỳ giả định nội bộ lỗi thời nào.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Lấy thông tin debug cho báo cáo lỗi">
+  Khi mở issue, các thông tin sau đây hữu ích nhất cho maintainer:
+
+  <Steps>
+    <Step title="Thu thập thông tin hệ thống và plugin">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Thu thập đầu ra log gần đây">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Xuất phiên liên quan (đã làm sạch)">
+      Nếu vấn đề xảy ra trong một phiên cụ thể, xuất nó với các bí mật được ẩn:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Đính kèm `session-debug.json` vào issue.
+    </Step>
+    <Step title="Mở issue hoặc thảo luận">
+      Đi tới [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) và dán đầu ra `bolt debug info` của bạn cùng với mô tả các bước tái tạo.
+    </Step>
+  </Steps>
+</Accordion>

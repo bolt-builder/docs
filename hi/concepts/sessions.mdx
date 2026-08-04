@@ -1,0 +1,191 @@
+---
+title: "Sessions — Bolt में टिकाऊ संवादात्मक इतिहास"
+sidebarTitle: "Sessions"
+description: "Sessions Bolt के स्थायी काम की इकाई हैं: प्रत्येक स्थानीय SQLite में पूरी बातचीत संग्रहीत करता है ताकि आप कभी भी detach, resume, fork, share और export कर सकें।"
+---
+
+**Session** Bolt के काम की प्राथमिक इकाई है। आपके द्वारा भेजा गया हर prompt, agent द्वारा पढ़ी या एडिट की गई हर फ़ाइल, और मॉडल द्वारा किए गए हर tool कॉल को उस सेशन के इतिहास में टिकाऊ रूप से रिकॉर्ड किया जाता है। क्योंकि sessions स्थानीय SQLite डेटाबेस में रहते हैं, वे प्रोसेस रीस्टार्ट के बाद भी बचे रहते हैं, किसी भी समय सूचीबद्ध और क्वेरी किए जा सकते हैं, और जब तक आप उन्हें स्पष्ट रूप से साझा या एक्सपोर्ट नहीं करते तब तक आपकी मशीन से बाहर नहीं जाते।
+
+<Note>
+  सभी सेशन डेटा आपकी अपनी मशीन पर स्थानीय SQLite डेटाबेस में संग्रहीत होता है। जब तक आप शेयरिंग सक्षम नहीं करते, तब तक बाहरी सर्वर पर कुछ भी नहीं भेजा जाता। सटीक डेटाबेस फ़ाइल खोजने के लिए `bolt db path` का उपयोग करें।
+</Note>
+
+## Session lifecycle
+
+एक सेशन उस पल शुरू होता है जब आप अपना पहला prompt भेजते हैं और तभी समाप्त होता है जब आप इसे delete करते हैं। इन दो बिंदुओं के बीच आप स्वतंत्र रूप से detach, resume, branch, या hand off कर सकते हैं।
+
+<Steps>
+  <Step title="सेशन बनाएँ या जारी रखें">
+    इंटरैक्टिवली नया सेशन शुरू करने के लिए TUI लॉन्च करें, या `bolt run` को prompt पास करके इसे non-interactively बनाएँ:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Detach करें और बाद में वापस आएँ">
+    TUI को किसी भी समय बंद करें — सेशन स्वचालित रूप से persist हो जाता है। अपने सबसे हाल के सेशन को `--continue` से resume करें, या ID से किसी विशिष्ट सेशन को `--session` से target करें:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="प्रयोग करने से पहले fork करें">
+    जोखिम भरा बदलाव आज़माने से पहले वर्तमान सेशन इतिहास से branch करने के लिए `--fork` का उपयोग करें। fork एक स्वतंत्र सेशन है जो मूल को प्रभावित नहीं करता:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="साझा करें और सहयोग करें">
+    `--share` के साथ एक साझा URL जनरेट करें। लिंक वाला कोई भी व्यक्ति सेशन transcript को ब्राउज़र में देख सकता है:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Session प्रबंधन कमांड
+
+### Sessions की सूची
+
+```bash
+bolt session list
+```
+
+सभी sessions की उनके ID, title, और अंतिम-अपडेट किए गए समय के साथ एक फ़ॉर्मैट की गई तालिका आउटपुट करता है। मशीन-पठनीय आउटपुट प्राप्त करने के लिए `--format json` जोड़ें, या सबसे हाल के N sessions तक सीमित करने के लिए `-n <N>`:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Session डिलीट करें
+
+```bash
+bolt session delete <sessionID>
+```
+
+स्थानीय डेटाबेस से सेशन और उसके सभी संदेशों को स्थायी रूप से हटा देता है।
+
+## Session नियंत्रण के लिए Run flags
+
+ये flags `bolt run` पर उपलब्ध हैं:
+
+| Flag | Alias | विवरण |
+|------|-------|-------------|
+| `--continue` | `-c` | सबसे हाल के सेशन को जारी रखें |
+| `--session <id>` | `-s` | ID से किसी विशिष्ट सेशन को जारी रखें |
+| `--fork` | | जारी रखने से पहले सेशन को fork करें (`--continue` या `--session` की आवश्यकता) |
+| `--share` | | सेशन के लिए साझा URL जनरेट करें |
+| `--title <title>` | | सेशन शीर्षक सेट या ओवरराइड करें |
+
+## Sessions एक्सपोर्ट करना
+
+एक सेशन का पूरा transcript JSON के रूप में एक्सपोर्ट करें:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` flag फ़ाइल पथ, कोड कंटेंट, tool inputs और outputs, और अन्य संभावित रूप से संवेदनशील फ़ील्ड्स को `[redacted:kind:id]` प्लेसहोल्डर्स से बदल देता है — teammates के साथ transcripts साझा करने या bug reports दायर करने के लिए उपयोगी।
+
+## Sessions इम्पोर्ट करना
+
+स्थानीय JSON फ़ाइल से या सीधे साझा URL से सेशन इम्पोर्ट करें:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+इम्पोर्ट किए गए sessions आपकी स्थानीय सेशन सूची में दिखाई देते हैं और पूरी तरह से resumable हैं।
+
+## Session डेटाबेस को क्वेरी करना
+
+Bolt पावर उपयोगकर्ताओं के लिए अंतर्निहित SQLite डेटाबेस को सीधे उजागर करता है।
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+आउटपुट फ़ॉर्मैट डिफ़ॉल्ट रूप से tab-separated values है; JSON आउटपुट के लिए `--format json` जोड़ें।
+
+## टोकन उपयोग और लागत आँकड़े
+
+`bolt stats` आपके सभी sessions में टोकन उपयोग और लागत डेटा को समेकित करता है:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+आउटपुट में कुल sessions, संदेश, input/output/reasoning/cache tokens, कुल लागत, प्रति दिन औसत लागत, प्रति सेशन औसत और माध्यिका tokens, और एक tool-usage ब्रेकडाउन शामिल है। संदेशों, tokens और लागत का per-model ब्रेकडाउन भी दिखाने के लिए `--models` पास करें।
+
+## Fork और share वर्कफ़्लो
+
+यहाँ किसी सेशन को fork करने और परिणाम साझा करने का एक पूरा उदाहरण है:
+
+<Steps>
+  <Step title="नए सेशन में काम शुरू करें">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="जोखिम भरे अगले चरण से पहले fork करें">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Fork किए गए सेशन का ID कंसोल पर प्रिंट होता है। मूल सेशन अछूता रहता है।
+  </Step>
+  <Step title="समीक्षा के लिए fork साझा करें">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    जब सेशन idle हो जाता है तो साझा URL प्रिंट होता है।
+  </Step>
+  <Step title="दूसरी मशीन पर इम्पोर्ट करें">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,32 @@
+---
+title: "統計とコスト (bolt stats)"
+sidebarTitle: "統計とコスト"
+description: "bolt stats はセッション間のトークン使用量とコストを集約するので、支出がどこに向かっているか確認して、モデルやエージェントを調整できます。"
+---
+
+`bolt stats` はローカルセッションデータベース全体でトークンカウントとコストを集約します。すべてのツール呼び出しが記録されている ([ローカルデータベース](/reference/local-database) を参照) ため、数値は Bolt が駆動した LLM 呼び出しについて正確です。
+
+## 基本的な使い方
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## 表示内容
+
+- 合計の入力、出力、キャッシュトークン。
+- プロバイダごとの推定コスト (実行時のプロバイダ価格テーブルを使用)。
+- フラグに応じて、モデルごと、エージェントごと、日ごとの内訳。
+
+## コストの削減
+
+- 推論の多いモデルでは `--variant minimal` または `--variant low` を使用してください。[プロバイダとモデル](/concepts/providers-and-models) を参照してください。
+- 探索には `ask` または `plan` エージェントを優先してください。読み取り専用でツール多用のループを避けます。
+- 最先端の能力を必要としないタスクには、`bolt models` でより小さなモデルに切り替えてください。
+
+## 関連
+
+- [プロバイダとモデル](/concepts/providers-and-models) — `stats` が測定するモデルの選択と調整。
+- [トラブルシューティング](/reference/troubleshooting) — 予想外の請求への対処方法。

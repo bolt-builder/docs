@@ -1,0 +1,107 @@
+---
+title: "Ievads Bolt: atvērtā koda termināļa MI aģents"
+sidebarTitle: "Ievads"
+description: "Iepazīstiet Bolt: atvērtā koda termināļa MI kodēšanas aģents ar desmit aģentiem, noturīgām sesijām, projekta atmiņu, MCP, 75+ LLM sniedzējiem, TUI un darbvirsmas lietotni."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Jūsu terminālis tagad ar pilnu MI inženieru komandu iekšā.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Vietne</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt ir terminālim primāri paredzēts MI kodēšanas aģents, kas veidots uz [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) un [SolidJS](https://www.solidjs.com). Norādiet to uz jebkuru projektu, un tas automātiski uzņem kontekstu: tas izpēta jūsu kodu, seko jūsu konvencijām, izpilda čaulas komandas, rediģē failus, palaiž testus un piegādā izmaiņas.
+
+Desmit iebūvētie aģenti (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) plus `@general` un `@explore` apakšaģenti aptver visu inženierijas ciklu. Sesijas ir noturīgas: atvienojieties, pievienojieties atpakaļ (pat attālinātā serverī), dakšojiet, dalieties, eksportējiet un importējiet jebkurā laikā. Projekta atmiņa saglabā to, ko aģents iemācās starp sesijām. Paplašināms, izmantojot MCP serverus (ar OAuth), spraudņus, pielāgotus aģentus un pielāgotus rīkus.
+
+Bolt ir atvērtā koda pēc PolyForm Noncommercial 1.0.0 licences.
+
+## Kāpēc Bolt?
+
+Bolt ir izstrādāts ap to, kā izstrādātāji patiešām strādā: terminālī, cauri vairākām sesijām, uz reālām koda bāzēm. Lūk, kas to atšķir:
+
+- **Terminālim primārais TUI.** Ātra, ar tastatūru vadāma saskarne, kas veidota ar [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) un [SolidJS](https://www.solidjs.com). Tā jūtas kā vietējā, jo tāda arī ir.
+- **Vesela aģentu komanda.** Desmit specializēti aģenti — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` un `perf` — plus apakšaģenti izpētei un daudzsoļu deleģēšanai. Pārslēdzieties starp tiem ar `Tab`.
+- **Sesijas, kuras varat atstāt un atkal pievienoties.** Atvienojieties no sesijas un pievienojieties vēlāk, pat attālinātā serverī. Dakšojiet, dalieties, eksportējiet un importējiet darbu jebkurā laikā. Sesijas tiek glabātas SQLite un ir pilnībā pārbaudāmas ar `bolt db`.
+- **Paplašināms pēc dizaina.** MCP serveri ar pilnu OAuth atbalstu, spraudņu sistēma, GitHub integrācija, iebūvēts API serveris un tīmekļa UI.
+- **Darbvirsmas lietotne.** Tas pats dzinējs ietīts daudzloga, daudzcilņu darbvirsmas pieredzē — ar integrētu termināli, failu koku, komandu paleti, 28 UI valodām un automātiskajiem atjauninājumiem.
+
+## Iebūvētie aģenti
+
+Bolt piegādā desmit specializētus aģentus. Katram aģentam ir definēts failu sistēmas piekļuves līmenis, kas atbilst tā mērķim.
+
+| Aģents | Piekļuve | Apraksts |
+| --- | --- | --- |
+| `code` | Full | Noklusējums: lasa, raksta un izpilda kodu |
+| `plan` | Read | Izpēta koda bāzi un izveido plānu, nemainot failus |
+| `ask` | Read | Jautājumi un izpēte — bez failu izmaiņām |
+| `code-review` | Read | Pārskata izmaiņas attiecībā uz pareizību, stilu un drošību |
+| `debug` | Full | Atkļūdo neizdevušos testus, avārijas un loģikas kļūdas |
+| `refactor` | Full | Droša pārstrukturēšana ar testu pārbaudi katrā solī |
+| `docs` | Edit | Raksta un atjaunina dokumentāciju un komentārus |
+| `security` | Read | Drošības audits: ievainojamības, noslēpumi, paraugi |
+| `migrate` | Full | Ietvaru jauninājumi un atkarību migrācijas |
+| `perf` | Full | Veiktspējas analīze un optimizācija |
+
+Jūs varat arī definēt savus aģentus kā Markdown failus vai ģenerēt vienu ar `bolt agent create`.
+
+## Darbvirsmas lietotne
+
+Bolt tiek piegādāts arī kā atsevišķa darbvirsmas lietotne ar daudzloga un daudzcilņu sesiju pārvaldību, uzvednes veidotāju ar pielikumu un starpliktuves attēlu ielīmēšanas atbalstu, integrētu termināli un failu koku, komandu paleti, pilniem iestatījumiem taustiņu piesaistēm, modeļiem, sniedzējiem un serveriem, vietējiem paziņojumiem, dziļajām saitēm, WSL integrāciju Windows un automātiskajiem atjauninājumiem dev, beta un produkcijas kanālos.
+
+Lejupielādējiet darbvirsmas lietotni no [izlaidumu lapas](https://github.com/Bolt-builder/bolt-cli/releases) vai instalējiet to vienā rindā uz macOS bez Gatekeeper apiešanas:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Izpētiet dokumentāciju
+
+<CardGroup cols={2}>
+  <Card title="Instalēšana" icon="download" href="/installation">
+    Instalējiet Bolt, izmantojot curl, npm vai savas sistēmas pakotņu pārvaldnieku uz macOS, Linux un Windows.
+  </Card>
+
+  <Card title="Ātrā palaišana" icon="rocket" href="/quickstart">
+    Atveriet TUI, palaidiet savu pirmo uzvedni un piegādājiet MI ģenerētu commit mazāk nekā minūtē.
+  </Card>
+
+  <Card title="Aģenti" icon="users" href="/concepts/agents">
+    Desmit iebūvēti aģenti plus apakšaģenti. Uzziniet, ko katrs no tiem dara un kā uzrakstīt savus.
+  </Card>
+
+  <Card title="Projekta atmiņa" icon="brain" href="/concepts/project-memory">
+    Kā Bolt atceras jūsu projektu starp sesijām un kā kontrolēt, kas tiek uzņemts.
+  </Card>
+
+  <Card title="MCP serveri" icon="plug" href="/extending/mcp-servers">
+    Savienojiet ārējos rīkus un datu avotus ar Bolt, izmantojot Model Context Protocol.
+  </Card>
+
+  <Card title="Bezgalvas serveris" icon="server" href="/server/headless-server">
+    Palaidiet `bolt serve`, pievienojiet TUI no jebkuras iekārtas un vadiet Bolt no API.
+  </Card>
+</CardGroup>

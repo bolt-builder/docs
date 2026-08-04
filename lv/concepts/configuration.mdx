@@ -1,0 +1,193 @@
+---
+title: "Konfigurācija — bolt.jsonc iestatījumi un globālās ignorējumi"
+sidebarTitle: "Konfigurācija"
+description: "Bolt lasa slāņotus JSONC konfigurācijas failus no jūsu projekta un OS konfigurācijas direktorijām. Iestatiet sniedzējus, MCP serverus, instrukcijas, spraudņus un vides ignorējumus."
+---
+
+Bolt izmanto slāņotu konfigurācijas sistēmu: **globālu** konfigurācijas failu lietotāja mēroga noklusējumiem un **katram projektam** paredzētu konfigurācijas failu repozitorijai specifiskiem iestatījumiem. Abi faili izmanto JSONC formātu (JSON ar komentāriem), un abi tiek automātiski izveidoti ar `$schema` norādi, kas iespējo redaktora automātisko pabeigšanu.
+
+## Konfigurācijas failu atrašanās vietas
+
+### Projekta konfigurācija
+
+Tiek izveidota automātiski pirmajā palaišanas reizē jūsu projektā:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Iekļaujiet šo failu, lai kopīgotu sniedzēja konfigurāciju, MCP serverus un pielāgotas instrukcijas ar pārējo komandu. Sensitīvi akreditācijas dati nekad nedrīkst nonākt šeit — tā vietā izmantojiet vides mainīgos vai globālo konfigurāciju.
+
+### Globālā konfigurācija
+
+Attiecas uz visiem projektiem jūsu iekārtā. Bolt meklē pirmo atbilstošo failu jūsu OS konfigurācijas direktorijā:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (ieteicams)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Kur atrodas globālā konfigurācijas direktorija?">
+  Bolt ievēro XDG Base Directory specifikāciju Linux un macOS (`~/.config/bolt/`) un `%APPDATA%\bolt\` Windows. Palaidiet `bolt debug config`, lai izdrukātu pilno atrisināto konfigurāciju jūsu iekārtā.
+</Accordion>
+
+## Minimāls konfigurācijas piemērs
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+Lauks `$schema` iespējo IntelliSense un validāciju redaktoros, kas atbalsta JSON Schema. Bolt automātiski ieraksta šo lauku, ja tā trūkst.
+
+## Konfigurācijas atsauce
+
+### `provider`
+
+Konfigurējiet sniedzējam specifiskas opcijas, piemēram, pielāgotus bāzes URL, reģiona iestatījumus vai nosauktus akreditācijas datus:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Reģistrējiet [Model Context Protocol](https://modelcontextprotocol.io) serverus, kurus aģents var izsaukt kā rīkus:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Interaktīvi pārvaldiet MCP serverus ar `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` un `bolt mcp debug`.
+
+### `instructions`
+
+Pievienojiet pielāgotas sistēmas instrukcijas, kas tiek injicētas katrā sesijā. Noderīgi, lai īstenotu kodēšanas konvencijas, stila rokasgrāmatas vai projektam specifiskus noteikumus:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instrukcijas no vairākiem konfigurācijas failiem (globālais \+ projekts) tiek automātiski apvienotas un dublikāti noņemti.
+
+### `plugin`
+
+Ielādējiet Bolt spraudņus. Spraudņi var pievienot jaunus rīkus, sniedzējus, konteksta avotus un āķus:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Attālinātā konfigurācija, izmantojot `url`
+
+Palaišanas laikā izgūstiet konfigurāciju no attālināta URL. Noderīgi centralizētai komandas konfigurācijai:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Mainīgo aizvietošana
+
+Konfigurācijas vērtības var atsaukties uz vides mainīgajiem, izmantojot sintaksi `$VAR_NAME` vai `${VAR_NAME}`. Aizvietošana notiek ielādes laikā, pirms konfigurācija tiek parsēta:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Kā konfigurācijā izmantot vides mainīgos?">
+  Atsauces uz jebkuru vides mainīgo ar `$VAR_NAME` vai `${VAR_NAME}` jebkur virknes konfigurācijas vērtībā. Bolt aizvieto vērtību ielādes laikā. Ja mainīgais nav iestatīts, tiek izmantota tiešā virkne `$VAR_NAME` — Bolt neklusē neveiksmīgi un nemet kļūdu par trūkstošām aizvietošanām.
+</Accordion>
+
+## Vides mainīgo ignorējumi
+
+Šie vides mainīgie ļauj pilnībā pāradresēt vai ignorēt konfigurāciju, kas ir noderīgi CI, konteineriem un testēšanai:
+
+| Mainīgais | Apraksts |
+| --- | --- |
+| `BOLT_CONFIG` | Absolūts ceļš uz konfigurācijas failu, ko ielādēt projekta lokālā vietā |
+| `BOLT_CONFIG_DIR` | Ignorē direktoriju, kurā Bolt meklē konfigurācijas failus |
+| `BOLT_CONFIG_CONTENT` | Nodrošina neapstrādātu JSONC konfigurācijas saturu kā virkni — faili nav nepieciešami |
+
+`BOLT_CONFIG_CONTENT` ir īpaši ērts konteinerizētās vidēs, kur failu piemontēšana ir neērta:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Kura konfigurācija ir prioritāra, ja aktīvi vairāki avoti?">
+  Bolt apvieno konfigurācijas šādā secībā (vēlākie ieraksti uzvar):
+
+  1. Globālais konfigurācijas fails (`bolt.jsonc` / `bolt.json` OS konfigurācijas direktorijā)
+  2. Attālinātās konfigurācijas, kas izgūtas no `url` ierakstiem globālajā konfigurācijā
+  3. Katram projektam paredzētie konfigurācijas faili (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` fails (ja iestatīts)
+  5. `BOLT_CONFIG_CONTENT` (ja iestatīts)
+
+  Masīvu lauki, piemēram, `instructions`, tiek savienoti starp avotiem, nevis aizstāti. Objektu lauki tiek dziļi apvienoti, un konflikta gadījumā uzvar vēlākās vērtības.
+</Accordion>

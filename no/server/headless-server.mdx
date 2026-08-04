@@ -1,0 +1,52 @@
+---
+title: "Kjør Bolt som en headless server"
+sidebarTitle: "Headless server"
+description: "bolt serve eksponerer en full Bolt-kjøretid over HTTP slik at en hvilken som helst TUI, web-grensesnitt, editor-integrasjon eller skript kan koble til den lokalt eller over nettverket."
+---
+
+`bolt serve` kjører en headless Bolt-server som eksponerer hele motoren over HTTP: økter, agenter, verktøy, leverandørtilgang, MCP og strømmehendelser. Alt Bolt kan gjøre interaktivt, kan den gjøre over API-et.
+
+## Start en server
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  Å binde til `0.0.0.0` eksponerer Bolt på nettverket ditt. Sett alltid `BOLT_SERVER_USERNAME` og `BOLT_SERVER_PASSWORD` før du gjør det.
+</Warning>
+
+## Koble til en TUI
+
+Fra en hvilken som helst maskin som kan nå serveren:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Eller kjør en engangs ledetekst mot en ekstern server:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Basic auth
+
+Sett legitimasjoner via miljøvariabler (se [Miljøvariabler](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Alle klienter må sende samsvarende legitimasjoner.
+
+## Relatert
+
+- [Eksterne økter](/server/remote-sessions) — tilkobling, mDNS-oppdagelse og delte servere.
+- [Web-grensesnitt](/server/web-ui) — nettleser-frontenden.
+- [ACP](/server/acp) — drive Bolt fra Zed og andre editorer.

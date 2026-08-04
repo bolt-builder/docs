@@ -1,0 +1,53 @@
+---
+title: "權限:控制 Bolt 代理能做什麼"
+sidebarTitle: "權限"
+description: "Bolt 的每個代理存取層級、權限提示與設定層級的允許/拒絕規則如何避免代理做出你未核准的事情。"
+---
+
+Bolt 代理可以讀取檔案、寫入檔案並執行 shell 命令。這樣的能力透過兩層來劃分範圍:每個代理的存取層級,以及可讓你核准、拒絕或事先設定的互動式權限提示。
+
+## 代理存取層級
+
+每個內建代理都有宣告的存取層級:
+
+| 存取層級 | 讀取檔案 | 寫入檔案 | 執行 shell 命令 |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+內建對應:
+
+- **Full** — `code`、`debug`、`refactor`、`migrate`、`perf`
+- **Edit** — `docs`
+- **Read** — `plan`、`ask`、`code-review`、`security`
+
+在 TUI 中按 `Tab` 切換代理,或將 `--agent <name>` 傳給 `bolt run`。
+
+## 互動式提示
+
+在代理的存取層級範圍內,可能具破壞性的動作仍會提示確認。你可以核准一次、在本次工作階段內核准或拒絕。被拒絕的呼叫會回傳錯誤給代理,代理就繼續往下做。
+
+## 非互動式核准
+
+對於 CI、指令碼或受信任的本機工作流程,`bolt run` 支援可略過提示的旗標:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`、`--yolo` 與 `--dangerously-skip-permissions` 讓代理無需詢問即可讀取、寫入與執行。僅在受信任的環境中使用。
+</Warning>
+
+## 設定層級的規則
+
+你可以在 `.bolt/bolt.jsonc` 中新增 `permission` 區塊,為整個專案預先拒絕(或預先允許)特定工具。這會套用到專案內的每個工作階段,包括非互動式的 `bolt run` 呼叫。schema 請見 [設定](/concepts/configuration)。
+
+## 相關
+
+- [代理](/concepts/agents) — 哪些代理具有哪些存取層級。
+- [工具](/concepts/tools) — 權限所控管的完整工具清單。
+- [設定](/concepts/configuration) — 設定持久的權限規則。

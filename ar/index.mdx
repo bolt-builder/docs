@@ -1,0 +1,78 @@
+---
+title: "Bolt: وكيل برمجة بالذكاء الاصطناعي لطرفيتك"
+sidebarTitle: "الصفحة الرئيسية"
+description: "Bolt هو وكيل برمجة بالذكاء الاصطناعي يعمل في الطرفية أولاً، ويضم عشرة وكلاء متخصصين، وجلسات دائمة، ودعم MCP، وتطبيق سطح مكتب — مدعوم بأي مزوّد LLM."
+---
+
+يضع Bolt فريقًا هندسيًا كاملاً مدعومًا بالذكاء الاصطناعي مباشرة داخل طرفيتك. يأتي كواجهة TUI سريعة تعمل بلوحة المفاتيح وتطبيق سطح مكتب أصلي، وكلاهما مدعوم بنفس المحرك: عشرة وكلاء متخصصون، جلسات دائمة قابلة للاستمرار، إدارة خوادم MCP مع OAuth، ونظام إضافات، ودعم لكل مزوّدي LLM الرئيسيين.
+
+<CardGroup cols={2}>
+  <Card title="التثبيت" icon="download" href="/installation">
+    ثبّت Bolt في ثوانٍ عبر curl أو npm أو bun أو مدير الحزم الذي تختاره.
+  </Card>
+  <Card title="البدء السريع" icon="rocket" href="/quickstart">
+    شغّل جلسة البرمجة الأولى بالذكاء الاصطناعي في أقل من دقيقة.
+  </Card>
+  <Card title="الوكلاء" icon="robot" href="/concepts/agents">
+    تعرّف على الوكلاء العشرة المدمجين: code وplan وask وreview وdebug وrefactor وdocs وsecurity وmigrate وperf.
+  </Card>
+  <Card title="مرجع الأوامر" icon="terminal" href="/reference/commands">
+    كل أمر CLI وأمر فرعي وخيار موثّق بالكامل.
+  </Card>
+</CardGroup>
+
+## ما الذي يفعله Bolt
+
+يقرأ Bolt قاعدة الشيفرة الخاصة بك، ويفهم ما تبنيه، ويكتب الشيفرة معك — في الطرفية أو كتطبيق سطح مكتب. كل جلسة قابلة للاستمرار: يمكنك الانفصال وإعادة الاتصال من جهاز آخر، وتفريع فرع من المحادثة، ومشاركة رابط، أو تصدير نسخة نصية مُنقّاة.
+
+<CardGroup cols={3}>
+  <Card title="الجلسات" icon="clock-rotate-left" href="/concepts/sessions">
+    جلسات دائمة وقابلة للتفريع مخزّنة في SQLite محلي.
+  </Card>
+  <Card title="المزوّدون والنماذج" icon="microchip" href="/concepts/providers-and-models">
+    استخدم مفتاح API الخاص بك لأي مزوّد LLM رئيسي.
+  </Card>
+  <Card title="الإعدادات" icon="sliders" href="/concepts/configuration">
+    ملف `.bolt/bolt.jsonc` لكل مشروع مع دعم كامل للمخطط.
+  </Card>
+  <Card title="خوادم MCP" icon="plug" href="/extending/mcp-servers">
+    أضف أدوات عبر Model Context Protocol، بما في ذلك تدفقات OAuth.
+  </Card>
+  <Card title="الإضافات" icon="puzzle-piece" href="/extending/plugins">
+    وسّع Bolt بمزوّدين وأدوات وطرق مصادقة مخصّصة.
+  </Card>
+  <Card title="تكامل GitHub" icon="github" href="/server/github-actions">
+    رسائل commit وتقييم شيفرة وGitHub Actions مدعومة بالذكاء الاصطناعي.
+  </Card>
+</CardGroup>
+
+## ابدأ الآن
+
+<Steps>
+  <Step title="ثبّت Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    أو ثبّت عبر npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="افتح مشروعك">
+    انتقل إلى أي مجلد مشروع وشغّل الـ TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="اضبط مزوّدًا">
+    عند التشغيل الأول يطلب منك Bolt إضافة مزوّد LLM. يمكنك أيضًا تشغيل:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="ابدأ البرمجة بالذكاء الاصطناعي">
+    اكتب موجّهك في تذييل الـ TUI، اضغط Enter، ودع وكلاء Bolt يبدؤون العمل. بدّل بين الوكلاء بـ `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  استخدم `bolt run "explain this codebase"` للحصول على إجابة سريعة غير تفاعلية دون فتح الـ TUI الكامل.
+</Tip>

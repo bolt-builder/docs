@@ -1,0 +1,215 @@
+---
+title: "MCP sunucularıyla Bolt'a araç ekleyin"
+sidebarTitle: "MCP Sunucuları"
+description: "Model Context Protocol kullanarak Bolt'a harici araçlar ve kaynaklar bağlayın. CLI'dan MCP sunucularını ekleyin, kimlik doğrulayın ve hata ayıklayın."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP), AI ajanlarının ortak bir arabirim aracılığıyla harici araçlar ve veri kaynaklarıyla iletişim kurmasına olanak tanıyan açık bir standarttır. Bolt, ajanların neler yapabileceğini genişletmek için MCP'yi kullanır — bağlı bir MCP sunucusu, bir veritabanı sorgu aracından tam bir web arama API'sine kadar her şeyi sunabilir. Bolt tam yaşam döngüsünü yönetir: sunucuları ekleme, OAuth akışlarını çalıştırma, tokenları yenileme ve bağlantıyı test etme.
+
+## Sunucu türleri
+
+Bolt iki tür MCP sunucusunu destekler.
+
+| Tür | Aktarım | Açıklama |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Akış Yapılabilir HTTP) | Ağ üzerinden ulaşabileceğiniz bir URL'de çalışan bir sunucu |
+| `local` | stdio | Bolt'un alt süreç olarak başlattığı yerel bir komut |
+
+Uzak sunucular kutudan çıkar çıkmaz OAuth kimlik doğrulamasını destekler. Bolt token edinme, saklama ve otomatik yenileme işlemlerini yönetir — tokenları asla elle yönetmezsiniz.
+
+---
+
+## Komutlar
+
+### `bolt mcp add`
+
+Etkileşimli veya tek seferde yeni bir MCP sunucusu ekleyin.
+
+**Etkileşimli** — adı, kapsamı (proje veya global), türü, URL veya komutu ve sunucunun OAuth kullanıp kullanmadığını soran komut yönlendirmeli bir sihirbaz üzerinden ilerlemek için `bolt mcp add` komutunu bağımsız değişken olmadan çalıştırın.
+
+**Etkileşimsiz** — bir ad artı uzak bir sunucu için `--url` veya yerel bir sunucu için `--` sonrası bir komut sağlayın:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**`bolt mcp add` için bayraklar**
+
+| Bayrak | Açıklama |
+|------|-------------|
+| `--url <url>` | Uzak bir MCP sunucusunun URL'si |
+| `--header <KEY=VALUE>` | Uzak bir sunucuya gönderilecek HTTP başlığı (tekrar edilebilir) |
+| `--env <KEY=VALUE>` | Yerel bir sunucu için ortam değişkeni (tekrar edilebilir) |
+
+---
+
+### `bolt mcp list`
+
+Yapılandırılmış her MCP sunucusunu bağlantı ve kimlik doğrulama durumuyla birlikte listeleyin.
+
+```bash
+bolt mcp list
+```
+
+Her giriş bir durum simgesi gösterir:
+
+| Simge | Anlamı |
+|------|---------|
+| `✓` | Bağlı (OAuth kullanılıyorsa doğrulandı) |
+| `⚠` | Kimlik doğrulama gerekli veya kimlik bilgileri süresi doldu |
+| `✗` | Bağlanma başarısız veya istemci kaydı gerekli |
+| `○` | Henüz başlatılmadı veya devre dışı |
+
+---
+
+### `bolt mcp auth <name>`
+
+OAuth etkin uzak bir MCP sunucusuyla kimlik doğrulayın. Adı atlarsanız Bolt, OAuth yeteneğine sahip tüm sunucuları mevcut kimlik doğrulama durumlarıyla birlikte (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`) listeleyen etkileşimli bir seçici gösterir.
+
+```bash
+# Belirli bir sunucuyu doğrula
+bolt mcp auth my-server
+
+# OAuth yeteneğine sahip sunucular listesinden seç
+bolt mcp auth
+```
+
+Bolt, sağlayıcının yetkilendirme URL'sinde tarayıcınızı açar ve geri çağrıyı bekler — dinamik istemci kaydı dahil tam OAuth el sıkışması otomatik olarak gerçekleşir.
+
+<Note>
+  Bolt token saklama ve otomatik token yenileme dahil tam OAuth akışını yönetir. Tokenları kopyalamanız veya sona ermeyi elle yönetmeniz gerekmez. Bir sunucu önceden kaydedilmiş bir istemci kimliği gerektiriyorsa, `.bolt/bolt.jsonc` içindeki sunucunun yapılandırma girişine `oauth.clientId` (ve isteğe bağlı olarak `oauth.clientSecret`) ekleyin.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Bir sunucu için saklanan OAuth kimlik bilgilerini kaldırın. Adı atlarsanız Bolt, saklanan tokenları olan sunucular listesinden seçmenizi ister.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Tam bir oturum başlatmadan uzak bir sunucunun bağlantısını test edin ve OAuth durumunu inceleyin. Bir sunucu `✗ failed` veya `⚠ needs authentication` gösterdiğinde başvurulacak ilk araç budur.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` şunları raporlar:
+- Sunucu URL'si ve mevcut kimlik doğrulama durumu
+- Erişim tokenı ayrıntıları (maskelenmiş) ve son kullanma zaman damgası
+- Bir yenileme tokenının olup olmadığı
+- Sunucudan gelen ham HTTP yanıt kodu
+- `WWW-Authenticate` başlığının içeriği
+- Bir OAuth keşif probunun sonucu (akışı tamamlamadan)
+
+---
+
+## Manuel yapılandırma
+
+CLI komutlarını kullanmadan MCP sunucularını doğrudan `.bolt/bolt.jsonc` içinde ekleyebilir veya düzenleyebilirsiniz. Bolt değişiklikleri bir sonraki oturum başlatıldığında alır.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Yerel bir stdio sunucusu şöyle görünür:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Özel HTTP başlıkları sağlamak veya uzak bir sunucuda OAuth'u devre dışı bırakmak için:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Uzak bir MCP sunucusu ekleme ve kimlik doğrulama
+
+<Steps>
+  <Step title="Sunucuyu ekleyin">
+    `bolt mcp add` çalıştırın ve komutları izleyin veya etkileşimsiz formu kullanın:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt girişi `.bolt/bolt.jsonc` (proje kapsamı) veya global yapılandırmanıza yazar.
+  </Step>
+
+  <Step title="Bağlantı durumunu kontrol edin">
+    ```bash
+    bolt mcp list
+    ```
+
+    Sunucu kimlik doğrulama gerektiriyorsa adının yanında `⚠ needs authentication` göreceksiniz.
+  </Step>
+
+  <Step title="OAuth ile kimlik doğrulayın">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt tarayıcınızı açar. Erişimi onayladıktan sonra terminal kimlik doğrulamanın başarılı olduğunu onaylar ve sunucu durumu `✓ connected (OAuth)` olarak değişir.
+  </Step>
+
+  <Step title="Araçların mevcut olduğunu doğrulayın">
+    Bir Bolt oturumu başlatın. Sunucunun sunduğu araçlar artık tüm ajanlar için kullanılabilir. İstediğiniz zaman inceleyebilirsiniz:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

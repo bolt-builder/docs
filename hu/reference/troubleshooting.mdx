@@ -1,0 +1,395 @@
+---
+title: "Gyakori Bolt-problémák elhárítása"
+sidebarTitle: "Hibaelhárítás"
+description: "Megoldások a leggyakoribb Bolt-problémákra: indítási hibák, szolgáltató-hitelesítési hibák, MCP-kapcsolatok, munkamenet-problémák, jogosultságok, költségek és több."
+---
+
+A legtöbb Bolt-probléma kevés kategóriába esik. Dolgozd át a megfelelő szakaszt lent, és ellenőrizd a naplókimenetet a `bolt logs` paranccsal, valahányszor valami váratlan történik.
+
+<Note>
+  Az itt meg nem válaszolt kérdésekhez keress vagy indíts vitát a [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) oldalán. Illeszd be a `bolt debug info` és `bolt logs --tail 50` kimenetét a posztodba, hogy a közösség gyorsabban segíthessen.
+</Note>
+
+## Először próbálandó dolgok
+
+Mielőtt egy adott szakaszba mélyednél, ez a négy parancs oldja meg a legtöbb problémát:
+
+| Tünet | Első parancs | Miért |
+| --- | --- | --- |
+| Bármi furcsa | `bolt debug info` | Egy lövéssel rendszer- \+ plugin-összefoglaló. |
+| Valami korábban működött, most nem | `bolt logs --tail 100` | Legutóbbi hibák, általában közel a tetejéhez. |
+| Plugint gyanítasz | `bolt --pure` | Indítás az összes plugin letiltva. |
+| A konfigurációt nem veszi fel | `bolt debug config` | Kiírja a teljesen feloldott konfigurációt. |
+
+<Tip>
+  A `bolt debug` család az első megálló bármilyen rejtélyes viselkedéshez. `bolt debug info` rendszer-összefoglalóhoz, `bolt debug config` a feloldott konfigurációhoz, `bolt debug paths` a lemezen lévő helyekhez, és `bolt debug snapshot` a munkamenet-állapot vizsgálatához.
+</Tip>
+
+<Accordion title="A Bolt nem indul / összeomlik indításkor">
+  **Tünetek:** A terminál felvillan és azonnal kilép, vagy stack trace-t látsz a TUI megjelenítése előtt.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Gyűjts rendszerinformációt">
+      ```bash
+      bolt debug info
+      ```
+
+      Ez kiírja a Bolt-verziódat, az operációs rendszert, a terminál-emulátort és a betöltött plugineket. Másold ki ezt a kimenetet, amikor hibát jelentesz.
+    </Step>
+    <Step title="Ellenőrizd a legutóbbi naplókimenetet">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Keress `ERROR` sorokat. Gyakori ok egy plugin, amely nem tud betöltődni — ebben az esetben egy plugin nevét említő hibát fogsz látni.
+    </Step>
+    <Step title="Tiltsd le a plugineket a probléma elszigeteléséhez">
+      ```bash
+      bolt --pure
+      ```
+
+      Ha a Bolt tisztán indul a `--pure` kapcsolóval, egy plugin okozza az összeomlást. Távolítsd el a bűnös plugint a konfigurációdból, vagy jelentsd a plugin szerzőjének.
+    </Step>
+    <Step title="Ellenőrizd a sérült konfigurációt">
+      ```bash
+      bolt debug config
+      ```
+
+      Ha ez hibát ír érvénytelen JSON-ról, nyisd meg az általa említett konfigurációs fájlt, és javítsd a szintaxist. Futtasd a `bolt db path` parancsot, hogy megerősítsd, az adatbázis útvonala elérhető.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="A szolgáltató hitelesítése sikertelen">
+  **Tünetek:** A Bolt „No providers configured" üzenetet mutat, az API-kérések 401-es hibával elbuknak, vagy a `bolt run` azonnal kilép kimenet nélkül.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Futtasd újra a szolgáltatói bejelentkezési folyamatot">
+      ```bash
+      bolt providers login
+      ```
+
+      Válaszd ki a szolgáltatódat, és kövesd a promptokat. A Bolt végigvezet az API-kulcs megadásán vagy az OAuth-on.
+    </Step>
+    <Step title="Ellenőrizd az API-kulcs környezeti változóját">
+      Ha környezeti változót használsz (pl. `ANTHROPIC_API_KEY`), erősítsd meg, hogy valóban be van állítva az aktuális shellben:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Ha üres, add hozzá a shell-profilodhoz, és nyisd újra a terminált.
+    </Step>
+    <Step title="Vizsgáld meg a feloldott konfigurációt">
+      ```bash
+      bolt debug config
+      ```
+
+      Nézd meg a `provider` szakaszt. Ha a szolgáltatód üres `apiKey` mezővel jelenik meg, a konfigurációs fájlban lévő környezeti változó-hivatkozás nem kerül kibontásra.
+    </Step>
+    <Step title="Listázd a tárolt hitelesítő adatokat">
+      ```bash
+      bolt providers list
+      ```
+
+      Ez megjeleníti az összes `auth.json`-ban tárolt hitelesítő adatot és az összes szolgáltatóhoz kapcsolódó környezeti változót, amelyet a Bolt észlelt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Az MCP-szerver nem csatlakozik">
+  **Tünetek:** A `bolt mcp list` egy szervert `failed` vagy `needs authentication` állapottal mutat, vagy az ügynök nem tud eszközöket használni arról a szerverről.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Futtasd az MCP-debug próbát">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Ez teszteli az alap HTTP-kapcsolatot, megvizsgálja a `WWW-Authenticate` fejlécet, és végigmegy az OAuth-felderítési folyamaton, ha alkalmazható. A kimenet megmondja, hogy a szerver elérhető-e, és szükséges-e hitelesítés.
+    </Step>
+    <Step title="Ellenőrizd a szerver URL-jét">
+      Ellenőrizd az URL-t a `.bolt/bolt.jsonc` fájlban. Távoli szervereknél győződj meg róla, hogy az URL az MCP-útvonalon végződik (pl. `/mcp` vagy `/tools`), nem csak a hoszton.
+    </Step>
+    <Step title="Hitelesíts újra OAuth-szervereknél">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Kövesd a böngésző folyamatát. Ha a szerver előre regisztrált kliensazonosítót igényel, add hozzá a konfigurációhoz:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Ellenőrizd a helyi szerver parancsát">
+      `local` szervereknél futtasd a parancsot manuálisan a termináljodban, hogy megerősítsd, hibák nélkül elindul:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Munkamenet nem található">
+  **Tünetek:** A `bolt run --session <id>` „Session not found" üzenettel kilép, vagy egy munkamenet, amivel emlékezetesen dolgoztál, eltűnt.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Listázd az összes elérhető munkamenetet">
+      ```bash
+      bolt session list
+      ```
+
+      A munkamenetek a legutóbb frissítettek szerint vannak rendezve. Ha a munkameneted törölve lett, vagy az adatbázis migrálva lett, itt nem fog megjelenni.
+    </Step>
+    <Step title="Keresd meg az adatbázis útvonalát">
+      ```bash
+      bolt db path
+      ```
+
+      Ez kiírja a teljes útvonalat a SQLite-fájlhoz. Ellenőrizd, hogy a fájl létezik és nem üres.
+    </Step>
+    <Step title="Kérdezd le közvetlenül az adatbázist">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Ha a munkameneted megjelenik az adatbázisban, de a `bolt session list`-ben nem, projekt-azonosító eltérés lehet — a munkamenetek projektekhez vannak hatókörözve.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Jogosultsági hibák a TUI-ban">
+  **Tünetek:** Az ügynök folyamatosan jogosultságot kér, megtagadja a fájlok írását, vagy „Permission denied" bannereket látsz.
+
+  **A hozzáférési szintek megértése:**
+
+  Minden beépített ügynöknek van egy deklarált hozzáférési szintje, amely szabályozza, mit tehet kérdés nélkül:
+
+  | Hozzáférési szint | Mit enged |
+  | --- | --- |
+  | **Full** | Fájlok olvasása, írása, shell parancsok futtatása |
+  | **Edit** | Fájlok olvasása és írása, nincs shell parancs |
+  | **Read** | Csak fájlok olvasása, nincs írás vagy parancs |
+
+  A `code`, `debug`, `refactor`, `migrate` és `perf` ügynökök **Full** hozzáféréssel rendelkeznek. A `docs`-nak **Edit** hozzáférése van. A `plan`, `ask`, `code-review` és `security` **Read** hozzáféréssel rendelkezik.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Válts Full hozzáféréssel rendelkező ügynökre">
+      Ha fájlírásra van szükséged, használd a `code` ügynököt:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Vagy nyomd meg a `Tab` billentyűt a TUI-ban, hogy körkörösen végigmenj az ügynökökön.
+    </Step>
+    <Step title="Használd az --auto kapcsolót nem interaktív jóváhagyáshoz">
+      CI-ben vagy szkriptelt kontextusban add át az `--auto` kapcsolót a `bolt run` parancsnak, hogy automatikusan jóváhagyja azokat a jogosultságokat, amelyek nincsenek kifejezetten letiltva a konfigurációban.
+    </Step>
+    <Step title="Konfiguráld a jogosultságokat a konfigurációs fájlban">
+      A projektben lévő összes munkamenethez letilthatsz konkrét eszközöket a `.bolt/bolt.jsonc` fájlba egy `permission` blokk hozzáadásával.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Magas token-használat vagy váratlan költségek">
+  **Tünetek:** A `bolt stats` a vártnál magasabb token-számokat mutat, vagy az API-számlád gyorsabban nő a vártnál.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Nézd át a használati statisztikáidat">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      A kimenet lebontja a napi költséget, az átlagos munkamenetenkénti tokent és a modellenkénti használatot.
+    </Step>
+    <Step title="Csökkentsd a gondolkodási erőfeszítést">
+      Olyan modelleknél, amelyek támogatják, csökkentsd a gondolkodási erőfeszítést a `--variant` kapcsolóval:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      A támogatott értékek szolgáltató-specifikusak (pl. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Válts olcsóbb modellre">
+      Használd a `bolt models` parancsot egy kisebb modell megkereséséhez. A kisebb modellek (pl. `claude-haiku`, `gpt-4o-mini`) jelentősen kevesebbe kerülnek tokenenként, és sok feladathoz jól működnek.
+    </Step>
+    <Step title="Használd az ask vagy plan ügynököt feltáráshoz">
+      Az `ask` és `plan` ügynökök **Read** hozzáféréssel rendelkeznek, és nem hívnak írási eszközöket, ami azt jelenti, hogy elkerülik az eszköz-igényes ciklusokat, amelyek nagy kimeneti tokeneket generálnak.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Plugin-konfliktusok vagy váratlan viselkedés">
+  **Tünetek:** Egy slash-parancs váratlanul viselkedik, a TUI helytelenül jelenít meg, vagy valami megváltozott egy plugin telepítése után.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Tiltsd le az összes plugint egy alap megállapításához">
+      ```bash
+      bolt --pure
+      ```
+
+      Ha a probléma eltűnik, egy plugin a felelős.
+    </Step>
+    <Step title="Azonosítsd a bűnös plugint">
+      ```bash
+      bolt debug info
+      ```
+
+      A kimenet felsorolja az összes betöltött plugint. Ideiglenesen távolítsd el őket egyesével a konfigurációdból, és indítsd újra a Bolt-ot, amíg a probléma el nem tűnik.
+    </Step>
+    <Step title="Ellenőrizd a verzió-inkompatibilitást">
+      ```bash
+      bolt upgrade
+      ```
+
+      A pluginek egy kompatibilis Bolt-verziótartományt deklarálnak. Ha nemrég frissítetted a Bolt-ot, lehet, hogy egy plugint is frissíteni kell.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows útvonalproblémák">
+  **Tünetek:** Windowson WSL-lel a Bolt nem találja a `less`-t, a fájlutak váratlan visszaütős perjeleket tartalmaznak, vagy a `bolt session list` lapozója nem indul el.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Állítsd be a Git Bash útvonalát">
+      A Bolt Unix-segédprogramokat (beleértve a `less`-t) keres a Git for Windows telepítéséhez képest. Állítsd be a környezeti változót a Git Bash könyvtárára:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Add hozzá ezt a PowerShell-profilodhoz (`$PROFILE`), hogy tartós legyen.
+    </Step>
+    <Step title="Ellenőrizd a debug info-val">
+      ```bash
+      bolt debug info
+      ```
+
+      Megerősíti az OS-észlelést és azt, hogy a Bolt milyen útvonalakat használ.
+    </Step>
+    <Step title="Futtasd a Bolt-ot közvetlenül a WSL-en belül">
+      A legjobb élmény érdekében Windowson futtasd a `bolt`-ot egy WSL-terminálon belülről, nem a PowerShell-ből vagy a Parancssorból.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Nem tudom frissíteni a Bolt-ot">
+  **Tünetek:** A `bolt upgrade` hibát jelent vagy csendben nem csinál semmit, vagy a verziószám nem változik a futtatása után.
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Add meg kifejezetten a telepítési módszert">
+      A Bolt megpróbálja felismerni, hogyan telepítették. Ha a felismerés sikertelen, írd felül:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Telepítsd újra a telepítőszkripttel">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: futtasd rendszergazdaként Chocolatey-hez">
+      Ha `choco`-val telepítettél, a frissítésekhez emelt jogosultságú terminál szükséges. Nyiss PowerShell-t rendszergazdaként a `bolt upgrade` futtatása előtt.
+    </Step>
+    <Step title="Erősítsd meg, hogy az új verzió aktív">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Az ügynök nem találja a fájlokat (vagy túl sokat talál)">
+  **Tünetek:** Az ügynök panaszkodik, hogy nem lát fájlokat, amelyek léteznek, vagy ismételten olyan fájlokat vesz fel, amelyekhez nem akarsz nyúlni (mint a `node_modules`, a build-kimenet vagy a titkok).
+
+  **Lépések:**
+
+  <Steps>
+    <Step title="Ellenőrizd a .boltignore fájlt">
+      A Bolt tiszteletben tart egy `.boltignore` fájlt a projekt gyökerében, amely vezérli, hogy az ügynök fájlkeresési eszközei mely fájlokat láthatják. Ugyanazt a szintaxist használja, mint a `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Erősítsd meg a munkakönyvtárat">
+      ```bash
+      bolt debug info
+      ```
+
+      Ellenőrizd, hogy a `cwd` illeszkedik a projekt gyökeréhez. Ha egy alkönyvtárból indítottad a Bolt-ot, az ügynök fájlkeresése ott gyökerezik.
+    </Step>
+    <Step title="Kérd meg az ügynököt, hogy grepeljen, ne találgasson">
+      Ha az ügynök azt állítja, hogy egy fájl nem létezik, kérd meg, hogy futtasson `grep`-et vagy `glob`-ot kifejezetten. Ez megkerüli bármely elavult belső feltételezést.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Debug info hibajelentéshez">
+  Amikor hibát jelentesz, a következő információ a leghasznosabb a karbantartók számára:
+
+  <Steps>
+    <Step title="Gyűjts rendszer- és plugin-információt">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Gyűjts legutóbbi naplókimenetet">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Exportáld a releváns munkamenetet (megtisztítva)">
+      Ha a probléma egy adott munkamenet során történt, exportáld a titkokat kihúzva:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Csatold a `session-debug.json` fájlt a jegyhez.
+    </Step>
+    <Step title="Nyiss egy issue-t vagy vitát">
+      Menj a [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) oldalára, és illeszd be a `bolt debug info` kimenetét és a reprodukció lépéseit.
+    </Step>
+  </Steps>
+</Accordion>

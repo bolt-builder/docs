@@ -1,0 +1,26 @@
+---
+title: "Automatyczne aktualizacje aplikacji desktopowej Bolt"
+sidebarTitle: "Automatyczne aktualizacje"
+description: "Jak aplikacja desktopowa Bolt aktualizuje się w kanałach dev, beta i produkcyjnym — oraz jak zmieniać kanały aktualizacji lub cofnąć się do poprzedniej wersji."
+---
+
+Aplikacja desktopowa aktualizuje się automatycznie w tle w trzech kanałach wydań:
+
+| Kanał | Cykl | Dla kogo |
+| --- | --- | --- |
+| `prod` | Tylko stabilne wydania. | Wszyscy domyślnie. |
+| `beta` | Release candidates. | Zespoły, które chcą wcześniejszego wglądu w kolejne stabilne wydanie. |
+| `dev` | Prawie-że-nightly. | Wcześni użytkownicy i kontrybutorzy. |
+
+## Zmiana kanałów
+
+Zmieniaj kanały z poziomu panelu ustawień aplikacji. Przy następnym uruchomieniu aplikacja sprawdzi wybrany kanał w poszukiwaniu nowszego builda; sprawdzenie możesz też wyzwolić ręcznie.
+
+## Pod maską
+
+Aktualizacje są pobierane w tle i stosowane przy następnym uruchomieniu. Jeśli aktualizacja nie zostanie zastosowana, aplikacja zachowuje poprzednią wersję i pokazuje błąd — nie ma stanu pośredniego.
+
+## Powiązane
+
+- [Instalacja](/desktop/install) — ścieżki pierwszej instalacji.
+- [Funkcje](/desktop/features) — co dostajesz w aplikacji desktopowej.

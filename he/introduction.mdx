@@ -1,0 +1,107 @@
+---
+title: "היכרות עם Bolt: סוכן AI פתוח למסוף"
+sidebarTitle: "היכרות"
+description: "פגוש את Bolt: סוכן קידוד AI פתוח למסוף עם עשרה סוכנים, סשנים עמידים, זיכרון פרויקט, MCP, 75+ ספקי LLM, TUI ויישום שולחן עבודה."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**המסוף שלך, עכשיו עם צוות הנדסת AI מלא בתוכו.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">אתר</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt הוא סוכן קידוד AI ראשון למסוף שנבנה על [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) ו-[SolidJS](https://www.solidjs.com). כוון אותו לכל פרויקט והוא קולט הקשר אוטומטית: הוא חוקר את הקוד שלך, עוקב אחר המוסכמות שלך, מבצע פקודות מעטפת, עורך קבצים, מריץ בדיקות ומשחרר שינויים.
+
+עשרה סוכנים מובנים (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) בתוספת תת-סוכנים `@general` ו-`@explore` מכסים את כל לולאת ההנדסה. סשנים עמידים: נתק, חבר מחדש (אפילו לשרת מרוחק), פצל, שתף, ייצא וייבא בכל עת. זיכרון הפרויקט שומר את מה שהסוכן לומד בין סשנים. ניתן להרחבה דרך שרתי MCP (עם OAuth), תוספים, סוכנים מותאמים אישית וכלים מותאמים אישית.
+
+Bolt הוא קוד פתוח תחת רישיון PolyForm Noncommercial 1.0.0.
+
+## למה Bolt?
+
+Bolt מעוצב סביב האופן שבו מפתחים באמת עובדים: במסוף, על פני סשנים מרובים, על בסיסי קוד אמיתיים. הנה מה שמייחד אותו:
+
+- **TUI ראשון למסוף.** ממשק מהיר, מונחה מקלדת שנבנה עם [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) ו-[SolidJS](https://www.solidjs.com). זה מרגיש ילידי כי זה כך.
+- **צוות שלם של סוכנים.** עשרה סוכנים מתמחים — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` ו-`perf` — בתוספת תת-סוכנים למחקר והאצלה רב-שלבית. החלף ביניהם עם `Tab`.
+- **סשנים שתוכל לעזוב ולהצטרף אליהם מחדש.** נתק מסשן וחבר מאוחר יותר, אפילו בשרת מרוחק. פצל, שתף, ייצא וייבא עבודה בכל עת. סשנים מאוחסנים ב-SQLite וניתנים לבדיקה מלאה עם `bolt db`.
+- **ניתן להרחבה בעיצוב.** שרתי MCP עם תמיכה מלאה ב-OAuth, מערכת תוספים, אינטגרציית GitHub, שרת API מובנה וממשק ווב.
+- **יישום שולחן עבודה.** אותו מנוע עטוף בחוויית שולחן עבודה בריבוי חלונות וריבוי לשוניות — עם מסוף משולב, עץ קבצים, לוח פקודות, 28 שפות ממשק ועדכונים אוטומטיים.
+
+## סוכנים מובנים
+
+Bolt מגיע עם עשרה סוכנים מתמחים. לכל סוכן יש רמת גישה מוגדרת למערכת הקבצים כדי להתאים למטרתו.
+
+| סוכן | גישה | תיאור |
+| --- | --- | --- |
+| `code` | Full | ברירת מחדל: קורא, כותב ומריץ קוד |
+| `plan` | Read | חוקר את בסיס הקוד ומייצר תוכנית מבלי לשנות קבצים |
+| `ask` | Read | שאלות ומחקר — ללא עריכות קבצים |
+| `code-review` | Read | סוקר שינויים לנכונות, סגנון ואבטחה |
+| `debug` | Full | מנפה בדיקות כושלות, קריסות ושגיאות לוגיקה |
+| `refactor` | Full | ריפקטורינג בטוח עם אימות בדיקות בכל שלב |
+| `docs` | Edit | כותב ומעדכן תיעוד והערות |
+| `security` | Read | ביקורת אבטחה: פגיעויות, סודות, דפוסים |
+| `migrate` | Full | שדרוגי פריימוורק ומיגרציות תלויות |
+| `perf` | Full | ניתוח ביצועים ואופטימיזציה |
+
+תוכל גם להגדיר סוכנים משלך כקבצי Markdown או ליצור אחד עם `bolt agent create`.
+
+## יישום שולחן העבודה
+
+Bolt מגיע גם כיישום שולחן עבודה עצמאי עם ניהול סשנים בריבוי חלונות וריבוי לשוניות, מלחין הנחיות עם תמיכה בקבצים מצורפים והדבקת תמונות מהלוח, מסוף משולב ועץ קבצים, לוח פקודות, הגדרות מלאות לקיצורי מקלדת, מודלים, ספקים ושרתים, התראות מקוריות, קישורים עמוקים, אינטגרציית WSL ב-Windows ועדכונים אוטומטיים על פני ערוצי dev, beta ו-production.
+
+הורד את יישום שולחן העבודה מ-[עמוד השחרורים](https://github.com/Bolt-builder/bolt-cli/releases), או התקן אותו בשורה אחת ב-macOS ללא מעקף Gatekeeper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## חקור את המסמכים
+
+<CardGroup cols={2}>
+  <Card title="התקנה" icon="download" href="/installation">
+    התקן את Bolt דרך curl, npm או מנהל החבילות של המערכת שלך ב-macOS, Linux ו-Windows.
+  </Card>
+
+  <Card title="התחלה מהירה" icon="rocket" href="/quickstart">
+    פתח את ה-TUI, הרץ את ההנחיה הראשונה שלך, ושחרר commit שנוצר על ידי AI תוך פחות מדקה.
+  </Card>
+
+  <Card title="סוכנים" icon="users" href="/concepts/agents">
+    עשרה סוכנים מובנים בתוספת תת-סוכנים. למד מה כל אחד עושה וכיצד לכתוב משלך.
+  </Card>
+
+  <Card title="זיכרון פרויקט" icon="brain" href="/concepts/project-memory">
+    כיצד Bolt זוכר את הפרויקט שלך על פני סשנים וכיצד לשלוט במה שנקלט.
+  </Card>
+
+  <Card title="שרתי MCP" icon="plug" href="/extending/mcp-servers">
+    חבר כלים חיצוניים ומקורות נתונים ל-Bolt דרך Model Context Protocol.
+  </Card>
+
+  <Card title="שרת ללא ראש" icon="server" href="/server/headless-server">
+    הרץ `bolt serve`, חבר TUI מכל מכונה, והפעל את Bolt מה-API.
+  </Card>
+</CardGroup>

@@ -1,0 +1,121 @@
+---
+title: "Instalace Boltu na macOS, Linuxu nebo Windows"
+sidebarTitle: "Instalace"
+description: "Nainstaluj Bolt CLI přes curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey nebo Scoop. Pokrývá upgrade, odinstalaci a desktopovou aplikaci."
+---
+
+Bolt lze nainstalovat na macOS, Linuxu a Windows metodou, která ti vyhovuje — jednořádkový curl skript, libovolný hlavní správce balíčků Node.js, nebo systémový správce balíčků jako Homebrew, Chocolatey nebo Scoop.
+
+## Rychlá instalace (macOS / Linux)
+
+Nejrychlejší cestou je oficiální instalační skript. Automaticky rozpozná tvůj OS a architekturu, stáhne správnou binárku do `~/.bolt/bin` a přidá ji do `$PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Installer také nastaví volitelné závislosti pro hlasový vstup (sox a whisper-cpp pro offline transkripci). Pro přeskočení předej `--no-voice`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Pro připnutí konkrétní verze:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Správci balíčků
+
+Nainstaluj Bolt globálně správcem balíčků dle svého výběru:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Ověření instalace
+
+<Steps>
+  <Step title="Zkontroluj nainstalovanou verzi">
+    Po instalaci potvrď, že je `bolt` dostupný ve tvém `$PATH`:
+
+    ```bash
+    bolt --version
+    ```
+
+    Pokud příkaz není nalezen, otevři novou terminálovou sezení (nebo znovu načti konfiguraci shellu), aby se aktualizovaný `$PATH` projevil.
+  </Step>
+</Steps>
+
+## Upgrade
+
+Spusť `bolt upgrade` pro aktualizaci na nejnovější vydání:
+
+```bash
+bolt upgrade
+```
+
+Bolt automaticky detekuje tvou původní instalační metodu. Můžeš ji přepsat přepínačem `--method`:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Podporované metody jsou: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Můžeš také upgradovat na konkrétní verzi předáním verze jako pozičního argumentu:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Odinstalace
+
+Pro odstranění Boltu ze systému:
+
+```bash
+bolt uninstall
+```
+
+## Proměnné prostředí
+
+| Proměnná               | Popis                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Podrobnost logů: `DEBUG`, `INFO`, `WARN` nebo `ERROR`    |
+| `BOLT_PRINT_LOGS`      | Tisknout logy na stderr                                  |
+| `BOLT_PURE`            | Spustit bez načítání externích pluginů                  |
+| `BOLT_SERVER_PASSWORD` | Heslo pro basic auth k bezhlavému API serveru       |
+| `BOLT_SERVER_USERNAME` | Uživatelské jméno pro basic auth k bezhlavému API serveru       |
+
+<Tip>
+  Nastav `BOLT_PURE=1`, když chceš čistý běh bez pluginů třetích stran — užitečné pro ladění nebo řízená CI prostředí.
+</Tip>
+
+## Desktopová aplikace
+
+<Note>
+  Bolt se dodává i jako nativní desktopová aplikace se správou sezení ve více oknech, integrovaným terminálem a stromem souborů, paletou příkazů, 28 jazyky UI a automatickými aktualizacemi. Stáhni nejnovější vydání ze [stránky releases](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  Na macOS ji nainstaluješ jedním řádkem bez zajížďky přes Gatekeeper:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

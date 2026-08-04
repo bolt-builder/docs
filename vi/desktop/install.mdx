@@ -1,0 +1,116 @@
+---
+title: "Ứng dụng desktop Bolt: phiên lập trình AI đa cửa sổ"
+sidebarTitle: "Cài đặt"
+description: "Cài đặt ứng dụng desktop Bolt cho các phiên đa cửa sổ, terminal tích hợp, prompt composer với dán ảnh, tự động cập nhật và 28 ngôn ngữ giao diện."
+url: "desktop/install"
+---
+
+Ứng dụng desktop Bolt đóng gói cùng một engine như CLI trong một shell Electron đầy đủ. Mọi tính năng có sẵn trong terminal — agent, MCP server, plugin, phiên từ xa, các phiên bạn có thể fork và chia sẻ — đều hoạt động y hệt trong ứng dụng desktop, cộng thêm trải nghiệm đa cửa sổ và đa tab, giao diện cài đặt đồ họa, thông báo gốc và tự động cập nhật. Nếu bạn đã dùng CLI, ứng dụng desktop là một bổ sung, không phải sự thay thế.
+
+---
+
+## Cài đặt
+
+### macOS
+
+<Steps>
+  <Step title="Cài đặt bằng một dòng lệnh (khuyến nghị)">
+    Mở terminal và chạy:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Script tải bản phát hành mới nhất, xác minh nó và đặt ứng dụng vào `/Applications`. Không có cửa sổ Gatekeeper bật lên.
+  </Step>
+
+  <Step title="Khởi chạy ứng dụng">
+    Mở **Bolt** từ `/Applications` hoặc Spotlight. Ở lần khởi chạy đầu tiên, Bolt yêu cầu bạn chọn một nhà cung cấp LLM mặc định và tạo tệp cấu hình toàn cục.
+  </Step>
+</Steps>
+
+<Tip>
+  Dòng lệnh cài đặt ứng dụng theo cách bỏ qua hộp thoại "unidentified developer" của macOS Gatekeeper, nên bạn vào thẳng lập trình mà không cần các lời nhắc bảo mật bổ sung.
+</Tip>
+
+### Mọi nền tảng — tải từ releases
+
+Tải trình cài đặt mới nhất cho nền tảng của bạn từ [trang releases của Bolt](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Nền tảng | Loại trình cài đặt |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | Trình cài đặt `.exe` |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Trên Windows, Bolt bao gồm tích hợp WSL (Windows Subsystem for Linux). Khi WSL có sẵn, Bolt có thể mở các phiên trực tiếp bên trong bản phân phối WSL của bạn — cho bạn một môi trường agent Linux gốc với giao diện Windows gốc bao quanh.
+</Note>
+
+---
+
+## Tính năng
+
+### Quản lý phiên đa cửa sổ và đa tab
+
+Mở bao nhiêu cửa sổ tùy thích, mỗi cửa sổ có bộ tab riêng. Các tab ánh xạ trực tiếp tới các phiên Bolt, nên bạn có thể chạy một agent để refactor trong một tab, hỏi một câu trong tab khác và chạy công việc nền trong tab thứ ba — tất cả cùng lúc.
+
+### Prompt composer
+
+Prompt composer hỗ trợ đầu vào phong phú: dán văn bản, kéo tệp vào làm tệp đính kèm, hoặc dán ảnh trực tiếp từ clipboard. Bolt mã hóa ảnh và gửi nó tới bất kỳ mô hình có khả năng vision nào một cách tự động.
+
+### Terminal tích hợp và cây tệp
+
+Bố cục chia ngăn cho bạn hội thoại agent ở một bên và terminal thời gian thực cùng cây tệp dự án ở bên kia. Bạn có thể chạy lệnh, kiểm tra đầu ra và đưa kết quả trở lại cho agent mà không cần chuyển ứng dụng.
+
+### Command palette
+
+Nhấn `Cmd/Ctrl+K` để mở command palette. Từ đây bạn có thể chuyển phiên, đổi agent, mở cài đặt hoặc kích hoạt bất kỳ hành động nào mà không cần với tới chuột.
+
+### Giao diện cài đặt đầy đủ
+
+Panel cài đặt bao phủ mọi tùy chọn nằm trong `.bolt/bolt.jsonc` — phím tắt, chọn mô hình, nhà cung cấp LLM, MCP server và auth — với dropdown, công tắc và xác thực trực tiếp. Bạn hiếm khi cần chỉnh sửa tệp cấu hình bằng tay.
+
+### Thông báo gốc
+
+Bolt kích hoạt một thông báo hệ điều hành gốc khi một tác vụ chạy lâu hoàn thành. Nhấp vào thông báo để nhảy trực tiếp tới phiên.
+
+### Deep link
+
+Mở một phiên cụ thể bằng cách điều hướng tới URL `bolt://`. Hữu ích cho việc chia sẻ liên kết phiên với đồng nghiệp hoặc đánh dấu công việc đang tiến hành.
+
+### Tự động cập nhật
+
+Ứng dụng desktop tự cập nhật qua ba kênh:
+
+| Kênh | Mô tả |
+|---------|-------------|
+| `prod` | Các bản phát hành ổn định, được cập nhật ở mỗi production tag |
+| `beta` | Các bản build tiền phát hành để truy cập sớm tính năng mới |
+| `dev` | Các bản build hàng đêm từ nhánh `dev` |
+
+Chuyển kênh trong **Settings → About**.
+
+### 28 ngôn ngữ giao diện
+
+Giao diện của Bolt được bản địa hóa sang 28 ngôn ngữ. Đổi ngôn ngữ hiển thị trong **Settings → Appearance → Language**.
+
+---
+
+## Tài liệu liên quan
+
+<CardGroup cols={2}>
+  <Card title="Phiên từ xa" icon="server" href="/server/remote-sessions">
+    Chạy một server headless trên máy từ xa và gắn từ ứng dụng desktop hoặc CLI.
+  </Card>
+  <Card title="MCP server" icon="plug" href="/extending/mcp-servers">
+    Thêm công cụ và API bên ngoài cho các agent của bạn bằng Model Context Protocol.
+  </Card>
+  <Card title="Plugin" icon="puzzle-piece" href="/extending/plugins">
+    Mở rộng Bolt với nhà cung cấp, phương thức auth và bộ chuyển đổi workspace tùy chỉnh.
+  </Card>
+  <Card title="Tích hợp GitHub" icon="github" href="/server/github-actions">
+    Tự động hóa PR, commit message và review code từ ứng dụng desktop hoặc CI.
+  </Card>
+</CardGroup>

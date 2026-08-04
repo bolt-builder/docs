@@ -1,0 +1,121 @@
+---
+title: "Bolt'u macOS, Linux veya Windows üzerine kurun"
+sidebarTitle: "Kurulum"
+description: "Bolt CLI'ı curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey veya Scoop ile kurun. Yükseltme, kaldırma ve masaüstü uygulamasını kapsar."
+---
+
+Bolt macOS, Linux ve Windows üzerine iş akışınıza uygun yöntemle kurulabilir — tek satırlık bir curl betiği, herhangi bir büyük Node.js paket yöneticisi veya Homebrew, Chocolatey ya da Scoop gibi bir sistem paket yöneticisi.
+
+## Hızlı kurulum (macOS / Linux)
+
+Başlamanın en hızlı yolu resmi kurulum betiğidir. İşletim sisteminizi ve mimarinizi otomatik olarak algılar, doğru ikili dosyayı `~/.bolt/bin` altına indirir ve `$PATH`'inize ekler.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Yükleyici ayrıca isteğe bağlı ses girişi bağımlılıklarını da ayarlar (çevrimdışı transkripsiyon için sox ve whisper-cpp). Bunu atlamak için `--no-voice` geçirin:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Belirli bir sürüme sabitlemek için:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Paket yöneticileri
+
+Bolt'u tercih ettiğiniz paket yöneticisiyle global olarak kurun:
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Kurulumu doğrulayın
+
+<Steps>
+  <Step title="Kurulan sürümü kontrol edin">
+    Kurulumdan sonra `bolt`'un `$PATH`'inizde kullanılabilir olduğunu doğrulayın:
+
+    ```bash
+    bolt --version
+    ```
+
+    Komut bulunamazsa, güncellenmiş `$PATH`'in geçerli olması için yeni bir terminal oturumu açın (veya kabuk yapılandırmanızı yeniden yükleyin).
+  </Step>
+</Steps>
+
+## Yükseltme
+
+En son sürüme güncellemek için `bolt upgrade` komutunu çalıştırın:
+
+```bash
+bolt upgrade
+```
+
+Bolt, orijinal kurulum yönteminizi otomatik olarak algılar. `--method` bayrağıyla geçersiz kılabilirsiniz:
+
+```bash
+bolt upgrade --method <method>
+```
+
+Desteklenen yöntemler: `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Sürümü konumsal bir bağımsız değişken olarak geçirerek belirli bir sürüme de yükseltebilirsiniz:
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Kaldırma
+
+Bolt'u sisteminizden kaldırmak için:
+
+```bash
+bolt uninstall
+```
+
+## Ortam değişkenleri
+
+| Değişken               | Açıklama                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Günlük ayrıntı düzeyi: `DEBUG`, `INFO`, `WARN` veya `ERROR`    |
+| `BOLT_PRINT_LOGS`      | Günlükleri stderr'e yazdırır                                  |
+| `BOLT_PURE`            | Harici eklentileri yüklemeden çalışır                  |
+| `BOLT_SERVER_PASSWORD` | Başsız API sunucusu için temel kimlik doğrulama parolası       |
+| `BOLT_SERVER_USERNAME` | Başsız API sunucusu için temel kimlik doğrulama kullanıcı adı       |
+
+<Tip>
+  Herhangi bir üçüncü taraf eklenti olmadan temiz bir çalıştırma istediğinizde `BOLT_PURE=1` ayarlayın — hata ayıklama veya kontrollü CI ortamları için kullanışlıdır.
+</Tip>
+
+## Masaüstü uygulaması
+
+<Note>
+  Bolt ayrıca çok pencereli oturum yönetimi, entegre terminal ve dosya ağacı, komut paleti, 28 arayüz dili ve otomatik güncellemelere sahip yerel bir masaüstü uygulaması olarak da sunulur. En son sürümü [sürümler sayfasından](https://github.com/Bolt-builder/bolt-cli/releases) indirin.
+
+  macOS'ta Gatekeeper detourı olmadan tek satırda kurabilirsiniz:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

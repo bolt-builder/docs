@@ -1,0 +1,53 @@
+---
+title: "İzinler: Bolt Ajanlarının Neler Yapabileceğini Kontrol Etme"
+sidebarTitle: "İzinler"
+description: "Bolt'un ajan başına erişim düzeyleri, izin komutları ve yapılandırma düzeyindeki izin ver/reddet kuralları, ajanın onaylamadığınız şeyleri yapmasını nasıl önler."
+---
+
+Bolt ajanları dosyaları okuyabilir, dosyaları yazabilir ve kabuk komutları çalıştırabilir. Bu güç iki katman aracılığıyla kapsamlandırılır: ajan başına bir erişim düzeyi ve önceden onaylayabileceğiniz, reddedebileceğiniz veya yapılandırabileceğiniz etkileşimli izin komutları.
+
+## Ajan erişim düzeyleri
+
+Her yerleşik ajanın bildirilmiş bir erişim düzeyi vardır:
+
+| Erişim düzeyi | Dosyaları oku | Dosyaları yaz | Kabuk komutlarını çalıştır |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Yerleşik eşleştirmeler:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+TUI'de `Tab` ile ajan değiştirin veya `bolt run` komutuna `--agent <name>` geçirin.
+
+## Etkileşimli komutlar
+
+Bir ajanın erişim düzeyi içinde bile potansiyel olarak yıkıcı eylemler yine de onay ister. Bir kez onaylayabilir, oturum için onaylayabilir veya reddedebilirsiniz. Reddedilen çağrılar ajana bir hata döndürür ve ajan devam eder.
+
+## Etkileşimsiz onay
+
+CI, betikler veya güvenilir yerel iş akışları için `bolt run`, komutları atlayan bayrakları destekler:
+
+```bash
+bolt run --auto "tidy up imports"                   # açıkça reddedilmeyen her şeyi otomatik onayla
+bolt run --yolo "tidy up imports"                   # --auto için takma ad
+bolt run --dangerously-skip-permissions "..."       # her komutu atla
+```
+
+<Warning>
+  `--auto`, `--yolo` ve `--dangerously-skip-permissions` ajanın sormadan okuma, yazma ve yürütme yapmasına izin verir. Bunları yalnızca güvenilir ortamlarda kullanın.
+</Warning>
+
+## Yapılandırma düzeyi kurallar
+
+`.bolt/bolt.jsonc` dosyasına bir `permission` bloğu ekleyerek tüm proje için belirli araçları önceden reddedebilir (veya önceden izin verebilirsiniz). Bu, etkileşimsiz `bolt run` çağrıları dahil projedeki her oturuma uygulanır. Şema için [Yapılandırma](/concepts/configuration) bölümüne bakın.
+
+## İlgili
+
+- [Ajanlar](/concepts/agents) — hangi ajanların hangi erişim düzeylerine sahip olduğu.
+- [Araçlar](/concepts/tools) — izinlerin kapıladığı araçların tam listesi.
+- [Yapılandırma](/concepts/configuration) — kalıcı izin kurallarını ayarlama.

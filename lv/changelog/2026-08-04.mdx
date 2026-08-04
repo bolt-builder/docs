@@ -1,0 +1,33 @@
+---
+title: "Nedēļa, kas sākas 2026. gada 4. augustā"
+description: "Iknedēļas Bolt izmaiņu žurnāls: 11 jaunas lietotāja interfeisa valodas, no labās uz kreiso izkārtojumi, vietējie darbvirsmas tulkojumi, Poolside sniedzējs, GPT-5 uzlabojumi un kļūdu labojumi."
+---
+
+## Jaunas funkcijas
+
+- **11 jaunas lietotāja interfeisa valodas** — Darbvirsmas lietotne un TUI tagad piegādā tulkojumus hindi, holandiešu, indonēziešu, vjetnamiešu, itāliešu, urdu, pandžabu, azerbaidžāņu, somu, zviedru un taju valodām, kopējais atbalstīto valodu skaits sasniedzot 28. Pārslēdziet valodas sadaļā **Iestatījumi → Izskats → Valoda**. Skatiet [Darbvirsmas funkcijas](/desktop/features) un [Instalēt](/desktop/install#28-ui-languages).
+- **Atbalsts no labās uz kreiso izkārtojumam** — Navigācija, redaktori, dialoglodziņi, vadīklas un teksta atveidojums tagad pareizi spoguļojas no labās uz kreiso valodām, piemēram, arābu, ebreju un urdu, tāpēc visa saskarne dabiski lasās šajās lokālēs.
+- **Vietējie darbvirsmas tulkojumi** — OS līmeņa izvēlnes, atjauninātāja dialoglodziņi, atkopšanas plūsma, WSL sākotnējā iestatīšana un vietējie failu izvēlētāji tagad ir lokalizēti līdzās lietotnes iekšējam UI, tāpēc visa darbvirsmas pieredze seko jūsu valodas iestatījumam.
+- **Paplašināts lokalizācijas pārklājums** — Izvēlnes, dialoglodziņi, uzvednes, palīdzības saturs, kļūdu ziņojumi un pieejamības etiķetes tagad ir tulkoti visās atbalstītajās valodās, aizverot vietas, kur virknes iepriekš atgriezās pie angļu valodas.
+- **Poolside sniedzējs** — Bolt tagad savienojas ar [Poolside](https://poolside.ai) caur tā OpenAI-saderīgo API. Palaidiet `/connect`, izvēlieties **Poolside** un ielīmējiet savu API atslēgu no [platform.poolside.ai](https://platform.poolside.ai). Pašmitinātas Poolside izvietošanas var arī konfigurēt kā pielāgotu sniedzēju. Skatiet [Sniedzēji un modeļi](/concepts/providers-and-models).
+- **Lokālei atbilstoša daudzskaitļa forma** — Skaitļi, statusi, faili un sesiju saraksta vienumi tagad pareizi izmanto daudzskaitli katrā valodā, tāpēc laika skalas un statusa teksts dabiski lasās visās atbalstītajās lokālēs.
+- **Bagātāks Markdown atveidojums** — Asistenta ziņām ir uzlabots Markdown formatējums, plūstošāki straumēšanas atjauninājumi, labāka sintakses izcelšana un atbalsts matemātiskam saturam, kas atvieglo garu un tehnisku atbilžu lasīšanu.
+
+## Atjauninājumi
+
+- **GPT-5 spriešanas piepūle atbilst modeļa versijai** — Spriešanas piepūles līmeņi (ieskaitot `none` un `xhigh`) tagad tiek piedāvāti tikai tām GPT-5 variantiem, kas tos atbalsta, tāpēc `--variant` vairs neparāda opcijas, kuras attiecīgais modelis noraidītu. Skatiet [Spriešanas piepūles kontrolēšana](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Diff anotāciju uzlabojumi** — Sesijas UI diff skats pielāgo komentāru indikatorus, malas uzvedību un gaišās/tumšās sintakses krāsas labākai lasāmībai.
+- **Pilnveidoti esošie tulkojumi** — Esošās valodas iegūst skaidrāku terminoloģiju un paplašinātas UI etiķetes vēl konsekventākai pieredzei lietotnē.
+
+## Kļūdu labojumi
+
+- **Sesijas darbību laika noteikšana** — Sesijas darbības tagad reģistrē un ziņo savu laiku precīzāk, tāpēc laika skala atspoguļo, kad darbs patiesi sākās un beidzās.
+- **Skaidrākas attālinātas darbvietas kļūdas** — Neveiksmes, savienojoties ar attālinātu darbvietu vai izpildot tajā komandas, tagad parāda aprakstošākus kļūdu ziņojumus vispārīgo vietā.
+- **Darbvietas starpniekserveris vairs neizpauž darba direktoriju** — Pieprasījumi, kas maršrutēti caur darbvietas starpniekserveri, vairs neietver darba direktorija detaļas, saglabājot lokālos ceļus ārpus sakariem.
+- **Karte aizpilda tukšos reģionus** — Aktivitātes karte tagad paliek redzama reģionos bez reģistrētas aktivitātes, nevis sabrūk tukšā laukumā.
+- **Labota lokāles noteikšana** — Bolt tagad uzticami uztver jūsu sistēmas lokāli palaišanas laikā, tāpēc saskarne atveras pareizajā valodā vairāk platformās.
+- **Labots vācu valodas laika skalas tulkojums** — Laika skalas ieraksti vācu valodā tagad tiek atveidoti ar pareizajām virknēm, nevis atgriežas pie angļu valodas vai nepareizi formatēta teksta.
+- **Failu izvēles pārslēgšana** — Otro reizi noklikšķinot uz faila izvēles, tā tagad tiek notīrīta, tāpēc jūs varat atsaukt izvēli, vispirms neizvēloties citu failu.
+- **Tīrāka melnraksta komentāru mijiedarbība** — Melnraksta komentāra sākšana vai atmešana tagad konsekventi notīra pamatā esošo izvēli un vairs nekonkurē ar peles pārvietošanas stāvokli.
+- **Atjaunota animētā spriešanas galvene** — Spriešanas galvene TUI atkal parāda animētu griešanās simbolu domāšanas laikā, un tās gradients aptumšojas, kad tā ir izvērsta, lai sabrukto un atvērto stāvokli būtu vieglāk atšķirt.
+- **Atjaunoti fona procesa un testu rīki** — `bash_background`, `process_output`, `list_processes`, `kill_process` un `test_run` atkal ir pieejami aģentiem pēc tam, kad tie tika nomesti agrākā apvienošanā. Aģenti var sākt ilgstošas komandas, piemēram, izstrādes serverus un vērotājus, lasīt to izvadi un palaist projekta testus ar strukturētiem izpildījās/neizpildījās rezultātiem. Skatiet [Iebūvētie rīki](/concepts/tools#built-in-tools).

@@ -1,0 +1,145 @@
+---
+title: "Rozšíření Boltu pluginy"
+sidebarTitle: "Pluginy"
+description: "Instaluj a stavěj pluginy Boltu pro přidání vlastních AI providerů, autentizačních metod, nástrojů a workspace adaptérů do libovolného projektu nebo globálně."
+url: "extending/plugins"
+---
+
+Pluginy ti umožňují rozšířit Bolt nad rámec jeho vestavěných schopností. Plugin je Node nebo Bun modul, který exportuje manifest pluginu Boltu; když se načte, může registrovat nové LLM providery, vlastní autentizační metody, další nástroje a workspace adaptéry. Pluginy lze nainstalovat pro jednotlivý projekt nebo aplikovat globálně napříč všemi tvými pracemi.
+
+## Instalace pluginu
+
+Použij `bolt plugin install` (alias: `bolt plug`) k instalaci pluginu z npm a jeho automatické registraci v konfiguraci:
+
+```bash
+bolt plugin install <module>
+```
+
+### Přepínače
+
+| Přepínač | Alias | Popis |
+|------|-------|-------------|
+| `--global` | `-g` | Nainstaluj do globální konfigurace místo do aktuálního projektu |
+| `--force` | `-f` | Nahraď existující záznam pro stejný modul |
+
+### Rozsah: projekt vs. globální
+
+Ve výchozím stavu `bolt plugin install` přidá plugin do `.bolt/bolt.jsonc` na úrovni projektu. Předej `--global` pro přidání do konfigurace na úrovni uživatele, aby se plugin načítal v každém projektu.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Spusť `bolt --pure` (nebo nastav `OPENCODE_PURE=1`) pro spuštění Boltu se všemi externími pluginy vypnutými. To se hodí pro ladění, zda plugin nezpůsobuje neočekávané chování, aniž bys ho odinstaloval(a).
+</Note>
+
+---
+
+## Instalace zveřejněného pluginu
+
+<Steps>
+  <Step title="Najdi balíček pluginu">
+    Prohledej npm na balíčky s `bolt-plugin` nebo `opencode-plugin` v názvu, nebo následuj odkaz z dokumentace providera.
+  </Step>
+
+  <Step title="Nainstaluj do svého projektu">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt nainstaluje balíček, přečte jeho manifest pro detekci server a TUI cílů a poté zapíše záznam do `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Ověř konfiguraci">
+    Otevři `.bolt/bolt.jsonc` a potvrď, že byl záznam pluginu přidán:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Spusť sezení">
+    ```bash
+    bolt
+    ```
+
+    Bolt načte plugin při startu. Jakékoli providery nebo nástroje, které registruje, jsou okamžitě dostupné.
+  </Step>
+</Steps>
+
+---
+
+## Ruční konfigurace pluginu
+
+Pluginy můžeš registrovat úpravou `.bolt/bolt.jsonc` přímo. To se hodí pro lokální pluginy ve vývoji:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Relativní cesty se řeší z kořene projektu. Podporovány jsou vstupní body v TypeScriptu i JavaScriptu.
+
+---
+
+## Stavba pluginu
+
+Pluginy se píší proti balíčku `@opencode-ai/plugin`, který poskytuje rozhraní `Hooks`, které tvůj modul musí splnit.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Minimální plugin exportuje funkci, která přijímá objekt `PluginInput` a vrací objekt `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Dostupné typy hooků
+
+| Hook | Účel |
+|------|---------|
+| `auth` | Registruje vlastní autentizační providery s polem `methods` |
+| `event` | Reaguje na události sezení (zprávy, volání nástrojů, dokončení) |
+| `config` | Reaguje na změny konfigurace za běhu |
+| `dispose` | Uklidí zdroje při odpojení pluginu |
+
+Objekt `PluginInput` vystavuje `client` (typovaný Bolt API klient), `project`, `worktree`, `directory` a `serverUrl`, aby tvůj plugin mohl interagovat s běžícím serverem.
+
+---
+
+## Proměnné prostředí
+
+| Proměnná | Popis |
+|----------|-------------|
+| `OPENCODE_PURE` | Nastav na `1` pro spuštění bez jakýchkoli externích pluginů |

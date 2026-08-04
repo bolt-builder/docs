@@ -1,0 +1,78 @@
+---
+title: "Bolt: Agent lập trình AI cho terminal của bạn"
+sidebarTitle: "Trang chủ"
+description: "Bolt là một agent lập trình AI ưu tiên terminal với mười agent chuyên biệt, phiên bền vững, hỗ trợ MCP và ứng dụng desktop—được vận hành bởi bất kỳ nhà cung cấp LLM nào."
+---
+
+Bolt đặt trọn cả một đội kỹ sư AI ngay trong terminal của bạn. Nó được cung cấp dưới dạng một TUI nhanh, điều khiển bằng bàn phím và một ứng dụng desktop gốc, cả hai đều được hậu thuẫn bởi cùng một engine: mười agent chuyên biệt, các phiên bền vững lâu dài, quản lý MCP server với OAuth, hệ thống plugin và hỗ trợ mọi nhà cung cấp LLM lớn.
+
+<CardGroup cols={2}>
+  <Card title="Cài đặt" icon="download" href="/installation">
+    Cài đặt Bolt trong vài giây qua curl, npm, bun hoặc trình quản lý gói bạn chọn.
+  </Card>
+  <Card title="Bắt đầu nhanh" icon="rocket" href="/quickstart">
+    Chạy phiên lập trình AI đầu tiên của bạn trong chưa đầy một phút.
+  </Card>
+  <Card title="Agent" icon="robot" href="/concepts/agents">
+    Gặp mười agent tích hợp sẵn: code, plan, ask, review, debug, refactor, docs, security, migrate và perf.
+  </Card>
+  <Card title="Tham chiếu lệnh" icon="terminal" href="/reference/commands">
+    Mọi lệnh CLI, lệnh con và cờ được ghi tài liệu đầy đủ.
+  </Card>
+</CardGroup>
+
+## Bolt làm gì
+
+Bolt đọc codebase của bạn, hiểu bạn đang xây dựng gì và ship code cùng bạn—trong terminal hoặc dưới dạng ứng dụng desktop. Mỗi phiên đều bền vững: tách ra, gắn lại từ máy khác, fork một nhánh của hội thoại, chia sẻ một liên kết, hoặc xuất một transcript đã được làm sạch.
+
+<CardGroup cols={3}>
+  <Card title="Phiên" icon="clock-rotate-left" href="/concepts/sessions">
+    Phiên bền vững, có thể fork được lưu trong SQLite cục bộ.
+  </Card>
+  <Card title="Provider & Mô hình" icon="microchip" href="/concepts/providers-and-models">
+    Mang API key của bạn cho bất kỳ nhà cung cấp LLM lớn nào.
+  </Card>
+  <Card title="Cấu hình" icon="sliders" href="/concepts/configuration">
+    `.bolt/bolt.jsonc` theo dự án với hỗ trợ schema đầy đủ.
+  </Card>
+  <Card title="MCP Server" icon="plug" href="/extending/mcp-servers">
+    Thêm công cụ qua Model Context Protocol, bao gồm cả luồng OAuth.
+  </Card>
+  <Card title="Plugin" icon="puzzle-piece" href="/extending/plugins">
+    Mở rộng Bolt với nhà cung cấp, công cụ và phương thức auth tùy chỉnh.
+  </Card>
+  <Card title="Tích hợp GitHub" icon="github" href="/server/github-actions">
+    Commit message, review code và GitHub Actions được điều khiển bằng AI.
+  </Card>
+</CardGroup>
+
+## Bắt đầu và chạy
+
+<Steps>
+  <Step title="Cài đặt Bolt">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Hoặc cài đặt qua npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Mở dự án của bạn">
+    Điều hướng tới bất kỳ thư mục dự án nào và khởi chạy TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Cấu hình một provider">
+    Ở lần khởi chạy đầu tiên Bolt yêu cầu bạn thêm một provider LLM. Bạn cũng có thể chạy:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Bắt đầu lập trình với AI">
+    Nhập prompt của bạn ở chân TUI, nhấn Enter và để các agent của Bolt bắt tay vào việc. Chuyển agent bằng `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Dùng `bolt run "giải thích codebase này"` để có câu trả lời nhanh không tương tác mà không cần mở TUI đầy đủ.
+</Tip>

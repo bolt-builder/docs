@@ -1,0 +1,142 @@
+---
+title: "Mulai dengan Bolt dalam Kurang dari Satu Menit"
+sidebarTitle: "Quickstart"
+description: "Instal Bolt, buka proyek kamu, hubungkan provider, dan jalankan prompt AI pertama kamu — semuanya dalam kurang dari 60 detik dengan panduan langkah demi langkah ini."
+---
+
+Panduan ini membantumu memasang Bolt, meluncurkannya di sebuah proyek, menghubungkan provider AI, dan menjalankan prompt pertama kamu. Seluruh alur memakan waktu kurang dari satu menit.
+
+<Steps>
+  <Step title="Install Bolt">
+    Jalur tercepat adalah script install resmi, yang bekerja di macOS dan Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Lebih suka package manager? Instal secara global dengan npm, bun, pnpm, atau yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Untuk aplikasi desktop di macOS (tanpa jalan memutar Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Lihat [panduan Installation](/installation) untuk semua metode, termasuk Homebrew, Chocolatey, Scoop, dan catatan khusus Windows.
+  </Step>
+  <Step title="Open your project">
+    Navigasikan ke direktori proyek mana pun dan luncurkan TUI interaktif:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt mengambil konteks proyek kamu secara otomatis — membaca file tree kamu, memahami stack, dan menyediakannya untuk setiap agent sejak saat kamu membukanya.
+  </Step>
+  <Step title="Configure an AI provider">
+    Pada peluncuran pertama, Bolt akan memintamu mengonfigurasi provider jika belum diatur. Kamu juga dapat menjalankan ini kapan saja:
+
+    ```bash
+    bolt providers
+    ```
+
+    Ini membuka alur manajemen provider di mana kamu dapat menambahkan API key untuk OpenAI, Anthropic, dan provider LLM lain yang didukung. Konfigurasi disimpan ke `.bolt/bolt.jsonc` di root proyek kamu.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Type a prompt and explore agents">
+    Setelah berada di dalam TUI, ketik prompt kamu dan tekan Enter. Gunakan **Tab** untuk beralih antara sepuluh agent bawaan Bolt kapan saja — agent saat ini ditampilkan di status bar.
+
+    Kamu juga dapat menjalankan prompt langsung dari command line tanpa membuka TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Agent bawaan
+
+Beralih agent dengan `Tab` di TUI, atau teruskan `--agent <name>` ke `bolt run`. Setiap agent memiliki tingkat akses yang ditentukan agar sesuai dengan tujuannya.
+
+| Agent | Akses | Deskripsi |
+| --- | --- | --- |
+| `code` | Full | Default: membaca, menulis, dan menjalankan kode |
+| `plan` | Read | Mengeksplorasi basis kode dan menghasilkan rencana tanpa mengubah file |
+| `ask` | Read | Pertanyaan dan penelitian — tanpa edit file |
+| `code-review` | Read | Meninjau perubahan untuk kebenaran, gaya, dan keamanan |
+| `debug` | Full | Men-debug tes yang gagal, crash, dan kesalahan logika |
+| `refactor` | Full | Refactoring aman dengan verifikasi tes di setiap langkah |
+| `docs` | Edit | Menulis dan memperbarui dokumentasi dan komentar |
+| `security` | Read | Audit keamanan: kerentanan, secret, pola |
+| `migrate` | Full | Upgrade framework dan migrasi dependensi |
+| `perf` | Full | Analisis performa dan optimasi |
+
+Ada juga dua subagent bawaan untuk delegasi: `@general` untuk tugas multi-langkah kompleks dan `@explore` untuk penelitian basis kode yang cepat dan hanya-baca. Kamu dapat mendefinisikan agent kamu sendiri sebagai file Markdown atau menghasilkan satu dengan `bolt agent create`.
+
+## Perintah umum untuk dicoba selanjutnya
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Teruskan `--mini` ke `bolt` atau `bolt attach` untuk UI kompak yang menggunakan lebih sedikit ruang terminal — bagus untuk window yang lebih kecil atau tata letak split-pane.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` menerima flag `--auto`, `--yolo`, dan `--dangerously-skip-permissions` yang auto-approve semua prompt izin tanpa bertanya. Gunakan ini hanya di lingkungan tepercaya — flag ini memungkinkan agent membaca, menulis, dan mengeksekusi tanpa konfirmasi.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt mendukung shell completion untuk bash, zsh, fish, dan shell lain. Buat dan pasang completion dengan:
+
+  ```bash
+  bolt completion
+  ```
+
+  Ikuti instruksi yang dicetak untuk melakukan source terhadap script completion di konfigurasi shell kamu.
+</Note>

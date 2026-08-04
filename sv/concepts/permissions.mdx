@@ -1,0 +1,53 @@
+---
+title: "Behörigheter: Styr vad Bolts agenter får göra"
+sidebarTitle: "Behörigheter"
+description: "Hur Bolts åtkomstnivåer per agent, behörighetsförfrågningar och regler för tillåt/neka på konfigurationsnivå hindrar agenten från att göra saker du inte har godkänt."
+---
+
+Bolts agenter kan läsa filer, skriva filer och köra skalkommandon. Den kraften är avgränsad genom två lager: en åtkomstnivå per agent och interaktiva behörighetsförfrågningar som du kan godkänna, neka eller konfigurera i förväg.
+
+## Agentens åtkomstnivåer
+
+Varje inbyggd agent har en deklarerad åtkomstnivå:
+
+| Åtkomstnivå | Läsa filer | Skriva filer | Köra skalkommandon |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Redigera** | ✓ | ✓ | ✗ |
+| **Läs** | ✓ | ✗ | ✗ |
+
+Inbyggda mappningar:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Redigera** — `docs`
+- **Läs** — `plan`, `ask`, `code-review`, `security`
+
+Växla agenter med `Tab` i TUI:n, eller skicka `--agent <name>` till `bolt run`.
+
+## Interaktiva förfrågningar
+
+Inom en agents åtkomstnivå frågar potentiellt destruktiva åtgärder ändå efter bekräftelse. Du kan godkänna en gång, godkänna för sessionen eller neka. Nekade anrop returnerar ett fel till agenten och den går vidare.
+
+## Icke-interaktivt godkännande
+
+För CI, skript eller betrodda lokala arbetsflöden stöder `bolt run` flaggor som hoppar över förfrågningar:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo` och `--dangerously-skip-permissions` låter agenten läsa, skriva och köra utan att fråga. Använd dem endast i betrodda miljöer.
+</Warning>
+
+## Regler på konfigurationsnivå
+
+Du kan förhandsneka (eller förhandsgodkänna) specifika verktyg för hela projektet genom att lägga till ett `permission`-block i `.bolt/bolt.jsonc`. Detta gäller för varje session i projektet, inklusive icke-interaktiva `bolt run`-anrop. Se [Konfiguration](/concepts/configuration) för schemat.
+
+## Relaterat
+
+- [Agenter](/concepts/agents) — vilka agenter som har vilka åtkomstnivåer.
+- [Verktyg](/concepts/tools) — hela listan över verktyg som behörigheter styr.
+- [Konfiguration](/concepts/configuration) — att sätta bestående behörighetsregler.

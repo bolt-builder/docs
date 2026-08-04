@@ -1,0 +1,33 @@
+---
+title: "Boltin web-käyttöliittymä"
+sidebarTitle: "Web-käyttöliittymä"
+description: "bolt web tarjoilee selainpohjaisen käyttöliittymän käynnissä olevan Bolt-palvelimen päälle — hyödyllinen jaetuille tiimikoneille, etäkoneille ja kaikkialle, missä TUI ei ole käytännöllinen."
+---
+
+`bolt web` käynnistää Bolt-palvelimen ja tarjoilee selainkäyttöliittymän sen eteen. Se on sama moottori kuin TUI, vain renderöitynä selainvälilehdessä.
+
+## Käynnistä se
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Avaa sitten tulostettu URL. Kun paljastat verkon yli, aseta ensin perustodennus:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Milloin käyttää web-käyttöliittymää
+
+- Boltin ajaminen tehokkaalla etäkoneella mutta sen ohjaaminen läppäriltä.
+- Live-istunnon jakaminen tiimikaverin kanssa pari-debuggausta varten.
+- Ympäristöt, joissa täysi TUI on kömpelö (Chromebookit, tabletit, coworking-koneet).
+
+## Liittyvät
+
+- [Päätön palvelin](/server/headless-server) — taustalla oleva API-palvelin.
+- [Etäistunnot](/server/remote-sessions) — liitä TUI samaan palvelimeen, jota web-käyttöliittymä palvelee.

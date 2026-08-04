@@ -1,0 +1,68 @@
+---
+title: "Bolt में कस्टम Agents"
+sidebarTitle: "Custom Agents"
+description: "अपने खुद के Bolt agents को Markdown फ़ाइलों के रूप में परिभाषित करें — एक मॉडल चुनें, एक्सेस लेवल सेट करें, tools प्रतिबंधित करें, और डोमेन-विशिष्ट निर्देश जोड़ें।"
+---
+
+दस बिल्ट-इन agents के अलावा, आप अपने खुद के परिभाषित कर सकते हैं। कस्टम agents Markdown फ़ाइलें हैं जिनमें एक frontmatter ब्लॉक होता है जो agent के मॉडल, एक्सेस लेवल, और उपलब्ध tools का वर्णन करता है, साथ ही एक body जो इसके system prompt के रूप में कार्य करती है।
+
+## एक agent बनाना
+
+सबसे तेज़ रास्ता बिल्ट-इन जनरेटर है, जो कुछ प्रश्न पूछता है और आपके लिए फ़ाइल लिखता है:
+
+```bash
+bolt agent create
+```
+
+Agents प्रोजेक्ट में `.opencode/agent/` के अंदर (या व्यक्तिगत agents के लिए आपकी global config डायरेक्टरी में) रहते हैं। प्रत्येक agent एक single `.md` फ़ाइल है जिसका फ़ाइलनाम agent का नाम बन जाता है।
+
+## Agent फ़ाइल की रचना
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+सामान्य frontmatter फ़ील्ड्स:
+
+| Field | उद्देश्य |
+| --- | --- |
+| `name` | `--agent` के साथ उपयोग किया गया agent नाम। |
+| `description` | listings में दिखाया गया एक-पंक्ति सारांश। |
+| `model` | `provider/model` फ़ॉर्मैट में डिफ़ॉल्ट मॉडल। |
+| `access` | `full`, `edit`, या `read` (देखें [Permissions](/concepts/permissions))। |
+| `tools` | वैकल्पिक allow-list जो प्रतिबंधित करती है कि agent किन [tools](/concepts/tools) को कॉल कर सकता है। |
+
+## एक कस्टम agent का उपयोग करना
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+TUI में, agents के बीच साइकिल करने के लिए `Tab` दबाएँ; कस्टम agents built-ins के साथ दिखाई देते हैं।
+
+## Subagents
+
+Agents `task` tool के माध्यम से subagents को सौंप सकते हैं। Bolt `@general` और `@explore` के साथ आता है, और कोई भी कस्टम agent जिसकी फ़ाइल `.opencode/agent/` के अंदर रहती है, उसे नाम से subagent के रूप में भी इनवोक किया जा सकता है।
+
+## संबंधित
+
+- [Agents](/concepts/agents) — बिल्ट-इन agent लाइनअप।
+- [Tools](/concepts/tools) — `tools:` में क्या जोड़ सकते हैं।
+- [Custom Tools](/extending/custom-tools) — वह tool बनाएँ जिसे agent कॉल करेगा।

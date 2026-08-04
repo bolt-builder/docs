@@ -1,0 +1,116 @@
+---
+title: "Bolt desktop-app: multi-window AI-code sessies"
+sidebarTitle: "Installatie"
+description: "Installeer de Bolt desktop-app voor multi-window sessies, een geïntegreerde terminal, prompt-composer met image paste, automatische updates en 28 UI-talen."
+url: "desktop/install"
+---
+
+De Bolt desktop-app verpakt dezelfde engine als de CLI in een volledige Electron-schil. Elke functie die beschikbaar is in de terminal — agents, MCP-servers, plugins, remote sessies, sessies die je kunt forken en delen — werkt identiek in de desktop-app, met daarnaast een multi-window en multi-tab-ervaring, een grafische instellingen-UI, native notificaties en automatische updates. Als je de CLI al gebruikt, is de desktop-app een drop-in-aanvulling, geen vervanging.
+
+---
+
+## Installatie
+
+### macOS
+
+<Steps>
+  <Step title="Installeren met de one-liner (aanbevolen)">
+    Open een terminal en voer uit:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Het script downloadt de nieuwste release, verifieert deze en plaatst de app in `/Applications`. Geen Gatekeeper-popup.
+  </Step>
+
+  <Step title="Start de app">
+    Open **Bolt** vanuit `/Applications` of Spotlight. Bij de eerste start vraagt Bolt je een standaard LLM-provider te kiezen en maakt het een globaal configuratiebestand aan.
+  </Step>
+</Steps>
+
+<Tip>
+  De one-liner installeert de app op een manier die het macOS Gatekeeper-dialoogvenster "unidentified developer" omzeilt, zodat je direct aan het coderen kunt zonder extra beveiligingsprompts.
+</Tip>
+
+### Alle platforms — download vanaf releases
+
+Download de nieuwste installer voor je platform vanaf de [Bolt releases-pagina](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Platform | Installer-type |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` installer |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Op Windows bevat Bolt WSL-integratie (Windows Subsystem for Linux). Wanneer WSL beschikbaar is, kan Bolt sessies direct binnen je WSL-distributie openen — waarmee je een Linux-native agent-omgeving krijgt met een native Windows-UI eromheen.
+</Note>
+
+---
+
+## Functies
+
+### Multi-window en multi-tab sessiebeheer
+
+Open zoveel vensters als je wilt, elk met een eigen set tabbladen. Tabbladen komen direct overeen met Bolt-sessies, dus je kunt in het ene tabblad een agent laten refactoren, in een ander een vraag stellen en in een derde een achtergrondjob draaien — allemaal tegelijk.
+
+### Prompt-composer
+
+De prompt-composer ondersteunt rijke invoer: plak tekst, sleep bestanden erin als bijlagen of plak een afbeelding direct vanaf je klembord. Bolt codeert de afbeelding en stuurt hem automatisch naar elk vision-capable model.
+
+### Geïntegreerde terminal en file tree
+
+Een split-pane layout geeft je aan de ene kant het agent-gesprek en aan de andere kant een live terminal en projectbestandsboom. Je kunt commando's uitvoeren, output inspecteren en de resultaten teruggeven aan de agent zonder van app te wisselen.
+
+### Command palette
+
+Druk op `Cmd/Ctrl+K` om de command palette te openen. Vanuit hier kun je van sessie wisselen, van agent wisselen, instellingen openen of elke actie triggeren zonder naar een muis te grijpen.
+
+### Volledige instellingen-UI
+
+Het instellingenpaneel dekt elke optie die in `.bolt/bolt.jsonc` leeft — sneltoetsen, modelselectie, LLM-providers, MCP-servers en auth — met dropdowns, toggles en inline-validatie. Je hoeft het configuratiebestand zelden met de hand te bewerken.
+
+### Native notificaties
+
+Bolt vuurt een native OS-notificatie af wanneer een langlopende taak klaar is. Klik op de notificatie om direct naar de sessie te springen.
+
+### Deep links
+
+Open een specifieke sessie door naar een `bolt://`-URL te navigeren. Handig om sessielinks met teamgenoten te delen of werk in uitvoering te bookmarken.
+
+### Automatische updates
+
+De desktop-app updatet zichzelf via drie kanalen:
+
+| Kanaal | Beschrijving |
+|---------|-------------|
+| `prod` | Stabiele releases, bijgewerkt bij elke productie-tag |
+| `beta` | Pre-release-builds voor vroege toegang tot nieuwe functies |
+| `dev` | Dagelijkse builds vanaf de `dev`-branch |
+
+Wissel van kanaal via **Settings → About**.
+
+### 28 UI-talen
+
+De interface van Bolt is gelokaliseerd in 28 talen. Wijzig de weergavetaal via **Settings → Appearance → Language**.
+
+---
+
+## Gerelateerde docs
+
+<CardGroup cols={2}>
+  <Card title="Remote sessies" icon="server" href="/server/remote-sessions">
+    Draai een headless server op een remote machine en koppel er aan vanaf de desktop-app of de CLI.
+  </Card>
+  <Card title="MCP-servers" icon="plug" href="/extending/mcp-servers">
+    Voeg externe tools en API's toe aan je agents via het Model Context Protocol.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Breid Bolt uit met custom providers, auth-methoden en workspace-adapters.
+  </Card>
+  <Card title="GitHub-integratie" icon="github" href="/server/github-actions">
+    Automatiseer PR's, commit-berichten en code review vanaf de desktop-app of CI.
+  </Card>
+</CardGroup>

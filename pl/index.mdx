@@ -1,0 +1,78 @@
+---
+title: "Bolt: agent AI do kodowania w Twoim terminalu"
+sidebarTitle: "Strona główna"
+description: "Bolt to działający w terminalu agent AI do kodowania — dziesięć wyspecjalizowanych agentów, trwałe sesje, obsługa MCP i aplikacja desktopowa, napędzane dowolnym dostawcą LLM."
+---
+
+Bolt umieszcza cały zespół inżynierski AI bezpośrednio w Twoim terminalu. Jest dostarczany jako szybki, sterowany klawiaturą TUI oraz natywna aplikacja desktopowa — oba oparte na tym samym silniku: dziesięciu wyspecjalizowanych agentach, trwałych sesjach, zarządzaniu serwerami MCP z OAuth, systemie wtyczek i wsparciu dla wszystkich głównych dostawców LLM.
+
+<CardGroup cols={2}>
+  <Card title="Instalacja" icon="download" href="/installation">
+    Zainstaluj Bolta w kilka sekund za pomocą curl, npm, bun lub wybranego menedżera pakietów.
+  </Card>
+  <Card title="Szybki start" icon="rocket" href="/quickstart">
+    Uruchom swoją pierwszą sesję kodowania z AI w mniej niż minutę.
+  </Card>
+  <Card title="Agenci" icon="robot" href="/concepts/agents">
+    Poznaj dziesięciu wbudowanych agentów: code, plan, ask, review, debug, refactor, docs, security, migrate i perf.
+  </Card>
+  <Card title="Referencja komend" icon="terminal" href="/reference/commands">
+    Każda komenda CLI, subkomenda i flaga w pełni udokumentowana.
+  </Card>
+</CardGroup>
+
+## Co robi Bolt
+
+Bolt czyta Twoją bazę kodu, rozumie nad czym pracujesz i dostarcza kod razem z Tobą — w terminalu lub jako aplikacja desktopowa. Każda sesja jest trwała: możesz się odłączyć, ponownie podłączyć z innej maszyny, rozgałęzić rozmowę, udostępnić link lub wyeksportować oczyszczoną transkrypcję.
+
+<CardGroup cols={3}>
+  <Card title="Sesje" icon="clock-rotate-left" href="/concepts/sessions">
+    Trwałe, rozgałęzialne sesje przechowywane w lokalnym SQLite.
+  </Card>
+  <Card title="Dostawcy i modele" icon="microchip" href="/concepts/providers-and-models">
+    Użyj własnego klucza API dla dowolnego głównego dostawcy LLM.
+  </Card>
+  <Card title="Konfiguracja" icon="sliders" href="/concepts/configuration">
+    Per-projekt `.bolt/bolt.jsonc` z pełną obsługą schematu.
+  </Card>
+  <Card title="Serwery MCP" icon="plug" href="/extending/mcp-servers">
+    Dodawaj narzędzia poprzez Model Context Protocol, w tym z przepływami OAuth.
+  </Card>
+  <Card title="Wtyczki" icon="puzzle-piece" href="/extending/plugins">
+    Rozszerz Bolta o niestandardowych dostawców, narzędzia i metody uwierzytelniania.
+  </Card>
+  <Card title="Integracja z GitHubem" icon="github" href="/server/github-actions">
+    Wiadomości commitów, przegląd kodu i GitHub Actions wspierane przez AI.
+  </Card>
+</CardGroup>
+
+## Zacznij działać
+
+<Steps>
+  <Step title="Zainstaluj Bolta">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Lub zainstaluj przez npm: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Otwórz swój projekt">
+    Przejdź do dowolnego katalogu projektu i uruchom TUI:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Skonfiguruj dostawcę">
+    Przy pierwszym uruchomieniu Bolt zapyta Cię o dodanie dostawcy LLM. Możesz też uruchomić:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Zacznij kodować z AI">
+    Wpisz swój prompt w stopce TUI, naciśnij Enter i pozwól agentom Bolta wziąć się do pracy. Przełączaj agentów za pomocą `Tab`.
+  </Step>
+</Steps>
+
+<Tip>
+  Użyj `bolt run "explain this codebase"`, aby uzyskać szybką, nieinteraktywną odpowiedź bez otwierania pełnego TUI.
+</Tip>

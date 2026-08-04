@@ -1,0 +1,33 @@
+---
+title: "4 Ağustos 2026 Haftası"
+description: "Haftalık Bolt değişiklik günlüğü: 11 yeni arayüz dili, sağdan sola düzenler, yerel masaüstü çevirileri, Poolside sağlayıcısı, GPT-5 iyileştirmeleri ve hata düzeltmeleri."
+---
+
+## Yeni özellikler
+
+- **11 yeni arayüz dili** — Masaüstü uygulaması ve TUI artık Hintçe, Felemenkçe, Endonezce, Vietnamca, İtalyanca, Urduca, Pencapça, Azerice, Fince, İsveççe ve Tayca çevirileriyle geliyor ve desteklenen toplam dil sayısı 28'e çıkıyor. Dilleri **Ayarlar → Görünüm → Dil** menüsünden değiştirebilirsiniz. Bkz. [Masaüstü özellikleri](/desktop/features) ve [Kurulum](/desktop/install#28-ui-languages).
+- **Sağdan sola düzen desteği** — Gezinme, düzenleyiciler, iletişim kutuları, kontroller ve metin oluşturma artık Arapça, İbranice ve Urduca gibi sağdan sola diller için doğru şekilde yansıtılıyor; böylece tüm arayüz bu yerel ayarlarda doğal biçimde okunuyor.
+- **Yerel masaüstü çevirileri** — İşletim sistemi düzeyindeki menüler, güncelleme iletişim kutuları, kurtarma akışı, WSL katılım süreci ve yerel dosya seçiciler artık uygulama içi arayüzle birlikte yerelleştiriliyor; böylece tüm masaüstü deneyimi dil ayarınızı takip ediyor.
+- **Genişletilmiş yerelleştirme kapsamı** — Menüler, iletişim kutuları, komut istemleri, yardım içerikleri, hata mesajları ve erişilebilirlik etiketleri artık desteklenen her dilde çevrildi; daha önce İngilizceye geri düşen dize boşlukları kapatıldı.
+- **Poolside sağlayıcısı** — Bolt artık OpenAI uyumlu API'si üzerinden [Poolside](https://poolside.ai) sağlayıcısına bağlanıyor. `/connect` çalıştırın, **Poolside** seçin ve API anahtarınızı [platform.poolside.ai](https://platform.poolside.ai) adresinden yapıştırın. Kendi kendine barındırılan Poolside dağıtımları da özel sağlayıcı olarak yapılandırılabilir. Bkz. [Sağlayıcılar ve modeller](/concepts/providers-and-models).
+- **Yerel ayara duyarlı çoğullaştırma** — Sayımlar, durumlar, dosyalar ve oturum listesi öğeleri artık dile göre doğru şekilde çoğullaştırılıyor; böylece zaman çizelgesi ve durum metni tüm desteklenen yerel ayarlarda doğal okunuyor.
+- **Zenginleştirilmiş Markdown oluşturma** — Asistan mesajları artık geliştirilmiş Markdown biçimlendirmesi, daha akıcı akış güncellemeleri, daha iyi söz dizimi vurgulama ve matematiksel içerik desteği alıyor; böylece uzun soluklu ve teknik yanıtların okunması kolaylaşıyor.
+
+## Güncellemeler
+
+- **GPT-5 muhakeme çabası model sürümüyle eşleşiyor** — Muhakeme çabası kademeleri (`none` ve `xhigh` dahil) artık yalnızca bunları destekleyen GPT-5 varyantları için sunuluyor; böylece `--variant`, belirli bir modelin reddedeceği seçenekleri artık göstermiyor. Bkz. [Muhakeme çabasını kontrol etme](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Fark ek açıklama iyileştirmesi** — Oturum arayüzü fark görünümü, yorum göstergelerini, kenarlık davranışını ve daha iyi okunabilirlik için açık/koyu söz dizimi renklerini iyileştiriyor.
+- **Mevcut çeviriler iyileştirildi** — Mevcut diller, uygulama genelinde daha tutarlı bir deneyim için daha net terminoloji ve genişletilmiş arayüz etiketleri alıyor.
+
+## Hata düzeltmeleri
+
+- **Oturum eylem zamanlaması** — Oturum eylemleri artık zamanlamalarını daha doğru kaydediyor ve raporluyor; böylece zaman çizelgesi işin gerçekten ne zaman başlayıp bittiğini yansıtıyor.
+- **Daha net uzak çalışma alanı hataları** — Uzak bir çalışma alanına bağlanma veya komut çalıştırma başarısızlıkları artık genel hata mesajları yerine daha açıklayıcı hata mesajları gösteriyor.
+- **Çalışma alanı proxy'si artık çalışma dizinini sızdırmıyor** — Çalışma alanı proxy'si üzerinden yönlendirilen istekler artık çalışma dizini ayrıntılarını içermiyor; böylece yerel yollar iletim hattından uzak tutuluyor.
+- **Harita boş bölgeleri dolduruyor** — Etkinlik haritası artık kaydedilmiş etkinlik olmayan bölgelerde boş bir alana çökmek yerine görünür kalıyor.
+- **Yerel ayar algılama düzeltildi** — Bolt artık sistem yerel ayarınızı başlangıçta güvenilir şekilde algılıyor; böylece arayüz daha fazla platformda doğru dilde açılıyor.
+- **Almanca zaman çizelgesi çevirisi düzeltildi** — Almanca zaman çizelgesi girişleri artık İngilizceye veya biçimsiz metne geri düşmek yerine doğru dizelerle görüntüleniyor.
+- **Dosya seçimini kapatma** — Bir dosya seçimine ikinci kez tıklamak artık onu temizliyor; böylece önce başka bir dosya seçmeden bir seçimi geri alabilirsiniz.
+- **Daha temiz taslak yorum etkileşimleri** — Bir taslak yorum başlatmak veya kapatmak artık altta yatan seçimi tutarlı şekilde temizliyor ve fareyle üzerine gelme durumuyla artık çakışmıyor.
+- **Animasyonlu muhakeme başlığı geri yüklendi** — TUI'deki muhakeme başlığı düşünürken tekrar animasyonlu bir döndürücü gösteriyor ve genişletildiğinde gradyanı soluklaşıyor; böylece daraltılmış ve açık durumları ayırt etmek kolaylaşıyor.
+- **Arka plan süreç ve test araçları geri yüklendi** — `bash_background`, `process_output`, `list_processes`, `kill_process` ve `test_run` araçları, önceki bir birleştirmede kaldırıldıktan sonra ajanlar için yeniden kullanılabilir. Ajanlar artık geliştirme sunucuları ve izleyiciler gibi uzun süre çalışan komutları başlatabilir, çıktısını okuyabilir ve yapılandırılmış geçme/başarısız olma sonuçlarıyla projenin testlerini çalıştırabilir. Bkz. [Yerleşik araçlar](/concepts/tools#built-in-tools).

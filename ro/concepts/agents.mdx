@@ -1,0 +1,135 @@
+---
+title: "Agenți — cei zece agenți încorporați Bolt și personaje AI personalizate"
+sidebarTitle: "Agenți"
+description: "Bolt include zece agenți încorporați, fiecare cu un rol, un set de instrumente și un nivel de acces distincte. Învață cum să comuți, să configurezi și să creezi propriii tăi agenți."
+---
+
+Bolt tratează fiecare personaj AI ca pe un **agent** numit: un prompt de sistem asociat cu un set precis de permisiuni pentru instrumente. În loc să rulezi un singur model generalist pentru fiecare sarcină, alegi agentul al cărui acces și focalizare corespund cu ceea ce ai nevoie — fie că este vorba de auditarea securității, scrierea de documentație sau realizarea unei migrări complete de framework.
+
+## Nivele de acces
+
+Fiecărui agent încorporat i se atribuie unul din trei niveluri de acces care determină ce instrumente poate invoca:
+
+| Nivel | Permisiuni acordate | Utilizare tipică |
+|-------|---------------------|------------------|
+| **Full** | Citirea fișierelor, scrierea/editarea fișierelor, rularea comenzilor shell | Codare activă, depanare, refactorizare, migrări |
+| **Edit** | Citirea fișierelor, scrierea/editarea fișierelor — fără shell | Documentație, actualizări de comentarii, editări sigure de text |
+| **Read** | Doar citirea fișierelor — fără scrieri, fără shell | Planificare, cercetare, revizuire de cod, audituri |
+
+## Agenți încorporați
+
+Bolt include zece agenți specializați direct din start. Comută între ei în TUI apăsând <kbd>Tab</kbd>.
+
+| Agent | Acces | Descriere |
+|-------|-------|-----------|
+| `code` | Full | Implicit: citește, scrie și rulează cod |
+| `plan` | Read | Explorează baza de cod și produce un plan fără a modifica codul |
+| `ask` | Read | Întrebări și cercetare — fără editări de fișiere |
+| `code-review` | Read | Revizuiește modificările pentru corectitudine, stil și securitate |
+| `debug` | Full | Depanează teste eșuate, blocări și erori de logică |
+| `refactor` | Full | Refactorizare sigură cu verificare a testelor la fiecare pas |
+| `docs` | Edit | Scrie și actualizează documentație și comentarii |
+| `security` | Read | Audit de securitate: vulnerabilități, secrete și tipare periculoase |
+| `migrate` | Full | Actualizări de framework și migrări de dependențe |
+| `perf` | Full | Analiză și optimizare a performanței |
+
+## Subagenți
+
+Pe lângă cei zece agenți primari, Bolt expune doi **subagenți** încorporați cărora agenții primari le pot delega lucru în timpul unei sesiuni. Nu selectezi niciodată manual un subagent — sunt trimiși automat atunci când un agent primar decide să genereze unul.
+
+| Subagent | Rol |
+|----------|-----|
+| `@general` | Delegarea sarcinilor complexe în mai mulți pași care necesită capabilități largi |
+| `@explore` | Cercetare rapidă a bazei de cod, doar în citire — parcurge fișierele fără efecte secundare |
+
+<Tip>
+  Când ai nevoie să înțelegi rapid o bază de cod necunoscută, începe cu agentul `ask` sau `plan`. În culise, aceștia pot trimite subagentul `@explore` să indexeze proiectul tău la viteză mare înainte de a produce un răspuns — fără să atingă niciun fișier.
+</Tip>
+
+## Comutarea între agenți
+
+**În TUI** — apasă <kbd>Tab</kbd> pentru a parcurge lista agenților disponibili în orice moment al unei sesiuni. Agentul activ este afișat în subsolul sesiunii.
+
+**Neinteractiv** — transmite `--agent <name>` către `bolt run` pentru a fixa un anumit agent pe durata acelei rulări:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Listarea agenților
+
+Pentru a vedea toți agenții disponibili — atât cei încorporați, cât și cei personalizați — cu modurile și configurația de permisiuni:
+
+```bash
+bolt agent list
+```
+
+## Agenți personalizați
+
+Poți crea proprii tăi agenți în două moduri.
+
+### Generează cu `bolt agent create`
+
+Asistentul interactiv generează un fișier de agent folosind un LLM și îl scrie pe disc:
+
+```bash
+bolt agent create
+```
+
+Toate opțiunile sunt facultative. Furnizează-le pentru a rula neinteractiv:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Opțiune | Descriere |
+|---------|-----------|
+| `--description` | Ce ar trebui să facă agentul (folosit ca prompt LLM pentru generare) |
+| `--path` | Directorul în care se scrie fișierul generat al agentului |
+| `--mode` | `all` (implicit), `primary` sau `subagent` |
+| `--permissions` | Listă separată prin virgulă de permisiuni de acordat. Omite pentru toate. |
+| `--model` / `-m` | Modelul de utilizat în formatul `provider/model` |
+
+### Scrie manual un fișier Markdown
+
+Un agent este pur și simplu un fișier Markdown cu frontmatter YAML. Plasează-l în `.bolt/agents/` în interiorul proiectului tău sau în directorul global de agenți:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Numele fișierului (fără `.md`) devine identificatorul agentului.
+
+### Permisiuni disponibile
+
+Permisiunile sunt porțile fine pentru instrumente pe care le controlezi atunci când creezi un agent personalizat:
+
+| Permisiune | Controlează |
+|------------|-------------|
+| `bash` | Executarea comenzilor shell |
+| `read` | Citirea fișierelor |
+| `edit` | Scrierea și editarea fișierelor (controlează și `write` și `apply_patch`) |
+| `glob` | Listarea fișierelor prin glob/director |
+| `grep` | Căutarea în fișiere prin ripgrep |
+| `webfetch` | Preluare HTTP din web |
+| `task` | Generarea de sarcini pentru subagenți |
+| `todowrite` | Crearea și actualizarea elementelor de tip todo |
+| `websearch` | Interogări de căutare pe web |
+| `lsp` | Operațiuni prin Language Server Protocol |
+| `skill` | Accesarea skill-urilor proiectului |

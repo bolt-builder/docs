@@ -1,0 +1,78 @@
+---
+title: "Bolt: MI-alapú kódolóügynök a terminálodhoz"
+sidebarTitle: "Kezdőlap"
+description: "A Bolt egy terminál-központú MI-alapú kódolóügynök tíz szakosított ügynökkel, tartós munkamenetekkel, MCP-támogatással és asztali alkalmazással — bármely LLM-szolgáltatóval használható."
+---
+
+A Bolt egy teljes MI-mérnökcsapatot helyez közvetlenül a terminálodba. Gyors, billentyűzet-vezérelt TUI és natív asztali alkalmazás formájában érkezik, mindkettőt ugyanaz a motor hajtja: tíz szakosított ügynök, tartós, megbízható munkamenetek, MCP-szerverkezelés OAuth-tal, plugin-rendszer és minden fontosabb LLM-szolgáltató támogatása.
+
+<CardGroup cols={2}>
+  <Card title="Telepítés" icon="download" href="/installation">
+    Telepítsd a Bolt-ot másodpercek alatt curl, npm, bun vagy a kedvenc csomagkezelőd segítségével.
+  </Card>
+  <Card title="Gyors indítás" icon="rocket" href="/quickstart">
+    Futtasd az első MI-alapú kódolómunkamenetedet kevesebb mint egy perc alatt.
+  </Card>
+  <Card title="Ügynökök" icon="robot" href="/concepts/agents">
+    Ismerd meg a tíz beépített ügynököt: code, plan, ask, review, debug, refactor, docs, security, migrate és perf.
+  </Card>
+  <Card title="Parancs-referencia" icon="terminal" href="/reference/commands">
+    Minden CLI-parancs, alparancs és kapcsoló teljes körű dokumentációja.
+  </Card>
+</CardGroup>
+
+## Mit csinál a Bolt
+
+A Bolt olvassa a kódbázisodat, megérti, mit építesz, és veled együtt szállítja a kódot — a terminálban vagy asztali alkalmazásként. Minden munkamenet tartós: bármikor leválaszthatod, újracsatlakozhatsz egy másik gépről, elágaztathatod a beszélgetést, megoszthatsz egy linket vagy exportálhatsz egy megtisztított átiratot.
+
+<CardGroup cols={3}>
+  <Card title="Munkamenetek" icon="clock-rotate-left" href="/concepts/sessions">
+    Tartós, elágaztatható munkamenetek helyi SQLite-ban tárolva.
+  </Card>
+  <Card title="Szolgáltatók és modellek" icon="microchip" href="/concepts/providers-and-models">
+    Használd a saját API-kulcsod bármely fontosabb LLM-szolgáltatóhoz.
+  </Card>
+  <Card title="Konfiguráció" icon="sliders" href="/concepts/configuration">
+    Projektenkénti `.bolt/bolt.jsonc` teljes körű séma-támogatással.
+  </Card>
+  <Card title="MCP-szerverek" icon="plug" href="/extending/mcp-servers">
+    Adj hozzá eszközöket a Model Context Protocolon keresztül, beleértve az OAuth-folyamatokat is.
+  </Card>
+  <Card title="Pluginek" icon="puzzle-piece" href="/extending/plugins">
+    Bővítsd a Bolt-ot egyedi szolgáltatókkal, eszközökkel és hitelesítési módszerekkel.
+  </Card>
+  <Card title="GitHub-integráció" icon="github" href="/server/github-actions">
+    MI-alapú commit-üzenetek, kódellenőrzés és GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Vágj bele
+
+<Steps>
+  <Step title="Telepítsd a Bolt-ot">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Vagy telepítsd npm-en keresztül: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Nyisd meg a projekted">
+    Lépj be egy tetszőleges projektkönyvtárba, és indítsd el a TUI-t:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Állíts be egy szolgáltatót">
+    Első indításkor a Bolt felajánlja egy LLM-szolgáltató hozzáadását. Bármikor futtathatod is:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="Kezdj el kódolni MI-vel">
+    Írd be a promptot a TUI láblécében, nyomj Enter-t, és hagyd, hogy a Bolt ügynökei dolgozzanak. Váltogass ügynökök között a `Tab` billentyűvel.
+  </Step>
+</Steps>
+
+<Tip>
+  Használd a `bolt run "explain this codebase"` parancsot egy gyors, nem interaktív válaszért anélkül, hogy megnyitnád a teljes TUI-t.
+</Tip>

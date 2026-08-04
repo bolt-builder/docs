@@ -1,0 +1,46 @@
+---
+title: "Prosjektminne: Vedvarende kontekst på tvers av Bolt-økter"
+sidebarTitle: "Prosjektminne"
+description: "Bolt fanger opp det den lærer om prosjektet ditt ved slutten av hver tur og injiserer det i nye økter slik at agenten ikke må lære kodebasen din på nytt hver gang."
+---
+
+Prosjektminne er det som får Bolt til å føles som om den allerede kjenner prosjektet ditt. Når en økt avslutter turen sin, destillerer Bolt det som var nyttig og skriver det til et per-prosjekt-minnelager. Når du åpner en ny økt, injiserer Bolt en minneindeks pluss det siste øktsammendraget i systemledeteksten slik at agenten starter med ekte kontekst i stedet for et blankt ark.
+
+## Slik fanges det opp
+
+Ved slutten av hver samtaletur ber Bolt modellen om å oppsummere varige fakta som vil være nyttige neste gang: konvensjoner, arkitekturnotater, filstruktur, bygg-/testkommandoer, fallgruver og åpne tråder. Disse skrives til disk under prosjektets minnemappe, sammen med et rullende sammendrag av den siste økten.
+
+Minne er per prosjekt. To sjekk-ut-er av samme repositorium på samme maskin deler minne; urelaterte prosjekter ser aldri hverandres minne.
+
+## Eksplisitte verktøy
+
+Agenter kan også lese og skrive minne direkte i løpet av en økt:
+
+- `memory_save` — registrer et spesifikt faktum agenten bør huske neste gang.
+- `memory_recall` — slå opp noe agenten (eller du) fanget opp tidligere.
+
+Du kan be agenten om å "huske at vi bruker pnpm, ikke npm", og den vil kalle `memory_save` for deg.
+
+## Per-økt-kontroller
+
+Inne i TUI-en kan du bytte minneatferd for gjeldende økt med skråstrekkommandoer:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+Dette er nyttig når du vil ha en utforskende engangsøkt som ikke forurenser minnet ditt, eller en skrivebeskyttet økt som fortsatt drar nytte av tidligere kontekst.
+
+## Inspisere og redigere minne
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Minne lagres som vanlige filer på disk under prosjektets Bolt-datamappe, slik at du kan grepe, redigere eller slette oppføringer direkte. For å finne nøyaktig sti på maskinen din, kjør `bolt debug paths`.
+
+## Relatert
+
+- [Økter](/concepts/sessions) — de varige samtalene som produserer minneoppføringer.
+- [Konfigurasjon](/concepts/configuration) — hvor minne lagres og hvordan overstyre stien.

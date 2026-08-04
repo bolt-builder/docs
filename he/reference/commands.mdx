@@ -1,0 +1,475 @@
+---
+title: "הפניית פקודות Bolt CLI"
+sidebarTitle: "פקודות"
+description: "הפניה מלאה לכל פקודת Bolt CLI, כולל דגלים, ארגומנטים ודוגמאות שימוש עבור ה-TUI, run, serve, session, agent ועוד."
+---
+
+Bolt חושף בינארי `bolt` יחיד עם קבוצה עשירה של תת-פקודות. הרצת `bolt` ללא ארגומנטים פותחת את ממשק המסוף המלא. כל שאר תת-הפקודות מפורטות למטה. השתמש ב-`bolt <command> --help` בכל עת לעזרה inline.
+
+<Accordion title="bolt (ברירת מחדל — השק TUI)">
+  פותח את ממשק המסוף האינטראקטיבי בספרייה הנוכחית. Bolt מגלה אוטומטית את הקשר הפרויקט שלך, טוען תצורה ומתחבר לכל ספק מוגדר.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **דגלים גלובליים** — זמינים בכל פקודה:
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | הדפס פלט לוג ל-stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | הגדר את רמת הוורבוזיות של הלוג |
+  | `--pure` | boolean | הרץ ללא טעינת תוספים חיצוניים |
+  | `--help`, `-h` | boolean | הצג טקסט עזרה |
+  | `--version`, `-v` | boolean | הדפס את מספר הגרסה המותקנת |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  הרץ את Bolt עם הנחיה בודדת במצב לא-אינטראקטיבי. Bolt מתחיל שרת בתהליך, שולח את ההנחיה לסשן הפעיל, מזרים את התגובה ל-stdout, ואז יוצא. שרשר stdin או העבר `--file` כדי לצרף הקשר.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | פקודת סלאש להרצה; העבר ארגומנטים כהודעה |
+  | `--continue` | `-c` | boolean | המשך את הסשן האחרון |
+  | `--session` | `-s` | string | מזהה סשן להמשך |
+  | `--fork` |  | boolean | פצל את הסשן לפני המשך (דורש `--continue` או `--session`) |
+  | `--share` |  | boolean | שתף את הסשן לאחר שהוא מסתיים |
+  | `--model` | `-m` | string | מודל לשימוש בפורמט `provider/model` |
+  | `--best-of` |  | string | רשימת `provider/model` מופרדת בפסיקים; מריץ את המשימה במקביל, מדרג תוצאות, שומר את הזוכה |
+  | `--agent` |  | string | סוכן לשימוש (למשל `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | פורמט פלט; `json` מזרים אירועי JSON מופרדים בשורות חדשות |
+  | `--file` | `-f` | string\[\] | קובץ/קבצים לצרף כהקשר |
+  | `--title` |  | string | כותרת לסשן |
+  | `--attach` |  | string | הרץ מול שרת Bolt מרוחק (למשל `http://localhost:4096`) |
+  | `--password` | `-p` | string | סיסמת אימות בסיסי לשרת המרוחק |
+  | `--username` | `-u` | string | שם משתמש אימות בסיסי לשרת המרוחק |
+  | `--dir` |  | string | ספריית עבודה; אם `--attach` מוגדר, זו הספרייה בשרת המרוחק |
+  | `--port` |  | number | פורט לשרת המקומי בתהליך (אקראי אם מושמט) |
+  | `--variant` |  | string | רמת מאמץ היגיון, ספציפית לספק (למשל `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | הצג בלוקי היגיון/חשיבה בפלט |
+  | `--mini` |  | boolean | התחל את ממשק ה-UI האינטראקטיבי המינימלי (מוסתר) |
+  | `--interactive` | `-i` | boolean | אלץ מצב split-footer אינטראקטיבי ישיר |
+  | `--auto` |  | boolean | אשר אוטומטית הרשאות שלא נדחו במפורש |
+  | `--yolo` |  | boolean | דלג על כל הנחיות ההרשאה (כינוי ל-`--auto`, מוסתר) |
+  | `--dangerously-skip-permissions` |  | boolean | דלג על כל בדיקות ההרשאה (מוסתר) |
+  | `--demo` |  | boolean | אפשר פקודות סלאש דמו אינטראקטיביות ישירות (מוסתר) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  חבר את ה-TUI המלא לשרת Bolt רץ. השרת יכול להיות מקומי או מרוחק. העבר `--mini` כדי להשתמש בממשק ה-split-footer המינימלי במקום ה-TUI המלא.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | ספרייה בשרת המרוחק |
+  | `--continue` | `-c` | boolean | המשך את הסשן האחרון בשרת המרוחק |
+  | `--session` | `-s` | string | מזהה סשן להמשך |
+  | `--fork` |  | boolean | פצל את הסשן בעת המשך |
+  | `--password` | `-p` | string | סיסמת אימות בסיסי |
+  | `--username` | `-u` | string | שם משתמש אימות בסיסי |
+  | `--mini` |  | boolean | השתמש בממשק האינטראקטיבי המינימלי |
+  | `--no-replay` |  | boolean | השבת שחזור היסטוריית סשן בחידוש ולאחר שינוי גודל (דורש `--mini`) |
+  | `--replay-limit` |  | number | הגבל שחזור נראה ל-N ההודעות החדשות ביותר (דורש `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  הפעל שרת API של Bolt ללא ראש. השרת חושף API של REST\+SSE שה-TUI, `bolt run --attach` ו-`bolt attach` יכולים להתחבר אליו. חבר ל-`0.0.0.0` כדי להפוך אותו לזמין ממכונות אחרות — תמיד הגדר `BOLT_SERVER_PASSWORD` כשעושים זאת.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--hostname` | string | כתובת לחיבור (ברירת מחדל: `127.0.0.1`) |
+  | `--port` | number | פורט להאזנה (אקראי אם מושמט) |
+  | `--mdns` | boolean | אפשר גילוי שירות mDNS (ברירת המחדל של hostname היא `0.0.0.0`) |
+  | `--mdns-domain` | string | שם דומיין מותאם עבור שירות mDNS (ברירת מחדל: `opencode.local`) |
+  | `--cors` | string\[\] | דומיינים נוספים לאפשר עבור CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` לא מוגדר כברירת מחדל. השרת ירשום אזהרה ויקבל את כל החיבורים עד שתגדיר אותה.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  הפעל את שרת Bolt ופתח מיד את ממשק הווב בדפדפן ברירת המחדל שלך. מקבל את אותם דגלי רשת כמו `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--hostname` | string | כתובת לחיבור (ברירת מחדל: `127.0.0.1`) |
+  | `--port` | number | פורט להאזנה (אקראי אם מושמט) |
+  | `--mdns` | boolean | אפשר גילוי שירות mDNS (ברירת המחדל של hostname היא `0.0.0.0`) |
+  | `--mdns-domain` | string | שם דומיין מותאם עבור שירות mDNS (ברירת מחדל: `opencode.local`) |
+  | `--cors` | string\[\] | דומיינים נוספים לאפשר עבור CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  נהל סשני Bolt המאוחסנים במסד הנתונים המקומי של SQLite.
+
+  **תת-פקודות**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **דגלי `bolt session list`**
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | הגבל פלט ל-N הסשנים האחרונים |
+  | `--format` |  | `table`\|`json` | פורמט פלט (ברירת מחדל: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  הצג ויצור סוכנים מותאמים אישית. סוכנים הם קבצי markdown עם YAML frontmatter שמגדירים הנחיית מערכת, הרשאות ומצב.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **דגלי `bolt agent create`**
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | נתיב הספרייה לכתיבת קובץ הסוכן |
+  | `--description` |  | string | תיאור בשפה טבעית של מה שהסוכן צריך לעשות |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | האם הסוכן פועל כסוכן ראשי, תת-סוכן או שניהם |
+  | `--permissions` | `--tools` | string | רשימת הרשאות מותרות מופרדת בפסיקים (ברירת מחדל: הכל) |
+  | `--model` | `-m` | string | מודל לשימוש בפורמט `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (כינוי: auth)">
+  נהל באופן אינטראקטיבי אישורי ספקי AI. אישורים מאוחסנים בספריית הנתונים של מערכת ההפעלה שלך (`~/.local/share/bolt/auth.json` ב-Linux, `~/Library/Application Support/bolt/auth.json` ב-macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  הצג את כל המודלים הזמינים מהספקים המוגדרים שלך.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--verbose` | boolean | כלול מטא-נתוני עלות JSON לכל מודל |
+  | `--refresh` | boolean | רענן את מטמון המודלים מ-models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  נהל שרתי Model Context Protocol (MCP). Bolt תומך גם בשרתים מרוחקים (HTTP/SSE) עם OAuth וגם בשרתים מקומיים (stdio).
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **דגלי `bolt mcp add`**
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--url` | string | URL עבור שרת MCP מרוחק |
+  | `--env` | string\[\] | משתנה סביבה עבור שרת מקומי (`KEY=VALUE`) |
+  | `--header` | string\[\] | כותרת HTTP עבור שרת מרוחק (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  התקן תוסף Bolt מ-npm ועדכן את קובץ התצורה הרלוונטי. תוספים יכולים להרחיב את ה-TUI, להוסיף פקודות סלאש חדשות או לרשום ספקים חדשים.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | הוסף את התוסף לתצורה הגלובלית במקום לתצורת הפרויקט |
+  | `--force` | `-f` | boolean | החלף גרסת תוסף שכבר הוגדרה |
+</Accordion>
+
+<Accordion title="bolt github">
+  נהל את אינטגרציית Bolt GitHub Actions, שמאפשרת ל-Bolt להגיב לבקשות משיכה, בעיות ואירועי GitHub אחרים.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **דגלי `bolt github run`**
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--event` | string | שם אירוע GitHub לסימולציה (למשל `pull_request`) |
+  | `--token` | string | טוקן גישה אישי של GitHub |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  בצע checkout של בקשת משיכה של GitHub כענף מקומי באמצעות ה-CLI של `gh`, ואז השק את Bolt בספרייה שנבדקה. אם תיאור ה-PR מכיל קישור לשיתוף סשן, Bolt מייבא את הסשן הזה אוטומטית.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    פקודה זו דורשת שה-[GitHub CLI (`gh`)](https://cli.github.com/) יהיה מותקן ומאומת.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  צור הודעת commit עבור שינויים שמורגלים (או כולל כל שינויי הקבצים המעקבים) באמצעות מודל AI ואז בצע commit. המודל בודק את היסטוריית ה-commit האחרונה עבור הקשר סגנון.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | בצע commit על כל השינויים המעקבים, לא רק המורגלים |
+  | `--dry-run` |  | boolean | הדפס את ההודעה שנוצרה מבלי לבצע commit |
+  | `--model` | `-m` | string | מודל לשימוש בפורמט `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  הרץ סקירת קוד AI על diff וצא עם קוד `0` (מעבר) או `1` (כישלון). הסוכן `code-review` בוחן את ה-diff עבור נכונות, סגנון ובעיות אבטחה, ואז פולט שורה `Verdict: PASS` או `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | סקור שינויים מורגלים בלבד |
+  | `--branch` |  | string | סקור שינויים מאז ה-merge base עם ענף זה |
+  | `--model` | `-m` | string | מודל לשימוש בפורמט `provider/model` |
+
+  <Note>
+    קודי יציאה: `0` = PASS, `1` = FAIL, `2` = לא ניתן לקבוע את הפסק.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  ייצא סשן כ-JSON ל-stdout. שימושי לארכוב, שיתוף או הזנה לכלים אחרים. העבר `--sanitize` לפני שיתוף פומבי כדי לצנזר נתיבי קבצים, הנחיות ותוכן תמליל רגיש אחר.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | צנזר נתונים רגישים (נתיבי קבצים, טקסט הנחיה, קלט/פלט של כלים) לפני ייצוא |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  ייבא סשן שיוצא בעבר למסד הנתונים המקומי. מקבל או קובץ JSON מקומי או URL של שיתוף סשן.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  הצג סטטיסטיקות שימוש בטוקנים ועלות מצטברות בכל הסשנים. הפלט כולל טבלת סקירה, פירוט עלות וטוקנים, שימוש במודל ותרשים עמודות של שימוש בכלים.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--days` | number | הגבל ל-N הימים האחרונים (ברירת מחדל: כל הזמנים) |
+  | `--tools` | number | מספר כלים להצגה בתרשים שימוש בכלים |
+  | `--models` | boolean\|number | הצג סטטיסטיקות מודל; העבר מספר להגבלת הרשימה |
+  | `--project` | string | סנן לפי מזהה פרויקט; מחרוזת ריקה משמעה הפרויקט הנוכחי |
+</Accordion>
+
+<Accordion title="bolt logs">
+  הדפס את יומן היישום של Bolt. היומן מאוחסן בספריית הלוגים של מערכת ההפעלה (למשל `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | מספר שורות סופיות להדפסה (ברירת מחדל: 1000) |
+  | `--follow` | `-f` | boolean | הזרם שורות לוג חדשות בזמן אמת |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  שאילתא או בדוק את מסד הנתונים המקומי של SQLite של הסשנים ישירות.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | פורמט פלט לתוצאות שאילתא (ברירת מחדל: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  שדרג את Bolt לשחרור האחרון או לגרסה ספציפית. Bolt מזהה את שיטת ההתקנה אוטומטית ומשתמש במנהל החבילות המתאים.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | דגל | כינוי | סוג | תיאור |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | שיטת התקנה לשימוש |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  הסר את הבינארי של Bolt ואת כל הנתונים הקשורים.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  צור סקריפט השלמת מעטפת עבור `bash`, `zsh` או `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  אוסף של תת-פקודות לפתרון בעיות ובחינה. שימושי בעת הגשת דיווחי באגים או אבחון התנהגות לא צפויה.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  הפעל שרת ACP (Agent Client Protocol). ACP הוא הפרוטוקול שמשמש אינטגרציות עורך כמו [Zed](https://zed.dev) לתקשורת עם Bolt על גבי stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | דגל | סוג | תיאור |
+  | --- | --- | --- |
+  | `--cwd` | string | ספריית עבודה לשרת (ברירת מחדל: `process.cwd()`) |
+  | `--hostname` | string | כתובת חיבור (ברירת מחדל: `127.0.0.1`) |
+  | `--port` | number | פורט חיבור |
+  | `--mdns` | boolean | אפשר גילוי שירות mDNS |
+  | `--mdns-domain` | string | שם דומיין מותאם עבור שירות mDNS (ברירת מחדל: `opencode.local`) |
+  | `--cors` | string\[\] | דומיינים נוספים לאפשר עבור CORS |
+</Accordion>

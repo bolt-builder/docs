@@ -1,0 +1,53 @@
+---
+title: "Permissions: Mengontrol Apa yang Boleh Dilakukan Agent Bolt"
+sidebarTitle: "Permissions"
+description: "Bagaimana tingkat akses per-agent, prompt izin, dan aturan allow/deny tingkat config di Bolt mencegah agent melakukan sesuatu yang tidak kamu setujui."
+---
+
+Agent Bolt dapat membaca file, menulis file, dan menjalankan perintah shell. Kekuatan itu dilingkupi melalui dua lapisan: tingkat akses per-agent, dan prompt izin interaktif yang dapat kamu setujui, tolak, atau konfigurasikan sebelumnya.
+
+## Tingkat akses agent
+
+Setiap agent bawaan memiliki tingkat akses yang dideklarasikan:
+
+| Tingkat akses | Membaca file | Menulis file | Menjalankan perintah shell |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Pemetaan bawaan:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Beralih agent dengan `Tab` di TUI, atau teruskan `--agent <name>` ke `bolt run`.
+
+## Prompt interaktif
+
+Dalam tingkat akses agent, tindakan yang berpotensi merusak tetap meminta konfirmasi. Kamu dapat menyetujui sekali, menyetujui untuk sesi, atau menolak. Panggilan yang ditolak mengembalikan kesalahan ke agent dan agent lanjut.
+
+## Persetujuan non-interaktif
+
+Untuk CI, script, atau alur kerja lokal yang tepercaya, `bolt run` mendukung flag yang melewati prompt:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  `--auto`, `--yolo`, dan `--dangerously-skip-permissions` memungkinkan agent membaca, menulis, dan mengeksekusi tanpa bertanya. Gunakan hanya di lingkungan yang tepercaya.
+</Warning>
+
+## Aturan tingkat config
+
+Kamu dapat menolak-terlebih-dahulu (atau mengizinkan-terlebih-dahulu) tool tertentu untuk seluruh proyek dengan menambahkan blok `permission` ke `.bolt/bolt.jsonc`. Ini berlaku untuk setiap sesi dalam proyek, termasuk panggilan `bolt run` non-interaktif. Lihat [Configuration](/concepts/configuration) untuk skemanya.
+
+## Terkait
+
+- [Agents](/concepts/agents) — agent mana yang memiliki tingkat akses mana.
+- [Tools](/concepts/tools) — daftar lengkap tool yang dijaga oleh izin.
+- [Configuration](/concepts/configuration) — menetapkan aturan izin yang tahan lama.

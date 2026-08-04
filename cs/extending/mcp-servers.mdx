@@ -1,0 +1,215 @@
+---
+title: "Přidání nástrojů do Boltu pomocí MCP serverů"
+sidebarTitle: "MCP servery"
+description: "Připoj externí nástroje a zdroje k Boltu pomocí Model Context Protocolu. Přidávej, autentizuj a laď MCP servery z CLI."
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol (MCP) je otevřený standard, který umožňuje AI agentům komunikovat s externími nástroji a zdroji dat přes společné rozhraní. Bolt používá MCP k rozšíření toho, co agenti dokážou — připojený MCP server může vystavit cokoli od nástroje pro dotazy do databáze po plnohodnotné API pro webové vyhledávání. Bolt řídí kompletní životní cyklus: přidávání serverů, spouštění OAuth toků, obnovování tokenů a testování konektivity.
+
+## Typy serverů
+
+Bolt podporuje dva druhy MCP serverů.
+
+| Typ | Transport | Popis |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | Server běžící na URL, kterou máš dostupnou přes síť |
+| `local` | stdio | Lokální příkaz, který Bolt spustí jako dceřinný proces |
+
+Vzdálené servery podporují OAuth autentizaci out of the box. Bolt řídí získávání, uložení a automatické obnovování tokenů — tokeny nikdy nespravuješ ručně.
+
+---
+
+## Příkazy
+
+### `bolt mcp add`
+
+Přidej nový MCP server interaktivně nebo najednou.
+
+**Interaktivně** — spusť `bolt mcp add` bez argumentů a projdi průvodcem s promptu, který se zeptá na jméno, oblast platnosti (projekt nebo globální), typ, URL nebo příkaz a zda server používá OAuth.
+
+**Neinteraktivně** — poskytni jméno plus buď `--url` pro vzdálený server, nebo příkaz po `--` pro lokální:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**Přepínače pro `bolt mcp add`**
+
+| Přepínač | Popis |
+|------|-------------|
+| `--url <url>` | URL vzdáleného MCP serveru |
+| `--header <KEY=VALUE>` | HTTP hlavička odesílaná vzdálenému serveru (opakovatelné) |
+| `--env <KEY=VALUE>` | Proměnná prostředí pro lokální server (opakovatelné) |
+
+---
+
+### `bolt mcp list`
+
+Vypíše každý nakonfigurovaný MCP server spolu se stavem připojení a autentizace.
+
+```bash
+bolt mcp list
+```
+
+Každá položka ukazuje ikonu stavu:
+
+| Ikona | Význam |
+|------|---------|
+| `✓` | Připojen (a autentizován, pokud se používá OAuth) |
+| `⚠` | Vyžaduje autentizaci nebo přihlašovací údaje vypršely |
+| `✗` | Nepodařilo se připojit nebo je vyžadována registrace klienta |
+| `○` | Zatím neinicializován nebo zakázán |
+
+---
+
+### `bolt mcp auth <name>`
+
+Autentizuj se vůči vzdálenému MCP serveru s OAuth. Pokud vynecháš jméno, Bolt zobrazí interaktivní picker se seznamem všech serverů podporujících OAuth spolu s jejich aktuálním stavem autentizace (`✓ authenticated`, `⚠ expired`, `✗ not authenticated`).
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+Bolt otevře tvůj prohlížeč na autorizační URL providera a čeká na callback — kompletní OAuth handshake, včetně dynamické registrace klienta, když je vyžadována, probíhá automaticky.
+
+<Note>
+  Bolt řídí celý OAuth tok, včetně uložení tokenů a automatického obnovování. Nemusíš kopírovat tokeny ani ručně spravovat expiraci. Pokud server vyžaduje předem registrovaný client ID, přidej `oauth.clientId` (a volitelně `oauth.clientSecret`) do konfiguračního záznamu serveru v `.bolt/bolt.jsonc`.
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+Odstraní uložené OAuth přihlašovací údaje pro server. Pokud vynecháš jméno, Bolt tě vyzve k výběru ze seznamu serverů s uloženými tokeny.
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+Otestuje konektivitu vzdáleného serveru a prozkoumá jeho OAuth stav bez zahájení plného sezení. Toto je první nástroj, po kterém sáhnout, když server ukazuje `✗ failed` nebo `⚠ needs authentication`.
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` reportuje:
+- URL serveru a aktuální stav autentizace
+- Detaily access tokenu (maskované) a časové razítko expirace
+- Zda je přítomen refresh token
+- Surový HTTP response kód ze serveru
+- Obsah hlavičky `WWW-Authenticate`
+- Výsledek OAuth discovery sondy (bez dokončení toku)
+
+---
+
+## Ruční konfigurace
+
+MCP servery můžeš přidávat nebo editovat přímo v `.bolt/bolt.jsonc` bez použití CLI příkazů. Bolt změny načte při dalším startu sezení.
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+Lokální stdio server vypadá takto:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+Pro dodání vlastních HTTP hlaviček nebo vypnutí OAuth na vzdáleném serveru:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## Přidání a autentizace vzdáleného MCP serveru
+
+<Steps>
+  <Step title="Přidání serveru">
+    Spusť `bolt mcp add` a následuj prompty, nebo použij neinteraktivní formu:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt zapíše záznam do `.bolt/bolt.jsonc` (rozsah projektu) nebo do tvé globální konfigurace.
+  </Step>
+
+  <Step title="Kontrola stavu připojení">
+    ```bash
+    bolt mcp list
+    ```
+
+    Pokud server vyžaduje autentizaci, uvidíš vedle jeho jména `⚠ needs authentication`.
+  </Step>
+
+  <Step title="Autentizace přes OAuth">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt otevře tvůj prohlížeč. Po tom, co přístup schválíš, terminál potvrdí úspěšnou autentizaci a stav serveru se změní na `✓ connected (OAuth)`.
+  </Step>
+
+  <Step title="Ověření dostupnosti nástrojů">
+    Spusť Bolt sezení. Nástroje vystavené serverem jsou nyní dostupné všem agentům. Můžeš je kdykoliv prohlédnout:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

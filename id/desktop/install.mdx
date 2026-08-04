@@ -1,0 +1,116 @@
+---
+title: "Aplikasi desktop Bolt: sesi coding AI multi-window"
+sidebarTitle: "Install"
+description: "Instal aplikasi desktop Bolt untuk sesi multi-window, terminal terintegrasi, prompt composer dengan paste gambar, auto-update, dan 28 bahasa UI."
+url: "desktop/install"
+---
+
+Aplikasi desktop Bolt membungkus engine yang sama dengan CLI dalam shell Electron lengkap. Setiap fitur yang tersedia di terminal — agent, MCP server, plugin, remote session, sesi yang dapat kamu fork dan share — bekerja identik di aplikasi desktop, dengan tambahan pengalaman multi-window dan multi-tab, UI setelan grafis, notifikasi native, dan auto-update. Jika kamu sudah menggunakan CLI, aplikasi desktop adalah pelengkap drop-in, bukan pengganti.
+
+---
+
+## Instalasi
+
+### macOS
+
+<Steps>
+  <Step title="Install with the one-liner (recommended)">
+    Buka terminal dan jalankan:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Script akan mengunduh rilis terbaru, memverifikasinya, dan menempatkan aplikasi di `/Applications`. Tanpa pop-up Gatekeeper.
+  </Step>
+
+  <Step title="Launch the app">
+    Buka **Bolt** dari `/Applications` atau Spotlight. Pada peluncuran pertama, Bolt memintamu memilih provider LLM default dan membuat file config global.
+  </Step>
+</Steps>
+
+<Tip>
+  One-liner memasang aplikasi dengan cara yang mem-bypass dialog "unidentified developer" Gatekeeper macOS, sehingga kamu langsung dapat coding tanpa prompt keamanan tambahan.
+</Tip>
+
+### Semua platform — unduh dari releases
+
+Unduh installer terbaru untuk platform kamu dari [halaman rilis Bolt](https://github.com/bolt-builder/bolt-cli/releases).
+
+| Platform | Tipe installer |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` installer |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Di Windows, Bolt menyertakan integrasi WSL (Windows Subsystem for Linux). Ketika WSL tersedia, Bolt dapat membuka sesi langsung di dalam distribusi WSL kamu — memberimu lingkungan agent Linux native dengan UI Windows native di sekelilingnya.
+</Note>
+
+---
+
+## Fitur
+
+### Manajemen sesi multi-window dan multi-tab
+
+Buka sebanyak mungkin window yang kamu inginkan, masing-masing dengan set tab-nya sendiri. Tab dipetakan langsung ke sesi Bolt, sehingga kamu dapat menjalankan agent untuk refactor di satu tab, mengajukan pertanyaan di tab lain, dan menjalankan pekerjaan latar di tab ketiga — semuanya pada saat yang bersamaan.
+
+### Prompt composer
+
+Prompt composer mendukung input kaya: paste teks, tarik file sebagai lampiran, atau paste gambar langsung dari clipboard kamu. Bolt meng-encode gambar dan mengirimkannya ke model apa pun yang mampu vision secara otomatis.
+
+### Terminal terintegrasi dan file tree
+
+Tata letak split-pane memberimu percakapan agent di satu sisi dan terminal langsung serta file tree proyek di sisi lain. Kamu dapat menjalankan perintah, memeriksa output, dan mengumpankan hasilnya kembali ke agent tanpa berpindah aplikasi.
+
+### Command palette
+
+Tekan `Cmd/Ctrl+K` untuk membuka command palette. Dari sini kamu dapat beralih sesi, mengubah agent, membuka setelan, atau memicu tindakan apa pun tanpa meraih mouse.
+
+### UI setelan lengkap
+
+Panel setelan mencakup setiap opsi yang tinggal di `.bolt/bolt.jsonc` — keybind, pemilihan model, provider LLM, MCP server, dan auth — dengan dropdown, toggle, dan validasi inline. Kamu jarang perlu mengedit file config dengan tangan.
+
+### Notifikasi native
+
+Bolt memicu notifikasi OS native ketika tugas yang berjalan lama selesai. Klik notifikasi untuk melompat langsung ke sesi.
+
+### Deep link
+
+Buka sesi tertentu dengan menavigasi ke URL `bolt://`. Berguna untuk berbagi tautan sesi dengan rekan tim atau menandai pekerjaan yang sedang berlangsung.
+
+### Auto-update
+
+Aplikasi desktop memperbarui dirinya sendiri di tiga channel:
+
+| Channel | Deskripsi |
+|---------|-------------|
+| `prod` | Rilis stabil, diperbarui pada setiap tag produksi |
+| `beta` | Build pre-release untuk akses awal ke fitur baru |
+| `dev` | Build nightly dari branch `dev` |
+
+Beralih channel di **Settings → About**.
+
+### 28 bahasa UI
+
+Antarmuka Bolt dilokalkan ke 28 bahasa. Ganti bahasa tampilan di **Settings → Appearance → Language**.
+
+---
+
+## Dokumen terkait
+
+<CardGroup cols={2}>
+  <Card title="Remote sessions" icon="server" href="/server/remote-sessions">
+    Jalankan server headless di mesin remote dan attach dari aplikasi desktop atau CLI.
+  </Card>
+  <Card title="MCP servers" icon="plug" href="/extending/mcp-servers">
+    Tambahkan tool dan API eksternal ke agent kamu menggunakan Model Context Protocol.
+  </Card>
+  <Card title="Plugins" icon="puzzle-piece" href="/extending/plugins">
+    Perluas Bolt dengan provider kustom, metode auth, dan workspace adapter.
+  </Card>
+  <Card title="GitHub integration" icon="github" href="/server/github-actions">
+    Otomatisasi PR, pesan commit, dan tinjauan kode dari aplikasi desktop atau CI.
+  </Card>
+</CardGroup>

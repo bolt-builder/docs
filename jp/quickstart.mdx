@@ -1,0 +1,142 @@
+---
+title: "1 分以内に Bolt を開始する"
+sidebarTitle: "クイックスタート"
+description: "Bolt をインストールし、プロジェクトを開き、プロバイダを接続し、最初の AI プロンプトを実行する — このステップバイステップガイドですべて 60 秒以内に。"
+---
+
+このガイドでは、Bolt のインストール、プロジェクトでの起動、AI プロバイダの接続、最初のプロンプトの実行を説明します。フロー全体で 1 分以内です。
+
+<Steps>
+  <Step title="Bolt をインストール">
+    最も速いパスは公式インストールスクリプトで、macOS と Linux で動作します。
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    パッケージマネージャの方が好みですか? npm、bun、pnpm、または yarn でグローバルにインストールしてください。
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    macOS のデスクトップアプリ (Gatekeeper 回避なし):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Homebrew、Chocolatey、Scoop、Windows 固有の注意事項を含むすべての方法については [インストールガイド](/installation) を参照してください。
+  </Step>
+  <Step title="プロジェクトを開く">
+    任意のプロジェクトディレクトリに移動して対話型 TUI を起動します。
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt はプロジェクトのコンテキストを自動的にピックアップします — ファイルツリーを読み、スタックを理解し、開いた瞬間からすべてのエージェントで利用可能にします。
+  </Step>
+  <Step title="AI プロバイダを設定">
+    初回起動時、プロバイダが設定されていない場合、Bolt はプロバイダの設定を求めます。いつでもこれを実行できます。
+
+    ```bash
+    bolt providers
+    ```
+
+    これにより OpenAI、Anthropic、その他のサポートされている LLM プロバイダの API キーを追加できるプロバイダ管理フローが開きます。設定はプロジェクトルートの `.bolt/bolt.jsonc` に保存されます。
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="プロンプトを入力してエージェントを探索">
+    TUI に入ったら、プロンプトを入力して Enter を押します。**Tab** でいつでも Bolt の 10 の組み込みエージェントを切り替えられます — 現在のエージェントはステータスバーに表示されます。
+
+    TUI を開かずにコマンドラインから直接プロンプトを実行することもできます。
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## 組み込みエージェント
+
+TUI では `Tab` でエージェントを切り替えるか、`bolt run` に `--agent <name>` を渡します。各エージェントは目的に合わせて定義されたアクセスレベルを持ちます。
+
+| エージェント | アクセス | 説明 |
+| --- | --- | --- |
+| `code` | Full | デフォルト: コードの読み込み、書き込み、実行 |
+| `plan` | Read | ファイルを変更せずにコードベースを探索して計画を作成 |
+| `ask` | Read | 質問とリサーチ — ファイル編集なし |
+| `code-review` | Read | 正確性、スタイル、セキュリティで変更をレビュー |
+| `debug` | Full | 失敗したテスト、クラッシュ、ロジックエラーをデバッグ |
+| `refactor` | Full | 各ステップでテスト検証を伴う安全なリファクタリング |
+| `docs` | Edit | ドキュメントとコメントの記述と更新 |
+| `security` | Read | セキュリティ監査: 脆弱性、シークレット、パターン |
+| `migrate` | Full | フレームワークのアップグレードと依存関係の移行 |
+| `perf` | Full | パフォーマンス分析と最適化 |
+
+委譲用の 2 つの組み込みサブエージェントもあります: 複雑な複数ステップタスク用の `@general` と、高速な読み取り専用コードベース調査用の `@explore` です。Markdown ファイルとして独自エージェントを定義するか、`bolt agent create` で生成できます。
+
+## 次に試すべき一般的なコマンド
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  `bolt` または `bolt attach` に `--mini` を渡すと、ターミナル空間を消費しないコンパクトな UI が表示されます — 小さなウィンドウや分割ペインレイアウトに最適です。
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` は `--auto`、`--yolo`、`--dangerously-skip-permissions` フラグを受け付け、確認なしにすべての権限プロンプトを自動承認します。これらは信頼された環境でのみ使用してください — エージェントが確認なしに読み取り、書き込み、実行できるようになります。
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  Bolt は bash、zsh、fish、その他のシェルのシェル補完をサポートしています。補完を生成してインストールするには:
+
+  ```bash
+  bolt completion
+  ```
+
+  シェル設定で補完スクリプトをソースするために、表示された手順に従ってください。
+</Note>

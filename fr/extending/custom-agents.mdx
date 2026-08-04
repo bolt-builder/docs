@@ -1,0 +1,68 @@
+---
+title: "Agents personnalisés dans Bolt"
+sidebarTitle: "Agents personnalisés"
+description: "Définissez vos propres agents Bolt sous forme de fichiers Markdown — choisissez un modèle, définissez le niveau d'accès, restreignez les outils et ajoutez des instructions propres à votre domaine."
+---
+
+Au-delà des dix agents intégrés, vous pouvez définir les vôtres. Les agents personnalisés sont des fichiers Markdown avec un bloc frontmatter qui décrit le modèle de l'agent, son niveau d'accès et ses outils disponibles, plus un corps qui sert de prompt système.
+
+## Créer un agent
+
+La voie la plus rapide passe par le générateur intégré, qui pose quelques questions et écrit le fichier pour vous :
+
+```bash
+bolt agent create
+```
+
+Les agents se trouvent sous `.opencode/agent/` dans le projet (ou dans votre répertoire de configuration global pour des agents personnels). Chaque agent est un unique fichier `.md` dont le nom devient le nom de l'agent.
+
+## Anatomie d'un fichier d'agent
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Champs frontmatter courants :
+
+| Champ | Rôle |
+| --- | --- |
+| `name` | Nom d'agent utilisé avec `--agent`. |
+| `description` | Résumé d'une ligne affiché dans les listes. |
+| `model` | Modèle par défaut au format `provider/model`. |
+| `access` | `full`, `edit` ou `read` (voir [Permissions](/concepts/permissions)). |
+| `tools` | Liste d'autorisation optionnelle restreignant les [outils](/concepts/tools) que l'agent peut appeler. |
+
+## Utiliser un agent personnalisé
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+Dans le TUI, appuyez sur `Tab` pour parcourir les agents ; les agents personnalisés apparaissent aux côtés des agents intégrés.
+
+## Sous-agents
+
+Les agents peuvent déléguer à des sous-agents via l'outil `task`. Bolt est livré avec `@general` et `@explore`, et tout agent personnalisé dont le fichier se trouve sous `.opencode/agent/` peut également être invoqué en tant que sous-agent par son nom.
+
+## Voir aussi
+
+- [Agents](/concepts/agents) — la liste des agents intégrés.
+- [Outils](/concepts/tools) — ce que vous pouvez ajouter à `tools:`.
+- [Outils personnalisés](/extending/custom-tools) — construire l'outil que l'agent appellera.

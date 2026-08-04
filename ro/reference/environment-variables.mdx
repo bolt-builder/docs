@@ -1,0 +1,61 @@
+---
+title: "Referință de variabile de mediu Bolt"
+sidebarTitle: "Variabile de mediu"
+description: "Fiecare variabilă de mediu recunoscută de Bolt, inclusiv controlul log-urilor, autentificarea serverului, suprascrierile de configurare și convențiile pentru cheile API ale furnizorilor."
+---
+
+Variabilele de mediu îți permit să configurezi Bolt fără să atingi niciun fișier de configurare — util în pipeline-urile CI, containerele Docker și mediile partajate în care nu poți comite credențiale. Sunt citite o singură dată la pornire și nu pot fi schimbate în timp ce Bolt rulează.
+
+## Referință
+
+| Variabilă | Descriere |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Setează nivelul de detaliere al log-urilor. Valori acceptate: `DEBUG`, `INFO`, `WARN`, `ERROR`. Echivalent cu opțiunea `--log-level`. |
+| `BOLT_PRINT_LOGS` | Setează la orice valoare nevidă pentru a tipări ieșirea de log la stderr. Echivalent cu `--print-logs`. |
+| `BOLT_PURE` | Setează la orice valoare nevidă pentru a dezactiva toate plugin-urile externe. Echivalent cu `--pure`. |
+| `BOLT_SERVER_USERNAME` | Numele de utilizator basic auth pentru `bolt serve` și `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Parola basic auth pentru `bolt serve` și `bolt web`. Toți clienții care se conectează trebuie să furnizeze această parolă. |
+| `BOLT_CONFIG` | Suprascrie calea către fișierul de configurare pe care Bolt îl încarcă. Bolt nu va căuta în locațiile implicite atunci când este setată. |
+| `BOLT_CONFIG_DIR` | Suprascrie directorul de configurare. Bolt va căuta fișierele de configurare în acest director în locul directorului implicit al sistemului de operare. |
+| `BOLT_CONFIG_CONTENT` | Furnizează întreaga configurație ca șir JSON inline. Util în CI unde scrierea de fișiere este impracticabilă. Are cea mai mare prioritate dintre sursele de configurare. |
+| `BOLT_GIT_BASH_PATH` | Calea către directorul `bin` al Git Bash pe Windows, folosită pentru a localiza utilitare Unix precum `less`. |
+
+## Chei API pentru furnizori
+
+Bolt descoperă automat credențialele furnizorilor din variabilele de mediu — nu este necesar un pas `bolt providers login`. Fiecare furnizor caută o variabilă de mediu specifică, iar Bolt o va folosi dacă variabila este setată, indiferent de ce este stocat în `auth.json`.
+
+<Tip>
+  Setează cheile API ale furnizorilor în profilul shell-ului tău (de ex. `~/.zshrc`, `~/.bashrc`) sau într-un fișier `.env` încărcat de shell. De asemenea, le poți referi din fișierul de configurare folosind sintaxa `${VAR_NAME}` într-un câmp `provider.*.apiKey`, astfel încât cheile să nu fie niciodată stocate în text simplu.
+</Tip>
+
+Variabile comune ale furnizorilor:
+
+| Variabilă | Furnizor |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, seria o) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Rulează `bolt models --verbose` pentru a vedea ce variabilă de mediu așteaptă fiecare furnizor configurat.
+
+## Exemple de utilizare
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

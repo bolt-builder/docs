@@ -1,0 +1,28 @@
+---
+title: "ACP: Điều khiển Bolt từ Zed và các trình soạn thảo khác"
+sidebarTitle: "ACP (Trình soạn thảo)"
+description: "Bolt nói Agent Client Protocol (ACP), cho phép các trình soạn thảo như Zed nhúng nó làm backend lập trình AI gốc mà không cần chạy ứng dụng hoặc TUI riêng."
+---
+
+Bolt triển khai Agent Client Protocol (ACP), là cách các trình soạn thảo như Zed nói chuyện với các agent AI. Sau khi cấu hình, trình soạn thảo sinh `bolt acp` như một tiến trình con và điều khiển nó trực tiếp — bạn có được các agent, công cụ, phiên và stack provider của Bolt mà không cần rời trình soạn thảo.
+
+## Bật ACP
+
+Trong cài đặt AI của trình soạn thảo của bạn, thêm Bolt như một agent tương thích ACP và trỏ nó tới:
+
+```bash
+bolt acp
+```
+
+Trình soạn thảo sẽ quản lý vòng đời tiến trình. Cấu hình provider, mô hình và MCP server như bạn thường làm trong `.bolt/bolt.jsonc` — chúng cũng áp dụng ở đây.
+
+## Bạn nhận được gì
+
+- Mọi agent Bolt, có thể gọi từ panel AI của trình soạn thảo.
+- Các phiên được chia sẻ với TUI và giao diện web (qua cơ sở dữ liệu cục bộ).
+- Cùng bộ công cụ, mô hình quyền và bộ nhớ dự án như bất kỳ điểm vào Bolt nào khác.
+
+## Liên quan
+
+- [Server headless](/server/headless-server) — giao diện HTTP song song.
+- [Cấu hình](/concepts/configuration) — tệp cấu hình mà ACP kế thừa.

@@ -1,0 +1,116 @@
+---
+title: "Desktopová aplikace Bolt: AI kódovací sezení ve více oknech"
+sidebarTitle: "Instalace"
+description: "Nainstaluj desktopovou aplikaci Bolt pro sezení ve více oknech, integrovaný terminál, prompt composer s vkládáním obrázků, automatické aktualizace a 28 jazyků UI."
+url: "desktop/install"
+---
+
+Desktopová aplikace Bolt obaluje stejný engine jako CLI do plnohodnotného Electron shellu. Každá funkce dostupná v terminálu — agenti, MCP servery, pluginy, vzdálená sezení, sezení, která můžeš rozvětvit a sdílet — funguje v desktopové aplikaci identicky, s přidaným zážitkem více oken a záložek, grafickým UI nastavení, nativními notifikacemi a automatickými aktualizacemi. Pokud už používáš CLI, desktopová aplikace ho doplňuje, nenahrazuje.
+
+---
+
+## Instalace
+
+### macOS
+
+<Steps>
+  <Step title="Instalace jednořádkovým příkazem (doporučeno)">
+    Otevři terminál a spusť:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skript stáhne poslední vydání, ověří ho a umístí aplikaci do `/Applications`. Žádné vyskakovací okno Gatekeeperu.
+  </Step>
+
+  <Step title="Spuštění aplikace">
+    Otevři **Bolt** z `/Applications` nebo přes Spotlight. Při prvním spuštění tě Bolt vyzve k výběru výchozího LLM providera a vytvoří globální konfigurační soubor.
+  </Step>
+</Steps>
+
+<Tip>
+  Jednořádkový příkaz nainstaluje aplikaci tak, aby obešel dialog „unidentified developer“ v macOS Gatekeeperu, takže se dostaneš rovnou ke kódování bez dalších bezpečnostních promptů.
+</Tip>
+
+### Všechny platformy — stažení z releases
+
+Stáhni nejnovější installer pro svou platformu ze [stránky releases Boltu](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Platforma | Typ installeru |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` installer |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Na Windows Bolt zahrnuje integraci s WSL (Windows Subsystem for Linux). Když je WSL dostupný, Bolt může otevírat sezení přímo uvnitř tvé WSL distribuce — dává ti agentské prostředí nativní pro Linux s nativním Windows UI kolem něj.
+</Note>
+
+---
+
+## Funkce
+
+### Správa sezení ve více oknech a záložkách
+
+Otevři si tolik oken, kolik chceš, každé se svou vlastní sadou záložek. Záložky se mapují přímo na sezení Boltu, takže můžeš mít agenta na refaktoru v jedné záložce, ptát se na otázku ve druhé a mít úlohu na pozadí ve třetí — vše ve stejnou chvíli.
+
+### Prompt composer
+
+Prompt composer podporuje bohatý vstup: vkládej text, přetahuj soubory jako přílohy nebo vkládej obrázek přímo ze schránky. Bolt obrázek zakóduje a automaticky ho pošle libovolnému modelu se schopnostmi vidění.
+
+### Integrovaný terminál a strom souborů
+
+Rozvržení se sdíleným panelem ti dává konverzaci s agentem na jedné straně a živý terminál a strom souborů projektu na druhé. Můžeš spouštět příkazy, prohlížet výstup a předávat výsledky zpět agentovi bez přepínání aplikací.
+
+### Paleta příkazů
+
+Stiskni `Cmd/Ctrl+K` pro otevření palety příkazů. Odsud můžeš přepínat sezení, měnit agenty, otevírat nastavení nebo vyvolat libovolnou akci bez sáhnutí po myši.
+
+### Kompletní UI nastavení
+
+Panel nastavení pokrývá každou volbu, která žije v `.bolt/bolt.jsonc` — klávesové zkratky, výběr modelu, LLM providery, MCP servery a autentizaci — s rozevíracími seznamy, přepínači a inline validací. Konfigurační soubor je jen zřídka potřeba editovat ručně.
+
+### Nativní notifikace
+
+Bolt spustí nativní OS notifikaci, když dlouho běžící úloha skončí. Kliknutím na notifikaci skočíš přímo do sezení.
+
+### Deep linky
+
+Otevři konkrétní sezení navigací na URL `bolt://`. Užitečné pro sdílení odkazů na sezení s kolegy nebo pro záložky rozdělané práce.
+
+### Automatické aktualizace
+
+Desktopová aplikace se sama aktualizuje napříč třemi kanály:
+
+| Kanál | Popis |
+|---------|-------------|
+| `prod` | Stabilní vydání, aktualizovaná při každém produkčním tagu |
+| `beta` | Pre-release buildy pro předběžný přístup k novým funkcím |
+| `dev` | Nightly buildy z větve `dev` |
+
+Kanály přepínej v **Settings → About**.
+
+### 28 jazyků UI
+
+Rozhraní Boltu je lokalizováno do 28 jazyků. Zobrazovaný jazyk změň v **Settings → Appearance → Language**.
+
+---
+
+## Související dokumentace
+
+<CardGroup cols={2}>
+  <Card title="Vzdálená sezení" icon="server" href="/server/remote-sessions">
+    Spusť bezhlavý server na vzdáleném stroji a připoj se z desktopové aplikace nebo z CLI.
+  </Card>
+  <Card title="MCP servery" icon="plug" href="/extending/mcp-servers">
+    Přidávej svým agentům externí nástroje a API pomocí Model Context Protocolu.
+  </Card>
+  <Card title="Pluginy" icon="puzzle-piece" href="/extending/plugins">
+    Rozšiř Bolt o vlastní providery, autentizační metody a workspace adaptéry.
+  </Card>
+  <Card title="Integrace s GitHubem" icon="github" href="/server/github-actions">
+    Automatizuj PR, commit zprávy a code review z desktopové aplikace nebo z CI.
+  </Card>
+</CardGroup>

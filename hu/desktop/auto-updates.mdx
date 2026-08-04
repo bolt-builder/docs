@@ -1,0 +1,26 @@
+---
+title: "Bolt asztali alkalmazás automatikus frissítései"
+sidebarTitle: "Automatikus frissítések"
+description: "Hogyan frissíti magát a Bolt asztali alkalmazás a dev, beta és production csatornákon — valamint hogyan válthatsz csatornát vagy térhetsz vissza egy korábbi verzióhoz."
+---
+
+Az asztali alkalmazás automatikusan frissül a háttérben három kiadási csatornán:
+
+| Csatorna | Ritmus | Kinek szól |
+| --- | --- | --- |
+| `prod` | Csak stabil kiadások. | Alapértelmezésben mindenkinek. |
+| `beta` | Release candidate-ek. | Csapatoknak, akik előre értesülnének a következő stabilról. |
+| `dev` | Kb. éjszakánként. | Korai adaptálóknak és közreműködőknek. |
+
+## Csatornaváltás
+
+Válts csatornát az alkalmazás beállításai panelről. A következő indításkor az alkalmazás a kiválasztott csatornát ellenőrzi újabb buildet keresve; a keresést manuálisan is elindíthatod.
+
+## A motorháztető alatt
+
+A frissítések a háttérben töltődnek le, és a következő indításkor alkalmazódnak. Ha egy frissítés nem alkalmazható, az alkalmazás megtartja az előző verziót, és hibát jelenít meg — nincs köztes állapot.
+
+## Kapcsolódó
+
+- [Telepítés](/desktop/install) — első telepítési útvonalak.
+- [Funkciók](/desktop/features) — mit kapsz az asztali alkalmazásban.

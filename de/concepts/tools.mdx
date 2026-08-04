@@ -1,0 +1,58 @@
+---
+title: "Tools: Was Bolt-Agents wirklich tun können"
+sidebarTitle: "Tools"
+description: "Die vollständige Liste der eingebauten Tools, die Bolt-Agents zur Verfügung stehen, und wie Sie über Plugins, MCP-Server oder das Verzeichnis .opencode/tool eigene Tools hinzufügen."
+---
+
+Agents in Bolt erledigen Arbeit durch das Aufrufen von Tools. Jede Aktion, die Sie im TUI sehen (Datei lesen, Tests ausführen, im Web suchen), ist das Modell, das ein Tool auswählt, und Bolt, das es ausführt. Jeder Agent verfügt über eine deklarierte Zugriffsebene, die bestimmt, welche Tools er ohne vorherige Rückfrage aufrufen darf (siehe [Berechtigungen](/concepts/permissions)).
+
+## Eingebaute Tools
+
+| Tool | Was es tut |
+| --- | --- |
+| `read` | Eine Datei von der Festplatte lesen. |
+| `write` | Eine neue Datei erstellen oder eine vorhandene überschreiben. |
+| `edit` | Eine gezielte Änderung (Suchen/Ersetzen) an einer Datei vornehmen. |
+| `apply_patch` | Einen Patch im Unified-Diff-Stil auf eine oder mehrere Dateien anwenden. |
+| `glob` | Dateien auflisten, die einem Glob-Muster entsprechen. |
+| `grep` | Dateiinhalte per Regex/Text durchsuchen. |
+| `bash` | Einen Shell-Befehl ausführen. |
+| `task` | Eine Teilaufgabe an einen Subagent delegieren (`@general`, `@explore` oder einen benutzerdefinierten Subagent). |
+| `todowrite` | Die strukturierte Aufgabenliste des Agents für mehrstufige Arbeit pflegen. |
+| `webfetch` | Eine URL abrufen und deren Inhalt zurückgeben. |
+| `websearch` | Im Web suchen. |
+| `skill` | Ein benanntes Skill aufrufen (siehe [Skills](/extending/skills)). |
+| `memory_save` | Einen Fakt im [Project Memory](/concepts/project-memory) persistieren. |
+| `memory_recall` | Einen zuvor gespeicherten Speichereintrag nachschlagen. |
+| `question` | Ihnen eine klärende Frage stellen und auf eine Antwort warten. |
+| `bash_background` | Einen Shell-Befehl als verwalteten Hintergrundprozess starten (Dev-Server, Watcher, lange Builds). |
+| `process_output` | Angesammelte Ausgabe und Status eines Hintergrundprozesses lesen, optional bis zum Abschluss warten. |
+| `list_processes` | Hintergrundprozesse mit ID, Status und Befehl auflisten. |
+| `kill_process` | Einen Hintergrundprozess (und dessen Prozessbaum) per ID beenden. |
+| `test_run` | Die Tests des Projekts erkennen und ausführen und strukturierte Pass/Fail-Ergebnisse sowie Fehlerdetails zurückgeben. |
+
+### Experimentell
+
+| Tool | Was es tut |
+| --- | --- |
+| `lsp` | Einen Language Server nach Definitionen, Referenzen und Diagnosen abfragen. |
+| `execute` | Code in einer isolierten Code-Mode-Sandbox ausführen. |
+| `plan` | Vor Änderungen einen strukturierten Plan erzeugen. |
+
+Experimentelle Tools können sich zwischen Releases ändern oder umbenannt werden.
+
+## Das Toolset erweitern
+
+Über die eingebauten Tools hinaus kann Bolt Tools aus drei Quellen aufrufen:
+
+- **Benutzerdefinierte Tools** in `.opencode/tool/` (oder `.opencode/tools/`) im Projektstamm. Siehe [Custom Tools](/extending/custom-tools).
+- **Plugin-Tools**, die von einem installierten [Plugin](/extending/plugins) beigesteuert werden.
+- **MCP-Tools** von jedem für das Projekt konfigurierten [MCP-Server](/extending/mcp-servers).
+
+Alle drei fühlen sich aus Sicht des Agents identisch an: Sie erscheinen in der Tool-Liste, respektieren die Zugriffsebene des Agents und werden in der Tool-Aufruf-Ausgabe des TUI angezeigt.
+
+## Verwandt
+
+- [Agents](/concepts/agents) – welche Agents welche Tools aufrufen können.
+- [Berechtigungen](/concepts/permissions) – wie der Tool-Zugriff pro Agent gesteuert wird.
+- [MCP Servers](/extending/mcp-servers) – der häufigste Weg, um Tools aus der realen Welt hinzuzufügen.

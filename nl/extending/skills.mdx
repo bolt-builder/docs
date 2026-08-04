@@ -1,0 +1,22 @@
+---
+title: "Skills: herbruikbare agent-playbooks"
+sidebarTitle: "Skills"
+description: "Skills zijn benoemde, herbruikbare playbooks die de Bolt-agent aanroept via de skill-tool — handig voor kant-en-klare workflows zoals releases uitbrengen of lint-suites draaien."
+---
+
+Skills zijn benoemde, herbruikbare playbooks die naast je project leven en worden aangeroepen via de `skill`-tool. Waar een custom tool één uitvoerbare actie is, is een skill een gescripte workflow die de agent stap-voor-stap kan volgen: verzamel deze bestanden, voer deze commando's uit, beslis wat de volgende stap is op basis van de output.
+
+Gebruik skills wanneer:
+
+- Je een workflow hebt die je in prompts blijft heruitleggen ("first run the linter, then …").
+- Je wilt dat de agent een specifieke beslissingsboom volgt.
+- Je dezelfde workflow beschikbaar wilt hebben voor elke sessie en elke agent in het project.
+
+## Waar ze leven
+
+Skills zijn bestanden onder `.opencode/skill/` (of `.opencode/skills/`) in de projectroot. Elk bestand beschrijft de trigger-naam, wanneer de agent hem moet gebruiken en de betrokken stappen. De `skill`-[tool](/concepts/tools) stelt ze bloot aan het model.
+
+## Gerelateerd
+
+- [Custom Tools](/extending/custom-tools) — uitbreiding op lager niveau, één actie.
+- [Custom Agents](/extending/custom-agents) — bak instructies in een agent in plaats daarvan.

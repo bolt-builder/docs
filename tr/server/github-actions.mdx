@@ -1,0 +1,179 @@
+---
+title: "GitHub entegrasyonu: Actions, PR'lar ve AI incelemesi"
+sidebarTitle: "GitHub Actions"
+description: "Bolt'u GitHub Actions içinde çalıştırın, PR'ları yerel olarak teslim alın, AI commit mesajları oluşturun ve AI destekli kod incelemesi ve çıkış kodlarıyla birleştirmeleri kapılayın."
+url: "server/github-actions"
+---
+
+Bolt, günlük Git iş akışınızı AI'a bağlayan dört komutla gelir: tek komutla kurabileceğiniz bir GitHub Actions ajanı, pull request'leri teslim almak için bir kısayol, bir AI commit mesajı üreteci ve makine tarafından okunabilir çıkış kodları olan bir AI kod inceleyicisi. Birlikte Bolt'u geliştirmenin her aşamasına — yerel kodlama, PR incelemesi ve sürekli entegrasyon — getirmenize olanak tanır.
+
+---
+
+## `bolt github`
+
+Bolt'u CI olaylarında çalıştıran GitHub Actions ajanını yönetin.
+
+### `bolt github install`
+
+GitHub Actions iş akışını mevcut depoya kurun. Bu, iş akışı YAML'sini `.github/workflows/` içine yazar; böylece Bolt sorun yorumlarında, yeni pull request'lerde veya yapılandırdığınız diğer olaylarda otomatik olarak başlar.
+
+```bash
+bolt github install
+```
+
+Bunu bir git deposunun kökünden çalıştırın. `.github/workflows/` üzerinde yazma erişiminiz olması gerekir.
+
+### `bolt github run`
+
+GitHub ajanını yerel olarak veya bir CI adımı içinde çalıştırın; belirli bir GitHub olay yükünü yeniden oynatın.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Bayrak | Açıklama |
+|------|-------------|
+| `--event <event>` | GitHub olay adı veya bir JSON olay yüküne yol |
+| `--token <pat>` | Yorum göndermek ve bağlam almak için kullanılan GitHub kişisel erişim tokenı (`github_pat_…`) |
+
+---
+
+## GitHub Actions ajanını ayarlama
+
+<Steps>
+  <Step title="İş akışını kurun">
+    Deponuzun kökünden:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt, `.github/workflows/` içine bir GitHub Actions iş akışı dosyası yazar. Dosyayı commit edin ve gönderin.
+  </Step>
+
+  <Step title="API anahtarınızı bir sır olarak ekleyin">
+    Depo ayarlarınızda, tercih ettiğiniz LLM sağlayıcısının API anahtarını depo sırrı olarak ekleyin (örneğin, `ANTHROPIC_API_KEY`). İş akışı bunu otomatik olarak alacaktır.
+  </Step>
+
+  <Step title="Ajanı tetikleyin">
+    Herhangi bir sorun veya pull request'te `/bolt <your request>` yorumu yapın. İş akışı ateşlenir, Bolt olay yükünü okur ve sonucu içeren bir yanıt gönderir.
+  </Step>
+
+  <Step title="Hata ayıklama için yerel olarak çalıştırın">
+    Önceki bir iş akışı çalıştırmasından canlı bir olay yükünü yeniden oynatın:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Bir GitHub pull request'i yerel bir dala teslim alın ve Bolt'u bu dalda başlatın — PR yazarının bıraktığı yerden incelemeye, hata ayıklamaya veya çalışmaya hazır.
+
+```bash
+bolt pr 42
+```
+
+Bolt, PR'ı almak için `gh` CLI'ı kullanır, `pr/<number>` adında bir dal oluşturur ve yukarı akış izleme referansını bağlar. Depolar arası (fork) PR'lar için fork'u otomatik olarak uzak olarak ekler. PR açıklaması paylaşılan bir Bolt oturum URL'si (`opncd.ai/s/…`) içeriyorsa, yazarın konuşmasına devam edebilmeniz için oturum içe aktarılır.
+
+> [GitHub CLI (`gh`)](https://cli.github.com/)'nın kurulu ve kimlik doğrulanmış olmasını gerektirir.
+
+---
+
+## `bolt commit`
+
+Sahnelenmiş (veya izlenen tüm) değişikliklerinizden bir commit mesajı oluşturun ve tek adımda commit yapın.
+
+```bash
+bolt commit
+```
+
+Bolt değişikliklerinizin farkını alır, farkı stil referansı için son commit konularıyla birlikte `commit` ajanına besler ve sonuçla birlikte `git commit -m <message>` çalıştırır.
+
+### Bayraklar
+
+| Bayrak | Takma ad | Açıklama |
+|------|-------|-------------|
+| `--all` | `-a` | Yalnızca sahnelenmişleri değil, izlenen tüm değişiklikleri commit et (`git commit -a` ile eşdeğer) |
+| `--dry-run` | | Commit etmeden üretilen mesajı yazdır |
+| `--model <provider/model>` | `-m` | Mesajı oluşturmak için kullanılan modeli geçersiz kıl |
+
+```bash
+# Her şeyi sahnele ve commit et
+bolt commit --all
+
+# Commit etmeden mesajı önizle
+bolt commit --dry-run
+
+# Belirli bir model kullan
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Commit yapılmadan önce üretilen mesajı önizlemek için `bolt commit --dry-run` kullanın. Düzenlemek istiyorsanız çıktıyı kopyalayın ve ayarlanmış ifadenizle `git commit -m "…"` çalıştırın.
+</Tip>
+
+---
+
+## `bolt review`
+
+Bir fark üzerinde `code-review` ajanını çalıştırın ve makine tarafından okunabilir bir kararla çıkın. İncelemenin son satırı her zaman `Verdict: PASS` veya `Verdict: FAIL`'dir; bu da `bolt review`'u CI ardışık düzenleri için hazır hale getirir.
+
+```bash
+bolt review
+```
+
+Varsayılan olarak `bolt review`, çalışma ağacına karşı `HEAD` farkını alır. Farkı kapsamlandırmak için aşağıdaki bayrakları kullanın.
+
+### Bayraklar
+
+| Bayrak | Takma ad | Açıklama |
+|------|-------|-------------|
+| `--staged` | | Yalnızca sahnelenmiş değişiklikleri incele |
+| `--branch <name>` | | Adlandırılmış dalla birleşme tabanından bu yana değişiklikleri incele (deponun varsayılan dalına varsayar) |
+| `--model <provider/model>` | `-m` | İnceleme için kullanılacak model |
+
+### Çıkış kodları
+
+| Kod | Anlamı |
+|------|---------|
+| `0` | `Verdict: PASS` — kritik veya büyük sorun yok |
+| `1` | `Verdict: FAIL` — bir veya daha fazla kritik veya büyük sorun bulundu |
+| `2` | Yanıttan karar belirlenemedi |
+
+### Bir GitHub Actions iş akışında kullanım
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Sıfır olmayan bir çıkış kodu kontrolü başarısız kılar; sorunlar ele alınana kadar birleştirmeyi engeller.
+
+<Tip>
+  Sorunları hâlâ kolayca değiştirilebilecekken — bir pull request'e ulaşmadan önce — yakalamak için commit yapmadan önce `bolt review --staged` çalıştırın.
+</Tip>

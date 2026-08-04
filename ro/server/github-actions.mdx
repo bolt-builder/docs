@@ -1,0 +1,179 @@
+---
+title: "Integrare GitHub: Actions, PR-uri și revizuire AI"
+sidebarTitle: "GitHub Actions"
+description: "Rulează Bolt în GitHub Actions, face checkout PR-urilor local, generează mesaje de commit AI și controlează merge-urile cu revizuire de cod bazată pe AI și coduri de ieșire."
+url: "server/github-actions"
+---
+
+Bolt este livrat cu patru comenzi care îți conectează fluxul zilnic Git la AI: un agent GitHub Actions pe care îl poți instala cu o singură comandă, o comandă rapidă pentru checkout-ul pull request-urilor, un generator de mesaje de commit AI și un revizor de cod AI cu coduri de ieșire lizibile de mașină. Împreună îți permit să aduci Bolt în fiecare etapă a dezvoltării — codare locală, revizuire de PR și integrare continuă.
+
+---
+
+## `bolt github`
+
+Gestionează agentul GitHub Actions care rulează Bolt pe evenimente CI.
+
+### `bolt github install`
+
+Instalează fluxul de lucru GitHub Actions în repository-ul curent. Aceasta scrie YAML-ul workflow-ului în `.github/workflows/`, astfel încât Bolt să pornească automat la comentarii de issue, pull request-uri noi sau alte evenimente pe care le configurezi.
+
+```bash
+bolt github install
+```
+
+Rulează asta din rădăcina unui repository git. Vei avea nevoie de acces de scriere la `.github/workflows/`.
+
+### `bolt github run`
+
+Rulează agentul GitHub local sau într-un pas CI, redând un anumit payload de eveniment GitHub.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Opțiune | Descriere |
+|---------|-----------|
+| `--event <event>` | Numele evenimentului GitHub sau calea către un payload de eveniment JSON |
+| `--token <pat>` | Token GitHub cu acces personal (`github_pat_…`) folosit pentru a posta comentarii și a prelua context |
+
+---
+
+## Configurează agentul GitHub Actions
+
+<Steps>
+  <Step title="Instalează fluxul de lucru">
+    Din rădăcina repository-ului tău:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt scrie un fișier de flux de lucru GitHub Actions în `.github/workflows/`. Comite și push-ează fișierul.
+  </Step>
+
+  <Step title="Adaugă cheia ta de API ca secret">
+    În setările repository-ului tău, adaugă cheia de API pentru furnizorul LLM preferat ca secret al repository-ului (de exemplu, `ANTHROPIC_API_KEY`). Fluxul de lucru o va prelua automat.
+  </Step>
+
+  <Step title="Declanșează agentul">
+    Comentează `/bolt <cererea ta>` la orice issue sau pull request. Fluxul de lucru pornește, Bolt citește payload-ul evenimentului și postează un răspuns cu rezultatul.
+  </Step>
+
+  <Step title="Rulează local pentru depanare">
+    Redă un payload de eveniment live de la o rulare anterioară a fluxului de lucru:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+Face checkout unui pull request GitHub într-o ramură locală și lansează Bolt în acea ramură — gata să revizuiască, să depaneze sau să continue lucrul de unde a rămas autorul PR-ului.
+
+```bash
+bolt pr 42
+```
+
+Bolt folosește CLI-ul `gh` pentru a prelua PR-ul, creează o ramură numită `pr/<number>` și configurează referința de urmărire upstream. Pentru PR-uri cross-repository (fork), adaugă automat fork-ul ca remote. Dacă descrierea PR-ului conține un URL de sesiune Bolt partajată (`opncd.ai/s/…`), sesiunea este importată astfel încât să poți continua conversația autorului.
+
+> Necesită ca [GitHub CLI (`gh`)](https://cli.github.com/) să fie instalat și autentificat.
+
+---
+
+## `bolt commit`
+
+Generează un mesaj de commit din modificările tale staged (sau toate cele urmărite) și face commit într-un singur pas.
+
+```bash
+bolt commit
+```
+
+Bolt face diff modificărilor tale, transmite diff-ul către agentul `commit` împreună cu subiectele recente de commit pentru referință stilistică și rulează `git commit -m <message>` cu rezultatul.
+
+### Opțiuni
+
+| Opțiune | Alias | Descriere |
+|---------|-------|-----------|
+| `--all` | `-a` | Face commit tuturor modificărilor urmărite, nu doar celor staged (echivalent cu `git commit -a`) |
+| `--dry-run` | | Tipărește mesajul generat fără a face commit |
+| `--model <provider/model>` | `-m` | Suprascrie modelul folosit pentru a genera mesajul |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  Folosește `bolt commit --dry-run` pentru a previzualiza mesajul generat înainte de a fi comis. Dacă vrei să îl editezi, copiază ieșirea și rulează `git commit -m "…"` cu formularea ta ajustată.
+</Tip>
+
+---
+
+## `bolt review`
+
+Rulează agentul `code-review` pe un diff și iese cu un verdict lizibil de mașină. Ultima linie a revizuirii este întotdeauna `Verdict: PASS` sau `Verdict: FAIL`, făcând `bolt review` drop-in ready pentru pipeline-urile CI.
+
+```bash
+bolt review
+```
+
+În mod implicit, `bolt review` face diff `HEAD` față de arborele de lucru. Folosește opțiunile de mai jos pentru a delimita diff-ul.
+
+### Opțiuni
+
+| Opțiune | Alias | Descriere |
+|---------|-------|-----------|
+| `--staged` | | Revizuiește doar modificările staged |
+| `--branch <name>` | | Revizuiește modificările de la merge base cu ramura numită (implicit ramura implicită a repository-ului) |
+| `--model <provider/model>` | `-m` | Modelul de utilizat pentru revizuire |
+
+### Coduri de ieșire
+
+| Cod | Semnificație |
+|-----|--------------|
+| `0` | `Verdict: PASS` — fără probleme critice sau majore |
+| `1` | `Verdict: FAIL` — s-au găsit una sau mai multe probleme critice sau majore |
+| `2` | Verdictul nu a putut fi determinat din răspuns |
+
+### Utilizarea într-un flux de lucru GitHub Actions
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+Un cod de ieșire diferit de zero face check-ul să eșueze, blocând merge-ul până când problemele sunt rezolvate.
+
+<Tip>
+  Rulează `bolt review --staged` înainte de a face commit pentru a prinde problemele cât timp sunt încă ușor de schimbat — înainte să ajungă vreodată într-un pull request.
+</Tip>

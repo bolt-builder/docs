@@ -1,0 +1,52 @@
+---
+title: "Chạy Bolt như một Server Headless"
+sidebarTitle: "Server Headless"
+description: "bolt serve phơi bày runtime Bolt đầy đủ qua HTTP để bất kỳ TUI, giao diện web, tích hợp trình soạn thảo hoặc script nào cũng có thể gắn vào nó cục bộ hoặc qua mạng."
+---
+
+`bolt serve` chạy một server Bolt headless phơi bày engine đầy đủ qua HTTP: phiên, agent, công cụ, truy cập provider, MCP và các sự kiện streaming. Bất cứ điều gì Bolt có thể làm tương tác, nó đều có thể làm qua API.
+
+## Khởi động một server
+
+```bash
+bolt serve                              # chỉ localhost, cổng ngẫu nhiên
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # quảng bá trên mạng cục bộ
+```
+
+<Warning>
+  Bind vào `0.0.0.0` phơi bày Bolt trên mạng của bạn. Luôn đặt `BOLT_SERVER_USERNAME` và `BOLT_SERVER_PASSWORD` trước khi làm vậy.
+</Warning>
+
+## Gắn một TUI
+
+Từ bất kỳ máy nào có thể truy cập server:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Hoặc chạy prompt một lần với server từ xa:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "test nào đang thất bại?"
+```
+
+## Basic auth
+
+Đặt thông tin xác thực qua biến môi trường (xem [Biến môi trường](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Mọi client phải gửi thông tin xác thực khớp.
+
+## Liên quan
+
+- [Phiên từ xa](/server/remote-sessions) — gắn, khám phá mDNS và server chia sẻ.
+- [Giao diện web](/server/web-ui) — giao diện trình duyệt.
+- [ACP](/server/acp) — điều khiển Bolt từ Zed và các trình soạn thảo khác.

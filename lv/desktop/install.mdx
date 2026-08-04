@@ -1,0 +1,116 @@
+---
+title: "Bolt darbvirsmas lietotne: daudzloga MI kodēšanas sesijas"
+sidebarTitle: "Instalēt"
+description: "Instalējiet Bolt darbvirsmas lietotni daudzloga sesijām, integrētam terminālim, uzvednes veidotājam ar attēlu ielīmēšanu, automātiskajiem atjauninājumiem un 28 UI valodām."
+url: "desktop/install"
+---
+
+Bolt darbvirsmas lietotne ietin to pašu dzinēju, ko CLI, pilnā Electron apvalkā. Katra funkcija, kas pieejama terminālī — aģenti, MCP serveri, spraudņi, attālinātās sesijas, sesijas, ko varat dakšot un kopīgot — darbojas identiski darbvirsmas lietotnē, papildinot to ar daudzloga un daudzcilņu pieredzi, grafisku iestatījumu UI, vietējiem paziņojumiem un automātiskajiem atjauninājumiem. Ja jau izmantojat CLI, darbvirsmas lietotne ir tiešais papildinājums, nevis aizvietotājs.
+
+---
+
+## Instalēšana
+
+### macOS
+
+<Steps>
+  <Step title="Instalējiet ar vienrindas komandu (ieteicams)">
+    Atveriet termināli un palaidiet:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Skripts lejupielādē jaunāko izlaidumu, verificē to un ievieto lietotni mapē `/Applications`. Bez Gatekeeper uznirstoša paziņojuma.
+  </Step>
+
+  <Step title="Palaidiet lietotni">
+    Atveriet **Bolt** no `/Applications` vai Spotlight. Pirmajā palaišanas reizē Bolt aicina jūs izvēlēties noklusējuma LLM sniedzēju un izveido globālu konfigurācijas failu.
+  </Step>
+</Steps>
+
+<Tip>
+  Vienrindas komanda instalē lietotni tā, lai apietu macOS Gatekeeper "nezināma izstrādātāja" dialoglodziņu, tāpēc jūs tieši nokļūstat pie kodēšanas bez papildu drošības uzvednēm.
+</Tip>
+
+### Visas platformas — lejupielādēt no izlaidumiem
+
+Lejupielādējiet jaunāko instalētāju savai platformai no [Bolt izlaidumu lapas](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Platforma | Instalētāja veids |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` instalētājs |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Windows Bolt ietver WSL (Windows Subsystem for Linux) integrāciju. Kad WSL ir pieejams, Bolt var atvērt sesijas tieši jūsu WSL distribūcijā — nodrošinot jums Linux-vietējo aģentu vidi ar vietējo Windows UI ap to.
+</Note>
+
+---
+
+## Funkcijas
+
+### Daudzloga un daudzcilņu sesiju pārvaldība
+
+Atveriet tik daudz logu, cik vēlaties, katru ar savu ciļņu kopu. Ciļņi tieši atbilst Bolt sesijām, tāpēc varat palaist aģentu pārstrukturēšanai vienā cilnē, uzdot jautājumu citā un palaist fona darbu trešajā — visu vienlaikus.
+
+### Uzvednes veidotājs
+
+Uzvednes veidotājs atbalsta bagātu ievadi: ielīmējiet tekstu, ievelciet failus kā pielikumus vai ielīmējiet attēlu tieši no starpliktuves. Bolt kodē attēlu un automātiski nosūta to jebkuram modelim, kas spēj apstrādāt attēlus.
+
+### Integrēts terminālis un failu koks
+
+Sadalīts izkārtojums nodrošina aģenta sarunu vienā pusē un tiešraides termināli un projekta failu koku otrā. Jūs varat palaist komandas, apskatīt izvadi un padot rezultātus atpakaļ aģentam, nepārslēdzot lietotnes.
+
+### Komandu palete
+
+Nospiediet `Cmd/Ctrl+K`, lai atvērtu komandu paleti. No šejienes jūs varat pārslēgt sesijas, mainīt aģentus, atvērt iestatījumus vai aktivizēt jebkuru darbību, nesniedzoties pēc peles.
+
+### Pilns iestatījumu UI
+
+Iestatījumu panelis aptver katru opciju, kas atrodas `.bolt/bolt.jsonc` — taustiņu piesaistes, modeļu izvēli, LLM sniedzējus, MCP serverus un autentifikāciju — ar nolaižamajām izvēlēm, pārslēgiem un iekļautu validāciju. Jums reti būs jāregulē konfigurācijas fails ar rokām.
+
+### Vietējie paziņojumi
+
+Bolt palaiž vietējo OS paziņojumu, kad beidzas ilgstošs uzdevums. Noklikšķiniet uz paziņojuma, lai pārietu tieši uz sesiju.
+
+### Dziļās saites
+
+Atveriet konkrētu sesiju, pārejot uz `bolt://` URL. Noderīgi sesiju saišu koplietošanai ar komandas biedriem vai darba grāmatzīmēm.
+
+### Automātiskie atjauninājumi
+
+Darbvirsmas lietotne atjaunina pati sevi trijos kanālos:
+
+| Kanāls | Apraksts |
+|---------|-------------|
+| `prod` | Stabilie izlaidumi, atjaunināti katrā produkcijas tagā |
+| `beta` | Iepriekšizlaidumu būvējumi agrai piekļuvei jaunām funkcijām |
+| `dev` | Ikvakara būvējumi no `dev` zara |
+
+Pārslēdziet kanālus sadaļā **Iestatījumi → Par**.
+
+### 28 UI valodas
+
+Bolt saskarne ir lokalizēta 28 valodās. Mainiet attēlojuma valodu sadaļā **Iestatījumi → Izskats → Valoda**.
+
+---
+
+## Saistītā dokumentācija
+
+<CardGroup cols={2}>
+  <Card title="Attālinātās sesijas" icon="server" href="/server/remote-sessions">
+    Palaidiet bezgalvas serveri attālinātā iekārtā un pievienojieties no darbvirsmas lietotnes vai CLI.
+  </Card>
+  <Card title="MCP serveri" icon="plug" href="/extending/mcp-servers">
+    Pievienojiet ārējos rīkus un API saviem aģentiem, izmantojot Model Context Protocol.
+  </Card>
+  <Card title="Spraudņi" icon="puzzle-piece" href="/extending/plugins">
+    Paplašiniet Bolt ar pielāgotiem sniedzējiem, autentifikācijas metodēm un darbvietas adapteriem.
+  </Card>
+  <Card title="GitHub integrācija" icon="github" href="/server/github-actions">
+    Automatizējiet PR, commit ziņas un koda pārskatīšanu no darbvirsmas lietotnes vai CI.
+  </Card>
+</CardGroup>

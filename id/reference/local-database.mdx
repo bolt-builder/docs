@@ -1,0 +1,38 @@
+---
+title: "Database Lokal (bolt db)"
+sidebarTitle: "Local Database"
+description: "Bolt menyimpan setiap sesi, pesan, dan panggilan tool dalam database SQLite lokal. Inspeksi, cadangkan, atau kueri secara langsung dengan bolt db."
+---
+
+Bolt menyimpan setiap sesi, pesan, dan panggilan tool dalam database SQLite lokal. Sepenuhnya dapat diperiksa dan sepenuhnya milikmu — tidak ada yang diunggah kecuali kamu secara eksplisit membagikan sebuah sesi.
+
+## Operasi umum
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Mencadangkannya
+
+Karena ini adalah satu file SQLite, backup adalah sebuah salinan:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Untuk penyimpanan jangka panjang atau transportasi, lebih baik gunakan `bolt export` / `bolt import` — mereka menghasilkan representasi JSON portabel yang selamat dari migrasi skema.
+
+## Skema sekilas
+
+- `sessions` — satu baris per sesi, dengan judul, proyek, timestamp, dan status.
+- `messages` — log giliran lengkap per sesi.
+- `tool_calls` — setiap pemanggilan dengan input, output, dan durasi.
+
+Kolom pastinya berkembang; gunakan `PRAGMA table_info(<table>)` untuk melihat skema yang aktif.
+
+## Terkait
+
+- [Sessions](/concepts/sessions) — apa yang disimpan database.
+- [Stats & Cost](/reference/stats-and-cost) — tampilan agregat dari data yang sama.

@@ -1,0 +1,142 @@
+---
+title: "Kezdd el a Bolt-ot kevesebb mint egy perc alatt"
+sidebarTitle: "Gyors indítás"
+description: "Telepítsd a Bolt-ot, nyisd meg a projekted, csatlakoztass egy szolgáltatót, és futtasd az első MI-promptodat — mindezt 60 másodperc alatt ezzel a lépésről lépésre útmutatóval."
+---
+
+Ez az útmutató végigvezet a Bolt telepítésén, projektben való elindításán, MI-szolgáltató csatlakoztatásán és az első prompt futtatásán. A teljes folyamat kevesebb mint egy percet vesz igénybe.
+
+<Steps>
+  <Step title="Telepítsd a Bolt-ot">
+    A leggyorsabb út a hivatalos telepítőszkript, amely macOS-en és Linuxon működik:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Csomagkezelőt preferálsz? Telepítsd globálisan npm-mel, bun-nal, pnpm-mel vagy yarn-nal:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Az asztali alkalmazáshoz macOS-en (Gatekeeper-kerülőút nélkül):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Lásd a [Telepítési útmutatót](/installation) minden módszerhez, beleértve a Homebrew-t, Chocolatey-t, Scoop-ot és Windows-specifikus megjegyzéseket.
+  </Step>
+  <Step title="Nyisd meg a projekted">
+    Lépj be egy tetszőleges projektkönyvtárba, és indítsd el az interaktív TUI-t:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    A Bolt automatikusan felveszi a projekted kontextusát — olvassa a fájlfát, megérti a stackedet, és minden ügynök számára elérhetővé teszi attól a pillanattól, hogy megnyitod.
+  </Step>
+  <Step title="Konfigurálj egy MI-szolgáltatót">
+    Első indításkor a Bolt megkér, hogy konfigurálj egy szolgáltatót, ha egyik sincs beállítva. Ezt bármikor futtathatod:
+
+    ```bash
+    bolt providers
+    ```
+
+    Ez megnyitja a szolgáltatókezelési folyamatot, ahol API-kulcsokat adhatsz hozzá az OpenAI, Anthropic és más támogatott LLM-szolgáltatókhoz. A konfiguráció a projekt gyökerében lévő `.bolt/bolt.jsonc` fájlba mentődik.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Írj egy promptot és fedezd fel az ügynököket">
+    Miután a TUI-ban vagy, írd be a promptodat, és nyomj Enter-t. Használd a **Tab** billentyűt, hogy váltogass a Bolt tíz beépített ügynöke között bármikor — az aktuális ügynök az állapotsávban látható.
+
+    Promptokat közvetlenül a parancssorból is futtathatsz a TUI megnyitása nélkül:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Beépített ügynökök
+
+Válts ügynököt a `Tab` billentyűvel a TUI-ban, vagy add át a `--agent <name>` kapcsolót a `bolt run` parancsnak. Minden ügynöknek van egy definiált hozzáférési szintje, amely illeszkedik a céljához.
+
+| Ügynök | Hozzáférés | Leírás |
+| --- | --- | --- |
+| `code` | Full | Alapértelmezett: olvas, ír és futtat kódot |
+| `plan` | Read | Feltárja a kódbázist, és tervet készít fájlok módosítása nélkül |
+| `ask` | Read | Kérdések és kutatás — nincs fájlszerkesztés |
+| `code-review` | Read | Változtatásokat vizsgál helyesség, stílus és biztonság szempontjából |
+| `debug` | Full | Bukó teszteket, összeomlásokat és logikai hibákat javít |
+| `refactor` | Full | Biztonságos refaktorálás minden lépésnél teszt-ellenőrzéssel |
+| `docs` | Edit | Dokumentációt és megjegyzéseket ír és frissít |
+| `security` | Read | Biztonsági audit: sebezhetőségek, titkok, minták |
+| `migrate` | Full | Keretrendszer-frissítések és függőségi migrációk |
+| `perf` | Full | Teljesítményelemzés és optimalizálás |
+
+Két beépített al-ügynök is van a delegáláshoz: `@general` az összetett többlépéses feladatokhoz és `@explore` a gyors, csak olvasható kódbáziskutatáshoz. Saját ügynököket is definiálhatsz Markdown-fájlokként, vagy generálhatsz egyet a `bolt agent create` paranccsal.
+
+## Gyakori parancsok, amiket érdemes kipróbálni
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Add át a `--mini` kapcsolót a `bolt` vagy `bolt attach` parancsnak egy kompakt felülethez, amely kevesebb terminálhelyet foglal — kiváló kisebb ablakokhoz vagy osztott elrendezésekhez.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  A `bolt run` elfogad `--auto`, `--yolo` és `--dangerously-skip-permissions` kapcsolókat, amelyek automatikusan jóváhagynak minden jogosultsági promptot rákérdezés nélkül. Ezeket csak megbízható környezetben használd — engedélyezik az ügynöknek, hogy megerősítés nélkül olvasson, írjon és végrehajtson.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  A Bolt támogatja a shell-kiegészítéseket bash, zsh, fish és más shellekhez. Generáld és telepítsd a kiegészítéseket:
+
+  ```bash
+  bolt completion
+  ```
+
+  Kövesd a kiírt utasításokat a kiegészítési szkript source-olásához a shell-konfigurációdban.
+</Note>

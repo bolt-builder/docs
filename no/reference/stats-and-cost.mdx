@@ -1,0 +1,32 @@
+---
+title: "Statistikk og kostnad (bolt stats)"
+sidebarTitle: "Statistikk og kostnad"
+description: "bolt stats aggregerer tokenbruk og kostnad på tvers av øktene dine slik at du kan se hvor forbruket ditt går og justere modeller eller agenter deretter."
+---
+
+`bolt stats` aggregerer tokentall og kostnad på tvers av den lokale øktdatabasen. Fordi hvert verktøykall registreres (se [Lokal database](/reference/local-database)), er tallene nøyaktige for LLM-kallene Bolt drev.
+
+## Grunnleggende bruk
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Hva den viser
+
+- Totale input-, output- og cache-tokens.
+- Estimert kostnad per leverandør (ved bruk av leverandørprisingstabeller på kjøretidspunktet).
+- Oversikter per modell, per agent og per dag avhengig av flagg.
+
+## Redusere kostnad
+
+- Bruk `--variant minimal` eller `--variant low` på resonneringstunge modeller. Se [Leverandører og modeller](/concepts/providers-and-models).
+- Foretrekk `ask`- eller `plan`-agenten for utforskning; de er skrivebeskyttet og unngår verktøytunge løkker.
+- Bytt til en mindre modell med `bolt models` for oppgaver som ikke trenger banebrytende kapasitet.
+
+## Relatert
+
+- [Leverandører og modeller](/concepts/providers-and-models) — velg og juster modellene `stats` måler.
+- [Feilsøking](/reference/troubleshooting) — hva du gjør med en overraskende regning.

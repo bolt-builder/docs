@@ -1,0 +1,22 @@
+---
+title: "Skills: opakovaně použitelné playbooky agenta"
+sidebarTitle: "Skills"
+description: "Skills jsou pojmenované, opakovaně použitelné playbooky, které agent Boltu vyvolává přes nástroj skill — hodí se pro předpřipravené workflow jako vydávání releasů nebo spouštění lint sad."
+---
+
+Skills jsou pojmenované, opakovaně použitelné playbooky, které žijí vedle tvého projektu a jsou vyvolávány přes nástroj `skill`. Zatímco vlastní nástroj je jediná spustitelná akce, skill je skriptovaný workflow, kterým se agent může řídit krok po kroku: sesbírat tyto soubory, spustit tyto příkazy, rozhodnout, co dál na základě výstupu.
+
+Skills použij, když:
+
+- Máš workflow, který stále znovu vysvětluješ v promptech („nejdřív spusť linter, potom …“).
+- Chceš, aby se agent řídil konkrétním rozhodovacím stromem.
+- Chceš, aby byl stejný workflow dostupný každému sezení a každému agentovi v projektu.
+
+## Kde žijí
+
+Skills jsou soubory pod `.opencode/skill/` (nebo `.opencode/skills/`) v kořeni projektu. Každý soubor popisuje název triggeru, kdy ho má agent použít a jednotlivé kroky. [Nástroj](/concepts/tools) `skill` je vystavuje modelu.
+
+## Související
+
+- [Vlastní nástroje](/extending/custom-tools) — rozšíření nižší úrovně, jediná akce.
+- [Vlastní agenti](/extending/custom-agents) — zapiš instrukce místo toho do agenta.

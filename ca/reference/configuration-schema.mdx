@@ -1,0 +1,192 @@
+---
+title: "Referència del fitxer de configuració de Bolt"
+sidebarTitle: "Esquema de config."
+description: "Referència completa per a l'esquema del fitxer de configuració de Bolt — ubicacions, tots els camps de nivell superior, tipus de servidor MCP, sobreescriptures de proveïdor i un exemple complet."
+---
+
+Bolt utilitza un fitxer JSON amb comentaris (`.jsonc`) per a la configuració de projecte i global. L'esquema té versió i es publica a `https://opencode.ai/config.json`, que els editors poden utilitzar per proporcionar autocompletat i validació.
+
+## Ubicacions dels fitxers de configuració
+
+Bolt combina la configuració de dues ubicacions. Els paràmetres per projecte guanyen sobre els globals quan la mateixa clau apareix a tots dos.
+
+| Abast | Ruta |
+|---|---|
+| **Per projecte** | `.bolt/bolt.jsonc` (o `.bolt/bolt.json`) a l'arrel del teu projecte |
+| **Global** | `bolt.jsonc` (o `bolt.json`) al directori de configuració del teu sistema operatiu |
+
+El directori de configuració del sistema operatiu és:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt també llegeix fitxers heretats `opencode.jsonc` / `opencode.json` a les mateixes ubicacions. Els projectes nous haurien d'utilitzar la convenció de nomenament `bolt.jsonc`, que té prioritat sobre els noms de fitxer heretats.
+</Note>
+
+Bolt crea un fitxer de configuració global mínim amb la línia `$schema` a la primera execució, i crea `.bolt/bolt.jsonc` a l'arrel del teu projecte la primera vegada que obres el TUI en aquest directori.
+
+## Camps de l'esquema
+
+<ParamField body="$schema" type="string">
+  URL que apunta a l'esquema JSON per a aquest fitxer de configuració. Habilita l'autocompletat i la validació en línia en editors que suporten JSON Schema (VS Code, Zed, IDEs de JetBrains, etc.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Model per defecte per a totes les sessions, expressat com `provider/model`. Es pot sobreescriure per sessió amb `bolt run --model` o al selector de model del TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Executa `bolt models` per veure totes les cadenes `provider/model` disponibles per als teus proveïdors configurats.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Sobreescriptures de credencials i paràmetres específics del proveïdor. Cada clau és un ID de proveïdor (p. ex. `anthropic`, `openai`, `google`). L'ús més comú és establir una clau API mitjançant una referència a una variable d'entorn perquè la clau mai s'emmagatzemi en text pla.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  Els valors que comencen per `${` i acaben per `}` es tracten com a referències a variables d'entorn i s'expandeixen en temps d'execució.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  Configuracions de servidor MCP, clavades per un nom que triïs. Bolt admet dos tipus de servidor:
+
+  **Servidor remot** — es connecta per HTTP/SSE, amb OAuth opcional:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Camp | Tipus | Descripció |
+  |---|---|---|
+  | `type` | `"remote"` | Identifica això com a servidor HTTP remot |
+  | `url` | string | URL completa del punt final MCP |
+  | `oauth` | object \| `false` | Objecte de configuració OAuth (amb `clientId`, `clientSecret`, `scope`, `redirectUri` opcionals). Estableix a `false` per desactivar la detecció automàtica d'OAuth. |
+  | `headers` | object | Capçaleres HTTP a enviar amb cada sol·licitud (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | Habilita o desactiva aquest servidor a l'inici |
+  | `timeout` | number | Temps d'espera de sol·licitud en mil·lisegons (per defecte: 5000) |
+
+  **Servidor local** — genera un subprocés per stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Camp | Tipus | Descripció |
+  |---|---|---|
+  | `type` | `"local"` | Identifica això com a servidor stdio local |
+  | `command` | string[] | Ordre i tots els arguments per generar |
+  | `cwd` | string | Directori de treball per al procés del servidor (les rutes relatives es resolen des del directori de l'espai de treball) |
+  | `environment` | object | Variables d'entorn addicionals a passar al subprocés |
+  | `enabled` | boolean | Habilita o desactiva aquest servidor a l'inici |
+  | `timeout` | number | Temps d'espera de sol·licitud en mil·lisegons (per defecte: 5000) |
+
+  Utilitza `bolt mcp add` per a un assistent interactiu, o `bolt mcp list` per inspeccionar l'estat actual del servidor.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  Instruccions de sistema addicionals afegides a cada sessió d'aquest projecte o globalment. Les instruccions de múltiples fitxers de configuració es combinen (desduplicades). Utilitza això per injectar convencions, regles d'estil o restriccions específiques del projecte que cada agent hauria de seguir.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Especificacions de plugin a carregar. Cada entrada és un nom de paquet npm, una ruta a un fitxer local o una URL. Els plugins poden ampliar el TUI, afegir ordres de barra inclinada o registrar proveïdors addicionals. Utilitza `bolt plugin install <spec>` per instal·lar un plugin i afegir-lo automàticament a aquesta matriu.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Exemple complet
+
+El següent `.bolt/bolt.jsonc` mostra una configuració de projecte realista:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Executa `bolt debug config` per veure la configuració completa resolta després que tots els fitxers es combinin. Aquesta és la manera més ràpida de confirmar que les teves configuracions per projecte i globals es combinen correctament.
+</Tip>

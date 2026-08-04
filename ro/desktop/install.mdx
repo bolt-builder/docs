@@ -1,0 +1,116 @@
+---
+title: "Aplicația desktop Bolt: sesiuni de codare AI multi-fereastră"
+sidebarTitle: "Instalare"
+description: "Instalează aplicația desktop Bolt pentru sesiuni multi-fereastră, un terminal integrat, un compunător de prompturi cu lipire de imagini, actualizări automate și 28 de limbi de interfață."
+url: "desktop/install"
+---
+
+Aplicația desktop Bolt învelește același motor ca CLI-ul într-o carcasă Electron completă. Fiecare funcție disponibilă în terminal — agenți, servere MCP, plugin-uri, sesiuni la distanță, sesiuni pe care le poți ramifica și partaja — funcționează identic în aplicația desktop, cu adăugarea unei experiențe multi-fereastră și multi-tab, a unui UI grafic de setări, a notificărilor native și a actualizărilor automate. Dacă folosești deja CLI-ul, aplicația desktop este un complement drop-in, nu un înlocuitor.
+
+---
+
+## Instalare
+
+### macOS
+
+<Steps>
+  <Step title="Instalează cu one-liner-ul (recomandat)">
+    Deschide un terminal și rulează:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Scriptul descarcă cea mai recentă versiune, o verifică și plasează aplicația în `/Applications`. Fără pop-up de Gatekeeper.
+  </Step>
+
+  <Step title="Lansează aplicația">
+    Deschide **Bolt** din `/Applications` sau Spotlight. La prima lansare, Bolt îți cere să alegi un furnizor LLM implicit și creează un fișier de configurare globală.
+  </Step>
+</Steps>
+
+<Tip>
+  One-liner-ul instalează aplicația într-un mod care ocolește dialogul „unidentified developer” al Gatekeeper-ului macOS, astfel încât să treci direct la codare fără solicitări de securitate suplimentare.
+</Tip>
+
+### Toate platformele — descarcă din releases
+
+Descarcă cel mai recent installer pentru platforma ta de pe [pagina de lansări Bolt](https://github.com/Bolt-builder/bolt-cli/releases).
+
+| Platformă | Tip de installer |
+|-----------|------------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | Installer `.exe` |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Pe Windows, Bolt include integrarea WSL (Windows Subsystem for Linux). Când WSL este disponibil, Bolt poate deschide sesiuni direct în distribuția ta WSL — oferindu-ți un mediu de agent nativ Linux, cu o interfață Windows nativă în jurul lui.
+</Note>
+
+---
+
+## Funcții
+
+### Gestionarea sesiunilor multi-fereastră și multi-tab
+
+Deschide oricâte ferestre îți dorești, fiecare cu propriul set de tab-uri. Tab-urile se mapează direct pe sesiunile Bolt, astfel încât să poți rula un agent pe un refactoring într-un tab, să pui o întrebare în altul și să rulezi o sarcină în fundal în al treilea — toate în același timp.
+
+### Compunător de prompturi
+
+Compunătorul de prompturi acceptă intrare bogată: lipește text, glisează fișiere ca atașamente sau lipește o imagine direct din clipboard. Bolt codifică imaginea și o trimite automat oricărui model capabil de viziune.
+
+### Terminal integrat și arbore de fișiere
+
+Un aspect cu panouri divizate îți oferă conversația cu agentul într-o parte și un terminal live și un arbore de fișiere ale proiectului în cealaltă. Poți rula comenzi, inspecta ieșirea și returna rezultatele către agent fără să schimbi aplicațiile.
+
+### Paleta de comenzi
+
+Apasă `Cmd/Ctrl+K` pentru a deschide paleta de comenzi. De aici poți schimba sesiuni, schimba agenți, deschide setări sau declanșa orice acțiune fără să atingi mouse-ul.
+
+### UI complet de setări
+
+Panoul de setări acoperă fiecare opțiune care trăiește în `.bolt/bolt.jsonc` — combinații de taste, selectarea modelului, furnizori LLM, servere MCP și autentificare — cu dropdown-uri, comutatoare și validare inline. Rareori mai trebuie să editezi manual fișierul de configurare.
+
+### Notificări native
+
+Bolt trimite o notificare OS nativă când se termină o sarcină de lungă durată. Fă clic pe notificare pentru a sări direct la sesiune.
+
+### Link-uri profunde
+
+Deschide o sesiune specifică navigând la un URL `bolt://`. Util pentru partajarea link-urilor de sesiune cu colegii sau pentru marcarea unei lucrări în desfășurare.
+
+### Actualizări automate
+
+Aplicația desktop se auto-actualizează pe trei canale:
+
+| Canal | Descriere |
+|-------|-----------|
+| `prod` | Versiuni stabile, actualizate la fiecare tag de producție |
+| `beta` | Build-uri pre-lansare pentru acces timpuriu la funcții noi |
+| `dev` | Build-uri nightly de pe ramura `dev` |
+
+Schimbă canalele din **Settings → About**.
+
+### 28 de limbi de interfață
+
+Interfața Bolt este localizată în 28 de limbi. Schimbă limba de afișare din **Settings → Appearance → Language**.
+
+---
+
+## Documente conexe
+
+<CardGroup cols={2}>
+  <Card title="Sesiuni la distanță" icon="server" href="/server/remote-sessions">
+    Rulează un server headless pe o mașină la distanță și atașează-te din aplicația desktop sau din CLI.
+  </Card>
+  <Card title="Servere MCP" icon="plug" href="/extending/mcp-servers">
+    Adaugă instrumente și API-uri externe la agenții tăi folosind Model Context Protocol.
+  </Card>
+  <Card title="Plugin-uri" icon="puzzle-piece" href="/extending/plugins">
+    Extinde Bolt cu furnizori, metode de autentificare și adaptoare de workspace personalizate.
+  </Card>
+  <Card title="Integrare GitHub" icon="github" href="/server/github-actions">
+    Automatizează PR-uri, mesaje de commit și revizuirea codului din aplicația desktop sau din CI.
+  </Card>
+</CardGroup>

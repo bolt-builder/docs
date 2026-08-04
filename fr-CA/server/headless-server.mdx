@@ -1,0 +1,52 @@
+---
+title: "Exécuter Bolt comme serveur sans interface"
+sidebarTitle: "Serveur sans interface"
+description: "bolt serve expose un runtime Bolt complet par HTTP afin que tout TUI, interface Web, intégration d'éditeur ou script puisse s'y rattacher localement ou sur le réseau."
+---
+
+`bolt serve` exécute un serveur Bolt sans interface qui expose le moteur complet par HTTP : sessions, agents, outils, accès aux fournisseurs, MCP et événements en diffusion. Tout ce que Bolt peut faire de façon interactive, il peut le faire par l'API.
+
+## Démarrer un serveur
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  L'attachement à `0.0.0.0` expose Bolt sur votre réseau. Définissez toujours `BOLT_SERVER_USERNAME` et `BOLT_SERVER_PASSWORD` avant de le faire.
+</Warning>
+
+## Rattacher un TUI
+
+Depuis toute machine qui peut joindre le serveur :
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Ou exécutez une invite ponctuelle contre un serveur distant :
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Authentification de base
+
+Définissez les identifiants via des variables d'environnement (voir [Variables d'env.](/reference/environment-variables)) :
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Tous les clients doivent envoyer des identifiants correspondants.
+
+## Voir aussi
+
+- [Sessions à distance](/server/remote-sessions) — rattachement, découverte mDNS et serveurs partagés.
+- [Interface Web](/server/web-ui) — le front-end pour navigateur.
+- [ACP](/server/acp) — piloter Bolt depuis Zed et d'autres éditeurs.

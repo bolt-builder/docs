@@ -1,0 +1,68 @@
+---
+title: "Anpassade agenter i Bolt"
+sidebarTitle: "Anpassade agenter"
+description: "Definiera dina egna Bolt-agenter som Markdown-filer — välj en modell, sätt åtkomstnivå, begränsa verktyg och lägg till domänspecifika instruktioner."
+---
+
+Utöver de tio inbyggda agenterna kan du definiera egna. Anpassade agenter är Markdown-filer med ett frontmatter-block som beskriver agentens modell, åtkomstnivå och tillgängliga verktyg, plus en brödtext som fungerar som dess systemprompt.
+
+## Skapa en agent
+
+Snabbaste vägen är den inbyggda generatorn, som ställer några frågor och skriver filen åt dig:
+
+```bash
+bolt agent create
+```
+
+Agenter lever under `.opencode/agent/` i projektet (eller din globala konfigurationskatalog för personliga agenter). Varje agent är en enskild `.md`-fil vars filnamn blir agentens namn.
+
+## En agentfils anatomi
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Vanliga frontmatter-fält:
+
+| Fält | Syfte |
+| --- | --- |
+| `name` | Agentnamn som används med `--agent`. |
+| `description` | Kort sammanfattning som visas i listor. |
+| `model` | Standardmodell i formatet `provider/model`. |
+| `access` | `full`, `edit` eller `read` (se [Behörigheter](/concepts/permissions)). |
+| `tools` | Valfri tillåtelselista som begränsar vilka [verktyg](/concepts/tools) agenten får anropa. |
+
+## Använda en anpassad agent
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+I TUI:n, tryck `Tab` för att cykla genom agenter; anpassade agenter visas bredvid de inbyggda.
+
+## Underagenter
+
+Agenter kan delegera till underagenter via verktyget `task`. Bolt levereras med `@general` och `@explore`, och alla anpassade agenter vars fil ligger under `.opencode/agent/` kan även anropas som underagent via namn.
+
+## Relaterat
+
+- [Agenter](/concepts/agents) — den inbyggda agentuppsättningen.
+- [Verktyg](/concepts/tools) — vad du kan lägga till i `tools:`.
+- [Anpassade verktyg](/extending/custom-tools) — bygg verktyget som agenten kommer att anropa.

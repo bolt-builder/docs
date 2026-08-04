@@ -1,0 +1,36 @@
+---
+title: "Strumenti personalizzati in Bolt"
+sidebarTitle: "Strumenti personalizzati"
+description: "Aggiungi strumenti specifici del progetto a Bolt inserendo file eseguibili in .opencode/tool/. Ogni file diventa uno strumento che l'agente può chiamare."
+---
+
+Gli strumenti personalizzati ti permettono di esporre qualsiasi cosa tu possa scrivere in script (script shell, programmi Node/Bun/Python, piccoli binari) come strumento che l'agente può invocare per nome. Sono il modo più semplice per dare a Bolt accesso ai flussi di build, deploy o dati del tuo progetto.
+
+## Dove risiedono
+
+Inserisci i file in uno di:
+
+- `.opencode/tool/` — con ambito progetto, incluso nel repository.
+- `.opencode/tools/` — accettato come alias del precedente.
+
+Ogni file diventa uno strumento con lo stesso nome del file (meno la sua estensione). Gli strumenti vengono rilevati automaticamente al successivo avvio di Bolt.
+
+## Anatomia di uno strumento
+
+Uno strumento personalizzato dichiara il suo nome, la sua descrizione e lo schema di input in un'intestazione, poi implementa il comportamento. La forma esatta dipende dal runtime che scegli (script shell, TypeScript, ecc.), ma ogni strumento deve:
+
+1. Pubblicizzare un JSON Schema per i suoi input in modo che il modello sappia come chiamarlo.
+2. Restituire un valore (o un errore) che Bolt possa mostrare nel TUI e reintrodurre al modello.
+
+Una volta caricato, lo strumento appare nell'elenco degli strumenti dell'agente accanto agli strumenti integrati come `bash` e `grep`, ed è controllato dallo stesso sistema di [permessi](/concepts/permissions).
+
+## Quando usare uno strumento personalizzato vs. un server MCP
+
+- **Strumento personalizzato** — piccolo, specifico del progetto, senza riutilizzo tra progetti. Rapido da scrivere.
+- **Server MCP** — condiviso tra progetti, o incapsula un servizio esterno reale con autenticazione. Vedi [Server MCP](/extending/mcp-servers).
+- **Strumento del plugin** — distribuito come pacchetto npm insieme ad altri punti di estensione. Vedi [Plugin](/extending/plugins).
+
+## Correlati
+
+- [Strumenti](/concepts/tools) — riferimento agli strumenti integrati.
+- [Plugin](/extending/plugins) — la superficie di estensione per strumenti e altro.

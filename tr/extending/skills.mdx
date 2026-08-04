@@ -1,0 +1,22 @@
+---
+title: "Beceriler: Yeniden Kullanılabilir Ajan Kılavuzları"
+sidebarTitle: "Beceriler"
+description: "Beceriler, Bolt ajanının skill aracıyla çağırdığı adlandırılmış, yeniden kullanılabilir kılavuzlardır — sürüm dağıtma veya lint takımları çalıştırma gibi hazır iş akışları için kullanışlıdır."
+---
+
+Beceriler, projenizin yanında yaşayan ve `skill` aracıyla çağrılan adlandırılmış, yeniden kullanılabilir kılavuzlardır. Özel bir araç tek bir yürütülebilir eylemken, bir beceri ajanın adım adım izleyebileceği betiklenmiş bir iş akışıdır: bu dosyaları topla, bu komutları çalıştır, çıktıya göre bundan sonra ne yapılacağına karar ver.
+
+Becerileri şu durumlarda kullanın:
+
+- Komutlarda sürekli yeniden açıkladığınız bir iş akışınız varsa ("önce linter'ı çalıştır, sonra …").
+- Ajanın belirli bir karar ağacını izlemesini istiyorsanız.
+- Aynı iş akışının projedeki her oturum ve her ajan için mevcut olmasını istiyorsanız.
+
+## Nerede yaşarlar
+
+Beceriler, proje kökündeki `.opencode/skill/` (veya `.opencode/skills/`) altında dosyalardır. Her dosya tetikleyici adını, ajanın onu ne zaman kullanması gerektiğini ve içerdiği adımları açıklar. `skill` [aracı](/concepts/tools) bunları modele sunar.
+
+## İlgili
+
+- [Özel Araçlar](/extending/custom-tools) — daha düşük düzey, tek eylemli uzantı.
+- [Özel Ajanlar](/extending/custom-agents) — bunun yerine talimatları bir ajana yerleştirin.

@@ -1,0 +1,36 @@
+---
+title: "Pielāgoti rīki Bolt"
+sidebarTitle: "Pielāgoti rīki"
+description: "Pievienojiet projektam specifiskus rīkus Bolt, ievietojot izpildāmos failus mapē .opencode/tool/. Katrs fails kļūst par rīku, ko aģents var izsaukt."
+---
+
+Pielāgoti rīki ļauj jums atklāt visu, ko varat skriptēt (čaulas skripti, Node/Bun/Python programmas, mazi binārie faili), kā rīku, ko aģents var izsaukt pēc vārda. Tas ir vienkāršākais veids, kā piešķirt Bolt piekļuvi jūsu projekta paša būvēšanas, izvietošanas vai datu darbplūsmām.
+
+## Kur tie atrodas
+
+Ievietojiet failus vienā no:
+
+- `.opencode/tool/` — projekta apjoma, iekļauti repozitorijā.
+- `.opencode/tools/` — pieņemts kā iepriekšējā aizstājējs.
+
+Katrs fails kļūst par rīku, kas nosaukts pēc faila (bez tā paplašinājuma). Rīki tiek automātiski uzņemti nākamajā Bolt palaišanā.
+
+## Rīka anatomija
+
+Pielāgots rīks deklarē savu vārdu, aprakstu un ievades shēmu galvenē, pēc tam īsteno uzvedību. Precīza forma ir atkarīga no izvēlētās izpildlaika (čaulas skripts, TypeScript utt.), bet katram rīkam ir:
+
+1. Jāreklamē JSON Schema saviem ievades datiem, lai modelis zina, kā to izsaukt.
+2. Jāatgriež vērtība (vai kļūda), ko Bolt var atveidot TUI un padot atpakaļ modelim.
+
+Kad ielādēts, rīks parādās aģenta rīku sarakstā blakus iebūvētajiem rīkiem, piemēram, `bash` un `grep`, un ir kontrolēts ar to pašu [atļauju](/concepts/permissions) sistēmu.
+
+## Kad izmantot pielāgotu rīku, nevis MCP serveri
+
+- **Pielāgots rīks** — mazs, projektam specifisks, nav atkārtoti izmantojams starp projektiem. Ātrs uzrakstīt.
+- **MCP serveris** — koplietots starp projektiem vai ietin īstu ārējo pakalpojumu ar autentifikāciju. Skatiet [MCP serveri](/extending/mcp-servers).
+- **Spraudņa rīks** — izplatīts kā npm pakete kopā ar citiem paplašinājumu punktiem. Skatiet [Spraudņi](/extending/plugins).
+
+## Saistīts
+
+- [Rīki](/concepts/tools) — iebūvēto rīku atsauce.
+- [Spraudņi](/extending/plugins) — paplašinājuma virsma rīkiem un vairāk.

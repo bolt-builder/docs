@@ -1,0 +1,395 @@
+---
+title: "פתור בעיות נפוצות של Bolt"
+sidebarTitle: "פתרון בעיות"
+description: "פתרונות לבעיות ה-Bolt הנפוצות ביותר: כשלי הפעלה, שגיאות אימות ספק, קישוריות MCP, בעיות סשן, הרשאות, עלות ועוד."
+---
+
+רוב בעיות Bolt נופלות למספר קטן של קטגוריות. עבוד דרך ה-accordion הרלוונטי למטה, ובדוק את פלט הלוג עם `bolt logs` בכל פעם שקורה משהו לא צפוי.
+
+<Note>
+  עבור שאלות שלא נענו כאן, חפש או התחל דיון ב-[Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). כלול את הפלט של `bolt debug info` ו-`bolt logs --tail 50` בפוסט שלך כדי שהקהילה תוכל לעזור מהר יותר.
+</Note>
+
+## דברים ראשונים לנסות
+
+לפני שאתה צולל למקטע ספציפי, ארבע פקודות אלה פותרות את רוב הבעיות:
+
+| סימפטום | פקודה ראשונה | למה |
+| --- | --- | --- |
+| כל דבר מוזר | `bolt debug info` | סיכום מערכת \+ תוסף בפעולה אחת. |
+| משהו עבד קודם, עכשיו לא | `bolt logs --tail 100` | שגיאות אחרונות, בדרך כלל בסמוך לחלק העליון. |
+| חשד בתוסף | `bolt --pure` | התחל עם כל התוספים מושבתים. |
+| התצורה לא נקלטת | `bolt debug config` | מדפיס את התצורה המפורשת המלאה. |
+
+<Tip>
+  משפחת `bolt debug` היא התחנה הראשונה שלך לכל התנהגות מסתורית. `bolt debug info` לסיכום מערכת, `bolt debug config` לתצורה המפורשת, `bolt debug paths` למיקומים בדיסק, ו-`bolt debug snapshot` לבדיקת מצב סשן.
+</Tip>
+
+<Accordion title="Bolt לא מתחיל / קורס בהשקה">
+  **סימפטומים:** המסוף מהבהב ויוצא מיד, או שאתה רואה מעקב מחסנית לפני שה-TUI מתרנדר.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="אסוף מידע מערכת">
+      ```bash
+      bolt debug info
+      ```
+
+      זה מדפיס את גרסת Bolt שלך, מערכת ההפעלה, אמולטור המסוף והתוספים הטעונים. העתק פלט זה כשאתה מדווח על באג.
+    </Step>
+    <Step title="בדוק פלט לוג אחרון">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      חפש שורות `ERROR`. סיבה נפוצה היא תוסף שנכשל בטעינה — במקרה כזה תראה שגיאה שמזכירה את שם התוסף.
+    </Step>
+    <Step title="השבת תוספים כדי לבודד את הבעיה">
+      ```bash
+      bolt --pure
+      ```
+
+      אם Bolt מתחיל נקי עם `--pure`, תוסף גורם לקריסה. הסר את התוסף הפוגע מהתצורה שלך, או דווח עליו למחבר התוסף.
+    </Step>
+    <Step title="בדוק תצורה מקולקלת">
+      ```bash
+      bolt debug config
+      ```
+
+      אם זה מדפיס שגיאה על JSON לא חוקי, פתח את קובץ התצורה שהוא מזכיר ותקן את התחביר. הרץ `bolt db path` כדי לוודא שנתיב מסד הנתונים נגיש.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="אימות ספק נכשל">
+  **סימפטומים:** Bolt מציג "No providers configured", בקשות API נכשלות עם שגיאות 401, או ש-`bolt run` יוצא מיד מבלי לייצר פלט.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="הרץ מחדש את זרימת כניסת הספק">
+      ```bash
+      bolt providers login
+      ```
+
+      בחר את הספק שלך ועקוב אחר ההנחיות. Bolt ילווה אותך בהזנת מפתח API או OAuth.
+    </Step>
+    <Step title="ודא את משתנה הסביבה של מפתח API">
+      אם אתה משתמש במשתנה סביבה (למשל `ANTHROPIC_API_KEY`), ודא שהוא באמת מוגדר במעטפת הנוכחית:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      אם הוא ריק, הוסף אותו לפרופיל המעטפת שלך ופתח מחדש את המסוף שלך.
+    </Step>
+    <Step title="בדוק את התצורה המפורשת">
+      ```bash
+      bolt debug config
+      ```
+
+      הסתכל בקטע `provider`. אם הספק שלך מופיע עם `apiKey` ריק, הפניית משתנה הסביבה בקובץ התצורה שלך לא מורחבת.
+    </Step>
+    <Step title="הצג אישורים מאוחסנים">
+      ```bash
+      bolt providers list
+      ```
+
+      זה מציג את כל האישורים המאוחסנים ב-`auth.json` ואת כל משתני הסביבה הקשורים לספקים ש-Bolt זיהה.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="שרת MCP לא מתחבר">
+  **סימפטומים:** `bolt mcp list` מציג שרת כ-`failed` או `needs authentication`, או שהסוכן לא יכול להשתמש בכלים מהשרת הזה.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="הרץ את בדיקת ה-debug של MCP">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      זה בודק קישוריות HTTP בסיסית, בוחן את כותרת `WWW-Authenticate`, ועובר דרך זרימת גילוי OAuth אם רלוונטי. הפלט יגיד לך אם השרת נגיש והאם נדרש אימות.
+    </Step>
+    <Step title="בדוק את כתובת השרת">
+      ודא את ה-URL ב-`.bolt/bolt.jsonc` שלך. עבור שרתים מרוחקים, ודא שה-URL מסתיים בנתיב MCP (למשל `/mcp` או `/tools`), לא רק במארח.
+    </Step>
+    <Step title="אמת מחדש עבור שרתי OAuth">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      עקוב אחר זרימת הדפדפן. אם השרת דורש מזהה לקוח שנרשם מראש, הוסף אותו לתצורה:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="בדוק פקודת שרת מקומי">
+      עבור שרתים `local`, הרץ את הפקודה ידנית במסוף שלך כדי לוודא שהיא מתחילה ללא שגיאות:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="סשן לא נמצא">
+  **סימפטומים:** `bolt run --session <id>` יוצא עם "Session not found", או שסשן שאתה זוכר שעבדת איתו נעלם.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="הצג את כל הסשנים הזמינים">
+      ```bash
+      bolt session list
+      ```
+
+      סשנים ממוינים לפי עדכון האחרון ראשון. אם הסשן שלך נמחק או שמסד הנתונים עבר מיגרציה, הוא לא יופיע כאן.
+    </Step>
+    <Step title="מצא את נתיב מסד הנתונים">
+      ```bash
+      bolt db path
+      ```
+
+      זה מדפיס את הנתיב המלא לקובץ SQLite. ודא שהקובץ קיים ואינו ריק.
+    </Step>
+    <Step title="תשאל את מסד הנתונים ישירות">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      אם הסשן שלך מופיע במסד הנתונים אך לא ב-`bolt session list`, ייתכן שיש חוסר התאמה במזהה פרויקט — סשנים מוגבלים לפרויקטים.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="שגיאות הרשאה ב-TUI">
+  **סימפטומים:** הסוכן מבקש הרשאה שוב ושוב, מסרב לכתוב קבצים, או שאתה רואה באנרים "Permission denied".
+
+  **הבנת רמות גישה:**
+
+  לכל סוכן מובנה יש רמת גישה מוצהרת ששולטת במה שהוא יכול לעשות מבלי לשאול:
+
+  | רמת גישה | מה זה מאפשר |
+  | --- | --- |
+  | **Full** | קריאת קבצים, כתיבת קבצים, הרצת פקודות מעטפת |
+  | **Edit** | קריאה וכתיבת קבצים, ללא פקודות מעטפת |
+  | **Read** | קריאת קבצים בלבד, ללא כתיבות או פקודות |
+
+  לסוכנים `code`, `debug`, `refactor`, `migrate` ו-`perf` יש גישה **Full**. ל-`docs` יש גישה **Edit**. ל-`plan`, `ask`, `code-review` ו-`security` יש גישה **Read**.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="עבור לסוכן עם גישה Full">
+      אם אתה צריך כתיבות קבצים, השתמש בסוכן `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      או לחץ `Tab` ב-TUI כדי לעבור בין סוכנים.
+    </Step>
+    <Step title="השתמש ב---auto לאישור הנחיות באופן לא-אינטראקטיבי">
+      ב-CI או בהקשרים בסקריפט, העבר `--auto` ל-`bolt run` כדי לאשר אוטומטית הרשאות שלא נדחו במפורש בתצורה.
+    </Step>
+    <Step title="הגדר הרשאות בקובץ התצורה">
+      תוכל לדחות כלים ספציפיים לכל הסשנים בפרויקט על ידי הוספת בלוק `permission` ל-`.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="שימוש גבוה בטוקנים או עלויות לא צפויות">
+  **סימפטומים:** `bolt stats` מציג ספירת טוקנים גבוהה מהצפוי, או שחשבון ה-API שלך גדל מהר יותר מהצפוי.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="סקור את סטטיסטיקות השימוש שלך">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      הפלט מפרק עלות ליום, ממוצע טוקנים לסשן, ושימוש לפי מודל.
+    </Step>
+    <Step title="הפחת את מאמץ ההיגיון">
+      עבור מודלים שתומכים בזה, הפחת את מאמץ ההיגיון עם `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      ערכים נתמכים הם ספציפיים לספק (למשל `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="עבור למודל זול יותר">
+      השתמש ב-`bolt models` כדי למצוא מודל קטן יותר. מודלים קטנים יותר (למשל `claude-haiku`, `gpt-4o-mini`) עולים משמעותית פחות לטוקן ועובדים טוב עבור משימות רבות.
+    </Step>
+    <Step title="השתמש בסוכן ask או plan לחקירה">
+      לסוכנים `ask` ו-`plan` יש גישה **Read** והם אינם מפעילים כלי כתיבה, מה שאומר שהם נמנעים מלולאות כבדות של כלים שמייצרות טוקני פלט גדולים.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="קונפליקטים של תוספים או התנהגות לא צפויה">
+  **סימפטומים:** פקודת סלאש מתנהגת באופן לא צפוי, ה-TUI מתרנדר באופן לא נכון, או שמשהו השתנה לאחר התקנת תוסף.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="השבת את כל התוספים כדי לקבוע קו בסיס">
+      ```bash
+      bolt --pure
+      ```
+
+      אם הבעיה נעלמת, תוסף אחראי.
+    </Step>
+    <Step title="זהה את התוסף הפוגע">
+      ```bash
+      bolt debug info
+      ```
+
+      הפלט מפרט את כל התוספים הטעונים. הסר אותם זמנית אחד בכל פעם מהתצורה שלך והפעל מחדש את Bolt עד שהבעיה תיעלם.
+    </Step>
+    <Step title="בדוק חוסר תאימות בגרסה">
+      ```bash
+      bolt upgrade
+      ```
+
+      תוספים מכריזים על טווח גרסאות Bolt תואם. אם שדרגת לאחרונה את Bolt, ייתכן שיהיה צורך לעדכן גם תוסף.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="בעיות נתיבים של WSL / Windows">
+  **סימפטומים:** ב-Windows עם WSL, Bolt לא יכול למצוא `less`, נתיבי קבצים מכילים לוכסנים אחוריים לא צפויים, או ש-pager עבור `bolt session list` לא מושק.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="הגדר את נתיב Git Bash">
+      Bolt מחפש כלים של Unix (כולל `less`) יחסית להתקנת Git for Windows. הגדר את משתנה הסביבה לספריית Git Bash שלך:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      הוסף זאת לפרופיל PowerShell שלך (`$PROFILE`) כדי להתמיד.
+    </Step>
+    <Step title="ודא עם debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      מאשר את זיהוי מערכת ההפעלה ואילו נתיבים Bolt משתמש בהם.
+    </Step>
+    <Step title="הרץ את Bolt בתוך WSL ישירות">
+      לחוויה הטובה ביותר ב-Windows, הרץ את `bolt` מתוך מסוף WSL ולא מ-PowerShell או Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="לא ניתן לשדרג את Bolt">
+  **סימפטומים:** `bolt upgrade` מדווח על שגיאה או לא עושה שום דבר בשקט, או שמספר הגרסה אינו משתנה לאחר הרצתו.
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="ציין את שיטת ההתקנה במפורש">
+      Bolt מנסה לזהות איך הוא הותקן. אם הזיהוי נכשל, דרוס אותו:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="התקן מחדש דרך סקריפט ההתקנה">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: הרץ כמנהל עבור Chocolatey">
+      אם התקנת דרך `choco`, שדרוגים דורשים מסוף מוגבר. פתח PowerShell כמנהל לפני הרצת `bolt upgrade`.
+    </Step>
+    <Step title="ודא שהגרסה החדשה פעילה">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="הסוכן לא יכול למצוא קבצים (או מוצא יותר מדי)">
+  **סימפטומים:** הסוכן מתלונן שהוא לא יכול לראות קבצים שקיימים, או שהוא קולט שוב ושוב קבצים שאינך רוצה שיגע בהם (כמו `node_modules`, פלט build, או סודות).
+
+  **שלבים:**
+
+  <Steps>
+    <Step title="בדוק אם יש .boltignore">
+      Bolt מכבד קובץ `.boltignore` בשורש הפרויקט שקובע אילו קבצים כלי חיפוש הקבצים של הסוכן יכולים לראות. הוא משתמש באותו תחביר כמו `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="ודא את ספריית העבודה">
+      ```bash
+      bolt debug info
+      ```
+
+      ודא ש-`cwd` תואם לשורש הפרויקט. אם השקת את Bolt מתת-ספרייה, חיפוש הקבצים של הסוכן מושרש שם.
+    </Step>
+    <Step title="בקש מהסוכן לבצע grep, לא לנחש">
+      אם הסוכן טוען שקובץ לא קיים, בקש ממנו להריץ `grep` או `glob` במפורש. זה עוקף כל הנחה פנימית מיושנת.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="קבלת מידע debug לדיווח באג">
+  בעת הגשת בעיה, המידע הבא הכי שימושי למתחזקים:
+
+  <Steps>
+    <Step title="אסוף מידע מערכת ותוסף">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="אסוף פלט לוג אחרון">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="ייצא את הסשן הרלוונטי (מנוקה)">
+      אם הבעיה קרתה במהלך סשן ספציפי, ייצא אותו עם סודות מוצנזרים:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      צרף את `session-debug.json` לבעיה.
+    </Step>
+    <Step title="פתח בעיה או דיון">
+      עבור אל [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) והדבק את הפלט של `bolt debug info` בתוספת תיאור של השלבים לשחזור.
+    </Step>
+  </Steps>
+</Accordion>

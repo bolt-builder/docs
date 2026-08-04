@@ -1,0 +1,33 @@
+---
+title: "Bolt webb-UI"
+sidebarTitle: "Webb-UI"
+description: "bolt web serverar ett webbläsarbaserat UI ovanpå en körande Bolt-server — användbart för delade teammaskiner, fjärrmaskiner och överallt en TUI inte är praktisk."
+---
+
+`bolt web` startar en Bolt-server och serverar ett webbläsar-UI framför den. Det är samma motor som TUI:n, bara renderad i en webbläsarflik.
+
+## Starta den
+
+```bash
+bolt web                                # localhost only
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Öppna sedan den utskrivna URL:en. När du exponerar över ett nätverk, sätt basic auth först:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## När använder man webb-UI:t
+
+- Kör Bolt på en kraftfull fjärrmaskin men driv den från en laptop.
+- Dela en live-session med en lagkamrat för parvis felsökning.
+- Miljöer där en fullständig TUI är obekväm (Chromebooks, surfplattor, coworking-maskiner).
+
+## Relaterat
+
+- [Headless-server](/server/headless-server) — den underliggande API-servern.
+- [Fjärrsessioner](/server/remote-sessions) — anslut en TUI till samma server som webb-UI:t serverar.

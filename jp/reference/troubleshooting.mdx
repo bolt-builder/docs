@@ -1,0 +1,395 @@
+---
+title: "一般的な Bolt の問題をトラブルシューティング"
+sidebarTitle: "トラブルシューティング"
+description: "最も一般的な Bolt の問題の解決策: 起動失敗、プロバイダ認証エラー、MCP 接続、セッションの問題、権限、コストなど。"
+---
+
+Bolt の問題のほとんどは、いくつかのカテゴリに分類されます。以下の関連アコーディオンを順に確認し、予期しないことが起きた場合はいつでも `bolt logs` でログ出力を確認してください。
+
+<Note>
+  ここに答えのない質問については、[Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) で検索するかディスカッションを開始してください。コミュニティが素早く助けられるよう、投稿には `bolt debug info` と `bolt logs --tail 50` の出力を含めてください。
+</Note>
+
+## まず試すべきこと
+
+特定のセクションに飛び込む前に、これら 4 つのコマンドがほとんどの問題を解決します。
+
+| 症状 | 最初のコマンド | 理由 |
+| --- | --- | --- |
+| 何か奇妙なこと | `bolt debug info` | ワンショットのシステム \+ プラグイン要約。 |
+| 以前は動いていたのに今は動かない | `bolt logs --tail 100` | 最近のエラーは通常上部近くにあります。 |
+| プラグインが怪しい | `bolt --pure` | すべてのプラグインを無効にして開始。 |
+| 設定がピックアップされない | `bolt debug config` | 完全に解決された設定を出力。 |
+
+<Tip>
+  `bolt debug` ファミリーは、あらゆる謎めいた動作の最初の停止点です。システム要約には `bolt debug info`、解決済み設定には `bolt debug config`、ディスク上の場所には `bolt debug paths`、セッション状態の検査には `bolt debug snapshot` を使ってください。
+</Tip>
+
+<Accordion title="Bolt が起動しない / 起動時にクラッシュする">
+  **症状:** ターミナルが点滅してすぐに終了する、または TUI がレンダリングされる前にスタックトレースが表示される。
+
+  **手順:**
+
+  <Steps>
+    <Step title="システム情報を収集">
+      ```bash
+      bolt debug info
+      ```
+
+      これは Bolt バージョン、OS、ターミナルエミュレータ、ロードされたプラグインを出力します。バグレポート時にこの出力をコピーしてください。
+    </Step>
+    <Step title="最近のログ出力を確認">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      `ERROR` 行を探します。一般的な原因は、ロードに失敗したプラグインです — その場合、プラグイン名に言及するエラーが表示されます。
+    </Step>
+    <Step title="プラグインを無効にして問題を分離">
+      ```bash
+      bolt --pure
+      ```
+
+      Bolt が `--pure` でクリーンに起動する場合、プラグインがクラッシュを引き起こしています。設定から問題のあるプラグインを削除するか、プラグイン作者に報告してください。
+    </Step>
+    <Step title="壊れた設定を確認">
+      ```bash
+      bolt debug config
+      ```
+
+      これが無効な JSON についてのエラーを出力する場合、それが言及する設定ファイルを開いて構文を修正してください。データベースパスがアクセス可能であることを確認するには `bolt db path` を実行してください。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="プロバイダ認証が失敗する">
+  **症状:** Bolt が「プロバイダが設定されていません」を表示、API リクエストが 401 エラーで失敗、または `bolt run` が出力を生成せずに即座に終了する。
+
+  **手順:**
+
+  <Steps>
+    <Step title="プロバイダログインフローを再実行">
+      ```bash
+      bolt providers login
+      ```
+
+      プロバイダを選択してプロンプトに従ってください。Bolt が API キー入力または OAuth をガイドします。
+    </Step>
+    <Step title="API キー環境変数を検証">
+      env 変数 (例: `ANTHROPIC_API_KEY`) を使用している場合、現在のシェルで実際に設定されていることを確認してください。
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      空の場合、シェルプロファイルに追加してターミナルを再度開いてください。
+    </Step>
+    <Step title="解決済み設定を検査">
+      ```bash
+      bolt debug config
+      ```
+
+      `provider` セクションを確認してください。プロバイダが空白の `apiKey` で表示される場合、設定ファイルの環境変数参照が展開されていません。
+    </Step>
+    <Step title="保存された認証情報を一覧表示">
+      ```bash
+      bolt providers list
+      ```
+
+      これは `auth.json` に保存されたすべての認証情報と、Bolt が検出したすべてのプロバイダ関連環境変数を表示します。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP サーバが接続できない">
+  **症状:** `bolt mcp list` がサーバを `failed` または `needs authentication` として表示する、またはエージェントがそのサーバからのツールを使えない。
+
+  **手順:**
+
+  <Steps>
+    <Step title="MCP デバッグプローブを実行">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      これは基本的な HTTP 接続性をテストし、`WWW-Authenticate` ヘッダを検査し、該当する場合は OAuth ディスカバリーフローをたどります。出力はサーバが到達可能かどうか、認証が必要かどうかを教えてくれます。
+    </Step>
+    <Step title="サーバ URL を確認">
+      `.bolt/bolt.jsonc` の URL を検証してください。リモートサーバの場合、URL がホストだけでなく MCP パス (例: `/mcp` または `/tools`) で終わることを確認してください。
+    </Step>
+    <Step title="OAuth サーバで再認証">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      ブラウザフローに従ってください。サーバが事前登録済みのクライアント ID を必要とする場合、設定に追加してください。
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="ローカルサーバコマンドを確認">
+      `local` サーバの場合、ターミナルでコマンドを手動で実行し、エラーなく起動することを確認してください。
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="セッションが見つからない">
+  **症状:** `bolt run --session <id>` が「Session not found」で終了する、または動作していたはずのセッションが消えた。
+
+  **手順:**
+
+  <Steps>
+    <Step title="利用可能なすべてのセッションを一覧表示">
+      ```bash
+      bolt session list
+      ```
+
+      セッションは最終更新順にソートされます。セッションが削除されているかデータベースが移行されている場合、ここには表示されません。
+    </Step>
+    <Step title="データベースパスを見つける">
+      ```bash
+      bolt db path
+      ```
+
+      これは SQLite ファイルへの完全パスを出力します。ファイルが存在し空でないことを確認してください。
+    </Step>
+    <Step title="データベースを直接クエリ">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      セッションがデータベースに表示されるが `bolt session list` に表示されない場合、プロジェクト ID の不一致がある可能性があります — セッションはプロジェクトにスコープされています。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="TUI での権限エラー">
+  **症状:** エージェントが繰り返し許可を求める、ファイル書き込みを拒否する、または「Permission denied」バナーが表示される。
+
+  **アクセスレベルの理解:**
+
+  各組み込みエージェントには、確認なしにできることを制御する宣言されたアクセスレベルがあります。
+
+  | アクセスレベル | 許可する内容 |
+  | --- | --- |
+  | **Full** | ファイル読み込み、ファイル書き込み、シェルコマンド実行 |
+  | **Edit** | ファイル読み書き、シェルコマンドなし |
+  | **Read** | ファイル読み込みのみ、書き込みやコマンドなし |
+
+  `code`、`debug`、`refactor`、`migrate`、`perf` エージェントは **Full** アクセスを持ちます。`docs` は **Edit** アクセスを持ちます。`plan`、`ask`、`code-review`、`security` は **Read** アクセスを持ちます。
+
+  **手順:**
+
+  <Steps>
+    <Step title="Full アクセスを持つエージェントに切り替え">
+      ファイル書き込みが必要な場合は `code` エージェントを使用してください。
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      または TUI で `Tab` を押してエージェントを循環してください。
+    </Step>
+    <Step title="--auto でプロンプトを非対話的に承認">
+      CI やスクリプト化された文脈では、設定で明示的に拒否されていない権限を自動承認するために `bolt run` に `--auto` を渡してください。
+    </Step>
+    <Step title="設定ファイルで権限を構成">
+      `.bolt/bolt.jsonc` に `permission` ブロックを追加することで、プロジェクトのすべてのセッションで特定のツールを拒否できます。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="トークン使用量の高騰または予想外のコスト">
+  **症状:** `bolt stats` が予想より高いトークンカウントを表示する、または API 請求が予想より速く成長している。
+
+  **手順:**
+
+  <Steps>
+    <Step title="使用統計を確認">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      出力は日ごとのコスト、セッションあたりの平均トークン、モデルごとの使用状況を内訳します。
+    </Step>
+    <Step title="推論エフォートを下げる">
+      サポートされているモデルでは、`--variant` で推論エフォートを下げます。
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      サポートされる値はプロバイダ固有です (例: `minimal`、`low`、`high`、`max`)。
+    </Step>
+    <Step title="より安価なモデルに切り替え">
+      より小さなモデルを見つけるには `bolt models` を使用してください。より小さなモデル (例: `claude-haiku`、`gpt-4o-mini`) は 1 トークンあたりのコストが大幅に低く、多くのタスクでうまく動作します。
+    </Step>
+    <Step title="探索には ask または plan エージェントを使用">
+      `ask` と `plan` エージェントは **Read** アクセスを持ち、書き込みツールを呼び出さないため、大きな出力トークンを生成するツール多用ループを避けます。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="プラグインの競合または予期しない動作">
+  **症状:** スラッシュコマンドが予期せず動作する、TUI が正しくレンダリングされない、またはプラグインをインストールした後に何かが変わった。
+
+  **手順:**
+
+  <Steps>
+    <Step title="ベースラインを確立するためにすべてのプラグインを無効化">
+      ```bash
+      bolt --pure
+      ```
+
+      問題が消える場合、プラグインが原因です。
+    </Step>
+    <Step title="問題のあるプラグインを特定">
+      ```bash
+      bolt debug info
+      ```
+
+      出力にはロードされたすべてのプラグインが一覧表示されます。設定から一度に 1 つずつ一時的に削除して、問題がなくなるまで Bolt を再起動してください。
+    </Step>
+    <Step title="バージョン非互換性を確認">
+      ```bash
+      bolt upgrade
+      ```
+
+      プラグインは互換性のある Bolt バージョン範囲を宣言します。最近 Bolt をアップグレードした場合、プラグインも更新が必要な場合があります。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows のパス問題">
+  **症状:** WSL 付きの Windows で、Bolt が `less` を見つけられない、ファイルパスに予期しないバックスラッシュが含まれる、または `bolt session list` のページャーが起動しない。
+
+  **手順:**
+
+  <Steps>
+    <Step title="Git Bash パスを設定">
+      Bolt は Git for Windows インストールに対する Unix ユーティリティ (`less` を含む) を探します。Git Bash ディレクトリに環境変数を設定してください。
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      永続化するには PowerShell プロファイル (`$PROFILE`) に追加してください。
+    </Step>
+    <Step title="デバッグ情報で検証">
+      ```bash
+      bolt debug info
+      ```
+
+      OS 検出と Bolt が使用しているパスを確認します。
+    </Step>
+    <Step title="WSL 内で Bolt を直接実行">
+      Windows での最高の体験のため、PowerShell やコマンドプロンプトからではなく WSL ターミナル内から `bolt` を実行してください。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Bolt をアップグレードできない">
+  **症状:** `bolt upgrade` がエラーを報告するか静かに何もしない、または実行後にバージョン番号が変わらない。
+
+  **手順:**
+
+  <Steps>
+    <Step title="インストール方法を明示的に指定">
+      Bolt はインストール方法を検出しようとします。検出が失敗した場合はオーバーライドしてください。
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="インストールスクリプトで再インストール">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: Chocolatey は Administrator で実行">
+      `choco` 経由でインストールした場合、アップグレードには管理者権限のターミナルが必要です。`bolt upgrade` を実行する前に管理者として PowerShell を開いてください。
+    </Step>
+    <Step title="新しいバージョンがアクティブであることを確認">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="エージェントがファイルを見つけられない (または多すぎるファイルを見つける)">
+  **症状:** エージェントが存在するファイルを見えないと文句を言う、または触れてほしくないファイル (`node_modules`、ビルド出力、シークレットなど) を繰り返しピックアップする。
+
+  **手順:**
+
+  <Steps>
+    <Step title=".boltignore を確認">
+      Bolt はプロジェクトルートの `.boltignore` ファイルを尊重します。これはエージェントのファイル検索ツールが見えるファイルを制御します。`.gitignore` と同じ構文を使用します。
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="作業ディレクトリを確認">
+      ```bash
+      bolt debug info
+      ```
+
+      `cwd` がプロジェクトルートと一致することを確認してください。サブディレクトリから Bolt を起動した場合、エージェントのファイル検索はそこをルートとします。
+    </Step>
+    <Step title="エージェントに推測ではなく grep するよう頼む">
+      エージェントがファイルが存在しないと主張する場合、明示的に `grep` または `glob` を実行するよう頼んでください。これは古い内部仮定をバイパスします。
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="バグレポート用のデバッグ情報を取得する">
+  問題を提出する際、メンテナに最も役立つ情報は次のとおりです。
+
+  <Steps>
+    <Step title="システムとプラグイン情報を収集">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="最近のログ出力を収集">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="関連するセッションをエクスポート (サニタイズ済み)">
+      特定のセッションで問題が発生した場合、シークレットを編集した状態でエクスポートしてください。
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      `session-debug.json` を issue に添付してください。
+    </Step>
+    <Step title="Issue またはディスカッションを開く">
+      [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) に移動して、`bolt debug info` の出力と再現手順の説明を貼り付けてください。
+    </Step>
+  </Steps>
+</Accordion>

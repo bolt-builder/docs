@@ -1,0 +1,61 @@
+---
+title: "Bolt 환경 변수 레퍼런스"
+sidebarTitle: "Env Variables"
+description: "로그 제어, 서버 인증, 설정 재정의, 프로바이더 API 키 규칙을 포함해 Bolt가 인식하는 모든 환경 변수."
+---
+
+환경 변수를 사용하면 설정 파일을 건드리지 않고 Bolt를 구성할 수 있습니다 — 자격 증명을 커밋할 수 없는 CI 파이프라인, Docker 컨테이너, 공유 환경에 유용합니다. 시작 시 한 번 읽히며 Bolt가 실행되는 동안에는 변경할 수 없습니다.
+
+## 레퍼런스
+
+| Variable | Description |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | 로그 상세도 설정. 허용되는 값: `DEBUG`, `INFO`, `WARN`, `ERROR`. `--log-level` 플래그와 동등. |
+| `BOLT_PRINT_LOGS` | 로그 출력을 stderr에 인쇄하려면 비어 있지 않은 값으로 설정. `--print-logs`와 동등. |
+| `BOLT_PURE` | 모든 외부 플러그인을 비활성화하려면 비어 있지 않은 값으로 설정. `--pure`와 동등. |
+| `BOLT_SERVER_USERNAME` | `bolt serve`와 `bolt web`용 basic auth 사용자 이름. |
+| `BOLT_SERVER_PASSWORD` | `bolt serve`와 `bolt web`용 basic auth 비밀번호. 모든 연결 클라이언트는 이 비밀번호를 제공해야 함. |
+| `BOLT_CONFIG` | Bolt가 로드하는 설정 파일의 경로를 재정의. 설정되면 Bolt는 기본 위치를 검색하지 않음. |
+| `BOLT_CONFIG_DIR` | 설정 디렉터리 재정의. Bolt는 기본 OS 설정 디렉터리 대신 이 디렉터리에서 설정 파일을 찾음. |
+| `BOLT_CONFIG_CONTENT` | 전체 설정을 인라인 JSON 문자열로 제공. 파일 쓰기가 비실용적인 CI에서 유용. 설정 소스 중 가장 높은 우선순위. |
+| `BOLT_GIT_BASH_PATH` | Windows에서 `less` 같은 Unix 유틸리티를 찾는 데 사용되는 Git Bash의 `bin` 디렉터리 경로. |
+
+## 프로바이더 API 키
+
+Bolt는 환경 변수에서 프로바이더 자격 증명을 자동으로 발견합니다 — `bolt providers login` 단계가 필요 없습니다. 각 프로바이더는 특정 환경 변수를 찾으며, 해당 변수가 설정되어 있으면 Bolt는 `auth.json`에 저장된 것과 무관하게 이를 사용합니다.
+
+<Tip>
+  셸 프로필(예: `~/.zshrc`, `~/.bashrc`) 또는 셸이 로드하는 `.env` 파일에서 프로바이더 API 키를 설정하세요. 키가 평문으로 저장되지 않도록 설정 파일에서 `provider.*.apiKey` 필드의 `${VAR_NAME}` 구문을 사용해 참조할 수도 있습니다.
+</Tip>
+
+일반적인 프로바이더 변수:
+
+| Variable | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-시리즈) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+각 구성된 프로바이더가 어떤 환경 변수를 기대하는지 확인하려면 `bolt models --verbose`를 실행하세요.
+
+## 사용 예제
+
+```bash
+# 단일 실행에 대해 디버그 로깅 활성화
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# 플러그인 간섭을 배제하기 위해 플러그인 없이 실행
+BOLT_PURE=1 bolt
+
+# basic auth로 공개 서버 시작
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# 인라인으로 설정 제공 (CI에 유용)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

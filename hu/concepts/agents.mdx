@@ -1,0 +1,135 @@
+---
+title: "Ügynökök — a Bolt tíz beépített és egyedi MI-személyisége"
+sidebarTitle: "Ügynökök"
+description: "A Bolt tíz beépített ügynökkel érkezik, mindegyik saját szereppel, eszközkészlettel és hozzáférési szinttel. Megtanulhatod, hogyan válts közöttük, hogyan konfiguráld őket, és hogyan hozz létre sajátokat."
+---
+
+A Bolt minden MI-személyiséget megnevezett **ügynökként** kezel: egy rendszerprompt párosítva pontosan hatókörű eszközjogosultságokkal. Ahelyett, hogy minden feladathoz egyetlen általános célú modellt futtatnál, azt az ügynököt választod, amelynek hozzáférése és fókusza illeszkedik ahhoz, amire szükséged van — legyen az biztonsági audit, dokumentációírás vagy egy teljes keretrendszeres migráció beállítása.
+
+## Hozzáférési szintek
+
+Minden beépített ügynökhöz a három hozzáférési szint egyikét rendelik hozzá, amely meghatározza, mely eszközöket hívhatja:
+
+| Szint | Megadott jogosultságok | Tipikus felhasználás |
+|-------|---------------------|-------------|
+| **Full** | Fájlok olvasása, írása/szerkesztése, shell parancsok futtatása | Aktív kódolás, hibakeresés, refaktorálás, migrációk |
+| **Edit** | Fájlok olvasása, írása/szerkesztése — nincs shell | Dokumentáció, megjegyzésfrissítések, biztonságos szövegszerkesztések |
+| **Read** | Csak fájlok olvasása — nincs írás, nincs shell | Tervezés, kutatás, kódellenőrzés, auditok |
+
+## Beépített ügynökök
+
+A Bolt tíz szakosított ügynökkel érkezik. Válts közöttük a TUI-ban a <kbd>Tab</kbd> lenyomásával.
+
+| Ügynök | Hozzáférés | Leírás |
+|-------|--------|-------------|
+| `code` | Full | Alapértelmezett: olvas, ír és futtat kódot |
+| `plan` | Read | Feltárja a kódbázist és tervet készít a kód módosítása nélkül |
+| `ask` | Read | Kérdések és kutatás — nincs fájlszerkesztés |
+| `code-review` | Read | Változtatásokat vizsgál helyesség, stílus és biztonság szempontjából |
+| `debug` | Full | Bukó teszteket, összeomlásokat és logikai hibákat javít |
+| `refactor` | Full | Biztonságos refaktorálás minden lépésnél teszt-ellenőrzéssel |
+| `docs` | Edit | Dokumentációt és megjegyzéseket ír és frissít |
+| `security` | Read | Biztonsági audit: sebezhetőségek, titkok és veszélyes minták |
+| `migrate` | Full | Keretrendszer-frissítések és függőségi migrációk |
+| `perf` | Full | Teljesítményelemzés és optimalizálás |
+
+## Al-ügynökök
+
+A tíz elsődleges ügynök mellett a Bolt két beépített **al-ügynököt** is elérhetővé tesz, amelyekre az elsődleges ügynökök munkát delegálhatnak egy munkamenet során. Al-ügynököt soha nem kézzel választasz — automatikusan hívják meg őket, amikor egy elsődleges ügynök úgy dönt, hogy indít egyet.
+
+| Al-ügynök | Szerep |
+|----------|------|
+| `@general` | Összetett, több lépéses feladatok delegálása, széles képességi kör szükséges |
+| `@explore` | Gyors, csak olvasható kódbázis-kutatás — mellékhatás nélkül járja be a fájlokat |
+
+<Tip>
+  Ha gyorsan meg akarsz érteni egy ismeretlen kódbázist, indíts az `ask` vagy `plan` ügynökkel. A háttérben ezek meghívhatják az `@explore` al-ügynököt, hogy nagy sebességgel indexelje a projekted, mielőtt választ adna — anélkül, hogy egyetlen fájlhoz is hozzáérnének.
+</Tip>
+
+## Ügynökök közötti váltás
+
+**A TUI-ban** — nyomd meg a <kbd>Tab</kbd> billentyűt, hogy körkörösen végigmenj az elérhető ügynökök listáján egy munkamenet során bármikor. Az aktív ügynök a munkamenet láblécében látható.
+
+**Nem interaktívan** — add át a `--agent <name>` kapcsolót a `bolt run` parancsnak egy adott ügynök rögzítéséhez az adott futás időtartamára:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Ügynökök listázása
+
+Az összes elérhető ügynök megtekintése — mind beépített, mind egyedi — módjaikkal és jogosultsági konfigurációjukkal:
+
+```bash
+bolt agent list
+```
+
+## Egyedi ügynökök
+
+Saját ügynököket kétféleképpen hozhatsz létre.
+
+### Létrehozás a `bolt agent create` paranccsal
+
+Az interaktív varázsló egy LLM-mel generál egy ügynökfájlt, és lemezre írja:
+
+```bash
+bolt agent create
+```
+
+Az összes kapcsoló opcionális. Add meg őket a nem interaktív futtatáshoz:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Kapcsoló | Leírás |
+|------|-------------|
+| `--description` | Mit tegyen az ügynök (LLM-promptként használva a generáláshoz) |
+| `--path` | Az a könyvtár, amelybe a generált ügynökfájl kerül |
+| `--mode` | `all` (alapértelmezett), `primary` vagy `subagent` |
+| `--permissions` | Engedélyezendő jogosultságok vesszővel elválasztott listája. Hagyd üresen mindenhez. |
+| `--model` / `-m` | Használni kívánt modell `provider/model` formátumban |
+
+### Markdown-fájl kézi megírása
+
+Egy ügynök nem más, mint egy Markdown-fájl YAML frontmatter-rel. Helyezd a `.bolt/agents/` könyvtárba a projekted belsejében vagy a globális ügynökök könyvtárában:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+A fájlnév (a `.md` nélkül) lesz az ügynök azonosítója.
+
+### Elérhető jogosultságok
+
+A jogosultságok azok a finomhangolt eszközkapuk, amelyeket egyedi ügynök létrehozásakor vezérelhetsz:
+
+| Jogosultság | Mit vezérel |
+|------------|----------|
+| `bash` | Shell parancsok végrehajtása |
+| `read` | Fájlok olvasása |
+| `edit` | Fájlok írása és szerkesztése (a `write` és `apply_patch` is ezen múlik) |
+| `glob` | Fájl-glob/könyvtárlistázás |
+| `grep` | Fájlkeresés ripgrep-pel |
+| `webfetch` | HTTP letöltés a webről |
+| `task` | Al-ügynök feladatok indítása |
+| `todowrite` | Todo-elemek létrehozása és frissítése |
+| `websearch` | Webes keresések |
+| `lsp` | Language Server Protocol műveletek |
+| `skill` | Projektbeli skillek elérése |

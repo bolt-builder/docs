@@ -1,0 +1,139 @@
+---
+title: "プロバイダとモデル — LLM の認証と選択"
+sidebarTitle: "プロバイダとモデル"
+description: "Bolt は Vercel AI SDK を介してあらゆる LLM プロバイダをサポートします。プロバイダの認証、モデルの一覧、推論エフォートの調整、best-of-N 並列比較の実行。"
+---
+
+Bolt は設計上、モデルに依存しません。内部では **Vercel AI SDK** を使ってプロバイダと通信するため、SDK がサポートするプロバイダ — Anthropic、OpenAI、Google、Amazon Bedrock、OpenRouter など — であればそのまま動作します。プロバイダとモデルのカタログは、プロバイダのメタデータと価格のコミュニティ管理データベースである [models.dev](https://models.dev) から提供されています。
+
+## プロバイダ認証情報の管理
+
+プロバイダ認証情報の追加、リスト表示、削除には `bolt providers` (エイリアス `bolt auth`) を使用します。
+
+### 認証情報の追加または更新
+
+```bash
+bolt providers login
+# or equivalently:
+bolt auth login
+```
+
+これは、プロバイダを選択して認証情報を入力するための対話型プロンプトを起動します。対話型フローをスキップするには、フラグを直接渡してください。
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### 設定済みプロバイダの一覧表示
+
+```bash
+bolt providers list
+# or:
+bolt auth list
+```
+
+保存されているすべての認証情報と、環境変数から検出されたプロバイダ API キーを表示します。
+
+### 認証情報の削除
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### 環境変数による認証
+
+CI パイプラインやヘッドレス環境では、プロバイダの API キー環境変数を直接設定してください — 対話型ログインは不要です。よくある例:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt は起動時にこれらの変数を自動的に読み取ります。`bolt providers list` は検出した環境変数を表示します。
+
+## 利用可能なモデルの参照
+
+`bolt models` は、設定されたプロバイダで利用できるすべてのモデルを一覧表示します。
+
+```bash
+# List all models
+bolt models
+
+# Filter to one provider
+bolt models anthropic
+
+# Show cost and capability metadata
+bolt models --verbose
+
+# Refresh the model catalog from models.dev
+bolt models --refresh
+```
+
+<Tip>
+  `bolt models --verbose` を実行すると、すべてのモデルの入力/出力トークン価格を確認できます。長時間実行タスクにモデルを決める前にコストのトレードオフを比較しやすくなります。
+</Tip>
+
+### モデル識別子の形式
+
+モデルは常に `provider/model` 形式で参照します。
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+この形式を、Bolt がモデルを受け付けるあらゆる場所 — CLI フラグ、設定ファイル、エージェント定義 — で使用してください。
+
+## 実行時のモデル選択
+
+### `--model` / `-m` フラグ
+
+`--model` フラグは `bolt run`、`bolt commit`、`bolt review` で利用できます。
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — 推論エフォートの制御
+
+一部のモデルは設定可能な推論エフォートレベルをサポートします (例: Anthropic の拡張思考、OpenAI の推論モデル)。`--variant` でエフォート層を選択します。
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  利用可能なバリアント値はプロバイダとモデルによります。一般的な値は `minimal`、`low`、`medium`、`high`、`max` ですが、正確なセットは異なります。プロバイダのドキュメントを確認するか、`bolt models --verbose` を使って特定のモデルでサポートされているバリアントを確認してください。
+</Note>
+
+### `--thinking` — 推論ブロックを表示
+
+拡張思考をサポートするモデルを使用している場合、`--thinking` を渡すと出力にモデルの思考連鎖を表示できます。
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Best-of-N 並列実行
+
+`--best-of` は複数のモデルに同じプロンプトを並列で発射し、判定モデルを使って応答をランク付けし、最良のものを保持します。
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+判定モデルはデフォルトで `--model` で渡されたモデルになり、`--model` が設定されていない場合は `--best-of` リストの最初のエントリになります。フラグは `provider/model` 識別子のカンマ区切りリストを受け付けます。
+
+<Tip>
+  best-of-N は、異なるモデルが本当に異なるアプローチを持ち込む可能性のある、複雑なアルゴリズム問題やアーキテクチャの決定に特に有用です。Bolt に並列で実行させ、勝者を自動的に選ばせましょう。
+</Tip>

@@ -1,0 +1,38 @@
+---
+title: "Bolt TUI-hurtigtaster"
+sidebarTitle: "Hurtigtaster"
+description: "De essensielle Bolt TUI-snarveiene: bytte agenter med Tab, mini-modus, push-to-talk stemme og alt annet du kan styre fra tastaturet."
+---
+
+Bolt TUI-en er designet for å styres fra ende til annen fra tastaturet. Denne siden lister snarveiene du vil bruke oftest. For den uttømmende listen, kjør `bolt` og åpne hjelpen i appen.
+
+## Essensielle
+
+| Taster | Handling |
+| --- | --- |
+| `Tab` | Bla til neste agent (`code`, `plan`, `ask`, ...). Aktiv agent vises i statuslinjen. |
+| `Shift+Tab` | Bla til forrige agent. |
+| `Enter` | Send gjeldende melding. |
+| `Esc` | Avbryt den pågående turen. |
+| `Ctrl+C` | Avbryt gjeldende verktøykall. |
+| `Ctrl+D` | Koble fra økten (lar den kjøre på serveren). |
+
+## Modi
+
+### `--mini`-modus
+
+Start Bolt med et kompakt split-footer-oppsett som tar mindre plass i terminalen, flott for delte ruter:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Push-to-talk stemme
+
+Hold inne den konfigurerte push-to-talk-tasten for å diktere en ledetekst ved hjelp av tale-til-tekst, og slipp for å sende. Konfigurer tasten og STT-leverandøren i `.bolt/bolt.jsonc`.
+
+## Relatert
+
+- [Skråstrekkommandoer](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` og venner.
+- [Økter](/concepts/sessions) — koble fra, gjenoppta, forgren og del fra tastaturet.

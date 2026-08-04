@@ -1,0 +1,395 @@
+---
+title: "Depanează probleme comune Bolt"
+sidebarTitle: "Depanare"
+description: "Soluții pentru cele mai comune probleme Bolt: eșecuri la pornire, erori de autentificare a furnizorului, conectivitate MCP, probleme de sesiune, permisiuni, cost și altele."
+---
+
+Majoritatea problemelor Bolt se încadrează într-un număr mic de categorii. Parcurge accordionul relevant de mai jos și verifică ieșirea de log cu `bolt logs` ori de câte ori se întâmplă ceva neașteptat.
+
+<Note>
+  Pentru întrebări la care nu se răspunde aici, caută sau începe o discuție în [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions). Include în postare ieșirea `bolt debug info` și `bolt logs --tail 50` pentru ca comunitatea să te poată ajuta mai rapid.
+</Note>
+
+## Primele lucruri de încercat
+
+Înainte să te afunzi într-o secțiune specifică, aceste patru comenzi rezolvă majoritatea problemelor:
+
+| Simptom | Prima comandă | De ce |
+| --- | --- | --- |
+| Orice ciudat | `bolt debug info` | Rezumat one-shot al sistemului \+ plugin-urilor. |
+| Ceva funcționa înainte, acum nu | `bolt logs --tail 100` | Erori recente, de obicei aproape de vârf. |
+| Suspectezi un plugin | `bolt --pure` | Pornește cu toate plugin-urile dezactivate. |
+| Configurația nu este preluată | `bolt debug config` | Tipărește configurația complet rezolvată. |
+
+<Tip>
+  Familia `bolt debug` este prima ta oprire pentru orice comportament misterios. `bolt debug info` pentru un rezumat al sistemului, `bolt debug config` pentru configurația rezolvată, `bolt debug paths` pentru locațiile pe disc și `bolt debug snapshot` pentru a inspecta starea sesiunii.
+</Tip>
+
+<Accordion title="Bolt nu pornește / se blochează la lansare">
+  **Simptome:** Terminalul clipește și iese imediat sau vezi un stack trace înainte ca TUI-ul să se afișeze.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Colectează informații despre sistem">
+      ```bash
+      bolt debug info
+      ```
+
+      Aceasta tipărește versiunea Bolt, sistemul de operare, emulatorul de terminal și plugin-urile încărcate. Copiază această ieșire când raportezi un bug.
+    </Step>
+    <Step title="Verifică ieșirea recentă de log">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      Caută linii `ERROR`. O cauză comună este un plugin care nu reușește să se încarce — în acest caz vei vedea o eroare care menționează numele plugin-ului.
+    </Step>
+    <Step title="Dezactivează plugin-urile pentru a izola problema">
+      ```bash
+      bolt --pure
+      ```
+
+      Dacă Bolt pornește curat cu `--pure`, un plugin cauzează blocarea. Elimină plugin-ul problematic din configurație sau raportează-l autorului plugin-ului.
+    </Step>
+    <Step title="Verifică dacă există o configurație coruptă">
+      ```bash
+      bolt debug config
+      ```
+
+      Dacă aceasta tipărește o eroare despre JSON invalid, deschide fișierul de configurare menționat și corectează sintaxa. Rulează `bolt db path` pentru a confirma că calea bazei de date este accesibilă.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Autentificarea furnizorului eșuează">
+  **Simptome:** Bolt afișează „No providers configured”, cererile de API eșuează cu erori 401 sau `bolt run` iese imediat fără să producă nicio ieșire.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Rulează din nou fluxul de login al furnizorului">
+      ```bash
+      bolt providers login
+      ```
+
+      Selectează furnizorul și urmează prompturile. Bolt te va ghida prin introducerea cheii de API sau prin OAuth.
+    </Step>
+    <Step title="Verifică variabila de mediu a cheii API">
+      Dacă folosești o variabilă de mediu (de ex. `ANTHROPIC_API_KEY`), confirmă că este într-adevăr setată în shell-ul curent:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      Dacă este goală, adaug-o în profilul shell-ului tău și redeschide terminalul.
+    </Step>
+    <Step title="Inspectează configurația rezolvată">
+      ```bash
+      bolt debug config
+      ```
+
+      Uită-te la secțiunea `provider`. Dacă furnizorul apare cu un `apiKey` gol, referința la variabila de mediu din fișierul de configurare nu este expandată.
+    </Step>
+    <Step title="Listează credențialele stocate">
+      ```bash
+      bolt providers list
+      ```
+
+      Aceasta afișează toate credențialele stocate în `auth.json` și toate variabilele de mediu legate de furnizor pe care Bolt le-a detectat.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Serverul MCP nu se conectează">
+  **Simptome:** `bolt mcp list` afișează un server ca `failed` sau `needs authentication` sau agentul nu poate folosi niciun instrument de pe acel server.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Rulează sonda de depanare MCP">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      Aceasta testează conectivitatea HTTP de bază, inspectează antetul `WWW-Authenticate` și parcurge fluxul de descoperire OAuth dacă este aplicabil. Ieșirea îți va spune dacă serverul este accesibil și dacă este necesară autentificarea.
+    </Step>
+    <Step title="Verifică URL-ul serverului">
+      Verifică URL-ul în `.bolt/bolt.jsonc`. Pentru serverele la distanță, asigură-te că URL-ul se termină cu calea MCP (de ex. `/mcp` sau `/tools`), nu doar cu host-ul.
+    </Step>
+    <Step title="Reautentifică pentru serverele OAuth">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      Urmează fluxul din browser. Dacă serverul necesită un ID de client pre-înregistrat, adaug-l la configurație:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="Verifică comanda serverului local">
+      Pentru serverele `local`, rulează comanda manual în terminal pentru a confirma că pornește fără erori:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Sesiune negăsită">
+  **Simptome:** `bolt run --session <id>` iese cu „Session not found” sau o sesiune la care îți amintești că ai lucrat a dispărut.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Listează toate sesiunile disponibile">
+      ```bash
+      bolt session list
+      ```
+
+      Sesiunile sunt sortate mai întâi după cea mai recent actualizată. Dacă sesiunea ta a fost ștearsă sau baza de date a fost migrată, nu va apărea aici.
+    </Step>
+    <Step title="Găsește calea bazei de date">
+      ```bash
+      bolt db path
+      ```
+
+      Aceasta tipărește calea completă către fișierul SQLite. Verifică dacă fișierul există și nu este gol.
+    </Step>
+    <Step title="Interoghează direct baza de date">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      Dacă sesiunea ta apare în baza de date, dar nu în `bolt session list`, poate exista o nepotrivire de ID de proiect — sesiunile sunt legate de proiecte.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Erori de permisiune în TUI">
+  **Simptome:** Agentul cere permisiune în mod repetat, refuză să scrie fișiere sau vezi bannere „Permission denied”.
+
+  **Înțelegerea nivelurilor de acces:**
+
+  Fiecare agent încorporat are un nivel de acces declarat care controlează ce poate face fără să întrebe:
+
+  | Nivel de acces | Ce permite |
+  | --- | --- |
+  | **Full** | Citește fișiere, scrie fișiere, rulează comenzi shell |
+  | **Edit** | Citește și scrie fișiere, fără comenzi shell |
+  | **Read** | Citește doar fișiere, fără scrieri sau comenzi |
+
+  Agenții `code`, `debug`, `refactor`, `migrate` și `perf` au acces **Full**. `docs` are acces **Edit**. `plan`, `ask`, `code-review` și `security` au acces **Read**.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Comută la un agent cu acces Full">
+      Dacă ai nevoie de scrieri de fișiere, folosește agentul `code`:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      Sau apasă `Tab` în TUI pentru a parcurge agenții.
+    </Step>
+    <Step title="Folosește --auto pentru a aproba prompturile neinteractiv">
+      În contexte CI sau scriptate, transmite `--auto` către `bolt run` pentru a aproba automat permisiunile care nu sunt refuzate explicit în configurație.
+    </Step>
+    <Step title="Configurează permisiunile în fișierul de configurare">
+      Poți refuza anumite instrumente pentru toate sesiunile dintr-un proiect adăugând un bloc `permission` la `.bolt/bolt.jsonc`.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Utilizare ridicată a token-urilor sau costuri neașteptate">
+  **Simptome:** `bolt stats` afișează un număr de token-uri mai mare decât cel așteptat sau factura de API crește mai repede decât ai anticipat.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Revizuiește statisticile de utilizare">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      Ieșirea defalcă costul pe zi, media de token-uri pe sesiune și utilizarea pe model.
+    </Step>
+    <Step title="Redu efortul de raționament">
+      Pentru modelele care îl acceptă, redu efortul de raționament cu `--variant`:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      Valorile acceptate sunt specifice furnizorului (de ex. `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="Comută la un model mai ieftin">
+      Folosește `bolt models` pentru a găsi un model mai mic. Modelele mai mici (de ex. `claude-haiku`, `gpt-4o-mini`) costă semnificativ mai puțin per token și funcționează bine pentru multe sarcini.
+    </Step>
+    <Step title="Folosește agentul ask sau plan pentru explorare">
+      Agenții `ask` și `plan` au acces **Read** și nu invocă instrumente de scriere, ceea ce înseamnă că evită buclele grele de instrumente care generează token-uri mari de ieșire.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Conflicte de plugin-uri sau comportament neașteptat">
+  **Simptome:** O comandă slash se comportă neașteptat, TUI-ul se randează incorect sau ceva s-a schimbat după instalarea unui plugin.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Dezactivează toate plugin-urile pentru a stabili o linie de bază">
+      ```bash
+      bolt --pure
+      ```
+
+      Dacă problema dispare, este responsabil un plugin.
+    </Step>
+    <Step title="Identifică plugin-ul problematic">
+      ```bash
+      bolt debug info
+      ```
+
+      Ieșirea listează toate plugin-urile încărcate. Elimină-le temporar unul câte unul din configurație și repornește Bolt până când problema dispare.
+    </Step>
+    <Step title="Verifică incompatibilitatea de versiune">
+      ```bash
+      bolt upgrade
+      ```
+
+      Plugin-urile își declară un interval compatibil de versiune Bolt. Dacă ai făcut recent upgrade la Bolt, este posibil ca un plugin să aibă nevoie și el de o actualizare.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Probleme de căi WSL / Windows">
+  **Simptome:** Pe Windows cu WSL, Bolt nu poate găsi `less`, căile de fișier conțin backslash-uri neașteptate sau pager-ul pentru `bolt session list` nu se lansează.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Setează calea Git Bash">
+      Bolt caută utilitare Unix (inclusiv `less`) relativ la instalarea Git for Windows. Setează variabila de mediu la directorul tău Git Bash:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      Adaugă asta la profilul tău PowerShell (`$PROFILE`) pentru a o persista.
+    </Step>
+    <Step title="Verifică cu debug info">
+      ```bash
+      bolt debug info
+      ```
+
+      Confirmă detectarea sistemului de operare și ce căi folosește Bolt.
+    </Step>
+    <Step title="Rulează Bolt direct în WSL">
+      Pentru cea mai bună experiență pe Windows, rulează `bolt` dintr-un terminal WSL, mai degrabă decât din PowerShell sau Command Prompt.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Nu pot actualiza Bolt">
+  **Simptome:** `bolt upgrade` raportează o eroare sau nu face nimic în tăcere sau numărul versiunii nu se schimbă după rularea acestuia.
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Specifică explicit metoda de instalare">
+      Bolt încearcă să detecteze cum a fost instalat. Dacă detectarea eșuează, suprascrie-o:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="Reinstalează prin scriptul de instalare">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: rulează ca Administrator pentru Chocolatey">
+      Dacă ai instalat prin `choco`, actualizările necesită un terminal ridicat. Deschide PowerShell ca Administrator înainte de a rula `bolt upgrade`.
+    </Step>
+    <Step title="Confirmă că noua versiune este activă">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Agentul nu găsește fișiere (sau găsește prea multe)">
+  **Simptome:** Agentul se plânge că nu poate vedea fișiere care există sau preia în mod repetat fișiere pe care nu vrei să le atingă (precum `node_modules`, ieșirea de build sau secrete).
+
+  **Pași:**
+
+  <Steps>
+    <Step title="Verifică dacă există un .boltignore">
+      Bolt respectă un fișier `.boltignore` la rădăcina proiectului, care controlează ce fișiere pot vedea instrumentele de căutare de fișiere ale agentului. Folosește aceeași sintaxă ca `.gitignore`.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="Confirmă directorul de lucru">
+      ```bash
+      bolt debug info
+      ```
+
+      Verifică dacă `cwd` corespunde rădăcinii proiectului. Dacă ai lansat Bolt dintr-un subdirector, căutarea de fișiere a agentului are rădăcina acolo.
+    </Step>
+    <Step title="Cere agentului să folosească grep, nu să ghicească">
+      Dacă agentul susține că un fișier nu există, cere-i să ruleze `grep` sau `glob` explicit. Aceasta ocolește orice presupunere internă învechită.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Obținerea informațiilor de depanare pentru un raport de bug">
+  Când depui o problemă, următoarele informații sunt cele mai utile pentru menținători:
+
+  <Steps>
+    <Step title="Colectează informații despre sistem și plugin-uri">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="Colectează ieșirea recentă de log">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="Exportă sesiunea relevantă (sanitizată)">
+      Dacă problema s-a întâmplat într-o sesiune specifică, export-o cu secretele redactate:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      Atașează `session-debug.json` la problemă.
+    </Step>
+    <Step title="Deschide o problemă sau o discuție">
+      Mergi la [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions) și lipește ieșirea `bolt debug info` plus o descriere a pașilor de reproducere.
+    </Step>
+  </Steps>
+</Accordion>

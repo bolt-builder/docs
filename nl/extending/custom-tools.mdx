@@ -1,0 +1,36 @@
+---
+title: "Custom tools in Bolt"
+sidebarTitle: "Custom tools"
+description: "Voeg projectspecifieke tools toe aan Bolt door uitvoerbare bestanden in .opencode/tool/ te plaatsen. Elk bestand wordt een tool die de agent kan aanroepen."
+---
+
+Custom tools laten je alles wat je kunt scripten (shell-scripts, Node/Bun/Python-programma's, kleine binaries) blootstellen als een tool die de agent op naam kan aanroepen. Ze zijn de eenvoudigste manier om Bolt toegang te geven tot de eigen build-, deploy- of dataworkflows van je project.
+
+## Waar ze leven
+
+Plaats bestanden in één van:
+
+- `.opencode/tool/` — project-gescoped, ingecheckt bij de repo.
+- `.opencode/tools/` — geaccepteerd als alias van het bovenstaande.
+
+Elk bestand wordt een tool die naar het bestand is genoemd (min de extensie). Tools worden automatisch opgepikt bij de volgende start van Bolt.
+
+## Anatomie van een tool
+
+Een custom tool declareert zijn naam, beschrijving en input-schema in een header en implementeert vervolgens het gedrag. De exacte vorm hangt af van de runtime die je kiest (shell-script, TypeScript, enz.), maar elke tool moet:
+
+1. Een JSON Schema voor zijn inputs adverteren zodat het model weet hoe het hem moet aanroepen.
+2. Een waarde (of een fout) teruggeven die Bolt in de TUI kan weergeven en terug kan voeren aan het model.
+
+Zodra hij is geladen, verschijnt de tool in de toollijst van de agent naast ingebouwde tools als `bash` en `grep`, en wordt hij afgeschermd door hetzelfde [permissie](/concepts/permissions)-systeem.
+
+## Wanneer gebruik je een custom tool vs. een MCP-server
+
+- **Custom tool** — klein, projectspecifiek, geen hergebruik tussen projecten. Snel te schrijven.
+- **MCP-server** — gedeeld over projecten heen, of omhult een echte externe service met auth. Zie [MCP Servers](/extending/mcp-servers).
+- **Plugin-tool** — gedistribueerd als npm-pakket naast andere uitbreidingspunten. Zie [Plugins](/extending/plugins).
+
+## Gerelateerd
+
+- [Tools](/concepts/tools) — referentie voor ingebouwde tools.
+- [Plugins](/extending/plugins) — het uitbreidingsoppervlak voor tools en meer.

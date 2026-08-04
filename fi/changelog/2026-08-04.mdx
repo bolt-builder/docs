@@ -1,0 +1,33 @@
+---
+title: "Viikko 4. elokuuta 2026"
+description: "Boltin viikoittainen muutosloki: 11 uutta käyttöliittymän kieltä, oikealta vasemmalle -asettelut, natiivit työpöytäkäännökset, Poolside-tarjoaja, GPT-5-viimeistely ja virheenkorjauksia."
+---
+
+## Uudet ominaisuudet
+
+- **11 uutta käyttöliittymän kieltä** — Työpöytäsovellus ja TUI sisältävät nyt käännökset seuraaville kielille: hindi, hollanti, indonesia, vietnam, italia, urdu, punjabi, azeri, suomi, ruotsi ja thai, mikä nostaa tuettujen kielten kokonaismäärän 28:aan. Vaihda kieltä valikossa **Asetukset → Ulkoasu → Kieli**. Katso [Työpöytäominaisuudet](/desktop/features) ja [Asennus](/desktop/install#28-ui-languages).
+- **Oikealta vasemmalle -asettelun tuki** — Navigointi, editorit, valintaikkunat, säätimet ja tekstin renderöinti peilautuvat nyt oikein oikealta vasemmalle luettavilla kielillä, kuten arabialla, hepreaksi ja urduksi, joten koko käyttöliittymä lukeutuu luontevasti näissä lokaaleissa.
+- **Natiivit työpöytäkäännökset** — Käyttöjärjestelmätason valikot, päivitysvalintaikkunat, palautusvirta, WSL-perehdytys ja natiivit tiedostovalitsimet on nyt lokalisoitu sovelluksen käyttöliittymän ohella, joten koko työpöytäkokemus noudattaa kieliasetustasi.
+- **Laajennettu lokalisointikattavuus** — Valikot, valintaikkunat, kehotteet, ohjesisältö, virheilmoitukset ja saavutettavuustunnisteet on nyt käännetty jokaisella tuetulla kielellä, mikä sulkee aukot, joissa merkkijonot aiemmin palasivat englanniksi.
+- **Poolside-tarjoaja** — Bolt yhdistyy nyt [Poolsideen](https://poolside.ai) sen OpenAI-yhteensopivan API:n kautta. Suorita `/connect`, valitse **Poolside** ja liitä API-avaimesi osoitteesta [platform.poolside.ai](https://platform.poolside.ai). Itse isännöityjä Poolside-käyttöönottoja voi myös määrittää mukautettuna tarjoajana. Katso [Tarjoajat ja mallit](/concepts/providers-and-models).
+- **Lokaalitietoinen monikko** — Lukumäärät, tilat, tiedostot ja istuntolistan kohteet monikoituvat nyt oikein kielikohtaisesti, joten aikajanan ja tilan teksti lukeutuu luontevasti kaikissa tuetuissa lokaaleissa.
+- **Rikkaampi Markdown-renderöinti** — Avustajan viestit saavat parannetun Markdown-muotoilun, sujuvammat suoratoistopäivitykset, paremman syntaksin korostuksen ja matemaattisen sisällön tuen, mikä tekee pitkämuotoisista ja teknisistä vastauksista helpompia lukea.
+
+## Päivitykset
+
+- **GPT-5:n päättelytaso vastaa mallin versiota** — Päättelytasot (mukaan lukien `none` ja `xhigh`) tarjotaan nyt vain niille GPT-5-varianteille, jotka niitä tukevat, joten `--variant` ei enää tarjoa vaihtoehtoja, jotka tietty malli hylkäisi. Katso [Päättelytason säätäminen](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Diff-merkinnän viimeistely** — Istunnon käyttöliittymän diff-näkymä tiivistää kommenttimerkintöjä, marginaalikäyttäytymistä ja vaalean/tumman syntaksivärejä paremman luettavuuden vuoksi.
+- **Hienosäädetyt olemassa olevat käännökset** — Nykyiset kielet saavat selkeämpää terminologiaa ja laajennettuja käyttöliittymätunnisteita johdonmukaisemman kokemuksen varmistamiseksi koko sovelluksessa.
+
+## Virheenkorjaukset
+
+- **Istuntotoimintojen ajoitus** — Istuntotoiminnot kirjaavat ja raportoivat ajoituksensa nyt tarkemmin, joten aikajana heijastaa, milloin työ todella alkoi ja päättyi.
+- **Selkeämmät etätyötilavirheet** — Etätyötilaan yhdistämisen tai siellä komentojen suorittamisen epäonnistumiset nostavat nyt esiin kuvaavampia virheilmoituksia geneeristen sijaan.
+- **Työtilan välityspalvelin ei enää vuoda työhakemistoa** — Työtilan välityspalvelimen kautta reititetyt pyynnöt eivät enää sisällä työhakemistotietoja, mikä pitää paikalliset polut pois verkosta.
+- **Kartta täyttää tyhjät alueet** — Aktiivisuuskartta pysyy nyt näkyvissä alueilla, joilla ei ole tallennettua aktiivisuutta, sen sijaan että se lyyhistyisi tyhjäksi alueeksi.
+- **Lokaalin havaitseminen korjattu** — Bolt havaitsee nyt järjestelmäsi lokaalin luotettavasti käynnistyksessä, joten käyttöliittymä avautuu oikealla kielellä useammilla alustoilla.
+- **Saksankielinen aikajanan käännös korjattu** — Aikajanan merkinnät saksaksi renderöityvät nyt oikeilla merkkijonoilla eivätkä enää palaa englanniksi tai virheellisesti muotoiltuun tekstiin.
+- **Vaihda tiedostovalinnat pois päältä** — Tiedostovalinnan napsauttaminen toisen kerran tyhjentää sen nyt, joten voit peruuttaa valinnan ilman toisen valitsemista ensin.
+- **Siistimmät luonnoskommenttien vuorovaikutukset** — Luonnoskommentin aloittaminen tai hylkääminen tyhjentää nyt taustalla olevan valinnan johdonmukaisesti eikä enää kilpaile hover-tilan kanssa.
+- **Animoitu päättelyotsikko palautettu** — Päättelyotsikko TUI:ssa näyttää jälleen animoidun pyörijän ajattelun aikana, ja sen liukuväri himmenee laajennettaessa, jotta suljetun ja avoimen tilan erottaa helpommin.
+- **Tausta- ja testityökalut palautettu** — `bash_background`, `process_output`, `list_processes`, `kill_process` ja `test_run` ovat jälleen agenttien käytettävissä sen jälkeen, kun ne pudotettiin aiemmassa yhdistämisessä. Agentit voivat käynnistää pitkäkestoisia komentoja, kuten kehityspalvelimia ja watchereita, lukea niiden tulostetta ja suorittaa projektin testit strukturoiduilla pass/fail-tuloksilla. Katso [Sisäänrakennetut työkalut](/concepts/tools#built-in-tools).

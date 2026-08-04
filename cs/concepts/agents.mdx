@@ -1,0 +1,135 @@
+---
+title: "Agenti — deset vestavěných a vlastních AI person Boltu"
+sidebarTitle: "Agenti"
+description: "Bolt obsahuje deset vestavěných agentů, každý s odlišnou rolí, sadou nástrojů a úrovní přístupu. Zjisti, jak přepínat, konfigurovat a vytvářet vlastní agenty."
+---
+
+Bolt považuje každou AI personu za pojmenovaného **agenta**: systémový prompt spárovaný s přesně vymezenou sadou oprávnění k nástrojům. Místo aby pro každou úlohu běžel jeden univerzální model, vybíráš si agenta, jehož přístup a zaměření odpovídá tomu, co potřebuješ — ať už jde o bezpečnostní audit, psaní dokumentace, nebo řízení kompletní migrace frameworku.
+
+## Úrovně přístupu
+
+Každý vestavěný agent má přiřazenou jednu ze tří úrovní přístupu, které určují, jaké nástroje může volat:
+
+| Úroveň | Udělená oprávnění | Typické použití |
+|-------|---------------------|-------------|
+| **Full** | Čtení souborů, zápis/úprava souborů, spouštění shellových příkazů | Aktivní kódování, ladění, refaktoring, migrace |
+| **Edit** | Čtení souborů, zápis/úprava souborů — bez shellu | Dokumentace, aktualizace komentářů, bezpečné úpravy textu |
+| **Read** | Pouze čtení souborů — žádné zápisy, žádný shell | Plánování, výzkum, code review, audity |
+
+## Vestavění agenti
+
+Bolt obsahuje deset specializovaných agentů z krabice. V TUI mezi nimi přepínáš stiskem <kbd>Tab</kbd>.
+
+| Agent | Přístup | Popis |
+|-------|--------|-------------|
+| `code` | Full | Výchozí: čte, píše a spouští kód |
+| `plan` | Read | Prozkoumává kódovou základnu a vytváří plán bez změn v kódu |
+| `ask` | Read | Otázky a výzkum — žádné úpravy souborů |
+| `code-review` | Read | Reviewuje změny na správnost, styl a bezpečnost |
+| `debug` | Full | Ladí padající testy, pády a logické chyby |
+| `refactor` | Full | Bezpečný refaktoring s ověřením testy v každém kroku |
+| `docs` | Edit | Píše a aktualizuje dokumentaci a komentáře |
+| `security` | Read | Bezpečnostní audit: zranitelnosti, tajné klíče a nebezpečné vzory |
+| `migrate` | Full | Upgrady frameworků a migrace závislostí |
+| `perf` | Full | Analýza výkonu a optimalizace |
+
+## Subagenti
+
+Kromě deseti primárních agentů Bolt vystavuje dva vestavěné **subagenty**, na které primární agenti mohou delegovat práci během sezení. Subagenta nikdy nevybíráš ručně — jsou nasazováni automaticky, když primární agent rozhodne, že jednoho vyvolá.
+
+| Subagent | Role |
+|----------|------|
+| `@general` | Delegování komplexních vícekrokových úloh vyžadujících široké schopnosti |
+| `@explore` | Rychlý průzkum kódové základny pouze pro čtení — prochází soubory bez vedlejších efektů |
+
+<Tip>
+  Když potřebuješ rychle porozumět neznámé kódové základně, začni s agentem `ask` nebo `plan`. Na pozadí mohou nasadit subagenta `@explore`, který tvůj projekt indexuje ve vysoké rychlosti, než vytvoří odpověď — bez toho, aby se dotkl jediného souboru.
+</Tip>
+
+## Přepínání agentů
+
+**V TUI** — stiskem <kbd>Tab</kbd> kdykoliv během sezení cyklicky procházíš seznam dostupných agentů. Aktivní agent je zobrazen v zápatí sezení.
+
+**Neinteraktivně** — předej `--agent <name>` do `bolt run` a připni konkrétního agenta na dobu trvání běhu:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Výpis agentů
+
+Chceš-li vidět všechny dostupné agenty — jak vestavěné, tak vlastní — spolu s jejich režimy a konfigurací oprávnění:
+
+```bash
+bolt agent list
+```
+
+## Vlastní agenti
+
+Vlastní agenty můžeš vytvořit dvěma způsoby.
+
+### Generování pomocí `bolt agent create`
+
+Interaktivní průvodce vygeneruje soubor agenta pomocí LLM a zapíše ho na disk:
+
+```bash
+bolt agent create
+```
+
+Všechny přepínače jsou volitelné. Uveď je, chceš-li spustit neinteraktivně:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Přepínač | Popis |
+|------|-------------|
+| `--description` | Co má agent dělat (použito jako LLM prompt pro generování) |
+| `--path` | Adresář, do kterého se má vygenerovaný soubor agenta zapsat |
+| `--mode` | `all` (výchozí), `primary` nebo `subagent` |
+| `--permissions` | Čárkami oddělený seznam oprávnění k povolení. Vynech pro všechna. |
+| `--model` / `-m` | Model k použití ve formátu `provider/model` |
+
+### Ruční napsání markdown souboru
+
+Agent je jen markdown soubor s YAML frontmatterem. Umísti ho do `.bolt/agents/` uvnitř svého projektu nebo do globálního adresáře agentů:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Název souboru (bez `.md`) se stává identifikátorem agenta.
+
+### Dostupná oprávnění
+
+Oprávnění jsou jemné brány k nástrojům, které ovládáš při vytváření vlastního agenta:
+
+| Oprávnění | Řídí |
+|------------|----------|
+| `bash` | Spouštění shellových příkazů |
+| `read` | Čtení souborů |
+| `edit` | Zápis a úprava souborů (řídí také `write` a `apply_patch`) |
+| `glob` | Vyhledávání souborů globem / výpis adresářů |
+| `grep` | Vyhledávání v souborech přes ripgrep |
+| `webfetch` | HTTP fetch z webu |
+| `task` | Spouštění subagent úloh |
+| `todowrite` | Vytváření a aktualizace todo položek |
+| `websearch` | Webové vyhledávací dotazy |
+| `lsp` | Operace Language Server Protocolu |
+| `skill` | Přístup ke skillům projektu |

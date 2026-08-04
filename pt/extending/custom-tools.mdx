@@ -1,0 +1,36 @@
+---
+title: "Ferramentas Personalizadas no Bolt"
+sidebarTitle: "Ferramentas Personalizadas"
+description: "Adicione ferramentas específicas do projeto ao Bolt colocando ficheiros executáveis em .opencode/tool/. Cada ficheiro torna-se uma ferramenta que o agente pode invocar."
+---
+
+As ferramentas personalizadas permitem-lhe expor qualquer coisa que possa criar por script (scripts de shell, programas Node/Bun/Python, pequenos binários) como uma ferramenta que o agente pode invocar por nome. São a forma mais simples de dar ao Bolt acesso aos fluxos de trabalho de build, deploy ou dados do seu projeto.
+
+## Onde vivem
+
+Coloque os ficheiros num dos seguintes locais:
+
+- `.opencode/tool/` — no âmbito do projeto, submetido ao repositório.
+- `.opencode/tools/` — aceite como alias do anterior.
+
+Cada ficheiro torna-se uma ferramenta com o nome do ficheiro (menos a extensão). As ferramentas são carregadas automaticamente na próxima vez que o Bolt arranca.
+
+## Anatomia de uma ferramenta
+
+Uma ferramenta personalizada declara o seu nome, descrição e esquema de entrada num cabeçalho e depois implementa o comportamento. A forma exata depende do runtime que escolher (script de shell, TypeScript, etc.), mas cada ferramenta tem de:
+
+1. Anunciar um JSON Schema para as suas entradas, para que o modelo saiba como a chamar.
+2. Devolver um valor (ou um erro) que o Bolt possa apresentar no TUI e devolver ao modelo.
+
+Depois de carregada, a ferramenta aparece na lista de ferramentas do agente, junto de ferramentas incorporadas como `bash` e `grep`, e é controlada pelo mesmo sistema de [permissões](/concepts/permissions).
+
+## Quando usar uma ferramenta personalizada vs. um servidor MCP
+
+- **Ferramenta personalizada** — pequena, específica do projeto, sem reutilização entre projetos. Rápida de escrever.
+- **Servidor MCP** — partilhado entre projetos, ou embrulha um serviço externo real com autenticação. Consulte [Servidores MCP](/extending/mcp-servers).
+- **Ferramenta de plugin** — distribuída como um pacote npm juntamente com outros pontos de extensão. Consulte [Plugins](/extending/plugins).
+
+## Relacionado
+
+- [Ferramentas](/concepts/tools) — referência das ferramentas incorporadas.
+- [Plugins](/extending/plugins) — a superfície de extensão para ferramentas e mais.

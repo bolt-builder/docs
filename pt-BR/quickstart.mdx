@@ -1,0 +1,142 @@
+---
+title: "Comece a usar o Bolt em menos de um minuto"
+sidebarTitle: "Início rápido"
+description: "Instale o Bolt, abra seu projeto, conecte um provedor e execute seu primeiro prompt de IA — tudo em menos de 60 segundos com este guia passo a passo."
+---
+
+Este guia leva você pela instalação do Bolt, iniciando-o em um projeto, conectando um provedor de IA e executando seu primeiro prompt. Todo o fluxo leva menos de um minuto.
+
+<Steps>
+  <Step title="Instale o Bolt">
+    O caminho mais rápido é o script oficial de instalação, que funciona no macOS e Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Prefere um gerenciador de pacotes? Instale globalmente com npm, bun, pnpm ou yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Para o app desktop no macOS (sem desvio do Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Veja o [Guia de instalação](/installation) para todos os métodos, incluindo Homebrew, Chocolatey, Scoop e observações específicas para Windows.
+  </Step>
+  <Step title="Abra seu projeto">
+    Navegue até qualquer diretório de projeto e inicie o TUI interativo:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    O Bolt capta o contexto do seu projeto automaticamente — lendo sua árvore de arquivos, entendendo a stack e tornando-a disponível para cada agente desde o momento em que você o abre.
+  </Step>
+  <Step title="Configure um provedor de IA">
+    Na primeira execução, o Bolt solicita que você configure um provedor se nenhum estiver definido. Você também pode executar isso a qualquer momento:
+
+    ```bash
+    bolt providers
+    ```
+
+    Isso abre o fluxo de gerenciamento de provedores onde você pode adicionar chaves de API para OpenAI, Anthropic e outros provedores de LLM suportados. A configuração é salva em `.bolt/bolt.jsonc` na raiz do seu projeto.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Provider config goes here
+      }
+    }
+    ```
+  </Step>
+  <Step title="Digite um prompt e explore os agentes">
+    Uma vez dentro do TUI, digite seu prompt e pressione Enter. Use **Tab** para alternar entre os dez agentes nativos do Bolt a qualquer momento — o agente atual é mostrado na barra de status.
+
+    Você também pode executar prompts diretamente da linha de comando sem abrir o TUI:
+
+    ```bash
+    # Non-interactive prompt using the default agent
+    bolt run "explain this codebase"
+    
+    # Use a specific agent
+    bolt run --agent ask "what does this project do?"
+    
+    # Attach the TUI to a running server (local or remote)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Agentes nativos
+
+Alterne agentes com `Tab` no TUI ou passe `--agent <name>` para `bolt run`. Cada agente tem um nível de acesso definido correspondente à sua finalidade.
+
+| Agente | Acesso | Descrição |
+| --- | --- | --- |
+| `code` | Total | Padrão: lê, escreve e executa código |
+| `plan` | Leitura | Explora a base de código e produz um plano sem alterar arquivos |
+| `ask` | Leitura | Perguntas e pesquisa — sem edições de arquivo |
+| `code-review` | Leitura | Revisa alterações quanto à correção, estilo e segurança |
+| `debug` | Total | Depura testes com falha, crashes e erros de lógica |
+| `refactor` | Total | Refatoração segura com verificação de testes em cada etapa |
+| `docs` | Edição | Escreve e atualiza documentação e comentários |
+| `security` | Leitura | Auditoria de segurança: vulnerabilidades, segredos, padrões |
+| `migrate` | Total | Upgrades de framework e migrações de dependências |
+| `perf` | Total | Análise e otimização de desempenho |
+
+Também há dois subagentes nativos para delegação: `@general` para tarefas complexas em várias etapas e `@explore` para pesquisa rápida e somente leitura da base de código. Você pode definir seus próprios agentes como arquivos Markdown ou gerar um com `bolt agent create`.
+
+## Comandos comuns para experimentar em seguida
+
+```bash
+# Review staged changes with a pass/fail exit code
+bolt review --staged
+
+# Generate a commit message for staged changes
+bolt commit
+
+# List and manage sessions
+bolt session list
+
+# View token usage and cost statistics
+bolt stats
+
+# Query the local session database
+bolt db
+```
+
+<Tip>
+  Passe `--mini` para `bolt` ou `bolt attach` para uma UI compacta que ocupa menos espaço do terminal — ótimo para janelas menores ou layouts com painéis divididos.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` aceita as flags `--auto`, `--yolo` e `--dangerously-skip-permissions` que aprovam automaticamente todos os prompts de permissão sem perguntar. Use-as apenas em ambientes confiáveis — elas permitem que o agente leia, escreva e execute sem confirmação.
+
+  ```bash
+  bolt run --auto "refactor this module"
+  bolt run --yolo "refactor this module"
+  bolt run --dangerously-skip-permissions "refactor this module"
+  ```
+</Warning>
+
+<Note>
+  O Bolt oferece suporte a completions de shell para bash, zsh, fish e outros shells. Gere e instale completions com:
+
+  ```bash
+  bolt completion
+  ```
+
+  Siga as instruções impressas para carregar o script de completion na configuração do seu shell.
+</Note>

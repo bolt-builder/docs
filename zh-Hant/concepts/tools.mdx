@@ -1,0 +1,58 @@
+---
+title: "工具:Bolt 代理實際能做什麼"
+sidebarTitle: "工具"
+description: "Bolt 代理可用的完整內建工具清單,以及如何透過外掛、MCP 伺服器或 .opencode/tool 目錄新增你自己的工具。"
+---
+
+Bolt 中的代理透過呼叫工具來完成工作。你在 TUI 中看到的每個動作(讀取檔案、執行測試、搜尋網路)都是模型選擇工具並由 Bolt 執行。每個代理都有宣告的存取層級,決定它可以在不先詢問你的情況下呼叫哪些工具(請見 [權限](/concepts/permissions))。
+
+## 內建工具
+
+| 工具 | 功能 |
+| --- | --- |
+| `read` | 從磁碟讀取檔案。 |
+| `write` | 建立新檔案或覆寫既有檔案。 |
+| `edit` | 對檔案套用定向編輯(尋找/取代)。 |
+| `apply_patch` | 對一或多個檔案套用 unified-diff 風格的修補。 |
+| `glob` | 列出符合 glob 模式的檔案。 |
+| `grep` | 透過 regex/文字搜尋檔案內容。 |
+| `bash` | 執行 shell 命令。 |
+| `task` | 將子任務委派給子代理(`@general`、`@explore` 或自訂子代理)。 |
+| `todowrite` | 為多步驟工作維護代理的結構化任務清單。 |
+| `webfetch` | 抓取 URL 並回傳其內容。 |
+| `websearch` | 搜尋網路。 |
+| `skill` | 呼叫具名的 skill(請見 [Skills](/extending/skills))。 |
+| `memory_save` | 將事實持久化到 [專案記憶](/concepts/project-memory)。 |
+| `memory_recall` | 查詢先前儲存的記憶。 |
+| `question` | 向你詢問澄清問題並等待回覆。 |
+| `bash_background` | 將 shell 命令作為受管理的背景程序啟動(開發伺服器、監看程式、長時間建置)。 |
+| `process_output` | 讀取背景程序累積的輸出與狀態,並可選擇等待其結束。 |
+| `list_processes` | 列出背景程序及其 id、狀態與命令。 |
+| `kill_process` | 依 id 終止背景程序(及其程序樹)。 |
+| `test_run` | 偵測並執行專案的測試,回傳結構化的通過/失敗結果與失敗詳情。 |
+
+### 實驗性
+
+| 工具 | 功能 |
+| --- | --- |
+| `lsp` | 向 language server 查詢定義、參考與診斷。 |
+| `execute` | 在隔離的 code-mode 沙箱中執行程式碼。 |
+| `plan` | 在進行變更前產生結構化計畫。 |
+
+實驗性工具可能會在版本之間變更或改名。
+
+## 擴充工具集
+
+除了內建工具外,Bolt 可以呼叫來自三個來源的工具:
+
+- 專案根目錄下 `.opencode/tool/`(或 `.opencode/tools/`)的 **自訂工具**。請見 [自訂工具](/extending/custom-tools)。
+- 任何已安裝 [外掛](/extending/plugins) 提供的 **外掛工具**。
+- 為專案設定的任何 [MCP 伺服器](/extending/mcp-servers) 提供的 **MCP 工具**。
+
+這三者從代理的角度看起來完全相同:它們會出現在工具清單中、遵守代理的存取層級,並顯示在 TUI 的工具呼叫輸出中。
+
+## 相關
+
+- [代理](/concepts/agents) — 哪些代理可以呼叫哪些工具。
+- [權限](/concepts/permissions) — 如何為每個代理管控工具存取。
+- [MCP 伺服器](/extending/mcp-servers) — 新增實際工具最常見的方式。

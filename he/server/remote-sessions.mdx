@@ -1,0 +1,185 @@
+---
+title: "חבר לסשני Bolt מרוחקים על גבי HTTP"
+sidebarTitle: "סשנים מרוחקים"
+description: "הפעל שרת Bolt ללא ראש, חבר TUI מכל מכונה, וגלה שרתים ברשת המקומית שלך עם mDNS — עם אימות בסיסי אופציונלי."
+url: "server/remote-sessions"
+---
+
+ל-Bolt יש שרת HTTP מובנה שמפריד לחלוטין את המנוע מהממשק. תוכל להתחיל שרת ללא ראש במכונה מרוחקת חזקה (VM ענן, קונטיינר פיתוח, שולחן עבודה שהושאר פועל בלילה) ולחבר את ה-TUI מהלפטופ שלך, מסוף שני, או אפילו דפדפן — כולם מצביעים על אותו סשן חי. זה הופך את Bolt למתאים לצוותים, עומסי עבודה מרוחקים ומשימות ממושכות שתרצה לעקוב אחריהן מבלי להיכנס ב-SSH לקופסה.
+
+---
+
+## `bolt serve`
+
+הפעל שרת Bolt ללא ראש שחושף את ה-API המלא על גבי HTTP ומקבל חיבורי TUI.
+
+```bash
+bolt serve
+```
+
+### דגלים
+
+| דגל | ברירת מחדל | תיאור |
+|------|---------|-------------|
+| `--hostname <host>` | `127.0.0.1` | שם מארח או כתובת IP לחיבור |
+| `--port <n>` | `0` (auto) | פורט להאזנה; Bolt מדפיס את הפורט המוקצה בהפעלה |
+| `--mdns` | `false` | פרסם את השרת דרך mDNS לגילוי ללא תצורה ברשת המקומית; גם מגדיר את hostname ל-`0.0.0.0` |
+| `--mdns-domain <name>` | `opencode.local` | דומיין שירות mDNS מותאם אישית |
+| `--cors <origin>` | `[]` | מקורות נוספים לאפשר דרך CORS (ניתן לחזור) |
+
+<Warning>
+  אם `OPENCODE_SERVER_PASSWORD` לא מוגדר, Bolt מדפיס אזהרה והשרת פתוח לחלוטין לכל מי שיכול להגיע אליו. תמיד הגדר סיסמה לפני חיבור לכל ממשק שאינו `127.0.0.1`.
+</Warning>
+
+### אימות
+
+אבטח את השרת עם HTTP Basic Auth באמצעות משתני סביבה:
+
+| משתנה | תיאור |
+|----------|-------------|
+| `OPENCODE_SERVER_PASSWORD` | סיסמת אימות בסיסי |
+| `OPENCODE_SERVER_USERNAME` | שם משתמש אימות בסיסי (ברירת מחדל ל-`opencode` אם מושמט) |
+
+```bash
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+---
+
+## `bolt attach <url>`
+
+חבר את ה-TUI המלא לשרת Bolt רץ. זה עובד כנגד כל שרת שנגיש דרך HTTP — מקומי או מרוחק.
+
+```bash
+bolt attach http://my-dev-machine.local:4096
+```
+
+### דגלים
+
+| דגל | כינוי | תיאור |
+|------|-------|-------------|
+| `--dir <path>` | | ספרייה להרצה בשרת המרוחק |
+| `--continue` | `-c` | המשך את הסשן האחרון בשרת |
+| `--session <id>` | `-s` | מזהה סשן להמשך |
+| `--fork` | | פצל את הסשן בעת המשך (השתמש עם `--continue` או `--session`) |
+| `--password <pw>` | `-p` | סיסמת אימות בסיסי (דורסת את `OPENCODE_SERVER_PASSWORD`) |
+| `--username <user>` | `-u` | שם משתמש אימות בסיסי (דורס את `OPENCODE_SERVER_USERNAME`) |
+| `--mini` | | השתמש בממשק האינטראקטיבי המינימלי במקום ב-TUI המלא |
+
+```bash
+# Continue the last session on a remote server
+bolt attach http://10.0.0.5:4096 --continue --password my-secret
+
+# Fork a specific session
+bolt attach http://10.0.0.5:4096 --session ses_abc123 --fork
+
+# Minimal UI — useful in restricted terminals
+bolt attach http://10.0.0.5:4096 --mini
+```
+
+---
+
+## `bolt web`
+
+הפעל שרת Bolt ופתח מיד את ממשק הווב בדפדפן ברירת המחדל שלך. זו הדרך המהירה ביותר לקבל ממשק מבוסס דפדפן שרץ מקומית.
+
+```bash
+bolt web
+```
+
+`bolt web` מקבל את אותם דגלי רשת כמו `bolt serve`.
+
+---
+
+## גילוי mDNS
+
+העבר `--mdns` ל-`bolt serve` כדי לשדר את כתובת השרת ברשת המקומית שלך באמצעות mDNS. כל מכונה באותה רשת יכולה אז להתחבר באמצעות שם ה-mDNS מבלי לדעת את כתובת ה-IP או הפורט.
+
+```bash
+# On the server machine
+OPENCODE_SERVER_PASSWORD=my-secret bolt serve --mdns
+
+# From another machine on the same LAN
+bolt attach http://opencode.local --password my-secret
+```
+
+דומיין mDNS ברירת המחדל הוא `opencode.local`. דרוס אותו עם `--mdns-domain`:
+
+```bash
+bolt serve --mdns --mdns-domain mydevbox.local
+```
+
+---
+
+## הפעל שרת וחבר מרחוק
+
+<Steps>
+  <Step title="הגדר סיסמה במכונת השרת">
+    ייצא את `OPENCODE_SERVER_PASSWORD` לפני הפעלת השרת. בלעדיה, Bolt מדפיס אזהרה וה-API אינו מאומת.
+
+    ```bash
+    export OPENCODE_SERVER_PASSWORD=my-secret
+    ```
+  </Step>
+
+  <Step title="הפעל את השרת ללא ראש">
+    חבר לכל הממשקים כדי שהלפטופ שלך יוכל להגיע אליו, ואופציונלית בחר פורט קבוע:
+
+    ```bash
+    bolt serve --hostname 0.0.0.0 --port 4096
+    # opencode server listening on http://0.0.0.0:4096
+    ```
+
+    השאר את המסוף הזה פתוח (או הרץ אותו ב-`tmux` / `screen` / יחידת systemd).
+  </Step>
+
+  <Step title="חבר מהלפטופ שלך">
+    בכל מכונה שיכולה להגיע לשרת, הרץ:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --password my-secret
+    ```
+
+    ה-TUI המלא נפתח ומתחבר למנוע המרוחק. סשנים, היסטוריה ומצב כלים כולם חיים בשרת.
+  </Step>
+
+  <Step title="המשך סשן מאוחר יותר">
+    נתק על ידי סגירת ה-TUI (`q` או `Ctrl-C`). הסשן ממשיך לרוץ בשרת. כדי להצטרף מחדש:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --password my-secret
+    ```
+
+    או פצל אותו כדי להסתעף מבלי להשפיע על המקורי:
+
+    ```bash
+    bolt attach http://192.168.1.10:4096 --continue --fork --password my-secret
+    ```
+  </Step>
+</Steps>
+
+---
+
+## דוגמת זרימת עבודה מרוחקת
+
+דפוס נפוץ הוא להשאיר שרת Bolt רץ במכונת פיתוח בעלת מספר גבוה של ליבות ולהתחבר מלפטופ דק.
+
+```
+┌──────────────────────────────────────────────────┐
+│  Dev machine (powerful, stays on)                │
+│                                                  │
+│  $ OPENCODE_SERVER_PASSWORD=secret bolt serve \  │
+│      --hostname 0.0.0.0 --port 4096              │
+│                                                  │
+│  opencode server listening on http://0.0.0.0:4096│
+└──────────────────────────────────────────────────┘
+               ↑  HTTP (LAN / VPN / SSH tunnel)
+┌──────────────────────────────────────────────────┐
+│  Laptop                                          │
+│                                                  │
+│  $ bolt attach http://dev-machine:4096 \         │
+│      --password secret                           │
+└──────────────────────────────────────────────────┘
+```
+
+כל נתוני הסשן מאוחסנים במסד הנתונים SQLite של השרת. הלפטופ רק מרנדר את ה-TUI — הוא יכול להתנתק ולהתחבר מחדש בכל עת מבלי לאבד עבודה.

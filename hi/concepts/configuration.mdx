@@ -1,0 +1,193 @@
+---
+title: "Configuration — bolt.jsonc सेटिंग्स और ग्लोबल ओवरराइड"
+sidebarTitle: "Configuration"
+description: "Bolt आपके प्रोजेक्ट और OS कॉन्फ़िगरेशन डायरेक्टरी से लेयर्ड JSONC कॉन्फ़िगरेशन फ़ाइलें पढ़ता है। providers, MCP servers, instructions, plugins और environment overrides सेट करें।"
+---
+
+Bolt एक लेयर्ड कॉन्फ़िगरेशन सिस्टम का उपयोग करता है: उपयोगकर्ता-व्यापी डिफ़ॉल्ट के लिए एक **global** कॉन्फ़िगरेशन फ़ाइल, और रिपॉज़िटरी-विशिष्ट सेटिंग्स के लिए एक **per-project** कॉन्फ़िगरेशन फ़ाइल। दोनों फ़ाइलें JSONC फ़ॉर्मैट (कमेंट्स के साथ JSON) का उपयोग करती हैं, और दोनों `$schema` पॉइंटर के साथ स्वचालित रूप से बनाई जाती हैं जो एडिटर autocompletion को सक्षम बनाता है।
+
+## कॉन्फ़िगरेशन फ़ाइल के स्थान
+
+### Per-project कॉन्फ़िगरेशन
+
+पहली बार चलाने पर आपके प्रोजेक्ट के अंदर स्वचालित रूप से बनाई जाती है:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+अपनी टीम के बाकी सदस्यों के साथ provider कॉन्फ़िगरेशन, MCP servers और कस्टम निर्देश साझा करने के लिए इस फ़ाइल को कमिट करें। संवेदनशील क्रेडेंशियल्स यहाँ कभी नहीं जाने चाहिए — इसके बजाय environment variables या global config का उपयोग करें।
+
+### Global कॉन्फ़िगरेशन
+
+आपकी मशीन के सभी प्रोजेक्ट्स पर लागू होती है। Bolt आपकी OS कॉन्फ़िगरेशन डायरेक्टरी में पहली मेल खाती फ़ाइल की तलाश करता है:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferred)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Global config directory कहाँ है?">
+  Bolt Linux और macOS पर XDG Base Directory Specification (`~/.config/bolt/`) का पालन करता है और Windows पर `%APPDATA%\bolt\` का। अपनी मशीन पर पूरी तरह हल किया गया कॉन्फ़िगरेशन प्रिंट करने के लिए `bolt debug config` चलाएँ।
+</Accordion>
+
+## न्यूनतम कॉन्फ़िगरेशन उदाहरण
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` फ़ील्ड उन एडिटर्स में IntelliSense और validation सक्षम बनाता है जो JSON Schema का समर्थन करते हैं। यदि यह फ़ील्ड गुम है तो Bolt इसे स्वचालित रूप से लिखता है।
+
+## कॉन्फ़िगरेशन संदर्भ
+
+### `provider`
+
+Provider-विशिष्ट विकल्पों को कॉन्फ़िगर करें जैसे कस्टम बेस URLs, क्षेत्रीय सेटिंग्स, या नामित क्रेडेंशियल्स:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+[Model Context Protocol](https://modelcontextprotocol.io) servers रजिस्टर करें जिन्हें agent tools के रूप में कॉल कर सकता है:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+MCP servers को इंटरैक्टिवली मैनेज करें `bolt mcp add`, `bolt mcp list`, `bolt mcp auth`, और `bolt mcp debug` के साथ।
+
+### `instructions`
+
+कस्टम system instructions जोड़ें जो हर सेशन में इंजेक्ट किए जाते हैं। कोडिंग कन्वेंशन्स, स्टाइल गाइड, या प्रोजेक्ट-विशिष्ट नियमों को लागू करने के लिए उपयोगी:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+कई कॉन्फ़िगरेशन फ़ाइलों (global \+ project) से निर्देश स्वचालित रूप से मर्ज और deduplicate किए जाते हैं।
+
+### `plugin`
+
+Bolt plugins लोड करें। Plugins नए tools, providers, context sources और hooks जोड़ सकते हैं:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### `url` के माध्यम से रिमोट कॉन्फ़िगरेशन
+
+स्टार्टअप पर रिमोट URL से कॉन्फ़िगरेशन fetch करें। केंद्रीकृत टीम कॉन्फ़िगरेशन के लिए उपयोगी:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## वेरिएबल प्रतिस्थापन
+
+कॉन्फ़िगरेशन मान `$VAR_NAME` या `${VAR_NAME}` सिंटैक्स का उपयोग करके environment variables को संदर्भित कर सकते हैं। कॉन्फ़िगरेशन पार्स होने से पहले, लोड समय पर प्रतिस्थापन होता है:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="कॉन्फ़िगरेशन में environment variables का उपयोग कैसे करें?">
+  किसी भी environment variable को स्ट्रिंग कॉन्फ़िगरेशन मान में कहीं भी `$VAR_NAME` या `${VAR_NAME}` के साथ संदर्भित करें। Bolt लोड समय पर मान प्रतिस्थापित करता है। यदि वेरिएबल सेट नहीं है तो लिटरल स्ट्रिंग `$VAR_NAME` का उपयोग किया जाता है — Bolt लापता प्रतिस्थापनों के लिए चुपचाप विफल नहीं होता या त्रुटि नहीं फेंकता।
+</Accordion>
+
+## Environment variable ओवरराइड
+
+ये environment variables आपको कॉन्फ़िगरेशन को पूरी तरह से रीडायरेक्ट या ओवरराइड करने देते हैं, जो CI, containers और testing के लिए उपयोगी है:
+
+| Variable | विवरण |
+| --- | --- |
+| `BOLT_CONFIG` | प्रोजेक्ट-लोकल के बजाय लोड करने के लिए कॉन्फ़िगरेशन फ़ाइल का absolute path |
+| `BOLT_CONFIG_DIR` | उस डायरेक्टरी को ओवरराइड करें जिसे Bolt कॉन्फ़िगरेशन फ़ाइलों के लिए खोजता है |
+| `BOLT_CONFIG_CONTENT` | कच्चा JSONC कॉन्फ़िगरेशन कंटेंट स्ट्रिंग के रूप में दें — किसी फ़ाइल की आवश्यकता नहीं |
+
+`BOLT_CONFIG_CONTENT` कंटेनराइज़्ड वातावरण में विशेष रूप से उपयोगी है जहाँ फ़ाइल माउंट करना असुविधाजनक होता है:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="जब कई स्रोत सक्रिय हों तो कौन-सा कॉन्फ़िगरेशन प्राथमिकता लेता है?">
+  Bolt इस क्रम में कॉन्फ़िगरेशन मर्ज करता है (बाद की प्रविष्टियाँ जीतती हैं):
+
+  1. Global कॉन्फ़िगरेशन फ़ाइल (OS कॉन्फ़िगरेशन डायरेक्टरी में `bolt.jsonc` / `bolt.json`)
+  2. Global कॉन्फ़िगरेशन में `url` प्रविष्टियों से fetch किए गए रिमोट कॉन्फ़िगरेशन
+  3. Per-project कॉन्फ़िगरेशन फ़ाइलें (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` फ़ाइल (यदि सेट है)
+  5. `BOLT_CONFIG_CONTENT` (यदि सेट है)
+
+  `instructions` जैसे array फ़ील्ड्स स्रोतों में बदलने के बजाय जोड़े जाते हैं। Object फ़ील्ड्स को गहराई से मर्ज किया जाता है, संघर्षों पर बाद के मान जीतते हैं।
+</Accordion>

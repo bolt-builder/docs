@@ -1,0 +1,33 @@
+---
+title: "Bolt Web UI"
+sidebarTitle: "Web UI"
+description: "bolt web ishlayotgan Bolt server tepasida brauzer asosidagi UI'ni beradi — bo'lishilgan jamoa qutilari, remote mashinalar va TUI amaliy bo'lmagan har qanday joy uchun foydali."
+---
+
+`bolt web` Bolt serverni boshlaydi va uning oldida brauzer UI'ni beradi. Bu TUI bilan bir xil dvigatel, faqat brauzer tabida render qilingan.
+
+## Uni boshlang
+
+```bash
+bolt web                                # faqat localhost
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+Keyin chop etilgan URL'ni oching. Tarmoq orqali ochib bergan holda, avval basic auth'ni o'rnating:
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt web --hostname 0.0.0.0 --port 4096
+```
+
+## Web UI qachon ishlatiladi
+
+- Bolt'ni kuchli remote mashinada ishga tushirish, lekin uni laptopdan boshqarish.
+- Jamoadosh bilan pair-debugging uchun jonli sessiyani bo'lishish.
+- To'liq TUI noqulay bo'lgan muhitlar (Chromebooklar, planshetlar, coworking mashinalar).
+
+## Aloqador
+
+- [Headless Server](/server/headless-server) — asosiy API server.
+- [Remote Sessions](/server/remote-sessions) — TUI'ni web UI xizmat qiladigan bir xil serverga biriktirish.

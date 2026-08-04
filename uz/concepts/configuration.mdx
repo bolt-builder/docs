@@ -1,0 +1,193 @@
+---
+title: "Konfiguratsiya — bolt.jsonc sozlamalari va global override'lar"
+sidebarTitle: "Konfiguratsiya"
+description: "Bolt loyihangizdan va OS konfiguratsiya kataloglaridan qatlamli JSONC konfiguratsiya fayllarini o'qiydi. Providerlar, MCP serverlari, ko'rsatmalar, plaginlar va environment override'larni sozlang."
+---
+
+Bolt qatlamli konfiguratsiya tizimidan foydalanadi: foydalanuvchi-keng standartlar uchun **global** konfiguratsiya fayli va repository-ga xos sozlamalar uchun **loyiha darajasidagi** konfiguratsiya fayli. Ikkala fayl ham JSONC formatidan foydalanadi (izohlar bilan JSON) va ikkalasi ham muharrir avtoto'ldirishni yoqadigan `$schema` ko'rsatkichi bilan avtomatik yaratiladi.
+
+## Konfiguratsiya fayli joylari
+
+### Loyiha darajasidagi konfiguratsiya
+
+Loyihangiz ichida birinchi ishga tushirishda avtomatik yaratiladi:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Provayder konfiguratsiyasi, MCP serverlari va custom ko'rsatmalarni jamoangizning qolgan qismi bilan bo'lishish uchun bu faylni commit qiling. Maxfiy hisob ma'lumotlari hech qachon bu yerga tushmasligi kerak — environment variable'lardan yoki global konfiguratsiyadan foydalaning.
+
+### Global konfiguratsiya
+
+Sizning mashinangizdagi barcha loyihalarga tatbiq etiladi. Bolt OS konfiguratsiya katalogingizdagi birinchi mos keladigan faylni izlaydi:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (afzal)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Global konfiguratsiya katalogi qayerda?">
+  Bolt Linux va macOS da XDG Base Directory Specification ni (`~/.config/bolt/`) va Windows da `%APPDATA%\bolt\` ni kuzatib boradi. Sizning mashinangizdagi to'liq hal etilgan konfiguratsiyani chop etish uchun `bolt debug config` ni ishga tushiring.
+</Accordion>
+
+## Minimal konfiguratsiya misoli
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` maydoni JSON Schema ni qo'llab-quvvatlaydigan muharrirlarda IntelliSense va tekshirishni yoqadi. Bolt bu maydonni yo'q bo'lsa avtomatik yozadi.
+
+## Konfiguratsiya ma'lumotnomasi
+
+### `provider`
+
+Custom base URL, mintaqa sozlamalari yoki nomlangan hisob ma'lumotlari kabi provayderga xos opsiyalarni sozlang:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Agent asbob sifatida chaqirishi mumkin bo'lgan [Model Context Protocol](https://modelcontextprotocol.io) serverlarini ro'yxatdan o'tkazing:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+MCP serverlarini `bolt mcp add`, `bolt mcp list`, `bolt mcp auth` va `bolt mcp debug` bilan interaktiv boshqaring.
+
+### `instructions`
+
+Har bir sessiyaga kiritiladigan custom system ko'rsatmalarini qo'shing. Kodlash konvensiyalarini, uslub qo'llanmalarini yoki loyihaga xos qoidalarni majburiy qilish uchun foydali:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Bir nechta konfiguratsiya fayllaridan olingan ko'rsatmalar (global \+ loyiha) avtomatik ravishda birlashtiriladi va takrorlanishlar olib tashlanadi.
+
+### `plugin`
+
+Bolt plaginlarini yuklang. Plaginlar yangi asboblar, provayderlar, kontekst manbalari va hook'larni qo'shishi mumkin:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### `url` orqali remote konfiguratsiya
+
+Ishga tushirishda remote URL dan konfiguratsiyani olib keling. Markazlashgan jamoa konfiguratsiyasi uchun foydali:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## O'zgaruvchi almashtirish
+
+Konfiguratsiya qiymatlari `$VAR_NAME` yoki `${VAR_NAME}` sintaksisi yordamida environment variable'lariga havola qilishi mumkin. Almashtirish konfiguratsiya tahlil qilinishidan oldin yuklash vaqtida sodir bo'ladi:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="Konfiguratsiyada environment variable'larni qanday ishlatish mumkin?">
+  Har qanday environment variable'ga string konfiguratsiya qiymatida istalgan joyda `$VAR_NAME` yoki `${VAR_NAME}` bilan havola qiling. Bolt qiymatni yuklash vaqtida almashtiradi. Agar o'zgaruvchi o'rnatilmagan bo'lsa, `$VAR_NAME` literal satri ishlatiladi — Bolt sekin-asta ishlamay qolmaydi yoki yo'q almashtirishlar uchun xatolik qaytarmaydi.
+</Accordion>
+
+## Environment variable override'lari
+
+Bu environment variable'lar CI, konteynerlar va testlash uchun foydali bo'lgan konfiguratsiyani to'liq qayta yo'naltirish yoki override qilish imkonini beradi:
+
+| O'zgaruvchi | Tavsif |
+| --- | --- |
+| `BOLT_CONFIG` | Loyiha-mahalliy o'rniga yuklanadigan konfiguratsiya fayliga to'liq yo'l |
+| `BOLT_CONFIG_DIR` | Bolt konfiguratsiya fayllarini qidiradigan katalogni override qilish |
+| `BOLT_CONFIG_CONTENT` | Xom JSONC konfiguratsiya mazmunini satr sifatida bering — fayl kerak emas |
+
+`BOLT_CONFIG_CONTENT` ayniqsa fayl mount qilish noqulay bo'lgan konteynerlashtirilgan muhitlarda foydali:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Bir nechta manba faol bo'lganda qaysi konfiguratsiya ustuvorlikka ega?">
+  Bolt konfiguratsiyalarni quyidagi tartibda birlashtiradi (keyingi yozuvlar g'olib bo'ladi):
+
+  1. Global konfiguratsiya fayli (OS config dir dagi `bolt.jsonc` / `bolt.json`)
+  2. Global konfiguratsiyadagi `url` yozuvlaridan olingan remote konfiguratsiyalar
+  3. Loyiha darajasidagi konfiguratsiya fayllari (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. `BOLT_CONFIG` fayli (agar o'rnatilgan bo'lsa)
+  5. `BOLT_CONFIG_CONTENT` (agar o'rnatilgan bo'lsa)
+
+  `instructions` kabi massiv maydonlari almashtirilishdan ko'ra manbalar bo'ylab birlashtiriladi. Obyekt maydonlari nizolarda keyingi qiymatlar g'olib bo'lish bilan chuqur birlashtiriladi.
+</Accordion>

@@ -1,0 +1,191 @@
+---
+title: "Sezení — trvalá konverzační historie v Boltu"
+sidebarTitle: "Sezení"
+description: "Sezení jsou jednotkou trvalé práce v Boltu: každé ukládá kompletní konverzaci do lokálního SQLite, takže se můžeš kdykoli odpojit, obnovit, rozvětvit, sdílet a exportovat."
+---
+
+**Sezení** je základní pracovní jednotkou Boltu. Každý prompt, který pošleš, každý soubor, který agent přečte nebo upraví, a každé volání nástroje modelem se trvale zaznamenává do historie tohoto sezení. Protože sezení žijí v lokální SQLite databázi, přežívají restarty procesu, lze je kdykoli vypsat a dotazovat a nikdy neopustí tvůj stroj, pokud je výslovně nesdílíš nebo neexportuješ.
+
+<Note>
+  Všechna data sezení jsou uložena lokálně v SQLite databázi na tvém vlastním stroji. Nic se neposílá na externí servery, pokud nezapneš sdílení. Přesný soubor databáze zjistíš pomocí `bolt db path`.
+</Note>
+
+## Životní cyklus sezení
+
+Sezení začíná v okamžiku, kdy pošleš první prompt, a končí, až když ho smažeš. Mezi těmito dvěma body se můžeš volně odpojit, obnovit, větvit nebo ho předat.
+
+<Steps>
+  <Step title="Vytvoření nebo pokračování sezení">
+    Spusť TUI pro interaktivní zahájení nového sezení, nebo předej prompt do `bolt run` a vytvoř ho neinteraktivně:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Odpojení a návrat později">
+    Zavři TUI kdykoliv — sezení je uloženo automaticky. Své nejnovější sezení obnovíš pomocí `--continue`, nebo cílíš na konkrétní sezení podle ID přes `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Rozvětvení před experimentováním">
+    Použij `--fork` k větvení z aktuální historie sezení před vyzkoušením rizikové změny. Fork je nezávislé sezení, které originál neovlivní:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Sdílení a spolupráce">
+    Vygeneruj sdílecí URL pomocí `--share`. Kdokoli s odkazem si může přepis sezení prohlédnout v prohlížeči:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Příkazy pro správu sezení
+
+### Výpis sezení
+
+```bash
+bolt session list
+```
+
+Vypíše formátovanou tabulku všech sezení s jejich ID, názvem a časem poslední aktualizace. Přidej `--format json` pro strojově čitelný výstup, nebo `-n <N>` pro omezení na posledních N sezení:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Smazání sezení
+
+```bash
+bolt session delete <sessionID>
+```
+
+Trvale odstraní sezení a všechny jeho zprávy z lokální databáze.
+
+## Přepínače `run` pro ovládání sezení
+
+Tyto přepínače jsou dostupné v `bolt run`:
+
+| Přepínač | Alias | Popis |
+|------|-------|-------------|
+| `--continue` | `-c` | Pokračovat v nejnovějším sezení |
+| `--session <id>` | `-s` | Pokračovat v konkrétním sezení podle ID |
+| `--fork` | | Rozvětvit sezení před pokračováním (vyžaduje `--continue` nebo `--session`) |
+| `--share` | | Vygenerovat sdílecí URL pro sezení |
+| `--title <title>` | | Nastavit nebo přepsat název sezení |
+
+## Export sezení
+
+Exportuj kompletní přepis sezení jako JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+Přepínač `--sanitize` nahradí cesty k souborům, obsah kódu, vstupy a výstupy nástrojů a další potenciálně citlivá pole zástupci `[redacted:kind:id]` — hodí se pro sdílení přepisů s kolegy nebo zakládání bug reportů.
+
+## Import sezení
+
+Importuj sezení z lokálního JSON souboru nebo přímo ze sdílecí URL:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Importovaná sezení se objeví v tvém lokálním seznamu sezení a jsou plně obnovitelná.
+
+## Dotazování databáze sezení
+
+Bolt vystavuje podkladovou SQLite databázi přímo pro pokročilé uživatele.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Výchozím formátem výstupu jsou hodnoty oddělené tabulátory; přidej `--format json` pro JSON výstup.
+
+## Statistiky spotřeby tokenů a nákladů
+
+`bolt stats` agreguje data o spotřebě tokenů a nákladech napříč všemi tvými sezeními:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Výstup obsahuje celkový počet sezení, zpráv, vstupní/výstupní/reasoning/cache tokeny, celkové náklady, průměrné náklady za den, průměrné a mediánové tokeny na sezení a rozpis využití nástrojů. Předej `--models` pro zobrazení rozpisu zpráv, tokenů a nákladů podle modelu.
+
+## Pracovní postup fork a share
+
+Zde je kompletní příklad rozvětvení sezení a sdílení výsledku:
+
+<Steps>
+  <Step title="Zahájení práce v novém sezení">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Rozvětvení před rizikovým dalším krokem">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    ID rozvětveného sezení se vypíše do konzole. Původní sezení zůstane nedotčené.
+  </Step>
+  <Step title="Sdílení forku k revizi">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Jakmile sezení přejde do klidu, vypíše se sdílecí URL.
+  </Step>
+  <Step title="Import na jiném stroji">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

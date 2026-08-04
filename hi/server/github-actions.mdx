@@ -1,0 +1,179 @@
+---
+title: "GitHub integration: Actions, PRs, और AI review"
+sidebarTitle: "GitHub Actions"
+description: "GitHub Actions के अंदर Bolt चलाएँ, PRs को स्थानीय रूप से checkout करें, AI commit messages जनरेट करें, और AI-संचालित कोड समीक्षा और exit codes के साथ merges को गेट करें।"
+url: "server/github-actions"
+---
+
+Bolt चार कमांड शिप करता है जो आपके दैनिक Git वर्कफ़्लो को AI से जोड़ते हैं: एक GitHub Actions agent जिसे आप एक ही कमांड से इंस्टॉल कर सकते हैं, pull requests को checkout करने के लिए एक शॉर्टकट, एक AI commit-message जनरेटर, और मशीन-पठनीय exit codes के साथ एक AI कोड reviewer। साथ में, वे आपको Bolt को विकास के हर चरण में लाने देते हैं — स्थानीय कोडिंग, PR समीक्षा, और continuous integration।
+
+---
+
+## `bolt github`
+
+GitHub Actions agent प्रबंधित करें जो CI events पर Bolt चलाता है।
+
+### `bolt github install`
+
+वर्तमान repository पर GitHub Actions workflow इंस्टॉल करें। यह workflow YAML को `.github/workflows/` में लिखता है ताकि Bolt issue comments, नए pull requests, या आपके द्वारा कॉन्फ़िगर किए गए अन्य events पर स्वचालित रूप से शुरू हो।
+
+```bash
+bolt github install
+```
+
+इसे किसी git repository के root से चलाएँ। आपको `.github/workflows/` तक write access की आवश्यकता होगी।
+
+### `bolt github run`
+
+GitHub agent को स्थानीय रूप से या CI step के अंदर चलाएँ, एक विशिष्ट GitHub event payload को replay करते हुए।
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| Flag | विवरण |
+|------|-------------|
+| `--event <event>` | GitHub event नाम या JSON event payload का path |
+| `--token <pat>` | GitHub personal access token (`github_pat_…`) comments post करने और संदर्भ fetch करने के लिए |
+
+---
+
+## GitHub Actions agent सेट अप करें
+
+<Steps>
+  <Step title="Workflow इंस्टॉल करें">
+    अपने repository के root से:
+
+    ```bash
+    bolt github install
+    ```
+
+    Bolt एक GitHub Actions workflow फ़ाइल `.github/workflows/` में लिखता है। फ़ाइल को commit और push करें।
+  </Step>
+
+  <Step title="अपनी API key को एक secret के रूप में जोड़ें">
+    अपनी repository settings में, अपने पसंदीदा LLM provider के लिए API key को एक repository secret के रूप में जोड़ें (उदाहरण के लिए, `ANTHROPIC_API_KEY`)। Workflow इसे स्वचालित रूप से उठा लेगा।
+  </Step>
+
+  <Step title="Agent को ट्रिगर करें">
+    किसी भी issue या pull request पर `/bolt <your request>` comment करें। Workflow फ़ायर होता है, Bolt event payload पढ़ता है, और परिणाम के साथ एक reply post करता है।
+  </Step>
+
+  <Step title="Debugging के लिए स्थानीय रूप से चलाएँ">
+    पिछले workflow run से एक live event payload replay करें:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+एक GitHub pull request को स्थानीय branch में checkout करें और उस branch में Bolt लॉन्च करें — जहाँ PR author ने छोड़ा था वहाँ से समीक्षा, debug, या काम जारी रखने के लिए तैयार।
+
+```bash
+bolt pr 42
+```
+
+Bolt PR fetch करने के लिए `gh` CLI का उपयोग करता है, `pr/<number>` नाम की एक branch बनाता है, और upstream tracking ref को wire करता है। Cross-repository (fork) PRs के लिए, यह स्वचालित रूप से fork को remote के रूप में जोड़ता है। यदि PR विवरण में एक साझा Bolt session URL (`opncd.ai/s/…`) है, तो session को इम्पोर्ट किया जाता है ताकि आप author की बातचीत जारी रख सकें।
+
+> [GitHub CLI (`gh`)](https://cli.github.com/) को इंस्टॉल और authenticated होने की आवश्यकता है।
+
+---
+
+## `bolt commit`
+
+अपने staged (या सभी tracked) बदलावों से एक commit message जनरेट करें और एक step में commit करें।
+
+```bash
+bolt commit
+```
+
+Bolt आपके बदलावों को diff करता है, शैली संदर्भ के लिए हाल के commit विषयों के साथ diff को `commit` agent को feed करता है, और परिणाम के साथ `git commit -m <message>` चलाता है।
+
+### Flags
+
+| Flag | Alias | विवरण |
+|------|-------|-------------|
+| `--all` | `-a` | सभी tracked बदलावों को commit करें, केवल staged नहीं (`git commit -a` के समतुल्य) |
+| `--dry-run` | | commit किए बिना जनरेट किया गया message प्रिंट करें |
+| `--model <provider/model>` | `-m` | message जनरेट करने के लिए उपयोग किए गए मॉडल को ओवरराइड करें |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  commit होने से पहले जनरेट किए गए message को preview करने के लिए `bolt commit --dry-run` का उपयोग करें। यदि आप इसे edit करना चाहते हैं, तो आउटपुट कॉपी करें और अपने adjusted wording के साथ `git commit -m "…"` चलाएँ।
+</Tip>
+
+---
+
+## `bolt review`
+
+एक diff के विरुद्ध `code-review` agent चलाएँ और मशीन-पठनीय verdict के साथ बाहर निकलें। समीक्षा की अंतिम पंक्ति हमेशा या तो `Verdict: PASS` या `Verdict: FAIL` होती है, जो `bolt review` को CI pipelines के लिए drop-in-ready बनाती है।
+
+```bash
+bolt review
+```
+
+डिफ़ॉल्ट रूप से, `bolt review` `HEAD` को working tree के विरुद्ध diff करता है। diff को स्कोप करने के लिए नीचे दिए गए flags का उपयोग करें।
+
+### Flags
+
+| Flag | Alias | विवरण |
+|------|-------|-------------|
+| `--staged` | | केवल staged बदलावों की समीक्षा करें |
+| `--branch <name>` | | नामित branch के साथ merge base से बदलावों की समीक्षा करें (repository के डिफ़ॉल्ट branch पर डिफ़ॉल्ट होता है) |
+| `--model <provider/model>` | `-m` | समीक्षा के लिए उपयोग करने के लिए मॉडल |
+
+### Exit codes
+
+| Code | अर्थ |
+|------|---------|
+| `0` | `Verdict: PASS` — कोई critical या major मुद्दे नहीं |
+| `1` | `Verdict: FAIL` — एक या अधिक critical या major मुद्दे मिले |
+| `2` | Response से Verdict निर्धारित नहीं किया जा सका |
+
+### GitHub Actions workflow में उपयोग
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+एक non-zero exit code check को fail कर देता है, मुद्दों को संबोधित करने तक merge को block करता है।
+
+<Tip>
+  जब मुद्दे अभी भी बदलने में आसान हैं, तब उन्हें पकड़ने के लिए commit करने से पहले `bolt review --staged` चलाएँ — इससे पहले कि वे कभी pull request तक पहुँचें।
+</Tip>

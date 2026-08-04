@@ -1,0 +1,192 @@
+---
+title: "הפניית קובץ תצורה של Bolt"
+sidebarTitle: "סכמת תצורה"
+description: "הפניה מלאה לסכמת קובץ התצורה של Bolt — מיקומים, כל השדות ברמה העליונה, סוגי שרתי MCP, דריסות ספקים ודוגמה שלמה."
+---
+
+Bolt משתמש בקובץ JSON עם הערות (`.jsonc`) עבור תצורת פרויקט וגלובלית. הסכמה מגורסאת ומפורסמת ב-`https://opencode.ai/config.json`, שעורכים יכולים להשתמש בו כדי לספק השלמה אוטומטית ואימות.
+
+## מיקומי קובץ תצורה
+
+Bolt ממזג תצורה משני מיקומים. הגדרות לכל פרויקט גוברות על הגדרות גלובליות כאשר אותו מפתח מופיע בשניהם.
+
+| היקף | נתיב |
+|---|---|
+| **לכל פרויקט** | `.bolt/bolt.jsonc` (או `.bolt/bolt.json`) בשורש הפרויקט שלך |
+| **גלובלי** | `bolt.jsonc` (או `bolt.json`) בספריית התצורה של מערכת ההפעלה שלך |
+
+ספריית התצורה של מערכת ההפעלה היא:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+Bolt קורא גם קבצי `opencode.jsonc` / `opencode.json` מדור קודם באותם מיקומים. פרויקטים חדשים צריכים להשתמש במוסכמה `bolt.jsonc`, שגוברת על שמות הקבצים מהדור הקודם.
+</Note>
+
+Bolt יוצר קובץ תצורה גלובלי מינימלי עם שורת `$schema` בהרצה הראשונה, ויוצר `.bolt/bolt.jsonc` בשורש הפרויקט שלך בפעם הראשונה שאתה פותח את ה-TUI באותה ספרייה.
+
+## שדות סכמה
+
+<ParamField body="$schema" type="string">
+  URL שמצביע על סכמת JSON עבור קובץ תצורה זה. מאפשר השלמה אוטומטית ואימות inline בעורכים שתומכים ב-JSON Schema (VS Code, Zed, IDEs של JetBrains וכו').
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  מודל ברירת מחדל לכל הסשנים, מבוטא כ-`provider/model`. ניתן לדרוס זאת לכל סשן עם `bolt run --model` או בבוחר המודל של ה-TUI.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  הרץ `bolt models` כדי לראות את כל מחרוזות ה-`provider/model` הזמינות עבור הספקים המוגדרים שלך.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  דריסות אישורים והגדרות ספציפיות לספק. כל מפתח הוא מזהה ספק (למשל `anthropic`, `openai`, `google`). השימוש הנפוץ ביותר הוא להגדיר מפתח API באמצעות הפניה למשתנה סביבה כך שהמפתח לא יאוחסן ב-plaintext.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  ערכים שמתחילים ב-`${` ומסתיימים ב-`}` מטופלים כהפניות למשתני סביבה ומורחבים בזמן ריצה.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  תצורות שרתי MCP, ממופתחות בשם שאתה בוחר. Bolt תומך בשני סוגי שרתים:
+
+  **שרת מרוחק** — מתחבר על גבי HTTP/SSE, עם OAuth אופציונלי:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | שדה | סוג | תיאור |
+  |---|---|---|
+  | `type` | `"remote"` | מזהה זה כשרת HTTP מרוחק |
+  | `url` | string | URL מלא של נקודת הקצה של MCP |
+  | `oauth` | object \| `false` | אובייקט תצורת OAuth (עם `clientId`, `clientSecret`, `scope`, `redirectUri` אופציונליים). הגדר ל-`false` כדי להשבית זיהוי OAuth אוטומטי. |
+  | `headers` | object | כותרות HTTP לשליחה עם כל בקשה (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | אפשר או השבת שרת זה בהפעלה |
+  | `timeout` | number | timeout לבקשה במילישניות (ברירת מחדל: 5000) |
+
+  **שרת מקומי** — מפעיל תהליך משנה על גבי stdio:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | שדה | סוג | תיאור |
+  |---|---|---|
+  | `type` | `"local"` | מזהה זה כשרת stdio מקומי |
+  | `command` | string[] | פקודה וכל הארגומנטים להפעלה |
+  | `cwd` | string | ספריית עבודה עבור תהליך השרת (נתיבים יחסיים מפוענחים מספריית סביבת העבודה) |
+  | `environment` | object | משתני סביבה נוספים להעברה לתהליך המשנה |
+  | `enabled` | boolean | אפשר או השבת שרת זה בהפעלה |
+  | `timeout` | number | timeout לבקשה במילישניות (ברירת מחדל: 5000) |
+
+  השתמש ב-`bolt mcp add` לאשף אינטראקטיבי, או ב-`bolt mcp list` כדי לבדוק סטטוס שרת נוכחי.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  הוראות מערכת נוספות שמצורפות לכל סשן בפרויקט זה או גלובלית. הוראות ממספר קבצי תצורה ממוזגות (ומוסרות מכפילויות). השתמש בזה כדי להזריק מוסכמות ספציפיות לפרויקט, כללי סגנון או אילוצים שכל סוכן צריך לעקוב אחריהם.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  מפרטי תוסף לטעינה. כל רשומה היא שם חבילת npm, נתיב קובץ מקומי או URL. תוספים יכולים להרחיב את ה-TUI, להוסיף פקודות סלאש או לרשום ספקים נוספים. השתמש ב-`bolt plugin install <spec>` כדי להתקין תוסף ולהוסיף אותו למערך זה אוטומטית.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## דוגמה שלמה
+
+הקובץ `.bolt/bolt.jsonc` הבא מציג תצורת פרויקט מציאותית:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+הרץ `bolt debug config` כדי לראות את התצורה המפורשת המלאה לאחר מיזוג כל הקבצים. זו הדרך המהירה ביותר לוודא שהתצורות שלך לכל פרויקט וגלובלית ממוזגות נכון.
+</Tip>

@@ -1,0 +1,58 @@
+---
+title: "Tools: Bolt Agents वास्तव में क्या कर सकते हैं"
+sidebarTitle: "Tools"
+description: "Bolt agents को उपलब्ध बिल्ट-इन tools की पूरी सूची, साथ ही plugins, MCP servers, या .opencode/tool डायरेक्टरी के माध्यम से अपने खुद के tools जोड़ने के तरीक़े।"
+---
+
+Bolt में agents tools को कॉल करके काम करते हैं। हर क्रिया जो आप TUI में देखते हैं (फ़ाइल पढ़ना, tests चलाना, वेब खोजना) वह मॉडल द्वारा एक tool चुनना और Bolt द्वारा उसे execute करना है। प्रत्येक agent का एक घोषित एक्सेस लेवल होता है जो निर्धारित करता है कि वह आपसे पहले पूछे बिना कौन-से tools को कॉल कर सकता है (देखें [Permissions](/concepts/permissions))।
+
+## बिल्ट-इन tools
+
+| Tool | यह क्या करता है |
+| --- | --- |
+| `read` | डिस्क से फ़ाइल पढ़ता है। |
+| `write` | एक नई फ़ाइल बनाता है या मौजूदा फ़ाइल को ओवरराइट करता है। |
+| `edit` | फ़ाइल पर लक्षित edit (find/replace) लागू करता है। |
+| `apply_patch` | एक या अधिक फ़ाइलों पर unified-diff स्टाइल patch लागू करता है। |
+| `glob` | Glob pattern से मेल खाने वाली फ़ाइलों की सूची बनाता है। |
+| `grep` | Regex/text से फ़ाइल कंटेंट खोजता है। |
+| `bash` | Shell कमांड चलाता है। |
+| `task` | Subagent को उप-कार्य सौंपता है (`@general`, `@explore`, या कस्टम subagent)। |
+| `todowrite` | बहु-चरण कार्य के लिए agent की structured task सूची बनाए रखता है। |
+| `webfetch` | URL fetch करता है और उसकी सामग्री लौटाता है। |
+| `websearch` | वेब खोजता है। |
+| `skill` | एक नामित skill को इनवोक करता है (देखें [Skills](/extending/skills))। |
+| `memory_save` | तथ्य को [project memory](/concepts/project-memory) में persist करता है। |
+| `memory_recall` | पहले सहेजी गई memory देखता है। |
+| `question` | आपसे स्पष्टीकरण प्रश्न पूछता है और उत्तर की प्रतीक्षा करता है। |
+| `bash_background` | Shell कमांड को प्रबंधित पृष्ठभूमि प्रोसेस के रूप में शुरू करता है (dev servers, watchers, लंबे builds)। |
+| `process_output` | पृष्ठभूमि प्रोसेस के लिए संचित आउटपुट और स्टेटस पढ़ता है, वैकल्पिक रूप से समाप्त होने की प्रतीक्षा करता है। |
+| `list_processes` | पृष्ठभूमि प्रोसेस को उनके id, स्टेटस और कमांड के साथ सूचीबद्ध करता है। |
+| `kill_process` | id से पृष्ठभूमि प्रोसेस (और उसके प्रोसेस tree) को समाप्त करता है। |
+| `test_run` | प्रोजेक्ट के tests का पता लगाता है और चलाता है, structured pass/fail परिणाम और विफलता विवरण लौटाता है। |
+
+### प्रायोगिक
+
+| Tool | यह क्या करता है |
+| --- | --- |
+| `lsp` | परिभाषाओं, संदर्भों और diagnostics के लिए language server से क्वेरी करता है। |
+| `execute` | अलगे code-mode sandbox में कोड चलाता है। |
+| `plan` | बदलाव करने से पहले एक structured plan तैयार करता है। |
+
+प्रायोगिक tools रिलीज़ के बीच बदल या नाम बदल सकते हैं।
+
+## Tool सेट का विस्तार
+
+बिल्ट-इन के अलावा, Bolt तीन स्रोतों से tools कॉल कर सकता है:
+
+- प्रोजेक्ट रूट पर `.opencode/tool/` (या `.opencode/tools/`) में **कस्टम tools**। देखें [Custom Tools](/extending/custom-tools)।
+- किसी भी इंस्टॉल किए गए [plugin](/extending/plugins) से **plugin tools**।
+- प्रोजेक्ट के लिए कॉन्फ़िगर किए गए किसी भी [MCP server](/extending/mcp-servers) से **MCP tools**।
+
+तीनों agent के दृष्टिकोण से समान महसूस होते हैं: वे tool सूची में दिखाई देते हैं, agent के एक्सेस लेवल का सम्मान करते हैं, और TUI के tool-कॉल आउटपुट में दिखाई देते हैं।
+
+## संबंधित
+
+- [Agents](/concepts/agents) — कौन-से agents कौन-से tools कॉल कर सकते हैं।
+- [Permissions](/concepts/permissions) — प्रति-agent tool एक्सेस को कैसे गेट किया जाता है।
+- [MCP Servers](/extending/mcp-servers) — वास्तविक-दुनिया के tools जोड़ने का सबसे सामान्य तरीक़ा।

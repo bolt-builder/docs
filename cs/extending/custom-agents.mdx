@@ -1,0 +1,68 @@
+---
+title: "Vlastní agenti v Boltu"
+sidebarTitle: "Vlastní agenti"
+description: "Definuj své vlastní agenty Boltu jako Markdown soubory — vyber model, nastav úroveň přístupu, omez nástroje a přidej doménově specifické instrukce."
+---
+
+Kromě deseti vestavěných agentů si můžeš definovat i vlastní. Vlastní agenti jsou Markdown soubory s blokem frontmatteru, který popisuje model agenta, úroveň přístupu a dostupné nástroje, plus tělem, které slouží jako jeho systémový prompt.
+
+## Vytvoření agenta
+
+Nejrychlejší cestou je vestavěný generátor, který položí několik otázek a soubor za tebe napíše:
+
+```bash
+bolt agent create
+```
+
+Agenti žijí pod `.opencode/agent/` v projektu (nebo v tvém globálním konfiguračním adresáři pro osobní agenty). Každý agent je jeden `.md` soubor, jehož název se stává jménem agenta.
+
+## Anatomie souboru agenta
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+Běžná pole frontmatteru:
+
+| Pole | Účel |
+| --- | --- |
+| `name` | Název agenta použitý s `--agent`. |
+| `description` | Jednořádkový souhrn zobrazovaný ve výpisech. |
+| `model` | Výchozí model ve formátu `provider/model`. |
+| `access` | `full`, `edit` nebo `read` (viz [Oprávnění](/concepts/permissions)). |
+| `tools` | Volitelný allow-list omezující, které [nástroje](/concepts/tools) může agent volat. |
+
+## Použití vlastního agenta
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+V TUI stiskni `Tab` pro cyklické procházení agentů; vlastní agenti se objeví vedle vestavěných.
+
+## Subagenti
+
+Agenti mohou delegovat na subagenty přes nástroj `task`. Bolt obsahuje `@general` a `@explore` a libovolný vlastní agent, jehož soubor žije pod `.opencode/agent/`, může být také vyvolán jako subagent podle jména.
+
+## Související
+
+- [Agenti](/concepts/agents) — sestava vestavěných agentů.
+- [Nástroje](/concepts/tools) — co můžeš přidat do `tools:`.
+- [Vlastní nástroje](/extending/custom-tools) — sestav nástroj, který bude agent volat.

@@ -1,0 +1,31 @@
+---
+title: "Comenzi slash Bolt TUI"
+sidebarTitle: "Comenzi slash"
+description: "Comenzile slash pe care le poți rula în Bolt TUI — /memory, /plan, /todos, /btw — și cum schimbă comportamentul sesiunii curente."
+---
+
+Comenzile slash se scriu în promptul TUI și schimbă modul în care se comportă sesiunea curentă. Nu trimit nimic modelului; rulează local pe Bolt.
+
+## Referință
+
+| Comandă | Ce face |
+| --- | --- |
+| `/memory` | Afișează starea memoriei proiectului pentru această sesiune. |
+| \`/memory use on | off\` | Dacă această sesiune citește din [memoria proiectului](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Dacă această sesiune scrie înapoi în memoria proiectului la închiderea turei. |
+| `/plan` | Comută sesiunea curentă în modul de planificare (doar în citire, produce un plan). |
+| `/todos` | Afișează lista structurată curentă de sarcini a agentului. |
+| `/btw` | Injectează o notă în afara benzii („apropo...”) pe care agentul o va vedea la următoarea tură fără a declanșa un răspuns complet. |
+
+<Tip>
+  Comenzile slash sunt limitate la sesiune. Pentru a face o preferință durabilă, setează-o în `.bolt/bolt.jsonc`. Consultă [Configurație](/concepts/configuration).
+</Tip>
+
+## Adăugarea propriilor comenzi
+
+Comenzile slash personalizate pot fi contribuite de [plugin-uri](/extending/plugins) și de fișiere din `.opencode/command/`. Fiecare comandă este un fișier Markdown al cărui frontmatter descrie declanșatorul și comportamentul.
+
+## Legături conexe
+
+- [Combinații de taste](/tui/keybinds) — scurtături de tastatură pentru TUI.
+- [Memoria proiectului](/concepts/project-memory) — ce comută `/memory`.

@@ -1,0 +1,61 @@
+---
+title: "Tham chiếu biến môi trường Bolt"
+sidebarTitle: "Biến môi trường"
+description: "Mọi biến môi trường được Bolt nhận biết, bao gồm điều khiển log, xác thực server, ghi đè cấu hình và quy ước API key của provider."
+---
+
+Biến môi trường cho phép bạn cấu hình Bolt mà không cần đụng vào bất kỳ tệp cấu hình nào — hữu ích trong pipeline CI, container Docker và môi trường chia sẻ nơi bạn không thể commit thông tin xác thực. Chúng được đọc một lần khi khởi động và không thể thay đổi khi Bolt đang chạy.
+
+## Tham chiếu
+
+| Biến | Mô tả |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Đặt mức độ chi tiết của log. Giá trị được chấp nhận: `DEBUG`, `INFO`, `WARN`, `ERROR`. Tương đương với cờ `--log-level`. |
+| `BOLT_PRINT_LOGS` | Đặt thành bất kỳ giá trị nào không rỗng để in đầu ra log ra stderr. Tương đương với `--print-logs`. |
+| `BOLT_PURE` | Đặt thành bất kỳ giá trị nào không rỗng để tắt mọi plugin bên ngoài. Tương đương với `--pure`. |
+| `BOLT_SERVER_USERNAME` | Tên người dùng basic auth cho `bolt serve` và `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Mật khẩu basic auth cho `bolt serve` và `bolt web`. Mọi client kết nối phải cung cấp mật khẩu này. |
+| `BOLT_CONFIG` | Ghi đè đường dẫn tới tệp cấu hình mà Bolt nạp. Bolt sẽ không tìm ở các vị trí mặc định khi cái này được đặt. |
+| `BOLT_CONFIG_DIR` | Ghi đè thư mục cấu hình. Bolt sẽ tìm các tệp cấu hình trong thư mục này thay vì thư mục cấu hình OS mặc định. |
+| `BOLT_CONFIG_CONTENT` | Cung cấp toàn bộ cấu hình dưới dạng chuỗi JSON nội tuyến. Hữu ích trong CI nơi việc ghi tệp không thực tế. Có ưu tiên cao nhất trong các nguồn cấu hình. |
+| `BOLT_GIT_BASH_PATH` | Đường dẫn tới thư mục `bin` của Git Bash trên Windows, dùng để định vị các tiện ích Unix như `less`. |
+
+## API key của provider
+
+Bolt tự động khám phá thông tin xác thực provider từ biến môi trường — không cần bước `bolt providers login`. Mỗi provider tìm một biến môi trường cụ thể, và Bolt sẽ dùng nó nếu biến được đặt, bất kể những gì được lưu trong `auth.json`.
+
+<Tip>
+  Đặt API key của provider trong profile shell của bạn (ví dụ `~/.zshrc`, `~/.bashrc`) hoặc trong tệp `.env` được shell nạp. Bạn cũng có thể tham chiếu chúng từ tệp cấu hình bằng cú pháp `${VAR_NAME}` trong trường `provider.*.apiKey` để key không bao giờ được lưu ở dạng văn bản thô.
+</Tip>
+
+Các biến provider phổ biến:
+
+| Biến | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, dòng o) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Chạy `bolt models --verbose` để xem biến môi trường mà mỗi provider đã cấu hình mong đợi.
+
+## Ví dụ sử dụng
+
+```bash
+# Bật debug logging cho một lần chạy
+BOLT_LOG_LEVEL=DEBUG bolt run "vì sao test auth đang thất bại?"
+
+# Chạy không có plugin nào để loại trừ can thiệp plugin
+BOLT_PURE=1 bolt
+
+# Khởi chạy server công khai với basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Cung cấp cấu hình nội tuyến (hữu ích trong CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "sinh changelog cho bản phát hành này"
+```

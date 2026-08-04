@@ -1,0 +1,32 @@
+---
+title: "Statistiques et coût (bolt stats)"
+sidebarTitle: "Statistiques et coût"
+description: "bolt stats agrège l'utilisation de jetons et le coût sur vos sessions pour que vous puissiez voir où vont vos dépenses et ajuster les modèles ou les agents en conséquence."
+---
+
+`bolt stats` agrège le compte de jetons et le coût dans la base de données locale des sessions. Comme chaque appel d'outil est enregistré (voir [Base de données locale](/reference/local-database)), les chiffres sont exacts pour les appels LLM que Bolt a pilotés.
+
+## Utilisation de base
+
+```bash
+bolt stats                       # summary for the current project
+bolt stats --days 7              # last seven days
+bolt stats --days 7 --models     # break down by model
+```
+
+## Ce qu'il affiche
+
+- Total des jetons d'entrée, de sortie et de cache.
+- Coût estimé par fournisseur (à partir des tables de prix des fournisseurs au moment de l'exécution).
+- Ventilations par modèle, par agent et par jour selon les indicateurs.
+
+## Réduire le coût
+
+- Utilisez `--variant minimal` ou `--variant low` sur les modèles à raisonnement intense. Voir [Fournisseurs et modèles](/concepts/providers-and-models).
+- Privilégiez l'agent `ask` ou `plan` pour l'exploration; ils sont en lecture seule et évitent les boucles à outils lourds.
+- Passez à un modèle plus petit avec `bolt models` pour les tâches qui n'exigent pas des capacités frontières.
+
+## Voir aussi
+
+- [Fournisseurs et modèles](/concepts/providers-and-models) — choisir et ajuster les modèles que `stats` mesure.
+- [Dépannage](/reference/troubleshooting) — que faire face à une facture surprise.

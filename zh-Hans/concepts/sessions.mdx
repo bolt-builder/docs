@@ -1,0 +1,191 @@
+---
+title: "会话——Bolt 中的持久对话历史"
+sidebarTitle: "会话"
+description: "会话是 Bolt 的持久工作单元：每个会话在本地 SQLite 中存储完整的对话，因此你可以随时分离、恢复、分叉、分享和导出。"
+---
+
+**会话**是 Bolt 的主要工作单元。你发送的每个提示、代理读取或编辑的每个文件，以及模型进行的每次工具调用,都会被持久地记录在该会话的历史中。因为会话存储在本地 SQLite 数据库中,它们在进程重启后仍然存在,可以随时列出和查询,除非你显式地共享或导出,否则永远不会离开你的机器。
+
+<Note>
+  所有会话数据本地存储在你自己机器上的 SQLite 数据库中。除非你启用共享,否则不会向外部服务器发送任何内容。使用 `bolt db path` 查找确切的数据库文件。
+</Note>
+
+## 会话生命周期
+
+会话从你发送第一个提示的那一刻开始,直到你删除它才结束。在这两个点之间,你可以自由地分离、恢复、分支或移交它。
+
+<Steps>
+  <Step title="创建或继续会话">
+    启动 TUI 以交互方式开始新会话,或向 `bolt run` 传递提示以非交互方式创建一个：
+
+    ```bash
+    # 在 TUI 中新建会话
+    bolt
+
+    # 非交互式新建会话
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="分离并稍后回来">
+    随时关闭 TUI — 会话会自动持久化。使用 `--continue` 恢复你最近的会话,或使用 `--session` 通过 ID 定位特定会话：
+
+    ```bash
+    # 恢复最近的会话
+    bolt run --continue "now write the tests too"
+
+    # 恢复特定会话
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="在实验之前分叉">
+    在尝试有风险的更改之前,使用 `--fork` 从当前会话历史分支。分叉是一个独立的会话,不会影响原始会话：
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="分享和协作">
+    使用 `--share` 生成分享 URL。任何有链接的人都可以在浏览器中查看会话记录：
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## 会话管理命令
+
+### 列出会话
+
+```bash
+bolt session list
+```
+
+输出所有会话的格式化表格，包含它们的 ID、标题和最后更新时间。添加 `--format json` 以获取机器可读输出,或 `-n <N>` 以限制为最近 N 个会话：
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### 删除会话
+
+```bash
+bolt session delete <sessionID>
+```
+
+从本地数据库中永久删除会话及其所有消息。
+
+## 用于会话控制的运行标志
+
+这些标志可在 `bolt run` 上使用：
+
+| 标志 | 别名 | 描述 |
+|------|-------|-------------|
+| `--continue` | `-c` | 继续最近的会话 |
+| `--session <id>` | `-s` | 通过 ID 继续特定会话 |
+| `--fork` | | 在继续之前分叉会话（需要 `--continue` 或 `--session`） |
+| `--share` | | 为会话生成分享 URL |
+| `--title <title>` | | 设置或覆盖会话标题 |
+
+## 导出会话
+
+以 JSON 形式导出会话的完整记录：
+
+```bash
+# 导出最近的会话
+bolt export
+
+# 导出特定会话
+bolt export <sessionID>
+
+# 导出并对敏感数据进行脱敏
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` 标志将文件路径、代码内容、工具输入和输出，以及其他潜在敏感字段替换为 `[redacted:kind:id]` 占位符 — 对于与队友分享记录或提交 bug 报告很有用。
+
+## 导入会话
+
+从本地 JSON 文件或直接从分享 URL 导入会话：
+
+```bash
+# 从本地文件
+bolt import ./transcript.json
+
+# 从分享 URL
+bolt import https://opncd.ai/share/abc123
+```
+
+导入的会话会出现在你的本地会话列表中,并且完全可恢复。
+
+## 查询会话数据库
+
+Bolt 直接向高级用户公开底层 SQLite 数据库。
+
+```bash
+# 打印数据库文件路径
+bolt db path
+
+# 打开交互式 SQLite shell
+bolt db
+
+# 运行临时查询
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+输出格式默认为制表符分隔值；添加 `--format json` 以获取 JSON 输出。
+
+## Token 使用和成本统计
+
+`bolt stats` 聚合你所有会话的 token 使用和成本数据：
+
+```bash
+# 所有时间统计
+bolt stats
+
+# 最近 7 天
+bolt stats --days 7
+
+# 仅当前项目
+bolt stats --project ""
+
+# 显示按模型细分（前 5 个模型）
+bolt stats --models 5
+
+# 将工具使用表限制为前 10 个工具
+bolt stats --tools 10
+```
+
+输出包括总会话数、消息数、输入/输出/推理/缓存 tokens、总成本、每天平均成本、每个会话的平均和中位数 tokens，以及工具使用细分。传递 `--models` 以显示每个模型的消息、tokens 和成本的细分。
+
+## 分叉和分享工作流
+
+以下是分叉会话并分享结果的完整示例：
+
+<Steps>
+  <Step title="在新会话中开始工作">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="在有风险的下一步之前分叉">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    分叉后的会话 ID 会打印到控制台。原始会话不受影响。
+  </Step>
+  <Step title="分享分叉以供审查">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    一旦会话进入空闲状态,分享 URL 就会被打印出来。
+  </Step>
+  <Step title="在另一台机器上导入">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

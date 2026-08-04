@@ -1,0 +1,31 @@
+---
+title: "Comandos de barra de la TUI de Bolt"
+sidebarTitle: "Comandos de barra"
+description: "Los comandos de barra que puedes ejecutar dentro de la TUI de Bolt — /memory, /plan, /todos, /btw — y cómo cambian el comportamiento de la sesión actual."
+---
+
+Los comandos de barra se escriben en el prompt de la TUI y cambian cómo se comporta la sesión actual. No envían nada al modelo; se ejecutan localmente contra el propio Bolt.
+
+## Referencia
+
+| Comando | Qué hace |
+| --- | --- |
+| `/memory` | Muestra el estado de la memoria de proyecto para esta sesión. |
+| \`/memory use on | off\` | Si esta sesión lee de la [memoria de proyecto](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Si esta sesión escribe de vuelta en la memoria de proyecto cuando el turno se cierra. |
+| `/plan` | Cambia la sesión actual al modo de planificación (solo lectura, produce un plan). |
+| `/todos` | Muestra la lista estructurada actual de tareas del agente. |
+| `/btw` | Inyecta una nota fuera de banda ("por cierto...") que el agente verá en su próximo turno sin disparar una respuesta completa. |
+
+<Tip>
+  Los comandos de barra son de alcance de sesión. Para hacer una preferencia duradera, defínela en `.bolt/bolt.jsonc` en su lugar. Consulta [Configuración](/concepts/configuration).
+</Tip>
+
+## Añadir los tuyos propios
+
+Los comandos de barra personalizados pueden ser aportados por [plugins](/extending/plugins) y por archivos en `.opencode/command/`. Cada comando es un archivo Markdown cuyo frontmatter describe el disparador y el comportamiento.
+
+## Relacionado
+
+- [Atajos de teclado](/tui/keybinds) — atajos de teclado para la TUI.
+- [Memoria de proyecto](/concepts/project-memory) — qué alterna `/memory`.

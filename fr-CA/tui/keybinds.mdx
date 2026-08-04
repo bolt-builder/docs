@@ -1,0 +1,38 @@
+---
+title: "Raccourcis clavier du TUI Bolt"
+sidebarTitle: "Raccourcis clavier"
+description: "Les raccourcis essentiels du TUI Bolt : alterner d'agent avec Tab, mode mini, dictée vocale à appuyer pour parler, et tout ce que vous pouvez piloter au clavier."
+---
+
+Le TUI Bolt est conçu pour être piloté de bout en bout au clavier. Cette page liste les raccourcis auxquels vous aurez recours le plus souvent. Pour la liste exhaustive, exécutez `bolt` et ouvrez l'aide intégrée.
+
+## Essentiels
+
+| Touches | Action |
+| --- | --- |
+| `Tab` | Passe à l'agent suivant (`code`, `plan`, `ask`, ...). L'agent courant est affiché dans la barre d'état. |
+| `Shift+Tab` | Passe à l'agent précédent. |
+| `Enter` | Envoie le message courant. |
+| `Esc` | Annule le tour en cours. |
+| `Ctrl+C` | Interrompt l'appel d'outil courant. |
+| `Ctrl+D` | Se détache de la session (elle reste en cours d'exécution sur le serveur). |
+
+## Modes
+
+### Mode `--mini`
+
+Démarrez Bolt avec une mise en page compacte à pied de page divisé qui prend moins d'espace au terminal, parfait pour les panneaux divisés :
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Voix à appuyer pour parler
+
+Maintenez enfoncée la touche configurée pour la dictée afin de dicter une invite par reconnaissance vocale, puis relâchez pour envoyer. Configurez la touche et le fournisseur STT dans `.bolt/bolt.jsonc`.
+
+## Voir aussi
+
+- [Commandes slash](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` et compagnie.
+- [Sessions](/concepts/sessions) — se détacher, reprendre, embrancher et partager au clavier.

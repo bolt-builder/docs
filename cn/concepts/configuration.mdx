@@ -1,0 +1,193 @@
+---
+title: "配置 — bolt.jsonc 设置与全局覆盖"
+sidebarTitle: "配置"
+description: "Bolt 从项目和操作系统配置目录中分层读取 JSONC 配置文件。可设置提供商、MCP 服务器、指令、插件和环境覆盖。"
+---
+
+Bolt 采用分层配置系统：一个 **全局** 配置文件用于用户级默认值，一个 **按项目** 配置文件用于仓库特定的设置。两个文件都使用 JSONC 格式（带注释的 JSON），并且都会自动创建一个 `$schema` 指针，以启用编辑器自动补全。
+
+## 配置文件位置
+
+### 按项目配置
+
+首次在项目内运行时自动创建：
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+将这个文件提交到仓库中，可与团队其他成员共享提供商配置、MCP 服务器和自定义指令。敏感凭据绝对不应放在这里——请改用环境变量或全局配置。
+
+### 全局配置
+
+对你机器上的所有项目生效。Bolt 会在你的操作系统配置目录中查找第一个匹配的文件：
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (推荐)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="全局配置目录在哪里？">
+  在 Linux 和 macOS 上 Bolt 遵循 XDG Base Directory 规范（`~/.config/bolt/`），在 Windows 上使用 `%APPDATA%\bolt\`。运行 `bolt debug config` 可打印你机器上完整解析后的配置。
+</Accordion>
+
+## 最小配置示例
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` 字段可在支持 JSON Schema 的编辑器中启用 IntelliSense 和校验。如果该字段缺失，Bolt 会自动写入。
+
+## 配置参考
+
+### `provider`
+
+配置提供商相关选项，如自定义 base URL、区域设置或具名凭据：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+注册代理可以作为工具调用的 [Model Context Protocol](https://modelcontextprotocol.io) 服务器：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+使用 `bolt mcp add`、`bolt mcp list`、`bolt mcp auth` 和 `bolt mcp debug` 可交互式管理 MCP 服务器。
+
+### `instructions`
+
+追加将注入到每个会话中的自定义系统指令。适合强制执行编码约定、风格指南或项目特定规则：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+来自多个配置文件（全局 \+ 项目）的指令会被自动合并并去重。
+
+### `plugin`
+
+加载 Bolt 插件。插件可以添加新工具、提供商、上下文源和钩子：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### 通过 `url` 使用远程配置
+
+启动时从远程 URL 拉取配置。适合团队集中式配置：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## 变量替换
+
+配置值可以使用 `$VAR_NAME` 或 `${VAR_NAME}` 语法引用环境变量。替换发生在加载时，早于配置解析：
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="如何在配置中使用环境变量？">
+  在任意字符串配置值中，可通过 `$VAR_NAME` 或 `${VAR_NAME}` 引用任意环境变量。Bolt 会在加载时替换其值。如果变量未设置，则使用字面字符串 `$VAR_NAME`——Bolt 不会静默失败，也不会因缺失替换而抛出错误。
+</Accordion>
+
+## 环境变量覆盖
+
+这些环境变量可让你完全重定向或覆盖配置，适用于 CI、容器和测试：
+
+| 变量 | 说明 |
+| --- | --- |
+| `BOLT_CONFIG` | 要加载的配置文件的绝对路径，替代项目本地配置 |
+| `BOLT_CONFIG_DIR` | 覆盖 Bolt 搜索配置文件的目录 |
+| `BOLT_CONFIG_CONTENT` | 以字符串形式直接提供 JSONC 配置内容——无需文件 |
+
+`BOLT_CONFIG_CONTENT` 在挂载文件不便的容器化环境中尤其方便：
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="当多个来源同时生效时，哪个配置优先？">
+  Bolt 按以下顺序合并配置（靠后的胜出）：
+
+  1. 全局配置文件（操作系统配置目录中的 `bolt.jsonc` / `bolt.json`）
+  2. 全局配置中 `url` 条目拉取的远程配置
+  3. 按项目配置文件（`.bolt/bolt.jsonc`、`.bolt/bolt.json`）
+  4. `BOLT_CONFIG` 文件（若已设置）
+  5. `BOLT_CONFIG_CONTENT`（若已设置）
+
+  数组字段（如 `instructions`）会跨来源拼接而非替换。对象字段进行深度合并，冲突时以靠后的值为准。
+</Accordion>

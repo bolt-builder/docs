@@ -1,0 +1,38 @@
+---
+title: "Baza de date locală (bolt db)"
+sidebarTitle: "Baza de date locală"
+description: "Bolt stochează fiecare sesiune, mesaj și apel de instrument într-o bază de date SQLite locală. Inspecteaz-o, fă-i backup sau interoghează-o direct cu bolt db."
+---
+
+Bolt păstrează fiecare sesiune, mesaj și apel de instrument într-o bază de date SQLite locală. Este complet inspectabilă și complet a ta — nimic nu este încărcat decât dacă partajezi explicit o sesiune.
+
+## Operațiuni comune
+
+```bash
+bolt db path                        # print the path to the SQLite file
+bolt db                             # open an interactive SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Cum îi faci backup
+
+Deoarece este un singur fișier SQLite, backup-ul înseamnă o copie:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Pentru stocare pe termen lung sau transport, preferă `bolt export` / `bolt import` — produc o reprezentare JSON portabilă care supraviețuiește migrărilor de schemă.
+
+## Schema pe scurt
+
+- `sessions` — un rând pe sesiune, cu titlu, proiect, timestamp-uri și stare.
+- `messages` — jurnalul complet al turelor per sesiune.
+- `tool_calls` — fiecare invocare cu intrări, ieșiri și durată.
+
+Coloanele exacte evoluează; folosește `PRAGMA table_info(<table>)` pentru a vedea schema live.
+
+## Legături conexe
+
+- [Sesiuni](/concepts/sessions) — ce stochează baza de date.
+- [Statistici și cost](/reference/stats-and-cost) — vizualizări agregate peste aceleași date.

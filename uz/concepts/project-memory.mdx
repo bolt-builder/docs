@@ -1,0 +1,46 @@
+---
+title: "Loyiha xotirasi: Bolt sessiyalari o'rtasida doimiy kontekst"
+sidebarTitle: "Loyiha xotirasi"
+description: "Bolt har bir navbat oxirida loyihangiz haqida o'rgangan narsalarni qamrab oladi va yangi sessiyalarga kiritadi, shuning uchun agent har safar kodbazangizni qaytadan o'rganmaydi."
+---
+
+Loyiha xotirasi Bolt sizning loyihangizni allaqachon biladigandek tuyulishiga sabab bo'lgan narsadir. Sessiya o'z navbatini tugatganda, Bolt foydali bo'lgan narsalarni distillash qiladi va uni har bir loyiha uchun xotira omboriga yozadi. Yangi sessiyani ochganingizda, Bolt system promptga xotira indeksi va so'nggi sessiya digest'ini kiritadi, shuning uchun agent bo'sh sahifa o'rniga haqiqiy kontekst bilan boshlanadi.
+
+## Ushlash qanday ishlaydi
+
+Har bir suhbat navbatining oxirida Bolt modelidan keyingi safar foydali bo'ladigan barqaror faktlarni umumlashtirish so'raydi: konvensiyalar, arxitektura yozuvlari, fayl tartibi, build/test buyruqlari, tuzoqlar va ochiq mavzular. Bular loyihaning xotira katalogi ostiga, so'nggi sessiyaning aylanma digest'i bilan bir qatorda diskga yoziladi.
+
+Xotira loyihaga xos. Bir xil reponing bir xil mashinadagi ikkita checkout'i xotirani baham ko'radi; bog'liq bo'lmagan loyihalar hech qachon bir-birining xotirasini ko'rmaydi.
+
+## Aniq asboblar
+
+Agentlar sessiya davomida ham xotirani to'g'ridan-to'g'ri o'qishi va yozishi mumkin:
+
+- `memory_save` — agent keyingi safar eslashi kerak bo'lgan aniq faktni qayd etish.
+- `memory_recall` — agent (yoki siz) ilgari qamrab olgan narsani izlash.
+
+Siz agentdan "we use pnpm, not npm ni eslab qol" deb so'rashingiz mumkin va u siz uchun `memory_save` ni chaqiradi.
+
+## Har bir sessiya boshqaruvi
+
+TUI ichida joriy sessiya uchun xotira xatti-harakatini slash buyruqlar bilan almashtirishingiz mumkin:
+
+```text
+/memory use on|off         # bu sessiya loyiha xotirasini o'qiydimi
+/memory contribute on|off  # bu sessiya xotiraga qaytib yozadimi
+```
+
+Bu, xotirangizni ifloslantirmaydigan bir marta ishlatiladigan tadqiqot sessiyasini xohlaganingizda yoki avvalgi kontekstdan foyda oladigan faqat o'qish uchun sessiyani xohlaganingizda foydali.
+
+## Xotirani tekshirish va tahrirlash
+
+```bash
+bolt memory           # joriy loyiha uchun xotira omborini tekshirish
+```
+
+Xotira loyihaning Bolt ma'lumot katalogi ostidagi oddiy fayllar sifatida diskda saqlanadi, shuning uchun yozuvlarni to'g'ridan-to'g'ri grep, tahrirlash yoki o'chirish mumkin. Mashinangizdagi aniq yo'lni topish uchun `bolt debug paths` ni ishga tushiring.
+
+## Aloqador
+
+- [Sessions](/concepts/sessions) — xotira yozuvlarini ishlab chiqaradigan barqaror suhbatlar.
+- [Configuration](/concepts/configuration) — xotira qayerda saqlanadi va yo'lni qanday override qilish.

@@ -1,0 +1,193 @@
+---
+title: "設定 — bolt.jsonc の設定とグローバルオーバーライド"
+sidebarTitle: "設定"
+description: "Bolt はプロジェクトと OS 設定ディレクトリから階層化された JSONC 設定ファイルを読み込みます。プロバイダ、MCP サーバ、指示、プラグイン、環境オーバーライドを設定します。"
+---
+
+Bolt は階層化された設定システムを使用します。ユーザ全体のデフォルト用の **グローバル** 設定ファイルと、リポジトリ固有の設定用の **プロジェクトごと** の設定ファイルです。どちらも JSONC 形式 (コメント付き JSON) を使用し、エディタの自動補完を有効にする `$schema` ポインタと共に自動的に作成されます。
+
+## 設定ファイルの場所
+
+### プロジェクトごとの設定
+
+プロジェクト内で初回実行時に自動的に作成されます。
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+このファイルをコミットすると、プロバイダ設定、MCP サーバ、カスタム指示をチームと共有できます。機密情報はここに置かないでください — 環境変数またはグローバル設定を使用してください。
+
+### グローバル設定
+
+マシン上のすべてのプロジェクトに適用されます。Bolt は OS 設定ディレクトリで最初に一致するファイルを探します。
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (推奨)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="グローバル設定ディレクトリはどこにありますか?">
+  Bolt は Linux と macOS では XDG Base Directory 仕様 (`~/.config/bolt/`)、Windows では `%APPDATA%\bolt\` に従います。`bolt debug config` を実行すると、マシン上で完全に解決された設定を表示できます。
+</Accordion>
+
+## 最小構成の例
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+`$schema` フィールドは、JSON Schema をサポートするエディタで IntelliSense と検証を有効にします。Bolt はこのフィールドがない場合、自動的に書き込みます。
+
+## 設定リファレンス
+
+### `provider`
+
+カスタムベース URL、リージョン設定、名前付き認証情報などのプロバイダ固有オプションを構成します。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+エージェントがツールとして呼び出せる [Model Context Protocol](https://modelcontextprotocol.io) サーバを登録します。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+MCP サーバは `bolt mcp add`、`bolt mcp list`、`bolt mcp auth`、`bolt mcp debug` で対話的に管理できます。
+
+### `instructions`
+
+すべてのセッションに注入されるカスタムシステム指示を追加します。コーディング規約、スタイルガイド、プロジェクト固有のルールを強制するのに役立ちます。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+複数の設定ファイル (グローバル \+ プロジェクト) からの指示は、自動的にマージされ重複が排除されます。
+
+### `plugin`
+
+Bolt プラグインをロードします。プラグインは新しいツール、プロバイダ、コンテキストソース、フックを追加できます。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### `url` によるリモート設定
+
+起動時にリモート URL から設定を取得します。集中化されたチーム設定に役立ちます。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## 変数置換
+
+設定値は `$VAR_NAME` または `${VAR_NAME}` 構文を使って環境変数を参照できます。置換は、設定が解析される前のロード時に行われます。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="設定で環境変数をどう使いますか?">
+  文字列設定値の中で `$VAR_NAME` または `${VAR_NAME}` によって任意の環境変数を参照できます。Bolt はロード時に値を置換します。変数が設定されていない場合はリテラル文字列 `$VAR_NAME` が使用されます — Bolt は欠落した置換に対して静かに失敗したりエラーをスローしたりしません。
+</Accordion>
+
+## 環境変数によるオーバーライド
+
+これらの環境変数を使うと、設定全体をリダイレクトまたはオーバーライドできます。CI、コンテナ、テストで便利です。
+
+| 変数 | 説明 |
+| --- | --- |
+| `BOLT_CONFIG` | プロジェクトローカルのものの代わりにロードする設定ファイルへの絶対パス |
+| `BOLT_CONFIG_DIR` | Bolt が設定ファイルを検索するディレクトリをオーバーライド |
+| `BOLT_CONFIG_CONTENT` | 生の JSONC 設定内容を文字列として提供 — ファイル不要 |
+
+`BOLT_CONFIG_CONTENT` は、ファイルをマウントするのが不便なコンテナ化環境で特に便利です。
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="複数のソースがアクティブなときはどの設定が優先されますか?">
+  Bolt は次の順序で設定をマージします (後のエントリが勝ちます)。
+
+  1. グローバル設定ファイル (OS 設定ディレクトリの `bolt.jsonc` / `bolt.json`)
+  2. グローバル設定の `url` エントリから取得したリモート設定
+  3. プロジェクトごとの設定ファイル (`.bolt/bolt.jsonc`、`.bolt/bolt.json`)
+  4. `BOLT_CONFIG` ファイル (設定されている場合)
+  5. `BOLT_CONFIG_CONTENT` (設定されている場合)
+
+  `instructions` のような配列フィールドは、置き換えられるのではなく、ソース間で連結されます。オブジェクトフィールドはディープマージされ、競合時には後の値が勝ちます。
+</Accordion>

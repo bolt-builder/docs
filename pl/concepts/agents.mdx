@@ -1,0 +1,135 @@
+---
+title: "Agenci — dziesięciu wbudowanych i niestandardowych agentów AI Bolta"
+sidebarTitle: "Agenci"
+description: "Bolt dostarczany jest z dziesięcioma wbudowanymi agentami, każdy z odrębną rolą, zestawem narzędzi i poziomem dostępu. Dowiedz się, jak przełączać, konfigurować i tworzyć własnych agentów."
+---
+
+Bolt traktuje każdą personę AI jako nazwanego **agenta**: prompt systemowy sparowany z precyzyjnie ograniczonym zestawem uprawnień do narzędzi. Zamiast uruchamiać jeden ogólnego przeznaczenia model do każdego zadania, wybierasz agenta, którego dostęp i skupienie pasują do tego, czego potrzebujesz — niezależnie od tego, czy jest to audyt bezpieczeństwa, pisanie dokumentacji, czy przeprowadzenie pełnej migracji frameworka.
+
+## Poziomy dostępu
+
+Każdy wbudowany agent ma przypisany jeden z trzech poziomów dostępu, który określa, jakie narzędzia może wywoływać:
+
+| Poziom | Przyznane uprawnienia | Typowe zastosowanie |
+|-------|---------------------|-------------|
+| **Full** | Czytanie plików, zapis/edycja plików, uruchamianie komend powłoki | Aktywne kodowanie, debugowanie, refaktoryzacja, migracje |
+| **Edit** | Czytanie plików, zapis/edycja plików — bez powłoki | Dokumentacja, aktualizacje komentarzy, bezpieczne edycje tekstu |
+| **Read** | Tylko czytanie plików — bez zapisu, bez powłoki | Planowanie, badania, przegląd kodu, audyty |
+
+## Wbudowani agenci
+
+Bolt dostarczany jest z dziesięcioma wyspecjalizowanymi agentami od razu po instalacji. Przełączaj między nimi w TUI, naciskając <kbd>Tab</kbd>.
+
+| Agent | Dostęp | Opis |
+|-------|--------|-------------|
+| `code` | Full | Domyślny: czyta, zapisuje i uruchamia kod |
+| `plan` | Read | Eksploruje bazę kodu i tworzy plan bez zmieniania kodu |
+| `ask` | Read | Pytania i badania — brak edycji plików |
+| `code-review` | Read | Przegląda zmiany pod kątem poprawności, stylu i bezpieczeństwa |
+| `debug` | Full | Debuguje nieudane testy, awarie i błędy logiki |
+| `refactor` | Full | Bezpieczny refaktoring z weryfikacją testów na każdym kroku |
+| `docs` | Edit | Pisze i aktualizuje dokumentację oraz komentarze |
+| `security` | Read | Audyt bezpieczeństwa: podatności, sekrety i niebezpieczne wzorce |
+| `migrate` | Full | Aktualizacje frameworków i migracje zależności |
+| `perf` | Full | Analiza wydajności i optymalizacja |
+
+## Subagenci
+
+Oprócz dziesięciu głównych agentów Bolt udostępnia dwóch wbudowanych **subagentów**, którym główni agenci mogą delegować pracę podczas sesji. Nigdy nie wybierasz subagenta ręcznie — są oni uruchamiani automatycznie, gdy główny agent zdecyduje się jednego utworzyć.
+
+| Subagent | Rola |
+|----------|------|
+| `@general` | Złożone, wieloetapowe delegowanie zadań wymagające szerokich możliwości |
+| `@explore` | Szybkie, tylko-do-odczytu badanie bazy kodu — przechodzi po plikach bez skutków ubocznych |
+
+<Tip>
+  Gdy musisz szybko zrozumieć nieznaną bazę kodu, zacznij od agenta `ask` lub `plan`. W tle mogą one uruchomić subagenta `@explore`, aby zindeksować Twój projekt z dużą prędkością, zanim wyprodukują odpowiedź — bez dotykania ani jednego pliku.
+</Tip>
+
+## Przełączanie agentów
+
+**W TUI** — naciśnij <kbd>Tab</kbd>, aby cyklicznie przechodzić po liście dostępnych agentów w dowolnym momencie sesji. Aktywny agent pokazywany jest w stopce sesji.
+
+**Nieinteraktywnie** — przekaż `--agent <name>` do `bolt run`, aby przypiąć konkretnego agenta na czas trwania tego uruchomienia:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Wyświetlanie listy agentów
+
+Aby zobaczyć wszystkich dostępnych agentów — wbudowanych i niestandardowych — z ich trybami i konfiguracją uprawnień:
+
+```bash
+bolt agent list
+```
+
+## Niestandardowi agenci
+
+Możesz tworzyć własnych agentów na dwa sposoby.
+
+### Wygenerowanie za pomocą `bolt agent create`
+
+Interaktywny kreator generuje plik agenta za pomocą LLM i zapisuje go na dysk:
+
+```bash
+bolt agent create
+```
+
+Wszystkie flagi są opcjonalne. Podaj je, aby uruchomić nieinteraktywnie:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flaga | Opis |
+|------|-------------|
+| `--description` | Co ma robić agent (używane jako prompt LLM do generowania) |
+| `--path` | Katalog, w którym zapisać wygenerowany plik agenta |
+| `--mode` | `all` (domyślnie), `primary` lub `subagent` |
+| `--permissions` | Lista uprawnień oddzielonych przecinkami do zezwolenia. Pomiń, aby zezwolić na wszystkie. |
+| `--model` / `-m` | Model do użycia w formacie `provider/model` |
+
+### Ręczne napisanie pliku markdown
+
+Agent to po prostu plik markdown z frontmatterem YAML. Umieść go w `.bolt/agents/` wewnątrz swojego projektu lub w globalnym katalogu agentów:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Nazwa pliku (bez `.md`) staje się identyfikatorem agenta.
+
+### Dostępne uprawnienia
+
+Uprawnienia to precyzyjne bramki narzędzi, którymi sterujesz przy tworzeniu niestandardowego agenta:
+
+| Uprawnienie | Kontroluje |
+|------------|----------|
+| `bash` | Wykonywanie komend powłoki |
+| `read` | Czytanie plików |
+| `edit` | Zapisywanie i edytowanie plików (steruje też `write` i `apply_patch`) |
+| `glob` | Wyszukiwanie plików glob / listowanie katalogów |
+| `grep` | Wyszukiwanie w plikach przez ripgrep |
+| `webfetch` | Pobieranie HTTP z sieci |
+| `task` | Uruchamianie zadań subagentów |
+| `todowrite` | Tworzenie i aktualizowanie pozycji zadań |
+| `websearch` | Zapytania do wyszukiwarki internetowej |
+| `lsp` | Operacje protokołu Language Server |
+| `skill` | Dostęp do skilli projektu |

@@ -1,0 +1,193 @@
+---
+title: "Configuration — Pengaturan bolt.jsonc dan Override Global"
+sidebarTitle: "Configuration"
+description: "Bolt membaca file konfigurasi JSONC berlapis dari proyek dan direktori konfigurasi OS kamu. Atur provider, MCP server, instruksi, plugin, dan override lingkungan."
+---
+
+Bolt menggunakan sistem konfigurasi berlapis: file config **global** untuk default seluruh pengguna, dan file config **per-proyek** untuk pengaturan spesifik repositori. Kedua file menggunakan format JSONC (JSON dengan komentar), dan keduanya dibuat secara otomatis dengan penunjuk `$schema` yang mengaktifkan autocompletion editor.
+
+## Lokasi file konfigurasi
+
+### Config per-proyek
+
+Dibuat secara otomatis pada run pertama di dalam proyek kamu:
+
+```text
+<project-root>/.bolt/bolt.jsonc
+```
+
+Commit file ini untuk membagikan konfigurasi provider, MCP server, dan instruksi kustom dengan seluruh tim kamu. Kredensial sensitif tidak boleh diletakkan di sini — gunakan variabel lingkungan atau config global sebagai gantinya.
+
+### Config global
+
+Berlaku untuk semua proyek di mesin kamu. Bolt mencari file yang cocok pertama di direktori config OS kamu:
+
+```text
+# macOS / Linux
+~/.config/bolt/bolt.jsonc   (preferred)
+~/.config/bolt/bolt.json
+
+# Windows
+%APPDATA%\bolt\bolt.jsonc
+%APPDATA%\bolt\bolt.json
+```
+
+<Accordion title="Where is the global config directory?">
+  Bolt mengikuti XDG Base Directory Specification di Linux dan macOS (`~/.config/bolt/`) dan `%APPDATA%\bolt\` di Windows. Jalankan `bolt debug config` untuk mencetak konfigurasi terselesaikan penuh di mesin kamu.
+</Accordion>
+
+## Contoh config minimal
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Provider config goes here
+  }
+}
+```
+
+Field `$schema` mengaktifkan IntelliSense dan validasi di editor yang mendukung JSON Schema. Bolt menulis field ini secara otomatis jika belum ada.
+
+## Referensi konfigurasi
+
+### `provider`
+
+Konfigurasikan opsi spesifik-provider seperti base URL kustom, pengaturan wilayah, atau kredensial bernama:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "name": "Anthropic"
+    },
+    "amazon-bedrock": {
+      "options": {
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+### `mcp`
+
+Daftarkan server [Model Context Protocol](https://modelcontextprotocol.io) yang dapat dipanggil oleh agent sebagai tool:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "my-server": {
+      "type": "local",
+      "command": "node",
+      "args": ["./mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL"
+      }
+    }
+  }
+}
+```
+
+Kelola MCP server secara interaktif dengan `bolt mcp add`, `bolt mcp list`, `bolt mcp auth`, dan `bolt mcp debug`.
+
+### `instructions`
+
+Tambahkan instruksi sistem kustom yang disuntikkan ke setiap sesi. Berguna untuk memberlakukan konvensi coding, panduan gaya, atau aturan spesifik proyek:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Always write tests alongside new code.",
+    "Follow the Google TypeScript Style Guide.",
+    "Never introduce new dependencies without explaining the trade-off."
+  ]
+}
+```
+
+Instruksi dari beberapa file config (global \+ proyek) digabungkan dan dideduplikasi secara otomatis.
+
+### `plugin`
+
+Muat plugin Bolt. Plugin dapat menambahkan tool, provider, sumber konteks, dan hook baru:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/my-tool.ts",
+    "@my-org/bolt-plugin-jira"
+  ]
+}
+```
+
+### Config remote via `url`
+
+Ambil config dari URL remote saat startup. Berguna untuk konfigurasi tim tersentralisasi:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "url": "https://config.example.com/bolt-team.json",
+  "headers": {
+    "Authorization": "Bearer $TEAM_CONFIG_TOKEN"
+  }
+}
+```
+
+## Substitusi variabel
+
+Nilai config dapat mereferensikan variabel lingkungan menggunakan sintaks `$VAR_NAME` atau `${VAR_NAME}`. Substitusi terjadi pada waktu pemuatan, sebelum config di-parse:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "database-tools": {
+      "type": "local",
+      "command": "npx",
+      "args": ["db-mcp-server"],
+      "env": {
+        "DATABASE_URL": "$DATABASE_URL",
+        "API_KEY": "${INTERNAL_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+<Accordion title="How do I use environment variables in config?">
+  Referensikan variabel lingkungan mana pun dengan `$VAR_NAME` atau `${VAR_NAME}` di mana saja dalam nilai config string. Bolt mengganti nilainya pada waktu pemuatan. Jika variabel tidak diatur, string literal `$VAR_NAME` digunakan — Bolt tidak gagal secara diam-diam atau melempar kesalahan untuk substitusi yang hilang.
+</Accordion>
+
+## Override variabel lingkungan
+
+Variabel lingkungan berikut memungkinkan kamu mengalihkan atau mengganti config sepenuhnya, yang berguna untuk CI, container, dan pengujian:
+
+| Variabel | Deskripsi |
+| --- | --- |
+| `BOLT_CONFIG` | Path absolut ke file config yang akan dimuat alih-alih file lokal proyek |
+| `BOLT_CONFIG_DIR` | Override direktori yang dicari Bolt untuk file config |
+| `BOLT_CONFIG_CONTENT` | Sediakan konten config JSONC mentah sebagai string — tanpa perlu file |
+
+`BOLT_CONFIG_CONTENT` sangat berguna di lingkungan yang menggunakan container di mana mounting file tidak praktis:
+
+```bash
+export BOLT_CONFIG_CONTENT='{"provider":{"anthropic":{}}}'
+bolt run "summarise the codebase"
+```
+
+<Accordion title="Which config takes precedence when multiple sources are active?">
+  Bolt menggabungkan config dalam urutan ini (entri kemudian menang):
+
+  1. File config global (`bolt.jsonc` / `bolt.json` di direktori config OS)
+  2. Config remote yang diambil dari entri `url` di config global
+  3. File config per-proyek (`.bolt/bolt.jsonc`, `.bolt/bolt.json`)
+  4. File `BOLT_CONFIG` (jika diatur)
+  5. `BOLT_CONFIG_CONTENT` (jika diatur)
+
+  Field array seperti `instructions` digabungkan di semua sumber alih-alih diganti. Field objek digabungkan secara mendalam dengan nilai kemudian menang saat konflik.
+</Accordion>

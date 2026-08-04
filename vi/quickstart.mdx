@@ -1,0 +1,142 @@
+---
+title: "Bắt đầu với Bolt trong chưa đầy một phút"
+sidebarTitle: "Bắt đầu nhanh"
+description: "Cài đặt Bolt, mở dự án, kết nối một provider và chạy prompt AI đầu tiên — tất cả trong dưới 60 giây với hướng dẫn từng bước này."
+---
+
+Hướng dẫn này đưa bạn qua việc cài đặt Bolt, khởi chạy nó trong một dự án, kết nối một provider AI và chạy prompt đầu tiên. Toàn bộ luồng mất chưa đầy một phút.
+
+<Steps>
+  <Step title="Cài đặt Bolt">
+    Cách nhanh nhất là script cài đặt chính thức, hoạt động trên macOS và Linux:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+
+    Ưa thích trình quản lý gói? Cài đặt toàn cục với npm, bun, pnpm hoặc yarn:
+
+    ```bash
+    npm i -g @bolt-builder/bolt-cli
+    ```
+
+    Cho ứng dụng desktop trên macOS (không cần đi vòng qua Gatekeeper):
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Xem [Hướng dẫn cài đặt](/installation) cho mọi phương thức, bao gồm Homebrew, Chocolatey, Scoop và các ghi chú riêng cho Windows.
+  </Step>
+  <Step title="Mở dự án của bạn">
+    Điều hướng tới bất kỳ thư mục dự án nào và khởi chạy TUI tương tác:
+
+    ```bash
+    cd my-project
+    bolt
+    ```
+
+    Bolt tự động lấy ngữ cảnh dự án của bạn — đọc cây tệp, hiểu stack và làm cho nó có sẵn cho mọi agent từ thời điểm bạn mở nó.
+  </Step>
+  <Step title="Cấu hình một provider AI">
+    Ở lần khởi chạy đầu tiên, Bolt sẽ yêu cầu bạn cấu hình một provider nếu chưa có. Bạn cũng có thể chạy điều này bất kỳ lúc nào:
+
+    ```bash
+    bolt providers
+    ```
+
+    Lệnh này mở luồng quản lý provider nơi bạn có thể thêm API key cho OpenAI, Anthropic và các nhà cung cấp LLM được hỗ trợ khác. Cấu hình được lưu vào `.bolt/bolt.jsonc` trong gốc dự án của bạn.
+
+    ```jsonc
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "provider": {
+        // Cấu hình provider đặt ở đây
+      }
+    }
+    ```
+  </Step>
+  <Step title="Nhập prompt và khám phá agent">
+    Khi đã vào TUI, nhập prompt của bạn và nhấn Enter. Dùng **Tab** để chuyển đổi giữa mười agent tích hợp sẵn của Bolt bất kỳ lúc nào — agent hiện tại được hiển thị trong thanh trạng thái.
+
+    Bạn cũng có thể chạy prompt trực tiếp từ dòng lệnh mà không cần mở TUI:
+
+    ```bash
+    # Prompt không tương tác dùng agent mặc định
+    bolt run "giải thích codebase này"
+    
+    # Dùng một agent cụ thể
+    bolt run --agent ask "dự án này làm gì?"
+    
+    # Gắn TUI vào một server đang chạy (cục bộ hoặc từ xa)
+    bolt attach <url>
+    ```
+  </Step>
+</Steps>
+
+## Agent tích hợp sẵn
+
+Chuyển agent bằng `Tab` trong TUI, hoặc truyền `--agent <name>` cho `bolt run`. Mỗi agent có một mức truy cập được xác định để phù hợp với mục đích của nó.
+
+| Agent | Truy cập | Mô tả |
+| --- | --- | --- |
+| `code` | Full | Mặc định: đọc, ghi và chạy code |
+| `plan` | Read | Khám phá codebase và tạo ra kế hoạch mà không thay đổi tệp |
+| `ask` | Read | Câu hỏi và nghiên cứu — không chỉnh sửa tệp |
+| `code-review` | Read | Review các thay đổi về tính đúng đắn, phong cách và bảo mật |
+| `debug` | Full | Gỡ lỗi các test thất bại, crash và lỗi logic |
+| `refactor` | Full | Refactor an toàn với xác minh test ở mỗi bước |
+| `docs` | Edit | Viết và cập nhật tài liệu và bình luận |
+| `security` | Read | Kiểm toán bảo mật: lỗ hổng, bí mật, các mẫu |
+| `migrate` | Full | Nâng cấp framework và di chuyển dependency |
+| `perf` | Full | Phân tích và tối ưu hóa hiệu năng |
+
+Còn có hai subagent tích hợp sẵn để ủy thác: `@general` cho các tác vụ phức tạp nhiều bước và `@explore` cho nghiên cứu codebase chỉ-đọc nhanh. Bạn có thể định nghĩa agent riêng dưới dạng tệp Markdown hoặc tạo một cái với `bolt agent create`.
+
+## Các lệnh phổ biến để thử tiếp theo
+
+```bash
+# Review các thay đổi đã staged với mã thoát pass/fail
+bolt review --staged
+
+# Tạo commit message cho các thay đổi đã staged
+bolt commit
+
+# Liệt kê và quản lý phiên
+bolt session list
+
+# Xem thống kê sử dụng token và chi phí
+bolt stats
+
+# Truy vấn cơ sở dữ liệu phiên cục bộ
+bolt db
+```
+
+<Tip>
+  Truyền `--mini` cho `bolt` hoặc `bolt attach` cho một giao diện gọn chiếm ít không gian terminal — tuyệt cho cửa sổ nhỏ hơn hoặc bố cục chia ngăn.
+
+  ```bash
+  bolt --mini
+  bolt attach --mini <url>
+  ```
+</Tip>
+
+<Warning>
+  `bolt run` chấp nhận các cờ `--auto`, `--yolo` và `--dangerously-skip-permissions` tự động phê duyệt mọi lời nhắc quyền mà không hỏi. Chỉ dùng chúng trong môi trường đáng tin cậy — chúng cho phép agent đọc, ghi và thực thi mà không cần xác nhận.
+
+  ```bash
+  bolt run --auto "refactor mô-đun này"
+  bolt run --yolo "refactor mô-đun này"
+  bolt run --dangerously-skip-permissions "refactor mô-đun này"
+  ```
+</Warning>
+
+<Note>
+  Bolt hỗ trợ shell completion cho bash, zsh, fish và các shell khác. Tạo và cài đặt completion bằng:
+
+  ```bash
+  bolt completion
+  ```
+
+  Làm theo hướng dẫn được in ra để source script completion trong cấu hình shell của bạn.
+</Note>

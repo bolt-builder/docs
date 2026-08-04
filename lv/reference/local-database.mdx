@@ -1,0 +1,38 @@
+---
+title: "Lokālā datubāze (bolt db)"
+sidebarTitle: "Lokālā datubāze"
+description: "Bolt glabā katru sesiju, ziņu un rīka izsaukumu lokālā SQLite datubāzē. Pārbaudiet to, dublējiet to vai vaicājiet to tieši ar bolt db."
+---
+
+Bolt saglabā katru sesiju, ziņu un rīka izsaukumu lokālā SQLite datubāzē. Tā ir pilnībā pārbaudāma un pilnībā jūsu — nekas netiek augšupielādēts, ja vien jūs skaidri nedalāties ar sesiju.
+
+## Bieži sastopamas darbības
+
+```bash
+bolt db path                        # izdrukāt ceļu uz SQLite failu
+bolt db                             # atvērt interaktīvu SQL čaulu
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## Tās dublēšana
+
+Tā kā tas ir viens SQLite fails, dublēšana ir kopija:
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+Ilgstošai glabāšanai vai transportam priekšroku dodiet `bolt export` / `bolt import` — tie rada pārnēsājamu JSON attēlojumu, kas izdzīvo shēmas migrācijas.
+
+## Shēma īsumā
+
+- `sessions` — viena rinda katrai sesijai ar nosaukumu, projektu, laika zīmogiem un statusu.
+- `messages` — pilns kārtu žurnāls katrai sesijai.
+- `tool_calls` — katrs izsaukums ar ievadēm, izvadēm un ilgumu.
+
+Precīzi stabiņi mainās; izmantojiet `PRAGMA table_info(<table>)`, lai redzētu tiešraides shēmu.
+
+## Saistīts
+
+- [Sesijas](/concepts/sessions) — ko datubāze glabā.
+- [Statistika un izmaksas](/reference/stats-and-cost) — apkopoti skati pār tiem pašiem datiem.

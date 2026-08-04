@@ -1,0 +1,36 @@
+---
+title: "Mukautetut työkalut Boltissa"
+sidebarTitle: "Mukautetut työkalut"
+description: "Lisää projektikohtaisia työkaluja Boltiin pudottamalla suoritettavia tiedostoja .opencode/tool-hakemistoon. Jokaisesta tiedostosta tulee työkalu, jota agentti voi kutsua."
+---
+
+Mukautetut työkalut antavat sinun paljastaa minkä tahansa, jonka voit skriptata (shell-skriptit, Node/Bun/Python-ohjelmat, pienet binäärit), työkaluna, jota agentti voi kutsua nimellä. Ne ovat yksinkertaisin tapa antaa Boltille pääsy projektisi omiin build-, deploy- tai datatyönkulkuihin.
+
+## Missä ne sijaitsevat
+
+Pudota tiedostoja johonkin näistä:
+
+- `.opencode/tool/` — projektikohtainen, sitoutettu repoon.
+- `.opencode/tools/` — hyväksytään edellisen aliaksena.
+
+Jokaisesta tiedostosta tulee tiedoston nimen mukaan nimetty työkalu (ilman päätettä). Työkalut poimitaan automaattisesti seuraavalla kerralla, kun Bolt käynnistyy.
+
+## Työkalun anatomia
+
+Mukautettu työkalu ilmoittaa nimensä, kuvauksensa ja syöteskeemansa otsikossa ja toteuttaa sitten käyttäytymisen. Tarkka muoto riippuu valitusta ajoympäristöstä (shell-skripti, TypeScript jne.), mutta jokaisen työkalun on:
+
+1. Mainostettava JSON Schema syötteilleen, jotta malli tietää, miten sitä kutsutaan.
+2. Palautettava arvo (tai virhe), jonka Bolt voi renderöidä TUI:ssa ja syöttää takaisin mallille.
+
+Kun työkalu on ladattu, se näkyy agentin työkaluluettelossa sisäänrakennettujen työkalujen, kuten `bash`in ja `grep`in, vieressä ja on samalla [oikeus](/concepts/permissions)järjestelmällä portitettu.
+
+## Milloin käyttää mukautettua työkalua vs. MCP-palvelinta
+
+- **Mukautettu työkalu** — pieni, projektikohtainen, ei uudelleenkäyttöä projektien välillä. Nopea kirjoittaa.
+- **MCP-palvelin** — jaettu projektien välillä tai kääri todellisen ulkoisen palvelun todennuksella. Katso [MCP-palvelimet](/extending/mcp-servers).
+- **Laajennustyökalu** — jaeltu npm-pakettina muiden laajennuspisteiden ohella. Katso [Laajennukset](/extending/plugins).
+
+## Liittyvät
+
+- [Työkalut](/concepts/tools) — sisäänrakennetun työkalun viite.
+- [Laajennukset](/extending/plugins) — laajennuspinta työkaluille ja lisää.

@@ -1,0 +1,58 @@
+---
+title: "Asboblar: Bolt agentlari nima qila oladi"
+sidebarTitle: "Asboblar"
+description: "Bolt agentlariga mavjud o'rnatilgan asboblarning to'liq ro'yxati, shuningdek plaginlar, MCP serverlari yoki .opencode/tool katalogi orqali o'z asboblaringizni qo'shish."
+---
+
+Bolt'dagi agentlar ishni asboblarni chaqirish orqali bajaradilar. TUI da ko'radigan har bir harakat (faylni o'qish, testlarni ishga tushirish, webda qidiruv) — bu model asbobni tanlaydi va Bolt uni bajaradi. Har bir agentda e'lon qilingan kirish darajasi mavjud bo'lib, u sizdan avval so'ramasdan qaysi asboblarni chaqirishi mumkinligini aniqlaydi ([Permissions](/concepts/permissions) ga qarang).
+
+## O'rnatilgan asboblar
+
+| Asbob | U nima qiladi |
+| --- | --- |
+| `read` | Diskdan faylni o'qish. |
+| `write` | Yangi fayl yaratish yoki mavjudini ustidan yozish. |
+| `edit` | Faylga maqsadli tahrirlash (find/replace) tatbiq etish. |
+| `apply_patch` | Bir yoki bir nechta faylga unified-diff uslubidagi patchni tatbiq etish. |
+| `glob` | Glob shablonga mos keladigan fayllarni ro'yxatga olish. |
+| `grep` | Fayl mazmunini regex/matn bo'yicha qidirish. |
+| `bash` | Shell buyrug'ini ishga tushirish. |
+| `task` | Sub-vazifani subagentga topshirish (`@general`, `@explore` yoki custom subagent). |
+| `todowrite` | Ko'p bosqichli ish uchun agentning strukturalangan vazifalar ro'yxatini yuritish. |
+| `webfetch` | URL ni olib kelish va uning mazmunini qaytarish. |
+| `websearch` | Webda qidirish. |
+| `skill` | Nomlangan skillni chaqirish ([Skills](/extending/skills) ga qarang). |
+| `memory_save` | Faktni [loyiha xotirasiga](/concepts/project-memory) doimiy ravishda saqlash. |
+| `memory_recall` | Ilgari saqlangan xotirani izlash. |
+| `question` | Sizdan aniqlashtirish savolini so'rash va javob kutish. |
+| `bash_background` | Shell buyrug'ini boshqariladigan fon jarayoni sifatida boshlash (dev serverlar, watcherlar, uzoq build'lar). |
+| `process_output` | Fon jarayoni uchun yig'ilgan chiqish va statusni o'qish, ixtiyoriy ravishda tugashini kutish. |
+| `list_processes` | Fon jarayonlarini ularning id, status va buyrug'i bilan ro'yxatga olish. |
+| `kill_process` | ID bo'yicha fon jarayonini (va uning jarayon daraxtini) to'xtatish. |
+| `test_run` | Loyihaning testlarini aniqlash va ishga tushirish, strukturalangan pass/fail natijalar va xatolik tafsilotlarini qaytarish. |
+
+### Eksperimental
+
+| Asbob | U nima qiladi |
+| --- | --- |
+| `lsp` | Ta'riflar, havolalar va diagnostikalar uchun language server'ga so'rov yuborish. |
+| `execute` | Izolyatsiya qilingan code-mode sandbox'da kodni ishga tushirish. |
+| `plan` | O'zgarishlar kiritishdan oldin strukturalangan rejani ishlab chiqish. |
+
+Eksperimental asboblar reliz'lar orasida o'zgarishi yoki nomi o'zgartirilishi mumkin.
+
+## Asboblar to'plamini kengaytirish
+
+O'rnatilganlardan tashqari, Bolt uchta manbadan asboblarni chaqirishi mumkin:
+
+- **Custom asboblar** loyiha ildizidagi `.opencode/tool/` (yoki `.opencode/tools/`) da. [Custom Tools](/extending/custom-tools) ga qarang.
+- **Plagin asboblari** har qanday o'rnatilgan [plugin](/extending/plugins) tomonidan qo'shilgan.
+- **MCP asboblari** loyiha uchun sozlangan har qanday [MCP server](/extending/mcp-servers) dan.
+
+Har uchtasi agent nuqtai nazaridan bir xil his qilinadi: ular asboblar ro'yxatida paydo bo'ladi, agentning kirish darajasini hurmat qiladi va TUI ning asbob chaqiruv chiqishida ko'rinadi.
+
+## Aloqador
+
+- [Agents](/concepts/agents) — qaysi agentlar qaysi asboblarni chaqirishi mumkin.
+- [Permissions](/concepts/permissions) — agent bo'yicha asboblarga kirish qanday boshqariladi.
+- [MCP Servers](/extending/mcp-servers) — real dunyo asboblarini qo'shishning eng keng tarqalgan usuli.

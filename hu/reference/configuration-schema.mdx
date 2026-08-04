@@ -1,0 +1,192 @@
+---
+title: "Bolt konfigurációs fájl-referencia"
+sidebarTitle: "Konfigurációs séma"
+description: "Teljes körű referencia a Bolt konfigurációs fájl sémájához — helyek, minden felső szintű mező, MCP-szervertípusok, szolgáltatói felülírások és teljes példa."
+---
+
+A Bolt JSON with Comments (`.jsonc`) fájlt használ projekt- és globális konfigurációhoz. A séma verziózott és közzé van téve a `https://opencode.ai/config.json` címen, amelyet a szerkesztők automatikus kiegészítéshez és érvényesítéshez használhatnak.
+
+## Konfigurációs fájl helye
+
+A Bolt két helyről egyesíti a konfigurációt. A projektenkénti beállítások nyernek a globális beállításokkal szemben, ha ugyanaz a kulcs mindkettőben megjelenik.
+
+| Hatókör | Útvonal |
+|---|---|
+| **Projektenkénti** | `.bolt/bolt.jsonc` (vagy `.bolt/bolt.json`) a projekted gyökerében |
+| **Globális** | `bolt.jsonc` (vagy `bolt.json`) az OS konfigurációs könyvtárában |
+
+Az OS konfigurációs könyvtár:
+
+- **macOS**: `~/Library/Application Support/bolt/`
+- **Linux**: `~/.config/bolt/`
+- **Windows**: `%APPDATA%\bolt\`
+
+<Note>
+A Bolt régi `opencode.jsonc` / `opencode.json` fájlokat is olvas ugyanezekben a helyeken. Az új projekteknek a `bolt.jsonc` névkonvenciót kell használniuk, amely elsőbbséget élvez a régi fájlnevekkel szemben.
+</Note>
+
+A Bolt egy minimális globális konfigurációs fájlt hoz létre a `$schema` sorral az első futtatáskor, és létrehozza a `.bolt/bolt.jsonc` fájlt a projekted gyökerében az első alkalommal, amikor abban a könyvtárban megnyitod a TUI-t.
+
+## Sémamezők
+
+<ParamField body="$schema" type="string">
+  URL, amely a konfigurációs fájl JSON-sémájára mutat. Lehetővé teszi az automatikus kiegészítést és a soron belüli érvényesítést a JSON Schemát támogató szerkesztőkben (VS Code, Zed, JetBrains IDE-k stb.).
+
+  ```json
+  "$schema": "https://opencode.ai/config.json"
+  ```
+</ParamField>
+
+<ParamField body="model" type="string">
+  Alapértelmezett modell az összes munkamenethez, `provider/model` formátumban kifejezve. Ezt munkamenetenként felül lehet írni a `bolt run --model` paranccsal vagy a TUI modellválasztójában.
+
+  ```json
+  "model": "anthropic/claude-opus-4-5"
+  ```
+
+  Futtasd a `bolt models` parancsot, hogy lásd az összes elérhető `provider/model` karakterláncot a beállított szolgáltatóidhoz.
+</ParamField>
+
+<ParamField body="provider" type="object">
+  Szolgáltató-specifikus hitelesítő adatok és beállítási felülírások. Minden kulcs egy szolgáltató-azonosító (pl. `anthropic`, `openai`, `google`). A leggyakoribb felhasználás egy API-kulcs beállítása környezeti változó-referencián keresztül, hogy a kulcs soha ne legyen sima szövegként tárolva.
+
+  ```jsonc
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  }
+  ```
+
+  A `${`-vel kezdődő és `}`-val végződő értékek környezeti változó-hivatkozásként vannak kezelve, és futásidőben kerülnek kibontásra.
+</ParamField>
+
+<ParamField body="mcp" type="object">
+  MCP-szerver konfigurációk, egy általad választott név szerint indexelve. A Bolt kétféle szervertípust támogat:
+
+  **Távoli szerver** — HTTP/SSE-n keresztül csatlakozik, opcionális OAuth-tal:
+
+  ```jsonc
+  "mcp": {
+    "my-remote-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    }
+  }
+  ```
+
+  | Mező | Típus | Leírás |
+  |---|---|---|
+  | `type` | `"remote"` | Ezt azonosítja távoli HTTP-szerverként |
+  | `url` | string | Az MCP-végpont teljes URL-je |
+  | `oauth` | object \| `false` | OAuth-konfigurációs objektum (opcionális `clientId`, `clientSecret`, `scope`, `redirectUri` mezőkkel). Állítsd `false`-ra az OAuth automatikus észlelésének letiltásához. |
+  | `headers` | object | Minden kéréssel elküldendő HTTP-fejlécek (`{ "Key": "Value" }`) |
+  | `enabled` | boolean | A szerver engedélyezése vagy letiltása indításkor |
+  | `timeout` | number | Kérés-időtúllépés ezredmásodpercben (alapértelmezett: 5000) |
+
+  **Helyi szerver** — alfolyamatot indít stdio-n keresztül:
+
+  ```jsonc
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "environment": {
+        "DEBUG": "1"
+      }
+    }
+  }
+  ```
+
+  | Mező | Típus | Leírás |
+  |---|---|---|
+  | `type` | `"local"` | Ezt azonosítja helyi stdio-szerverként |
+  | `command` | string[] | Indítandó parancs és minden argumentuma |
+  | `cwd` | string | A szerverfolyamat munkakönyvtára (a relatív útvonalak a munkaterület-könyvtárból oldódnak fel) |
+  | `environment` | object | Extra környezeti változók az alfolyamathoz |
+  | `enabled` | boolean | A szerver engedélyezése vagy letiltása indításkor |
+  | `timeout` | number | Kérés-időtúllépés ezredmásodpercben (alapértelmezett: 5000) |
+
+  Használd a `bolt mcp add` parancsot egy interaktív varázslóhoz, vagy a `bolt mcp list` parancsot az aktuális szerverállapot megvizsgálásához.
+</ParamField>
+
+<ParamField body="instructions" type="string[]">
+  További rendszerutasítások, amelyek minden munkamenethez hozzá vannak fűzve ebben a projektben vagy globálisan. Több konfigurációs fájlból származó utasítások egyesítve vannak (deduplikálva). Használd ezt projekt-specifikus konvenciók, stílusszabályok vagy megkötések injektálásához, amelyeket minden ügynöknek követnie kell.
+
+  ```jsonc
+  "instructions": [
+    "Always write tests for every new function.",
+    "Use TypeScript strict mode. Never use `any`.",
+    "Follow the repository's existing naming conventions."
+  ]
+  ```
+</ParamField>
+
+<ParamField body="plugin" type="string[]">
+  Betöltendő plugin-specifikációk. Minden bejegyzés egy npm-csomagnév, egy helyi fájlútvonal vagy egy URL. A pluginek bővíthetik a TUI-t, hozzáadhatnak slash-parancsokat vagy további szolgáltatókat regisztrálhatnak. Használd a `bolt plugin install <spec>` parancsot egy plugin telepítéséhez és automatikus hozzáadásához ehhez a tömbhöz.
+
+  ```jsonc
+  "plugin": [
+    "@my-org/bolt-plugin-jira",
+    "./local-plugins/my-custom-plugin.ts"
+  ]
+  ```
+</ParamField>
+
+## Teljes példa
+
+A következő `.bolt/bolt.jsonc` egy reális projektkonfigurációt mutat:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Default model for all sessions in this project
+  "model": "anthropic/claude-opus-4-5",
+
+  // Provider credentials — never hard-code keys; use env var references
+  "provider": {
+    "anthropic": {
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    "openai": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+
+  // MCP servers available in this project
+  "mcp": {
+    // Remote server with OAuth
+    "my-tools": {
+      "type": "remote",
+      "url": "https://mcp.example.com/tools",
+      "oauth": {}
+    },
+    // Local stdio server
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+
+  // System instructions injected into every session
+  "instructions": [
+    "Always write tests for new functions.",
+    "Use conventional commits for all commit messages.",
+    "Prefer explicit error handling over broad try/catch blocks."
+  ],
+
+  // Plugins to load
+  "plugin": [
+    "@my-org/bolt-plugin-linear"
+  ]
+}
+```
+
+<Tip>
+Futtasd a `bolt debug config` parancsot, hogy lásd a teljesen feloldott konfigurációt az összes fájl egyesítése után. Ez a leggyorsabb módja annak, hogy megerősítsd, a projektenkénti és globális konfigurációid helyesen kombinálódnak.
+</Tip>

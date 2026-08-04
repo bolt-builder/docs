@@ -1,0 +1,38 @@
+---
+title: "本地数据库 (bolt db)"
+sidebarTitle: "本地数据库"
+description: "Bolt 将每个会话、消息和工具调用都存储在本地 SQLite 数据库中。可通过 bolt db 检查、备份或直接查询。"
+---
+
+Bolt 将每个会话、消息和工具调用都保存在本地 SQLite 数据库中。它可完全查看，也完全属于你——除非你显式分享会话，否则任何内容都不会上传。
+
+## 常见操作
+
+```bash
+bolt db path                        # 打印 SQLite 文件的路径
+bolt db                             # 打开交互式 SQL shell
+bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+```
+
+## 备份
+
+因为它是单个 SQLite 文件，备份就是复制：
+
+```bash
+cp "$(bolt db path)" ~/backups/bolt-$(date +%Y%m%d).db
+```
+
+对于长期存储或传输，推荐使用 `bolt export` / `bolt import`——它们会产出可跨 schema 迁移的可移植 JSON 表示。
+
+## Schema 概览
+
+- `sessions` — 每个会话一行，包含标题、项目、时间戳和状态。
+- `messages` — 每个会话的完整对话日志。
+- `tool_calls` — 每次调用，含输入、输出和耗时。
+
+具体列会演进；使用 `PRAGMA table_info(<table>)` 查看实时 schema。
+
+## 相关内容
+
+- [Sessions](/concepts/sessions) — 数据库存储的内容。
+- [Stats & Cost](/reference/stats-and-cost) — 对同一数据的聚合视图。

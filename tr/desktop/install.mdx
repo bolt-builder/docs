@@ -1,0 +1,116 @@
+---
+title: "Bolt masaüstü uygulaması: çok pencereli AI kodlama oturumları"
+sidebarTitle: "Kurulum"
+description: "Çok pencereli oturumlar, entegre terminal, görüntü yapıştırmalı komut oluşturucu, otomatik güncellemeler ve 28 arayüz dili için Bolt masaüstü uygulamasını kurun."
+url: "desktop/install"
+---
+
+Bolt masaüstü uygulaması, CLI ile aynı motoru tam bir Electron kabuğunda paketler. Terminalde mevcut olan her özellik — ajanlar, MCP sunucuları, eklentiler, uzak oturumlar, çatallayıp paylaşabileceğiniz oturumlar — masaüstü uygulamasında aynı şekilde çalışır; ek olarak çok pencereli ve çok sekmeli bir deneyim, grafiksel bir ayarlar arayüzü, yerel bildirimler ve otomatik güncellemeler bulunur. CLI'ı zaten kullanıyorsanız, masaüstü uygulaması bir yerine değil, tamamlayıcı olarak eklenir.
+
+---
+
+## Kurulum
+
+### macOS
+
+<Steps>
+  <Step title="Tek satırlık komutla kurun (önerilen)">
+    Bir terminal açın ve şunu çalıştırın:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+    ```
+
+    Betik en son sürümü indirir, doğrular ve uygulamayı `/Applications` altına yerleştirir. Gatekeeper açılır penceresi yok.
+  </Step>
+
+  <Step title="Uygulamayı başlatın">
+    **Bolt**'u `/Applications` veya Spotlight'tan açın. İlk başlatmada Bolt sizden varsayılan bir LLM sağlayıcı seçmenizi ister ve bir global yapılandırma dosyası oluşturur.
+  </Step>
+</Steps>
+
+<Tip>
+  Tek satırlık komut, uygulamayı macOS Gatekeeper "kimliği doğrulanmamış geliştirici" iletişim kutusunu atlayacak şekilde kurar; böylece ek güvenlik komutları olmadan doğrudan kodlamaya başlarsınız.
+</Tip>
+
+### Tüm platformlar — sürümlerden indirin
+
+Platformunuz için en son yükleyiciyi [Bolt sürümler sayfasından](https://github.com/Bolt-builder/bolt-cli/releases) indirin.
+
+| Platform | Yükleyici türü |
+|----------|---------------|
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Windows | `.exe` yükleyici |
+| Linux | `.AppImage` / `.deb` |
+
+<Note>
+  Windows'ta Bolt, WSL (Windows Linux için Alt Sistem) entegrasyonu içerir. WSL kullanılabilir olduğunda Bolt oturumları doğrudan WSL dağıtımınızın içinde açabilir — size yerel bir Windows arayüzü etrafında Linux-yerel bir ajan ortamı sunar.
+</Note>
+
+---
+
+## Özellikler
+
+### Çok pencereli ve çok sekmeli oturum yönetimi
+
+İstediğiniz kadar pencere açın; her biri kendi sekme kümesine sahiptir. Sekmeler doğrudan Bolt oturumlarına eşlenir; böylece bir sekmede yeniden düzenleme için bir ajan çalıştırabilir, başka bir sekmede bir soru sorabilir ve üçüncü bir sekmede bir arka plan işi çalıştırabilirsiniz — hepsi aynı anda.
+
+### Komut oluşturucu
+
+Komut oluşturucu zengin girişi destekler: metin yapıştırın, dosyaları ek olarak sürükleyin veya panonuzdan doğrudan bir görüntü yapıştırın. Bolt görüntüyü kodlar ve otomatik olarak görüntü yeteneğine sahip herhangi bir modele gönderir.
+
+### Entegre terminal ve dosya ağacı
+
+Bölünmüş panel düzeni size bir tarafta ajan konuşmasını, diğer tarafta canlı bir terminal ve proje dosya ağacını sunar. Komutları çalıştırabilir, çıktıyı inceleyebilir ve sonuçları uygulama değiştirmeden ajana geri besleyebilirsiniz.
+
+### Komut paleti
+
+Komut paletini açmak için `Cmd/Ctrl+K` tuşuna basın. Buradan oturumları değiştirebilir, ajanları değiştirebilir, ayarları açabilir veya fareye uzanmadan herhangi bir eylemi tetikleyebilirsiniz.
+
+### Tam ayarlar arayüzü
+
+Ayarlar paneli `.bolt/bolt.jsonc` içinde bulunan her seçeneği kapsar — kısayol tuşları, model seçimi, LLM sağlayıcıları, MCP sunucuları ve kimlik doğrulama — açılır menüler, geçişler ve satır içi doğrulama ile. Yapılandırma dosyasını elle düzenlemeniz nadiren gerekir.
+
+### Yerel bildirimler
+
+Uzun süre çalışan bir görev bittiğinde Bolt yerel bir işletim sistemi bildirimi tetikler. Doğrudan oturuma atlamak için bildirime tıklayın.
+
+### Derin bağlantılar
+
+Bir `bolt://` URL'sine giderek belirli bir oturumu açın. Ekip arkadaşlarınızla oturum bağlantılarını paylaşmak veya devam eden çalışmayı yer imlerine eklemek için kullanışlıdır.
+
+### Otomatik güncellemeler
+
+Masaüstü uygulaması kendini üç kanal arasında günceller:
+
+| Kanal | Açıklama |
+|---------|-------------|
+| `prod` | Kararlı sürümler, her üretim etiketinde güncellenir |
+| `beta` | Yeni özelliklere erken erişim için sürüm öncesi derlemeler |
+| `dev` | `dev` dalından geceye özel derlemeler |
+
+Kanalları **Ayarlar → Hakkında** menüsünden değiştirin.
+
+### 28 arayüz dili
+
+Bolt'un arayüzü 28 dile yerelleştirilmiştir. Görüntü dilini **Ayarlar → Görünüm → Dil** menüsünden değiştirin.
+
+---
+
+## İlgili belgeler
+
+<CardGroup cols={2}>
+  <Card title="Uzak oturumlar" icon="server" href="/server/remote-sessions">
+    Uzak bir makinede başsız bir sunucu çalıştırın ve masaüstü uygulamasından veya CLI'dan bağlanın.
+  </Card>
+  <Card title="MCP sunucuları" icon="plug" href="/extending/mcp-servers">
+    Ajanlarınıza Model Context Protocol kullanarak harici araçlar ve API'ler ekleyin.
+  </Card>
+  <Card title="Eklentiler" icon="puzzle-piece" href="/extending/plugins">
+    Bolt'u özel sağlayıcılar, kimlik doğrulama yöntemleri ve çalışma alanı bağdaştırıcılarıyla genişletin.
+  </Card>
+  <Card title="GitHub entegrasyonu" icon="github" href="/server/github-actions">
+    Masaüstü uygulamasından veya CI'dan PR'ları, commit mesajlarını ve kod incelemesini otomatikleştirin.
+  </Card>
+</CardGroup>

@@ -1,0 +1,139 @@
+---
+title: "Sağlayıcılar ve Modeller — LLM Kimlik Doğrulaması ve Seçim"
+sidebarTitle: "Sağlayıcılar ve Modeller"
+description: "Bolt, Vercel AI SDK üzerinden herhangi bir LLM sağlayıcısını destekler. Sağlayıcıları doğrulayın, modelleri listeleyin, muhakeme çabasını ayarlayın ve best-of-N paralel karşılaştırmaları çalıştırın."
+---
+
+Bolt tasarım gereği modelden bağımsızdır. Kaputun altında sağlayıcılarla konuşmak için **Vercel AI SDK**'yı kullanır; bu da SDK'nın desteklediği herhangi bir sağlayıcının — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter ve daha fazlası — kutudan çıkar çıkmaz çalıştığı anlamına gelir. Sağlayıcı ve model kataloğu, topluluk tarafından sürdürülen bir sağlayıcı meta verileri ve fiyatlandırma veritabanı olan [models.dev](https://models.dev) adresinden alınır.
+
+## Sağlayıcı kimlik bilgilerini yönetme
+
+Sağlayıcı kimlik bilgilerini eklemek, listelemek ve kaldırmak için `bolt providers` (takma adı `bolt auth`) komutunu kullanın.
+
+### Kimlik bilgilerini ekleme veya güncelleme
+
+```bash
+bolt providers login
+# veya eşdeğer olarak:
+bolt auth login
+```
+
+Bu, bir sağlayıcı seçmek ve kimlik bilgilerini girmek için etkileşimli bir komut başlatır. Etkileşimli akışı atlamak için bayrakları doğrudan geçirin:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Yapılandırılmış sağlayıcıları listeleme
+
+```bash
+bolt providers list
+# veya:
+bolt auth list
+```
+
+Depolanan tüm kimlik bilgilerini ve ortam değişkenlerinden algılanan sağlayıcı API anahtarlarını görüntüler.
+
+### Kimlik bilgilerini kaldırma
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Ortam değişkeni kimlik doğrulaması
+
+CI ardışık düzenleri veya başsız ortamlar için sağlayıcının API anahtarı ortam değişkenini doğrudan ayarlayın — etkileşimli oturum açmaya gerek yoktur. Yaygın örnekler:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt bu değişkenleri başlangıçta otomatik olarak okur. `bolt providers list` hangi ortam değişkenlerini algıladığını gösterir.
+
+## Mevcut modellere göz atma
+
+`bolt models`, yapılandırılmış sağlayıcılarınızda mevcut olan her modeli listeler.
+
+```bash
+# Tüm modelleri listele
+bolt models
+
+# Bir sağlayıcıya filtrele
+bolt models anthropic
+
+# Maliyet ve yetenek meta verilerini göster
+bolt models --verbose
+
+# Model kataloğunu models.dev'den yenile
+bolt models --refresh
+```
+
+<Tip>
+  Her model için giriş/çıkış token fiyatlandırmasını görmek için `bolt models --verbose` komutunu çalıştırın. Bu, uzun süre çalışan bir görev için bir modele bağlanmadan önce maliyet dengelerini karşılaştırmayı kolaylaştırır.
+</Tip>
+
+### Model tanımlayıcı formatı
+
+Modellere her zaman `provider/model` formatında başvurulur:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Bolt'un bir model kabul ettiği her yerde bu formatı kullanın — CLI bayrakları, yapılandırma dosyaları ve ajan tanımları.
+
+## Çalışma zamanında model seçme
+
+### `--model` / `-m` bayrağı
+
+`--model` bayrağı `bolt run`, `bolt commit` ve `bolt review` üzerinde mevcuttur:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — muhakeme çabasını kontrol etme
+
+Bazı modeller yapılandırılabilir muhakeme çabası düzeylerini destekler (örn. Anthropic'in genişletilmiş düşünmesi, OpenAI'nin muhakeme modelleri). Çaba kademesini seçmek için `--variant` kullanın:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Kullanılabilir varyant değerleri sağlayıcıya ve modele bağlıdır. Yaygın değerler `minimal`, `low`, `medium`, `high` ve `max`'tir, ancak tam küme değişir. Belirli bir model için desteklenen varyantları görmek için sağlayıcınızın belgelerine bakın veya `bolt models --verbose` kullanın.
+</Note>
+
+### `--thinking` — muhakeme bloklarını göster
+
+Genişletilmiş düşünmeyi destekleyen bir model kullanırken modelin düşünce zincirini çıktıda göstermek için `--thinking` geçirin:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Best-of-N paralel çalıştırmalar
+
+`--best-of`, aynı komutu birden çok modelde paralel olarak çalıştırır, ardından yanıtları sıralamak ve en iyisini tutmak için bir jüri modeli kullanır:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+Jüri varsayılan olarak `--model` üzerinden geçirilen modele veya `--model` ayarlanmamışsa `--best-of` listesindeki ilk girişe ayarlanır. Bayrak, `provider/model` tanımlayıcılarının virgülle ayrılmış bir listesini kabul eder.
+
+<Tip>
+  Best-of-N, farklı modellerin gerçekten farklı yaklaşımlar getirebileceği karmaşık algoritmik sorunlar veya mimari kararlar için özellikle kullanışlıdır. Bolt'un bunları paralel çalıştırmasına ve kazananı otomatik olarak seçmesine izin verin.
+</Tip>

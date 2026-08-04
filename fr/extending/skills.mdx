@@ -1,0 +1,22 @@
+---
+title: "Skills : playbooks d'agent réutilisables"
+sidebarTitle: "Skills"
+description: "Les skills sont des playbooks nommés et réutilisables que l'agent Bolt invoque via l'outil skill — pratiques pour des workflows prêts à l'emploi comme livrer des versions ou lancer des suites de lint."
+---
+
+Les skills sont des playbooks nommés et réutilisables qui vivent aux côtés de votre projet et sont invoqués via l'outil `skill`. Là où un outil personnalisé est une unique action exécutable, un skill est un workflow scripté que l'agent peut suivre étape par étape : rassembler tels fichiers, exécuter telles commandes, décider de la suite en fonction de la sortie.
+
+Utilisez les skills lorsque :
+
+- Vous avez un workflow que vous ne cessez de réexpliquer dans vos prompts (« d'abord lance le linter, puis... »).
+- Vous voulez que l'agent suive un arbre de décision précis.
+- Vous voulez le même workflow disponible pour chaque session et chaque agent du projet.
+
+## Où ils se trouvent
+
+Les skills sont des fichiers placés sous `.opencode/skill/` (ou `.opencode/skills/`) à la racine du projet. Chaque fichier décrit le nom du déclencheur, quand l'agent doit l'utiliser et les étapes concernées. L'[outil](/concepts/tools) `skill` les expose au modèle.
+
+## Voir aussi
+
+- [Outils personnalisés](/extending/custom-tools) — extension de plus bas niveau, à action unique.
+- [Agents personnalisés](/extending/custom-agents) — inscrire les instructions directement dans un agent.

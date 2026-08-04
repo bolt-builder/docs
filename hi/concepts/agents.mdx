@@ -1,0 +1,135 @@
+---
+title: "Agents — Bolt के दस बिल्ट-इन और कस्टम AI Personas"
+sidebarTitle: "Agents"
+description: "Bolt दस बिल्ट-इन agents के साथ आता है, प्रत्येक की एक अलग भूमिका, टूलसेट और एक्सेस लेवल है। सीखें कि कैसे बदलें, कॉन्फ़िगर करें और अपने खुद के agents बनाएँ।"
+---
+
+Bolt हर AI persona को एक नामित **agent** के रूप में मानता है: एक system prompt जो सटीक रूप से निर्धारित tool permissions के सेट के साथ जुड़ा होता है। हर काम के लिए एक सामान्य-उद्देश्य वाला मॉडल चलाने के बजाय, आप वह agent चुनते हैं जिसका एक्सेस और फ़ोकस आपकी ज़रूरत से मेल खाता हो — चाहे वह सुरक्षा ऑडिट करना हो, docs लिखना हो, या पूरे फ़्रेमवर्क माइग्रेशन को जोड़ना हो।
+
+## एक्सेस लेवल
+
+हर बिल्ट-इन agent को तीन एक्सेस टियर में से एक असाइन किया जाता है जो यह निर्धारित करता है कि वह कौन-से tools को इनवोक कर सकता है:
+
+| लेवल | दिए गए Permissions | विशिष्ट उपयोग |
+|-------|---------------------|-------------|
+| **Full** | फ़ाइलें पढ़ना, फ़ाइलें लिखना/एडिट करना, shell कमांड चलाना | सक्रिय कोडिंग, डिबगिंग, रीफ़ैक्टरिंग, माइग्रेशन |
+| **Edit** | फ़ाइलें पढ़ना, फ़ाइलें लिखना/एडिट करना — कोई shell नहीं | दस्तावेज़ीकरण, कमेंट अपडेट, सुरक्षित प्रोज़ एडिट |
+| **Read** | केवल फ़ाइलें पढ़ना — कोई राइट नहीं, कोई shell नहीं | प्लानिंग, रिसर्च, कोड रिव्यू, ऑडिट |
+
+## बिल्ट-इन agents
+
+Bolt बॉक्स से बाहर दस विशेष agents के साथ आता है। TUI में उनके बीच स्विच करने के लिए <kbd>Tab</kbd> दबाएँ।
+
+| Agent | Access | विवरण |
+|-------|--------|-------------|
+| `code` | Full | डिफ़ॉल्ट: कोड पढ़ता, लिखता और चलाता है |
+| `plan` | Read | कोडबेस का अन्वेषण करता है और कोड बदले बिना एक प्लान तैयार करता है |
+| `ask` | Read | प्रश्न और रिसर्च — कोई फ़ाइल एडिट नहीं |
+| `code-review` | Read | बदलावों की शुद्धता, शैली और सुरक्षा के लिए समीक्षा करता है |
+| `debug` | Full | विफल टेस्ट, क्रैश और लॉजिक त्रुटियों को डिबग करता है |
+| `refactor` | Full | हर चरण पर टेस्ट सत्यापन के साथ सुरक्षित रीफ़ैक्टरिंग |
+| `docs` | Edit | दस्तावेज़ीकरण और कमेंट लिखता और अपडेट करता है |
+| `security` | Read | सुरक्षा ऑडिट: कमज़ोरियाँ, secrets, और खतरनाक पैटर्न |
+| `migrate` | Full | फ़्रेमवर्क अपग्रेड और dependency माइग्रेशन |
+| `perf` | Full | परफ़ॉर्मेंस विश्लेषण और अनुकूलन |
+
+## Subagents
+
+दस प्राथमिक agents के अलावा, Bolt दो बिल्ट-इन **subagents** भी उजागर करता है, जिन्हें प्राथमिक agents किसी सेशन के दौरान काम सौंप सकते हैं। आप कभी भी manually subagent नहीं चुनते — जब कोई प्राथमिक agent इन्हें स्पॉन करने का निर्णय लेता है तब वे स्वचालित रूप से डिस्पैच होते हैं।
+
+| Subagent | भूमिका |
+|----------|------|
+| `@general` | जटिल बहु-चरण कार्य प्रत्यायोजन जिसमें व्यापक क्षमताओं की आवश्यकता होती है |
+| `@explore` | तेज़, केवल-पढ़ने योग्य कोडबेस रिसर्च — फ़ाइलों को बिना दुष्प्रभाव के ट्रैवर्स करता है |
+
+<Tip>
+  जब आपको किसी अपरिचित कोडबेस को जल्दी समझने की ज़रूरत हो, तो `ask` या `plan` agent से शुरू करें। पर्दे के पीछे वे उत्तर तैयार करने से पहले आपके प्रोजेक्ट को हाई स्पीड पर इंडेक्स करने के लिए `@explore` subagent डिस्पैच कर सकते हैं — बिना एक भी फ़ाइल छुए।
+</Tip>
+
+## Agents बदलना
+
+**TUI में** — सेशन के दौरान किसी भी समय उपलब्ध agents की सूची में साइकिल करने के लिए <kbd>Tab</kbd> दबाएँ। सक्रिय agent सेशन फ़ुटर में दिखाया जाता है।
+
+**Non-interactively** — उस रन की अवधि के लिए एक विशिष्ट agent पिन करने के लिए `bolt run` में `--agent <name>` पास करें:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Agents की सूची
+
+सभी उपलब्ध agents — बिल्ट-इन और कस्टम दोनों — को उनके मोड और permission कॉन्फ़िगरेशन के साथ देखने के लिए:
+
+```bash
+bolt agent list
+```
+
+## कस्टम agents
+
+आप अपने खुद के agents दो तरीक़ों से बना सकते हैं।
+
+### `bolt agent create` के साथ जेनरेट करें
+
+इंटरैक्टिव विज़ार्ड LLM का उपयोग करके एक agent फ़ाइल बनाता है और उसे डिस्क पर लिखता है:
+
+```bash
+bolt agent create
+```
+
+सभी flags वैकल्पिक हैं। इन्हें non-interactively चलाने के लिए दें:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | विवरण |
+|------|-------------|
+| `--description` | agent को क्या करना चाहिए (जेनरेशन के लिए LLM प्रॉम्प्ट के रूप में उपयोग किया जाता है) |
+| `--path` | जनरेट की गई agent फ़ाइल लिखने के लिए डायरेक्टरी |
+| `--mode` | `all` (डिफ़ॉल्ट), `primary`, या `subagent` |
+| `--permissions` | अनुमति देने के लिए कॉमा-सेपरेटेड permissions की सूची। सभी के लिए छोड़ दें। |
+| `--model` / `-m` | `provider/model` फ़ॉर्मैट में उपयोग करने के लिए मॉडल |
+
+### मैन्युअली markdown फ़ाइल लिखें
+
+एक agent बस YAML frontmatter वाली markdown फ़ाइल है। इसे अपने प्रोजेक्ट के अंदर `.bolt/agents/` में या ग्लोबल agents डायरेक्टरी में रखें:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+फ़ाइल का नाम (बिना `.md` के) agent का पहचानकर्ता बन जाता है।
+
+### उपलब्ध permissions
+
+Permissions सूक्ष्म tool गेट हैं जिन्हें आप कस्टम agent बनाते समय नियंत्रित करते हैं:
+
+| Permission | नियंत्रण करता है |
+|------------|----------|
+| `bash` | Shell कमांड निष्पादन |
+| `read` | फ़ाइल पढ़ना |
+| `edit` | फ़ाइल लिखना और एडिट करना (`write` और `apply_patch` को भी गेट करता है) |
+| `glob` | फ़ाइल glob/डायरेक्टरी लिस्टिंग |
+| `grep` | ripgrep के माध्यम से फ़ाइल खोज |
+| `webfetch` | वेब से HTTP fetch |
+| `task` | subagent टास्क स्पॉन करना |
+| `todowrite` | todo आइटम बनाना और अपडेट करना |
+| `websearch` | वेब खोज क्वेरी |
+| `lsp` | Language server protocol ऑपरेशन |
+| `skill` | प्रोजेक्ट skills तक पहुँच |

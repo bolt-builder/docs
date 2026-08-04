@@ -1,0 +1,78 @@
+---
+title: "Bolt: Terminaliniz İçin AI Kodlama Ajanı"
+sidebarTitle: "Ana Sayfa"
+description: "Bolt; on uzmanlaşmış ajan, kalıcı oturumlar, MCP desteği ve masaüstü uygulaması içeren, terminal odaklı bir AI kodlama ajanıdır — herhangi bir LLM sağlayıcısıyla çalışır."
+---
+
+Bolt, tam donanımlı bir AI mühendislik ekibini doğrudan terminalinize taşır. Hızlı, klavyeyle sürülen bir TUI ve yerel bir masaüstü uygulaması olarak sunulur; ikisi de aynı motor tarafından desteklenir: on uzmanlaşmış ajan, kalıcı ve dayanıklı oturumlar, OAuth destekli MCP sunucu yönetimi, bir eklenti sistemi ve tüm büyük LLM sağlayıcıları için destek.
+
+<CardGroup cols={2}>
+  <Card title="Kurulum" icon="download" href="/installation">
+    Bolt'u saniyeler içinde curl, npm, bun veya tercih ettiğiniz paket yöneticisi ile kurun.
+  </Card>
+  <Card title="Hızlı Başlangıç" icon="rocket" href="/quickstart">
+    İlk AI kodlama oturumunuzu bir dakikadan kısa sürede çalıştırın.
+  </Card>
+  <Card title="Ajanlar" icon="robot" href="/concepts/agents">
+    On yerleşik ajanla tanışın: code, plan, ask, review, debug, refactor, docs, security, migrate ve perf.
+  </Card>
+  <Card title="Komut Referansı" icon="terminal" href="/reference/commands">
+    Her CLI komutu, alt komutu ve bayrağı ayrıntılı olarak belgelendi.
+  </Card>
+</CardGroup>
+
+## Bolt ne yapar
+
+Bolt kod tabanınızı okur, ne inşa ettiğinizi anlar ve terminalde ya da masaüstü uygulamasında sizinle birlikte kod teslim eder. Her oturum kalıcıdır: ayrılabilir, başka bir makineden yeniden bağlanabilir, konuşmanın bir dalını çatallayabilir, bir bağlantı paylaşabilir veya temizlenmiş bir transkript dışa aktarabilirsiniz.
+
+<CardGroup cols={3}>
+  <Card title="Oturumlar" icon="clock-rotate-left" href="/concepts/sessions">
+    Yerel SQLite'ta saklanan kalıcı ve çatallanabilir oturumlar.
+  </Card>
+  <Card title="Sağlayıcılar ve Modeller" icon="microchip" href="/concepts/providers-and-models">
+    Tüm büyük LLM sağlayıcıları için kendi API anahtarınızı kullanın.
+  </Card>
+  <Card title="Yapılandırma" icon="sliders" href="/concepts/configuration">
+    Tam şema desteğiyle proje başına `.bolt/bolt.jsonc`.
+  </Card>
+  <Card title="MCP Sunucuları" icon="plug" href="/extending/mcp-servers">
+    OAuth akışları dahil Model Context Protocol üzerinden araçlar ekleyin.
+  </Card>
+  <Card title="Eklentiler" icon="puzzle-piece" href="/extending/plugins">
+    Bolt'u özel sağlayıcılar, araçlar ve kimlik doğrulama yöntemleriyle genişletin.
+  </Card>
+  <Card title="GitHub Entegrasyonu" icon="github" href="/server/github-actions">
+    AI destekli commit mesajları, kod incelemesi ve GitHub Actions.
+  </Card>
+</CardGroup>
+
+## Çalışır hale getirin
+
+<Steps>
+  <Step title="Bolt'u kurun">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+    ```
+    Veya npm ile kurun: `npm i -g @bolt-builder/bolt-cli`
+  </Step>
+  <Step title="Projenizi açın">
+    Herhangi bir proje dizinine gidin ve TUI'yi başlatın:
+    ```bash
+    cd my-project
+    bolt
+    ```
+  </Step>
+  <Step title="Bir sağlayıcı yapılandırın">
+    İlk başlatmada Bolt sizden bir LLM sağlayıcısı eklemenizi ister. Ayrıca şunu da çalıştırabilirsiniz:
+    ```bash
+    bolt providers
+    ```
+  </Step>
+  <Step title="AI ile kodlamaya başlayın">
+    Komutunuzu TUI altbilgisine yazın, Enter'a basın ve Bolt'un ajanlarını çalıştırın. `Tab` ile ajan değiştirin.
+  </Step>
+</Steps>
+
+<Tip>
+  Tüm TUI'yi açmadan hızlı, etkileşimsiz bir yanıt almak için `bolt run "explain this codebase"` komutunu kullanın.
+</Tip>

@@ -1,0 +1,191 @@
+---
+title: "Sessions — Historial conversacional durador a Bolt"
+sidebarTitle: "Sessions"
+description: "Les sessions són la unitat de treball persistent de Bolt: cadascuna emmagatzema una conversa completa en SQLite local perquè puguis desconnectar-te, reprendre-la, bifurcar-la, compartir-la i exportar-la en qualsevol moment."
+---
+
+Una **sessió** és la unitat de treball principal de Bolt. Cada prompt que envies, cada fitxer que l'agent llegeix o edita i cada crida d'eina que el model fa es registren de manera duradora a l'historial d'aquesta sessió. Com que les sessions viuen en una base de dades SQLite local, sobreviuen als reinicis de procés, es poden llistar i consultar en qualsevol moment, i mai surten de la teva màquina tret que les comparteixis o exportis explícitament.
+
+<Note>
+  Totes les dades de sessió s'emmagatzemen localment en una base de dades SQLite a la teva pròpia màquina. No s'envia res a servidors externs tret que habilitis la compartició. Utilitza `bolt db path` per trobar el fitxer exacte de la base de dades.
+</Note>
+
+## Cicle de vida de la sessió
+
+Una sessió comença en el moment en què envies el teu primer prompt i acaba només quan l'esborres. Entre aquests dos punts pots desconnectar-te, reprendre, bifurcar o transferir-la lliurement.
+
+<Steps>
+  <Step title="Crear o continuar una sessió">
+    Llança el TUI per iniciar una sessió nova interactivament, o passa un prompt a `bolt run` per crear-ne una de manera no interactiva:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Desconnectar-se i tornar més tard">
+    Tanca el TUI en qualsevol moment — la sessió es persisteix automàticament. Reprèn la teva sessió més recent amb `--continue`, o apunta a una sessió específica per ID amb `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Bifurcar abans d'experimentar">
+    Utilitza `--fork` per bifurcar l'historial de la sessió actual abans de provar un canvi arriscat. La bifurcació és una sessió independent que no afecta l'original:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Compartir i col·laborar">
+    Genera una URL de compartició amb `--share`. Qualsevol persona amb l'enllaç pot veure la transcripció de la sessió en un navegador:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Ordres de gestió de sessions
+
+### Llistar sessions
+
+```bash
+bolt session list
+```
+
+Genera una taula formatada de totes les sessions amb el seu ID, títol i hora de la darrera actualització. Afegeix `--format json` per obtenir una sortida llegible per màquina, o `-n <N>` per limitar-lo a les N sessions més recents:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Eliminar una sessió
+
+```bash
+bolt session delete <sessionID>
+```
+
+Elimina permanentment la sessió i tots els seus missatges de la base de dades local.
+
+## Flags d'execució per al control de sessions
+
+Aquests flags estan disponibles a `bolt run`:
+
+| Flag | Àlies | Descripció |
+|------|-------|-------------|
+| `--continue` | `-c` | Continua la sessió més recent |
+| `--session <id>` | `-s` | Continua una sessió específica per ID |
+| `--fork` | | Bifurca la sessió abans de continuar (requereix `--continue` o `--session`) |
+| `--share` | | Genera una URL de compartició per a la sessió |
+| `--title <title>` | | Estableix o sobreescriu el títol de la sessió |
+
+## Exportar sessions
+
+Exporta la transcripció completa d'una sessió com a JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+El flag `--sanitize` reemplaça les rutes de fitxers, el contingut del codi, les entrades i sortides d'eines i altres camps potencialment sensibles amb marcadors `[redacted:kind:id]` — útil per compartir transcripcions amb companys d'equip o per informar d'errors.
+
+## Importar sessions
+
+Importa una sessió des d'un fitxer JSON local o directament des d'una URL de compartició:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Les sessions importades apareixen a la teva llista de sessions local i són completament reprenibles.
+
+## Consultar la base de dades de sessions
+
+Bolt exposa directament la base de dades SQLite subjacent per a usuaris avançats.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+El format de sortida per defecte és valors separats per tabulacions; afegeix `--format json` per a la sortida JSON.
+
+## Estadístiques d'ús de tokens i cost
+
+`bolt stats` agrega dades d'ús de tokens i cost a través de totes les teves sessions:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+La sortida inclou el total de sessions, missatges, tokens d'entrada/sortida/raonament/cache, cost total, cost mitjà per dia, tokens mitjans i mitjans per sessió, i un desglossament d'ús d'eines. Passa `--models` per mostrar també un desglossament per model de missatges, tokens i cost.
+
+## Flux de treball de bifurcació i compartició
+
+Aquí tens un exemple complet de bifurcació d'una sessió i compartició del resultat:
+
+<Steps>
+  <Step title="Comença el treball en una sessió nova">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Bifurca abans del següent pas arriscat">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    L'ID de la sessió bifurcada s'imprimeix a la consola. La sessió original queda intacta.
+  </Step>
+  <Step title="Comparteix la bifurcació per a revisió">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    La URL de compartició s'imprimeix un cop la sessió queda inactiva.
+  </Step>
+  <Step title="Importa en una altra màquina">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

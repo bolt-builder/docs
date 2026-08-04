@@ -1,0 +1,139 @@
+---
+title: "Furnizori și modele — autentificare și selecție LLM"
+sidebarTitle: "Furnizori și modele"
+description: "Bolt acceptă orice furnizor LLM prin Vercel AI SDK. Autentifică furnizori, listează modele, reglează efortul de raționament și rulează comparații paralele best-of-N."
+---
+
+Bolt este agnostic la model prin design. În culise folosește **Vercel AI SDK** pentru a comunica cu furnizorii, ceea ce înseamnă că orice furnizor pe care SDK-ul îl suportă — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter și altele — funcționează direct. Catalogul de furnizori și modele provine de la [models.dev](https://models.dev), o bază de date întreținută de comunitate cu metadate despre furnizori și prețuri.
+
+## Gestionarea credențialelor furnizorilor
+
+Folosește `bolt providers` (aliasat ca `bolt auth`) pentru a adăuga, lista și elimina credențialele furnizorilor.
+
+### Adaugă sau actualizează credențiale
+
+```bash
+bolt providers login
+# or equivalently:
+bolt auth login
+```
+
+Aceasta lansează un prompt interactiv pentru a selecta un furnizor și a introduce credențiale. Pentru a sări peste fluxul interactiv, transmite direct opțiunile:
+
+```bash
+bolt providers login --provider anthropic
+bolt providers login --provider openai --method "API key"
+```
+
+### Listează furnizorii configurați
+
+```bash
+bolt providers list
+# or:
+bolt auth list
+```
+
+Afișează toate credențialele stocate și orice chei de API ale furnizorilor detectate din variabilele de mediu.
+
+### Elimină credențialele
+
+```bash
+bolt providers logout
+bolt providers logout anthropic
+```
+
+### Autentificare prin variabile de mediu
+
+Pentru fluxuri CI sau medii headless, setează direct variabila de mediu a cheii de API a furnizorului — nu este necesară autentificarea interactivă. Exemple comune:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
+```
+
+Bolt citește automat aceste variabile la pornire. `bolt providers list` va arăta ce variabile de mediu au fost detectate.
+
+## Răsfoirea modelelor disponibile
+
+`bolt models` listează fiecare model disponibil în furnizorii tăi configurați.
+
+```bash
+# List all models
+bolt models
+
+# Filter to one provider
+bolt models anthropic
+
+# Show cost and capability metadata
+bolt models --verbose
+
+# Refresh the model catalog from models.dev
+bolt models --refresh
+```
+
+<Tip>
+  Rulează `bolt models --verbose` pentru a vedea prețurile pe token de intrare/ieșire pentru fiecare model. Acest lucru face ușor de comparat compromisurile de cost înainte de a te fixa pe un model pentru o sarcină de lungă durată.
+</Tip>
+
+### Formatul identificatorului de model
+
+Modelele sunt întotdeauna referite în formatul `provider/model`:
+
+```
+anthropic/claude-opus-4-5
+openai/gpt-4o
+google/gemini-2.5-pro
+openrouter/anthropic/claude-opus-4-5
+```
+
+Folosește acest format oriunde Bolt acceptă un model — opțiuni CLI, fișiere de configurare și definiții de agent.
+
+## Selectarea unui model la rulare
+
+### Opțiunea `--model` / `-m`
+
+Opțiunea `--model` este disponibilă pe `bolt run`, `bolt commit` și `bolt review`:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 "refactor the payment module"
+bolt commit --model openai/gpt-4o
+bolt review --model google/gemini-2.5-pro --staged
+```
+
+### `--variant` — controlul efortului de raționament
+
+Unele modele acceptă niveluri configurabile de efort de raționament (de exemplu, gândirea extinsă de la Anthropic, modelele de raționament OpenAI). Folosește `--variant` pentru a selecta nivelul de efort:
+
+```bash
+bolt run --variant high "design a distributed rate limiter"
+bolt run --variant minimal "rename this variable"
+```
+
+<Note>
+  Valorile disponibile pentru variantă depind de furnizor și de model. Valorile comune sunt `minimal`, `low`, `medium`, `high` și `max`, dar setul exact variază. Verifică documentația furnizorului tău sau folosește `bolt models --verbose` pentru a vedea variantele acceptate pentru un anumit model.
+</Note>
+
+### `--thinking` — afișează blocurile de raționament
+
+Când folosești un model care acceptă gândire extinsă, transmite `--thinking` pentru a face vizibil lanțul de gândire al modelului în ieșire:
+
+```bash
+bolt run --model anthropic/claude-opus-4-5 --variant high --thinking \
+  "why does the token refresh logic race in the auth service?"
+```
+
+## Rulări paralele best-of-N
+
+`--best-of` trimite același prompt către mai multe modele în paralel, apoi folosește un model judecător pentru a clasifica răspunsurile și a-l păstra pe cel mai bun:
+
+```bash
+bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+  "implement a binary search tree with full test coverage"
+```
+
+Judecătorul implicit este modelul transmis prin `--model` sau prima intrare din lista `--best-of` dacă `--model` nu este setat. Opțiunea acceptă o listă separată prin virgulă de identificatori `provider/model`.
+
+<Tip>
+  Best-of-N este deosebit de util pentru probleme algoritmice complexe sau decizii de arhitectură, unde modelele diferite pot aduce abordări cu adevărat diferite. Lasă Bolt să le ruleze în paralel și să aleagă automat câștigătorul.
+</Tip>

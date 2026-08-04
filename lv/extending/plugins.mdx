@@ -1,0 +1,145 @@
+---
+title: "Paplašiniet Bolt ar spraudņiem"
+sidebarTitle: "Spraudņi"
+description: "Instalējiet un veidojiet Bolt spraudņus, lai pievienotu pielāgotus MI sniedzējus, autentifikācijas metodes, rīkus un darbvietas adapterus jebkuram projektam vai globāli."
+url: "extending/plugins"
+---
+
+Spraudņi ļauj jums paplašināt Bolt ārpus tā iebūvētajām iespējām. Spraudnis ir Node vai Bun modulis, kas eksportē Bolt spraudņa manifestu; ielādēts, tas var reģistrēt jaunus LLM sniedzējus, pielāgotas autentifikācijas metodes, papildu rīkus un darbvietas adapterus. Spraudņus var instalēt vienam projektam vai piemērot globāli visam jūsu darbam.
+
+## Spraudņa instalēšana
+
+Izmantojiet `bolt plugin install` (aizstājējs: `bolt plug`), lai instalētu spraudni no npm un automātiski reģistrētu to savā konfigurācijā:
+
+```bash
+bolt plugin install <module>
+```
+
+### Karogi
+
+| Karogs | Aizstājējs | Apraksts |
+|------|-------|-------------|
+| `--global` | `-g` | Instalē globālajā konfigurācijā, nevis pašreizējā projektā |
+| `--force` | `-f` | Aizstāj esošu ierakstu tam pašam modulim |
+
+### Apjoms: projekts vai globāls
+
+Pēc noklusējuma `bolt plugin install` pievieno spraudni projekta līmeņa `.bolt/bolt.jsonc`. Nododiet `--global`, lai pievienotu to savai lietotāja mēroga konfigurācijai, lai tas ielādētos katrā projektā.
+
+```bash
+# Projekta apjoms (noklusējums)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Globāls — ielādējas katrā projektā
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Palaidiet `bolt --pure` (vai iestatiet `OPENCODE_PURE=1`), lai palaistu Bolt ar visiem ārējiem spraudņiem atspējotiem. Tas ir noderīgi, atkļūdojot, vai spraudnis izraisa negaidītu uzvedību, to neinstalējot.
+</Note>
+
+---
+
+## Publicēta spraudņa instalēšana
+
+<Steps>
+  <Step title="Atrodiet spraudņa paketi">
+    Meklējiet npm paketes ar `bolt-plugin` vai `opencode-plugin` vārdā vai sekojiet saitei no sniedzēja dokumentācijas.
+  </Step>
+
+  <Step title="Instalējiet savā projektā">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt instalē paketi, nolasa tās manifestu, lai atklātu servera un TUI mērķus, pēc tam ieraksta ierakstu failā `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Pārbaudiet konfigurāciju">
+    Atveriet `.bolt/bolt.jsonc` un apstipriniet, ka spraudņa ieraksts ir pievienots:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Sāciet sesiju">
+    ```bash
+    bolt
+    ```
+
+    Bolt ielādē spraudni palaišanas laikā. Jebkuri tā reģistrētie sniedzēji vai rīki ir uzreiz pieejami.
+  </Step>
+</Steps>
+
+---
+
+## Manuāla spraudņu konfigurācija
+
+Jūs varat reģistrēt spraudņus, tieši rediģējot `.bolt/bolt.jsonc`. Tas ir noderīgi lokāliem spraudņiem izstrādes gaitā:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Relatīvie ceļi tiek atrisināti no projekta saknes. Tiek atbalstīti gan TypeScript, gan JavaScript ievades punkti.
+
+---
+
+## Spraudņa veidošana
+
+Spraudņi tiek veidoti pret `@opencode-ai/plugin` paketi, kas nodrošina `Hooks` saskarni, kurai jūsu modulim ir jāatbilst.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Minimāls spraudnis eksportē funkciju, kas saņem `PluginInput` objektu un atgriež `Hooks` objektu:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Pieejamie āķu veidi
+
+| Āķis | Mērķis |
+|------|---------|
+| `auth` | Reģistrēt pielāgotus autentifikācijas sniedzējus ar `methods` masīvu |
+| `event` | Reaģēt uz sesijas notikumiem (ziņas, rīku izsaukumi, pabeigšanas) |
+| `config` | Reaģēt uz konfigurācijas izmaiņām izpildes laikā |
+| `dispose` | Iztīrīt resursus, kad spraudnis tiek izkrauts |
+
+`PluginInput` objekts atklāj `client` (tipizētu Bolt API klientu), `project`, `worktree`, `directory` un `serverUrl`, lai jūsu spraudnis varētu mijiedarboties ar palaisto serveri.
+
+---
+
+## Vides mainīgie
+
+| Mainīgais | Apraksts |
+|----------|-------------|
+| `OPENCODE_PURE` | Iestatiet uz `1`, lai palaistu bez ārējiem spraudņiem |

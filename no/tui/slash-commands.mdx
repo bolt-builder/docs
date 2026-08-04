@@ -1,0 +1,31 @@
+---
+title: "Bolt TUI-skråstrekkommandoer"
+sidebarTitle: "Skråstrekkommandoer"
+description: "Skråstrekkommandoene du kan kjøre inne i Bolt TUI-en — /memory, /plan, /todos, /btw — og hvordan de endrer oppførselen til gjeldende økt."
+---
+
+Skråstrekkommandoer skrives inn i TUI-ledeteksten og endrer hvordan gjeldende økt oppfører seg. De sender ikke noe til modellen; de kjøres lokalt mot Bolt selv.
+
+## Referanse
+
+| Kommando | Hva den gjør |
+| --- | --- |
+| `/memory` | Vis prosjektminnestatus for denne økten. |
+| \`/memory use on | off\` | Om denne økten leser fra [prosjektminne](/concepts/project-memory). |
+| \`/memory contribute on | off\` | Om denne økten skriver tilbake til prosjektminne når turen avsluttes. |
+| `/plan` | Bytt gjeldende økt til planleggingsmodus (skrivebeskyttet, produserer en plan). |
+| `/todos` | Vis agentens gjeldende strukturerte oppgaveliste. |
+| `/btw` | Injiser en out-of-band-notis ("forresten...") som agenten vil se på sin neste tur uten å utløse en full respons. |
+
+<Tip>
+  Skråstrekkommandoer er avgrenset til økten. For å gjøre en preferanse varig, sett den i `.bolt/bolt.jsonc` i stedet. Se [Konfigurasjon](/concepts/configuration).
+</Tip>
+
+## Legge til dine egne
+
+Egendefinerte skråstrekkommandoer kan bidras av [plugins](/extending/plugins) og av filer i `.opencode/command/`. Hver kommando er en Markdown-fil hvis frontmatter beskriver utløseren og oppførselen.
+
+## Relatert
+
+- [Hurtigtaster](/tui/keybinds) — tastatursnarveier for TUI-en.
+- [Prosjektminne](/concepts/project-memory) — hva `/memory` slår av og på.

@@ -1,0 +1,107 @@
+---
+title: "Bolt 소개: 오픈 소스 터미널 AI 에이전트"
+sidebarTitle: "Introduction"
+description: "Bolt를 만나보세요: 10개 에이전트, 지속적 세션, 프로젝트 메모리, MCP, 75+ LLM 프로바이더, TUI, 데스크톱 앱을 갖춘 오픈 소스 터미널 AI 코딩 에이전트."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**여러분의 터미널, 이제 완전한 AI 엔지니어링 팀이 내부에 있습니다.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt는 [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui), [SolidJS](https://www.solidjs.com) 위에 구축된 터미널 우선 AI 코딩 에이전트입니다. 아무 프로젝트에 가리키면 자동으로 컨텍스트를 파악합니다: 코드를 탐색하고, 규칙을 따르고, 셸 명령을 실행하고, 파일을 편집하고, 테스트를 실행하고, 변경을 배포합니다.
+
+10개의 내장 에이전트(`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`)와 `@general` 및 `@explore` 서브에이전트가 전체 엔지니어링 루프를 다룹니다. 세션은 내구성이 있습니다: 언제든지 분리, 재연결(원격 서버에도), 포크, 공유, 내보내기, 가져오기할 수 있습니다. 프로젝트 메모리는 에이전트가 세션 사이에 학습한 것을 유지합니다. MCP 서버(OAuth 포함), 플러그인, 커스텀 에이전트, 커스텀 도구를 통해 확장 가능합니다.
+
+Bolt는 PolyForm Noncommercial 1.0.0 라이선스 하에 오픈 소스입니다.
+
+## 왜 Bolt인가?
+
+Bolt는 개발자가 실제로 작업하는 방식을 중심으로 설계되었습니다: 터미널에서, 여러 세션에 걸쳐, 실제 코드베이스에서. 다음과 같은 점이 차별화됩니다:
+
+- **터미널 우선 TUI.** [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui), [SolidJS](https://www.solidjs.com)로 구축된 빠르고 키보드 중심의 인터페이스. 실제로 네이티브이기 때문에 네이티브처럼 느껴집니다.
+- **에이전트 팀 전체.** 10개의 전문 에이전트 — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf` — 과 조사 및 다단계 위임을 위한 서브에이전트. `Tab`으로 전환합니다.
+- **떠났다가 다시 참여할 수 있는 세션.** 세션에서 분리하고 나중에 원격 서버에서도 연결하세요. 언제든지 포크, 공유, 내보내기, 가져오기가 가능합니다. 세션은 SQLite에 저장되며 `bolt db`로 완전히 검사할 수 있습니다.
+- **설계상 확장 가능.** 완전한 OAuth 지원을 갖춘 MCP 서버, 플러그인 시스템, GitHub 통합, 내장 API 서버, 웹 UI.
+- **데스크톱 앱.** 다중 창, 다중 탭 데스크톱 경험으로 감싼 동일한 엔진 — 통합 터미널, 파일 트리, 명령 팔레트, 28개 UI 언어, 자동 업데이트를 포함합니다.
+
+## 내장 에이전트
+
+Bolt는 10개의 전문 에이전트를 기본 제공합니다. 각 에이전트는 목적에 맞게 파일 시스템 접근 수준이 정의되어 있습니다.
+
+| Agent | Access | Description |
+| --- | --- | --- |
+| `code` | Full | 기본값: 코드를 읽고 쓰고 실행합니다 |
+| `plan` | Read | 코드베이스를 탐색하고 파일을 변경하지 않은 채 계획을 생성합니다 |
+| `ask` | Read | 질문과 조사 — 파일 편집 없음 |
+| `code-review` | Read | 정확성, 스타일, 보안 관점에서 변경을 검토합니다 |
+| `debug` | Full | 실패하는 테스트, 크래시, 논리 오류를 디버깅합니다 |
+| `refactor` | Full | 각 단계에서 테스트 검증을 동반한 안전한 리팩터링 |
+| `docs` | Edit | 문서와 주석을 작성하고 업데이트합니다 |
+| `security` | Read | 보안 감사: 취약점, 시크릿, 패턴 |
+| `migrate` | Full | 프레임워크 업그레이드와 의존성 마이그레이션 |
+| `perf` | Full | 성능 분석과 최적화 |
+
+또한 자신만의 에이전트를 Markdown 파일로 정의하거나 `bolt agent create`로 생성할 수 있습니다.
+
+## 데스크톱 앱
+
+Bolt는 다중 창 및 다중 탭 세션 관리, 첨부 및 클립보드 이미지 붙여넣기 지원 프롬프트 컴포저, 통합 터미널과 파일 트리, 명령 팔레트, 키바인딩·모델·프로바이더·서버에 대한 완전한 설정, 네이티브 알림, 딥 링크, Windows의 WSL 통합, dev·beta·프로덕션 채널 전반의 자동 업데이트를 갖춘 독립 실행형 데스크톱 앱으로도 제공됩니다.
+
+데스크톱 앱은 [릴리스 페이지](https://github.com/Bolt-builder/bolt-cli/releases)에서 다운로드하거나, macOS에서 Gatekeeper 우회 없이 한 줄로 설치하세요:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## 문서 탐색
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    macOS, Linux, Windows에서 curl, npm 또는 시스템 패키지 관리자로 Bolt를 설치하세요.
+  </Card>
+
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    TUI를 열고 첫 프롬프트를 실행하고 1분 안에 AI 생성 커밋을 배포하세요.
+  </Card>
+
+  <Card title="Agents" icon="users" href="/concepts/agents">
+    10개의 내장 에이전트와 서브에이전트. 각각이 무엇을 하는지, 자신만의 에이전트를 어떻게 작성하는지 배워보세요.
+  </Card>
+
+  <Card title="Project memory" icon="brain" href="/concepts/project-memory">
+    Bolt가 세션 전반에 걸쳐 프로젝트를 어떻게 기억하는지, 무엇이 캡처되는지 어떻게 제어하는지.
+  </Card>
+
+  <Card title="MCP servers" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol을 통해 외부 도구와 데이터 소스를 Bolt에 연결하세요.
+  </Card>
+
+  <Card title="Headless server" icon="server" href="/server/headless-server">
+    `bolt serve`를 실행하고 어느 머신에서든 TUI를 연결하고 API로 Bolt를 구동하세요.
+  </Card>
+</CardGroup>

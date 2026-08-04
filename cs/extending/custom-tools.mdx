@@ -1,0 +1,36 @@
+---
+title: "Vlastní nástroje v Boltu"
+sidebarTitle: "Vlastní nástroje"
+description: "Přidávej do Boltu nástroje specifické pro projekt vhozením spustitelných souborů do .opencode/tool/. Každý soubor se stane nástrojem, který může agent volat."
+---
+
+Vlastní nástroje ti umožní vystavit cokoli, co dokážeš naskriptovat (shellové skripty, Node/Bun/Python programy, malé binárky), jako nástroj, který agent může vyvolat jménem. Jsou to nejjednodušší způsob, jak dát Boltu přístup k build, deploy nebo datovým workflow vlastního projektu.
+
+## Kde žijí
+
+Vlož soubory do jednoho z:
+
+- `.opencode/tool/` — v rámci projektu, commitnutý s repem.
+- `.opencode/tools/` — přijímán jako alias k výše uvedenému.
+
+Každý soubor se stane nástrojem pojmenovaným podle souboru (bez přípony). Nástroje se automaticky načtou při dalším startu Boltu.
+
+## Anatomie nástroje
+
+Vlastní nástroj deklaruje své jméno, popis a schéma vstupů v hlavičce a poté implementuje chování. Přesná podoba závisí na runtime, který vybereš (shellový skript, TypeScript atd.), ale každý nástroj musí:
+
+1. Ohlásit JSON Schema svých vstupů, aby model věděl, jak ho volat.
+2. Vrátit hodnotu (nebo chybu), kterou Bolt umí vykreslit v TUI a předat zpět modelu.
+
+Jakmile je načten, nástroj se objeví v seznamu nástrojů agenta vedle vestavěných nástrojů jako `bash` a `grep` a je řízen stejným systémem [oprávnění](/concepts/permissions).
+
+## Kdy použít vlastní nástroj vs. MCP server
+
+- **Vlastní nástroj** — malý, specifický pro projekt, bez opětovného použití napříč projekty. Rychlý na napsání.
+- **MCP server** — sdílený napříč projekty nebo obaluje skutečnou externí službu s autentizací. Viz [MCP servery](/extending/mcp-servers).
+- **Nástroj z pluginu** — distribuovaný jako npm balíček spolu s dalšími rozšiřujícími body. Viz [Pluginy](/extending/plugins).
+
+## Související
+
+- [Nástroje](/concepts/tools) — reference vestavěných nástrojů.
+- [Pluginy](/extending/plugins) — plocha rozšíření pro nástroje i další.

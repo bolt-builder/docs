@@ -1,0 +1,61 @@
+---
+title: "Referència de variables d'entorn de Bolt"
+sidebarTitle: "Variables d'entorn"
+description: "Totes les variables d'entorn reconegudes per Bolt, incloent-hi control de registre, autenticació de servidor, sobreescriptures de configuració i convencions de claus API de proveïdor."
+---
+
+Les variables d'entorn et permeten configurar Bolt sense tocar cap fitxer de configuració — útil en canonades CI, contenidors Docker i entorns compartits on no pots consignar credencials. Es llegeixen una vegada a l'inici i no es poden canviar mentre Bolt s'està executant.
+
+## Referència
+
+| Variable | Descripció |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Estableix la verbositat del registre. Valors acceptats: `DEBUG`, `INFO`, `WARN`, `ERROR`. Equivalent al flag `--log-level`. |
+| `BOLT_PRINT_LOGS` | Estableix a qualsevol valor no buit per imprimir la sortida del registre a stderr. Equivalent a `--print-logs`. |
+| `BOLT_PURE` | Estableix a qualsevol valor no buit per desactivar tots els plugins externs. Equivalent a `--pure`. |
+| `BOLT_SERVER_USERNAME` | Nom d'usuari d'autenticació bàsica per a `bolt serve` i `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Contrasenya d'autenticació bàsica per a `bolt serve` i `bolt web`. Tots els clients connectants han de proporcionar aquesta contrasenya. |
+| `BOLT_CONFIG` | Sobreescriu la ruta al fitxer de configuració que Bolt carrega. Bolt no cercarà les ubicacions per defecte quan això estigui definit. |
+| `BOLT_CONFIG_DIR` | Sobreescriu el directori de configuració. Bolt cercarà fitxers de configuració en aquest directori en lloc del directori de configuració del sistema operatiu per defecte. |
+| `BOLT_CONFIG_CONTENT` | Proporciona la configuració completa com una cadena JSON en línia. Útil en CI on escriure fitxers és impracticable. Té la màxima prioritat entre les fonts de configuració. |
+| `BOLT_GIT_BASH_PATH` | Ruta al directori `bin` de Git Bash a Windows, utilitzat per localitzar utilitats Unix com `less`. |
+
+## Claus API de proveïdor
+
+Bolt descobreix credencials de proveïdor de variables d'entorn automàticament — no cal el pas `bolt providers login`. Cada proveïdor busca una variable d'entorn específica, i Bolt l'utilitzarà si la variable està definida, independentment del que s'emmagatzemi a `auth.json`.
+
+<Tip>
+  Estableix les claus API del proveïdor al teu perfil de shell (p. ex. `~/.zshrc`, `~/.bashrc`) o en un fitxer `.env` carregat pel teu shell. També pots referenciar-les des del fitxer de configuració utilitzant la sintaxi `${VAR_NAME}` en un camp `provider.*.apiKey` perquè les claus mai s'emmagatzemin en text pla.
+</Tip>
+
+Variables de proveïdor comunes:
+
+| Variable | Proveïdor |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, sèrie o) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Executa `bolt models --verbose` per veure quina variable d'entorn espera cada proveïdor configurat.
+
+## Exemples d'ús
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

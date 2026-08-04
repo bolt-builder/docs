@@ -1,0 +1,179 @@
+---
+title: "تكامل GitHub: Actions وPRs ومراجعة بالذكاء الاصطناعي"
+sidebarTitle: "GitHub Actions"
+description: "شغّل Bolt داخل GitHub Actions، أخرج PRs محليًا، ولّد رسائل commit بالذكاء الاصطناعي، وأوقف عمليات الدمج بمراجعة شيفرة بالذكاء الاصطناعي ورموز خروج."
+url: "server/github-actions"
+---
+
+يشحن Bolt أربعة أوامر تربط سير عمل Git اليومي بالذكاء الاصطناعي: وكيل GitHub Actions يمكنك تثبيته بأمر واحد، واختصار لإخراج pull requests، ومولّد رسائل commit بالذكاء الاصطناعي، ومراجع شيفرة بالذكاء الاصطناعي مع رموز خروج قابلة للقراءة الآلية. معًا يتيحون لك جلب Bolt إلى كل مرحلة من التطوير — البرمجة المحلية ومراجعة PR والتكامل المستمر.
+
+---
+
+## `bolt github`
+
+إدارة وكيل GitHub Actions الذي يشغّل Bolt على أحداث CI.
+
+### `bolt github install`
+
+ثبّت سير عمل GitHub Actions في المستودع الحالي. يكتب هذا YAML سير العمل إلى `.github/workflows/` بحيث يبدأ Bolt تلقائيًا على تعليقات القضايا أو pull requests الجديدة أو الأحداث الأخرى التي تضبطها.
+
+```bash
+bolt github install
+```
+
+شغّل هذا من جذر مستودع git. ستحتاج إلى صلاحية كتابة إلى `.github/workflows/`.
+
+### `bolt github run`
+
+شغّل وكيل GitHub محليًا أو داخل خطوة CI، بإعادة تشغيل حمولة حدث GitHub معيّن.
+
+```bash
+bolt github run --event <event> --token <pat>
+```
+
+| الخيار | الوصف |
+|------|-------------|
+| `--event <event>` | اسم حدث GitHub أو مسار إلى حمولة حدث JSON |
+| `--token <pat>` | رمز وصول شخصي إلى GitHub (`github_pat_…`) يُستخدم لنشر التعليقات وجلب السياق |
+
+---
+
+## إعداد وكيل GitHub Actions
+
+<Steps>
+  <Step title="ثبّت سير العمل">
+    من جذر مستودعك:
+
+    ```bash
+    bolt github install
+    ```
+
+    يكتب Bolt ملف سير عمل GitHub Actions إلى `.github/workflows/`. commit وادفع الملف.
+  </Step>
+
+  <Step title="أضف مفتاح API الخاص بك كسر">
+    في إعدادات مستودعك، أضف مفتاح API لمزوّد LLM المفضّل لديك كسر مستودع (مثل `ANTHROPIC_API_KEY`). سيلتقطه سير العمل تلقائيًا.
+  </Step>
+
+  <Step title="فعّل الوكيل">
+    علّق `/bolt <your request>` على أي قضية أو pull request. يُشغَّل سير العمل، ويقرأ Bolt حمولة الحدث، وينشر ردًا بالنتيجة.
+  </Step>
+
+  <Step title="شغّل محليًا لأغراض التصحيح">
+    أعِد تشغيل حمولة حدث حيّة من تشغيل سير عمل سابق:
+
+    ```bash
+    bolt github run \
+      --event path/to/event.json \
+      --token github_pat_abc123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## `bolt pr <number>`
+
+أخرج pull request من GitHub إلى فرع محلي وأطلق Bolt في ذلك الفرع — جاهز للمراجعة أو التصحيح أو مواصلة العمل من حيث توقف مؤلّف الـ PR.
+
+```bash
+bolt pr 42
+```
+
+يستخدم Bolt `gh` CLI لجلب الـ PR، وينشئ فرعًا باسم `pr/<number>`، ويوصل مرجع التتبع الأعلى. للـ PRs عبر المستودعات (fork)، يضيف الـ fork كمصدر بعيد تلقائيًا. إذا كان وصف الـ PR يحتوي على رابط جلسة Bolt مشترك (`opncd.ai/s/…`)، تُستورد الجلسة بحيث يمكنك مواصلة محادثة المؤلّف.
+
+> يتطلّب تثبيت [GitHub CLI (`gh`)](https://cli.github.com/) والمصادقة عليه.
+
+---
+
+## `bolt commit`
+
+ولّد رسالة commit من تغييراتك المُهيّأة (أو كل التغييرات المتتبَّعة) وقُم بـ commit في خطوة واحدة.
+
+```bash
+bolt commit
+```
+
+يفرّق Bolt تغييراتك، ويرسل الفرق إلى وكيل `commit` مع مواضيع commits الأخيرة لمرجعية الأسلوب، ويشغّل `git commit -m <message>` بالنتيجة.
+
+### الخيارات
+
+| الخيار | اللقب | الوصف |
+|------|-------|-------------|
+| `--all` | `-a` | commit جميع التغييرات المتتبَّعة، وليس فقط المُهيّأة (مكافئ لـ `git commit -a`) |
+| `--dry-run` | | طباعة الرسالة المولّدة دون commit |
+| `--model <provider/model>` | `-m` | تجاوز النموذج المستخدم لتوليد الرسالة |
+
+```bash
+# Stage everything and commit
+bolt commit --all
+
+# Preview the message without committing
+bolt commit --dry-run
+
+# Use a specific model
+bolt commit --model anthropic/claude-opus-4-5
+```
+
+<Tip>
+  استخدم `bolt commit --dry-run` لمعاينة الرسالة المولّدة قبل الالتزام بها. إذا كنت تريد تحريرها، انسخ الإخراج وشغّل `git commit -m "…"` بصياغتك المعدّلة.
+</Tip>
+
+---
+
+## `bolt review`
+
+شغّل وكيل `code-review` مقابل فرق (diff) واخرج بحكم قابل للقراءة الآلية. السطر الأخير للمراجعة هو دائمًا إما `Verdict: PASS` أو `Verdict: FAIL`، ما يجعل `bolt review` جاهزًا للاستخدام في أنابيب CI.
+
+```bash
+bolt review
+```
+
+افتراضيًا، يفرّق `bolt review` `HEAD` مقابل شجرة العمل. استخدم الخيارات أدناه لتحديد نطاق الفرق.
+
+### الخيارات
+
+| الخيار | اللقب | الوصف |
+|------|-------|-------------|
+| `--staged` | | مراجعة التغييرات المُهيّأة فقط |
+| `--branch <name>` | | مراجعة التغييرات منذ نقطة الدمج الأساسية مع الفرع المسمّى (الافتراضي هو الفرع الافتراضي للمستودع) |
+| `--model <provider/model>` | `-m` | النموذج المستخدم للمراجعة |
+
+### رموز الخروج
+
+| الرمز | المعنى |
+|------|---------|
+| `0` | `Verdict: PASS` — لا مشكلات حرجة أو رئيسية |
+| `1` | `Verdict: FAIL` — وُجدت مشكلة حرجة أو رئيسية أو أكثر |
+| `2` | لم يمكن تحديد الحكم من الاستجابة |
+
+### الاستخدام في سير عمل GitHub Actions
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bolt
+        run: curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+
+      - name: AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bolt review --branch main
+```
+
+رمز خروج غير صفري يُفشل الفحص، ما يمنع الدمج حتى تُعالج المشكلات.
+
+<Tip>
+  شغّل `bolt review --staged` قبل الالتزام لالتقاط المشكلات بينما لا يزال من السهل تغييرها — قبل أن تصل إلى pull request أبدًا.
+</Tip>

@@ -1,0 +1,61 @@
+---
+title: "Reference proměnných prostředí Boltu"
+sidebarTitle: "Proměnné prostředí"
+description: "Každá proměnná prostředí, kterou Bolt rozpoznává, včetně řízení logování, autentizace serveru, přepsání konfigurace a konvencí API klíčů providerů."
+---
+
+Proměnné prostředí ti umožňují nakonfigurovat Bolt bez sáhnutí do konfiguračních souborů — užitečné v CI pipelines, Docker kontejnerech a sdílených prostředích, kde nemůžeš commitovat přihlašovací údaje. Načítají se jednou při startu a nelze je za běhu Boltu měnit.
+
+## Reference
+
+| Proměnná | Popis |
+| --- | --- |
+| `BOLT_LOG_LEVEL` | Nastavuje podrobnost logování. Přijímané hodnoty: `DEBUG`, `INFO`, `WARN`, `ERROR`. Ekvivalent přepínače `--log-level`. |
+| `BOLT_PRINT_LOGS` | Nastav na jakoukoli neprázdnou hodnotu pro tisk logů na stderr. Ekvivalent `--print-logs`. |
+| `BOLT_PURE` | Nastav na jakoukoli neprázdnou hodnotu pro vypnutí všech externích pluginů. Ekvivalent `--pure`. |
+| `BOLT_SERVER_USERNAME` | Uživatelské jméno pro basic auth k `bolt serve` a `bolt web`. |
+| `BOLT_SERVER_PASSWORD` | Heslo pro basic auth k `bolt serve` a `bolt web`. Všichni připojující se klienti musí toto heslo dodat. |
+| `BOLT_CONFIG` | Přepiš cestu ke konfiguračnímu souboru, který Bolt načte. Bolt při nastavení této proměnné nebude hledat na výchozích umístěních. |
+| `BOLT_CONFIG_DIR` | Přepiš konfigurační adresář. Bolt bude hledat konfigurační soubory v tomto adresáři místo ve výchozím OS konfiguračním adresáři. |
+| `BOLT_CONFIG_CONTENT` | Poskytni celou konfiguraci jako inline JSON řetězec. Užitečné v CI, kde je zápis souborů nepraktický. Má nejvyšší prioritu mezi zdroji konfigurace. |
+| `BOLT_GIT_BASH_PATH` | Cesta k adresáři `bin` v Git Bashi na Windows, používaná k lokalizaci Unixových nástrojů jako `less`. |
+
+## API klíče providerů
+
+Bolt objevuje přihlašovací údaje providerů z proměnných prostředí automaticky — není potřeba krok `bolt providers login`. Každý provider hledá konkrétní proměnnou prostředí a Bolt ji použije, pokud je nastavena, bez ohledu na to, co je uloženo v `auth.json`.
+
+<Tip>
+  Nastav API klíče providerů ve svém shell profilu (např. `~/.zshrc`, `~/.bashrc`) nebo v souboru `.env` načítaném tvým shellem. Můžeš na ně také odkazovat z konfiguračního souboru syntaxí `${VAR_NAME}` v poli `provider.*.apiKey`, aby klíče nikdy nebyly uloženy v plaintextu.
+</Tip>
+
+Běžné proměnné providerů:
+
+| Proměnná | Provider |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT, o-series) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google (Gemini) |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `AWS_ACCESS_KEY_ID` \+ `AWS_SECRET_ACCESS_KEY` | Amazon Bedrock |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
+
+Spusť `bolt models --verbose` pro zobrazení proměnné prostředí, kterou každý nakonfigurovaný provider očekává.
+
+## Příklady použití
+
+```bash
+# Enable debug logging for a single run
+BOLT_LOG_LEVEL=DEBUG bolt run "why is the auth test failing?"
+
+# Run without any plugins to rule out plugin interference
+BOLT_PURE=1 bolt
+
+# Start a public server with basic auth
+BOLT_SERVER_USERNAME=team BOLT_SERVER_PASSWORD=mysecret \
+  bolt serve --hostname 0.0.0.0 --port 4096
+
+# Provide config inline (useful in CI)
+BOLT_CONFIG_CONTENT='{"model":"anthropic/claude-opus-4-5"}' \
+  ANTHROPIC_API_KEY=sk-ant-xxx \
+  bolt run "generate a changelog for this release"
+```

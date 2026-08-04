@@ -1,0 +1,145 @@
+---
+title: "プラグインで Bolt を拡張する"
+sidebarTitle: "プラグイン"
+description: "Bolt プラグインをインストールおよびビルドして、カスタム AI プロバイダ、認証方式、ツール、ワークスペースアダプタを任意のプロジェクトまたはグローバルに追加します。"
+url: "extending/plugins"
+---
+
+プラグインを使うと、Bolt を組み込み機能を超えて拡張できます。プラグインは Bolt プラグインマニフェストをエクスポートする Node または Bun モジュールで、ロードされると新しい LLM プロバイダ、カスタム認証方式、追加のツール、ワークスペースアダプタを登録できます。プラグインは 1 つのプロジェクト用にインストールすることも、すべての作業にグローバルに適用することもできます。
+
+## プラグインのインストール
+
+`bolt plugin install` (エイリアス: `bolt plug`) を使って npm からプラグインをインストールし、自動的に設定に登録します。
+
+```bash
+bolt plugin install <module>
+```
+
+### フラグ
+
+| フラグ | エイリアス | 説明 |
+|------|-------|-------------|
+| `--global` | `-g` | 現在のプロジェクトの代わりにグローバル設定にインストール |
+| `--force` | `-f` | 同じモジュールの既存エントリを置き換え |
+
+### スコープ: プロジェクト vs. グローバル
+
+デフォルトでは、`bolt plugin install` はプラグインをプロジェクトレベルの `.bolt/bolt.jsonc` に追加します。すべてのプロジェクトでロードされるようユーザ全体の設定に追加するには `--global` を渡してください。
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  `bolt --pure` を実行する (または `OPENCODE_PURE=1` を設定する) と、すべての外部プラグインを無効にして Bolt を起動できます。プラグインをアンインストールすることなく、プラグインが予期しない挙動を引き起こしているかどうかをデバッグするのに便利です。
+</Note>
+
+---
+
+## 公開プラグインのインストール
+
+<Steps>
+  <Step title="プラグインパッケージを見つける">
+    パッケージ名に `bolt-plugin` または `opencode-plugin` を含むものを npm で検索するか、プロバイダのドキュメントのリンクをたどってください。
+  </Step>
+
+  <Step title="プロジェクトにインストール">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt はパッケージをインストールし、そのマニフェストを読んでサーバと TUI のターゲットを検出し、エントリを `.bolt/bolt.jsonc` に書き込みます。
+  </Step>
+
+  <Step title="設定を検証">
+    `.bolt/bolt.jsonc` を開き、プラグインエントリが追加されたことを確認します。
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="セッションを開始">
+    ```bash
+    bolt
+    ```
+
+    Bolt は起動時にプラグインをロードします。登録されるあらゆるプロバイダやツールはすぐに利用可能になります。
+  </Step>
+</Steps>
+
+---
+
+## 手動でのプラグイン設定
+
+`.bolt/bolt.jsonc` を直接編集してプラグインを登録できます。開発中のローカルプラグインに便利です。
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+相対パスはプロジェクトルートから解決されます。TypeScript と JavaScript の両方のエントリポイントがサポートされています。
+
+---
+
+## プラグインの構築
+
+プラグインは `@opencode-ai/plugin` パッケージに対して作成します。このパッケージはモジュールが満たすべき `Hooks` インターフェイスを提供します。
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+最小限のプラグインは、`PluginInput` オブジェクトを受け取り `Hooks` オブジェクトを返す関数をエクスポートします。
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### 利用可能なフックの種類
+
+| フック | 目的 |
+|------|---------|
+| `auth` | カスタム認証プロバイダを `methods` 配列で登録 |
+| `event` | セッションイベント (メッセージ、ツール呼び出し、完了) に反応 |
+| `config` | 実行時の設定変更に応答 |
+| `dispose` | プラグインがアンロードされる際にリソースをクリーンアップ |
+
+`PluginInput` オブジェクトは、`client` (型付き Bolt API クライアント)、`project`、`worktree`、`directory`、`serverUrl` を公開しているため、プラグインは稼働中のサーバとやりとりできます。
+
+---
+
+## 環境変数
+
+| 変数 | 説明 |
+|----------|-------------|
+| `OPENCODE_PURE` | 外部プラグインなしで実行するには `1` に設定 |

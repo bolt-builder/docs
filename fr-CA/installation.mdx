@@ -1,0 +1,121 @@
+---
+title: "Installer Bolt sur macOS, Linux ou Windows"
+sidebarTitle: "Installation"
+description: "Installez la CLI Bolt via curl, npm, bun, pnpm, yarn, Homebrew, Chocolatey ou Scoop. Couvre la mise à niveau, la désinstallation et l'application de bureau."
+---
+
+Bolt peut être installé sur macOS, Linux et Windows au moyen de la méthode qui convient à votre flux de travail — un script curl en une ligne, tout gestionnaire de paquets Node.js majeur, ou un gestionnaire de paquets système comme Homebrew, Chocolatey ou Scoop.
+
+## Installation rapide (macOS / Linux)
+
+Le moyen le plus rapide de commencer est le script d'installation officiel. Il détecte automatiquement votre système d'exploitation et votre architecture, télécharge le binaire adéquat dans `~/.bolt/bin` et l'ajoute à votre `$PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+```
+
+Le programme d'installation configure aussi des dépendances optionnelles d'entrée vocale (sox et whisper-cpp pour la transcription hors ligne). Pour les ignorer, passez `--no-voice` :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --no-voice
+```
+
+Pour épingler une version précise :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash -s -- --version 1.20.2
+```
+
+## Gestionnaires de paquets
+
+Installez Bolt globalement avec le gestionnaire de paquets de votre choix :
+
+<CodeGroup>
+
+```bash npm
+npm i -g @bolt-builder/bolt-cli
+```
+
+```bash bun
+bun add -g @bolt-builder/bolt-cli
+```
+
+```bash pnpm
+pnpm add -g @bolt-builder/bolt-cli
+```
+
+```bash yarn
+yarn global add @bolt-builder/bolt-cli
+```
+
+</CodeGroup>
+
+## Vérifier l'installation
+
+<Steps>
+  <Step title="Vérifier la version installée">
+    Après l'installation, confirmez que `bolt` est accessible dans votre `$PATH` :
+
+    ```bash
+    bolt --version
+    ```
+
+    Si la commande est introuvable, ouvrez une nouvelle session de terminal (ou rechargez la configuration de votre shell) pour que le `$PATH` mis à jour prenne effet.
+  </Step>
+</Steps>
+
+## Mise à niveau
+
+Exécutez `bolt upgrade` pour mettre à jour vers la dernière version :
+
+```bash
+bolt upgrade
+```
+
+Bolt détecte automatiquement votre méthode d'installation d'origine. Vous pouvez la remplacer avec l'indicateur `--method` :
+
+```bash
+bolt upgrade --method <method>
+```
+
+Les méthodes prises en charge sont : `curl`, `npm`, `pnpm`, `bun`, `brew`, `choco`, `scoop`.
+
+Vous pouvez aussi mettre à niveau vers une version précise en passant la version comme argument positionnel :
+
+```bash
+bolt upgrade 1.20.2
+```
+
+## Désinstallation
+
+Pour retirer Bolt de votre système :
+
+```bash
+bolt uninstall
+```
+
+## Variables d'environnement
+
+| Variable               | Description                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `BOLT_LOG_LEVEL`       | Verbosité des journaux : `DEBUG`, `INFO`, `WARN` ou `ERROR` |
+| `BOLT_PRINT_LOGS`      | Imprime les journaux sur stderr                       |
+| `BOLT_PURE`            | Exécute sans charger les greffons externes            |
+| `BOLT_SERVER_PASSWORD` | Mot de passe d'authentification de base pour le serveur d'API sans interface |
+| `BOLT_SERVER_USERNAME` | Nom d'utilisateur d'authentification de base pour le serveur d'API sans interface |
+
+<Tip>
+  Réglez `BOLT_PURE=1` lorsque vous voulez une exécution propre sans aucun greffon tiers — utile pour le débogage ou les environnements CI contrôlés.
+</Tip>
+
+## Application de bureau
+
+<Note>
+  Bolt est aussi livré sous forme d'application de bureau native avec la gestion de sessions multi-fenêtres, un terminal intégré et une arborescence de fichiers, une palette de commandes, 28 langues d'interface et des mises à jour automatiques. Téléchargez la dernière version depuis la [page des versions](https://github.com/Bolt-builder/bolt-cli/releases).
+
+  Sur macOS, vous pouvez l'installer en une ligne sans détour par Gatekeeper :
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+  ```
+</Note>

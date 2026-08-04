@@ -1,0 +1,475 @@
+---
+title: "Referencja komend Bolt CLI"
+sidebarTitle: "Komendy"
+description: "Kompletna referencja każdej komendy Bolt CLI, w tym flagi, argumenty i przykłady użycia dla TUI, run, serve, session, agent i innych."
+---
+
+Bolt udostępnia pojedynczy plik binarny `bolt` z bogatym zestawem subkomend. Uruchomienie `bolt` bez argumentów otwiera pełne UI terminala. Wszystkie inne subkomendy są wymienione poniżej. Użyj `bolt <command> --help` w dowolnej chwili, aby uzyskać inline'ową pomoc.
+
+<Accordion title="bolt (default — launch TUI)">
+  Otwiera interaktywne UI terminala w bieżącym katalogu. Bolt automatycznie odkrywa kontekst Twojego projektu, ładuje konfigurację i łączy się z wszelkimi skonfigurowanymi dostawcami.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Flagi globalne** — dostępne dla każdej komendy:
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Wypisuj wyjście logów do stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Ustaw poziom szczegółowości logów |
+  | `--pure` | boolean | Uruchom bez ładowania jakichkolwiek zewnętrznych wtyczek |
+  | `--help`, `-h` | boolean | Pokaż tekst pomocy |
+  | `--version`, `-v` | boolean | Wypisz numer zainstalowanej wersji |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Uruchom Bolta z pojedynczym promptem w trybie nieinteraktywnym. Bolt startuje wewnątrzprocesowy serwer, wysyła prompt do aktywnej sesji, strumieniuje odpowiedź na stdout, po czym kończy pracę. Podaj stdin lub przekaż `--file`, aby dołączyć kontekst.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Komenda slash do wykonania; przekaż argumenty jako wiadomość |
+  | `--continue` | `-c` | boolean | Kontynuuj najnowszą sesję |
+  | `--session` | `-s` | string | ID sesji do kontynuowania |
+  | `--fork` |  | boolean | Rozgałęź sesję przed kontynuowaniem (wymaga `--continue` lub `--session`) |
+  | `--share` |  | boolean | Udostępnij sesję po jej ukończeniu |
+  | `--model` | `-m` | string | Model do użycia w formacie `provider/model` |
+  | `--best-of` |  | string | Lista `provider/model` oddzielona przecinkami; uruchamia zadanie równolegle, klasyfikuje wyniki, zatrzymuje zwycięzcę |
+  | `--agent` |  | string | Agent do użycia (np. `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Format wyjścia; `json` strumieniuje surowe zdarzenia JSON oddzielone nową linią |
+  | `--file` | `-f` | string\[\] | Plik(i) do dołączenia jako kontekst |
+  | `--title` |  | string | Tytuł dla sesji |
+  | `--attach` |  | string | Uruchom wobec zdalnego serwera Bolta (np. `http://localhost:4096`) |
+  | `--password` | `-p` | string | Hasło basic auth dla zdalnego serwera |
+  | `--username` | `-u` | string | Nazwa użytkownika basic auth dla zdalnego serwera |
+  | `--dir` |  | string | Katalog roboczy; jeśli ustawione jest `--attach`, jest to katalog na zdalnym serwerze |
+  | `--port` |  | number | Port dla lokalnego wewnątrzprocesowego serwera (losowy jeśli pominięty) |
+  | `--variant` |  | string | Poziom wysiłku rozumowania, specyficzny dla dostawcy (np. `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Pokazuj bloki rozumowania/myślenia w wyjściu |
+  | `--mini` |  | boolean | Uruchom minimalne UI interaktywne split-footer (ukryte) |
+  | `--interactive` | `-i` | boolean | Wymuś bezpośredni interaktywny tryb split-footer |
+  | `--auto` |  | boolean | Automatycznie zatwierdzaj uprawnienia, które nie są jawnie odrzucone |
+  | `--yolo` |  | boolean | Pomiń wszystkie zapytania o uprawnienia (alias dla `--auto`, ukryte) |
+  | `--dangerously-skip-permissions` |  | boolean | Pomiń wszystkie sprawdzenia uprawnień (ukryte) |
+  | `--demo` |  | boolean | Włącz bezpośrednie interaktywne demo komend slash (ukryte) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Podłącz pełne TUI do działającego serwera Bolta. Serwer może być lokalny lub zdalny. Przekaż `--mini`, aby użyć minimalnego UI split-footer zamiast pełnego TUI.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Katalog na zdalnym serwerze |
+  | `--continue` | `-c` | boolean | Kontynuuj najnowszą sesję na zdalnym serwerze |
+  | `--session` | `-s` | string | ID sesji do kontynuowania |
+  | `--fork` |  | boolean | Rozgałęź sesję przy kontynuowaniu |
+  | `--password` | `-p` | string | Hasło basic auth |
+  | `--username` | `-u` | string | Nazwa użytkownika basic auth |
+  | `--mini` |  | boolean | Użyj minimalnego interaktywnego UI |
+  | `--no-replay` |  | boolean | Wyłącz odtwarzanie historii sesji przy wznawianiu i po zmianie rozmiaru (wymaga `--mini`) |
+  | `--replay-limit` |  | number | Ogranicz widoczne odtwarzanie do N najnowszych wiadomości (wymaga `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Uruchom headless serwer API Bolta. Serwer udostępnia API REST\+SSE, do którego mogą się podłączać TUI, `bolt run --attach` i `bolt attach`. Bind na `0.0.0.0`, aby był osiągalny z innych maszyn — zawsze ustawiaj `BOLT_SERVER_PASSWORD`, gdy to robisz.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--hostname` | string | Adres do bindowania (domyślnie: `127.0.0.1`) |
+  | `--port` | number | Port do nasłuchiwania (losowy jeśli pominięty) |
+  | `--mdns` | boolean | Włącz odkrywanie usług mDNS (domyślnie ustawia hostname na `0.0.0.0`) |
+  | `--mdns-domain` | string | Niestandardowa nazwa domeny dla usługi mDNS (domyślnie: `opencode.local`) |
+  | `--cors` | string\[\] | Dodatkowe domeny do zezwolenia dla CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` nie jest domyślnie ustawione. Serwer zaloguje ostrzeżenie i będzie akceptował wszystkie połączenia, dopóki go nie ustawisz.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Uruchom serwer Bolta i natychmiast otwórz UI webowe w swojej domyślnej przeglądarce. Akceptuje te same flagi sieciowe co `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--hostname` | string | Adres do bindowania (domyślnie: `127.0.0.1`) |
+  | `--port` | number | Port do nasłuchiwania (losowy jeśli pominięty) |
+  | `--mdns` | boolean | Włącz odkrywanie usług mDNS (domyślnie ustawia hostname na `0.0.0.0`) |
+  | `--mdns-domain` | string | Niestandardowa nazwa domeny dla usługi mDNS (domyślnie: `opencode.local`) |
+  | `--cors` | string\[\] | Dodatkowe domeny do zezwolenia dla CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Zarządzaj sesjami Bolta przechowywanymi w lokalnej bazie SQLite.
+
+  **Subkomendy**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **Flagi `bolt session list`**
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Ogranicz wyjście do N najnowszych sesji |
+  | `--format` |  | `table`\|`json` | Format wyjścia (domyślnie: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Listuj i twórz niestandardowych agentów. Agenci to pliki markdown z frontmatterem YAML, które definiują prompt systemowy, uprawnienia i tryb.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **Flagi `bolt agent create`**
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Ścieżka katalogu do zapisania pliku agenta |
+  | `--description` |  | string | Opis w języku naturalnym tego, co ma robić agent |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Czy agent działa jako główny agent, subagent czy oba |
+  | `--permissions` | `--tools` | string | Lista dozwolonych uprawnień oddzielona przecinkami (domyślnie: wszystkie) |
+  | `--model` | `-m` | string | Model do użycia w formacie `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  Interaktywnie zarządzaj danymi uwierzytelniającymi dostawców AI. Dane uwierzytelniające są przechowywane w Twoim systemowym katalogu danych (`~/.local/share/bolt/auth.json` na Linuksie, `~/Library/Application Support/bolt/auth.json` na macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Listuj wszystkie modele dostępne od Twoich skonfigurowanych dostawców.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Uwzględnij metadane kosztów JSON dla każdego modelu |
+  | `--refresh` | boolean | Odśwież cache modeli z models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Zarządzaj serwerami Model Context Protocol (MCP). Bolt wspiera zarówno zdalne (HTTP/SSE) serwery z OAuth, jak i lokalne (stdio) serwery.
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **Flagi `bolt mcp add`**
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--url` | string | URL dla zdalnego serwera MCP |
+  | `--env` | string\[\] | Zmienna środowiskowa dla lokalnego serwera (`KEY=VALUE`) |
+  | `--header` | string\[\] | Nagłówek HTTP dla zdalnego serwera (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Zainstaluj wtyczkę Bolta z npm i zaktualizuj odpowiedni plik konfiguracyjny. Wtyczki mogą rozszerzać TUI, dodawać nowe komendy slash lub rejestrować nowych dostawców.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Dodaj wtyczkę do globalnej konfiguracji zamiast konfiguracji projektu |
+  | `--force` | `-f` | boolean | Zastąp już skonfigurowaną wersję wtyczki |
+</Accordion>
+
+<Accordion title="bolt github">
+  Zarządzaj integracją Bolta z GitHub Actions, która pozwala Boltowi reagować na pull requesty, issue i inne zdarzenia GitHuba.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **Flagi `bolt github run`**
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--event` | string | Nazwa zdarzenia GitHuba do symulacji (np. `pull_request`) |
+  | `--token` | string | Osobisty token dostępu GitHuba |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Wyewidencjonuj pull request GitHuba jako lokalną gałąź za pomocą CLI `gh`, po czym uruchom Bolta w wyewidencjonowanym katalogu. Jeśli opis PR-a zawiera link do udostępnionej sesji, Bolt automatycznie zaimportuje tę sesję.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Ta komenda wymaga zainstalowanego i uwierzytelnionego [GitHub CLI (`gh`)](https://cli.github.com/).
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Wygeneruj wiadomość commita dla zmian w indeksie (lub wszystkich śledzonych zmian) za pomocą modelu AI i zatwierdź. Model bada niedawną historię commitów w celu uzyskania kontekstu stylistycznego.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Zatwierdź wszystkie śledzone zmiany, nie tylko te w indeksie |
+  | `--dry-run` |  | boolean | Wypisz wygenerowaną wiadomość bez zatwierdzania |
+  | `--model` | `-m` | string | Model do użycia w formacie `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Uruchom przegląd kodu AI na diffie i wyjdź z kodem `0` (pass) lub `1` (fail). Agent `code-review` bada diff pod kątem poprawności, stylu i kwestii bezpieczeństwa, po czym emituje linię `Verdict: PASS` lub `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Przeglądaj tylko zmiany w indeksie |
+  | `--branch` |  | string | Przeglądaj zmiany od bazy scalenia z tą gałęzią |
+  | `--model` | `-m` | string | Model do użycia w formacie `provider/model` |
+
+  <Note>
+    Kody wyjścia: `0` = PASS, `1` = FAIL, `2` = werdykt nie mógł zostać ustalony.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Wyeksportuj sesję jako JSON na stdout. Przydatne do archiwizacji, udostępniania lub przekazywania do innych narzędzi. Przekaż `--sanitize` przed publicznym udostępnieniem, aby zredagować ścieżki plików, prompty i inną wrażliwą zawartość transkryptu.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Zredaguj wrażliwe dane (ścieżki plików, tekst promptów, I/O narzędzi) przed eksportem |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Zaimportuj wcześniej wyeksportowaną sesję do lokalnej bazy danych. Akceptuje albo lokalny plik JSON, albo URL udostępniania sesji.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Wyświetl zbiorcze statystyki użycia tokenów i kosztów we wszystkich sesjach. Wyjście obejmuje tabelę przeglądową, podział kosztów i tokenów, użycie modeli oraz wykres słupkowy użycia narzędzi.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--days` | number | Ogranicz do ostatnich N dni (domyślnie: cały czas) |
+  | `--tools` | number | Liczba narzędzi do pokazania na wykresie użycia narzędzi |
+  | `--models` | boolean\|number | Pokaż statystyki modeli; przekaż liczbę, aby ograniczyć listę |
+  | `--project` | string | Filtruj po ID projektu; pusty string oznacza bieżący projekt |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Wypisz dziennik aplikacji Bolt. Dziennik jest przechowywany w systemowym katalogu logów (np. `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Liczba końcowych linii do wypisania (domyślnie: 1000) |
+  | `--follow` | `-f` | boolean | Strumieniuj nowe linie logów w czasie rzeczywistym |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Odpytuj lub badaj lokalną bazę sesji SQLite bezpośrednio.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Format wyjścia dla wyników zapytania (domyślnie: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Zaktualizuj Bolta do najnowszego wydania lub konkretnej wersji. Bolt automatycznie wykrywa metodę instalacji i używa odpowiedniego menedżera pakietów.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Flaga | Alias | Typ | Opis |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Metoda instalacji do użycia |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Usuń plik binarny Bolta i wszystkie powiązane dane.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Wygeneruj skrypt uzupełniania powłoki dla `bash`, `zsh` lub `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Zbiór subkomend do rozwiązywania problemów i introspekcji. Przydatne przy składaniu zgłoszeń błędów lub diagnozowaniu nieoczekiwanego zachowania.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Uruchom serwer ACP (Agent Client Protocol). ACP to protokół używany przez integracje edytorów, takie jak [Zed](https://zed.dev), do komunikacji z Boltem przez stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Flaga | Typ | Opis |
+  | --- | --- | --- |
+  | `--cwd` | string | Katalog roboczy dla serwera (domyślnie: `process.cwd()`) |
+  | `--hostname` | string | Hostname do bindowania (domyślnie: `127.0.0.1`) |
+  | `--port` | number | Port do bindowania |
+  | `--mdns` | boolean | Włącz odkrywanie usług mDNS |
+  | `--mdns-domain` | string | Niestandardowa nazwa domeny dla usługi mDNS (domyślnie: `opencode.local`) |
+  | `--cors` | string\[\] | Dodatkowe domeny do zezwolenia dla CORS |
+</Accordion>

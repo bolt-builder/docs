@@ -1,0 +1,36 @@
+---
+title: "Herramientas personalizadas en Bolt"
+sidebarTitle: "Herramientas personalizadas"
+description: "Añade herramientas específicas del proyecto a Bolt colocando archivos ejecutables en .opencode/tool/. Cada archivo se convierte en una herramienta que el agente puede invocar."
+---
+
+Las herramientas personalizadas te permiten exponer cualquier cosa que puedas guionizar (scripts de shell, programas de Node/Bun/Python, pequeños binarios) como una herramienta que el agente puede invocar por nombre. Son la forma más sencilla de dar a Bolt acceso a los flujos de build, deploy o datos propios de tu proyecto.
+
+## Dónde viven
+
+Coloca archivos en:
+
+- `.opencode/tool/` — con alcance de proyecto, se versiona con el repositorio.
+- `.opencode/tools/` — aceptado como alias del anterior.
+
+Cada archivo se convierte en una herramienta que toma su nombre del archivo (sin la extensión). Las herramientas se detectan automáticamente la próxima vez que Bolt arranque.
+
+## Anatomía de una herramienta
+
+Una herramienta personalizada declara su nombre, descripción y esquema de entrada en una cabecera, y luego implementa el comportamiento. La forma exacta depende del runtime que elijas (script de shell, TypeScript, etc.), pero toda herramienta debe:
+
+1. Anunciar un JSON Schema para sus entradas para que el modelo sepa cómo invocarla.
+2. Devolver un valor (o un error) que Bolt pueda renderizar en la TUI y realimentar al modelo.
+
+Una vez cargada, la herramienta aparece en la lista de herramientas del agente junto a herramientas integradas como `bash` y `grep`, y queda regulada por el mismo sistema de [permisos](/concepts/permissions).
+
+## Cuándo usar una herramienta personalizada vs. un servidor MCP
+
+- **Herramienta personalizada** — pequeña, específica del proyecto, sin reutilización entre proyectos. Rápida de escribir.
+- **Servidor MCP** — compartida entre proyectos, o envuelve un servicio externo real con autenticación. Consulta [Servidores MCP](/extending/mcp-servers).
+- **Herramienta de plugin** — distribuida como paquete de npm junto con otros puntos de extensión. Consulta [Plugins](/extending/plugins).
+
+## Relacionado
+
+- [Herramientas](/concepts/tools) — referencia de herramientas integradas.
+- [Plugins](/extending/plugins) — la superficie de extensión para herramientas y más.

@@ -1,0 +1,135 @@
+---
+title: "Agentlar — Bolt'ning o'nta o'rnatilgan va custom AI shaxsiyati"
+sidebarTitle: "Agentlar"
+description: "Bolt o'nta o'rnatilgan agent bilan keladi, har biri o'ziga xos rol, asboblar to'plami va kirish darajasiga ega. Agentlarni almashtirish, sozlash va o'zingiznikini yaratishni o'rganing."
+---
+
+Bolt har bir AI shaxsiyatini nomlangan **agent** sifatida ko'radi: aniq belgilangan asboblar ruxsatlari to'plami bilan birlashtirilgan system prompt. Har bir vazifa uchun bitta umumiy modelni ishga tushirish o'rniga, siz kirish darajasi va yo'nalishi sizga kerak bo'lgan narsaga mos keladigan agentni tanlaysiz — xavfsizlik auditi, hujjatlar yozish yoki to'liq framework migratsiyasini o'rnatish bo'ladimi.
+
+## Kirish darajalari
+
+Har bir o'rnatilgan agentga uchta kirish darajasidan biri berilgan, bu esa qaysi asboblarni chaqirishi mumkinligini aniqlaydi:
+
+| Daraja | Berilgan ruxsatlar | Odatiy foydalanish |
+|-------|---------------------|-------------|
+| **Full** | Fayllarni o'qish, fayllarni yozish/tahrirlash, shell buyruqlarini bajarish | Faol kodlash, debug qilish, refactoring, migratsiyalar |
+| **Edit** | Fayllarni o'qish, fayllarni yozish/tahrirlash — shell yo'q | Hujjatlar, izohlarni yangilash, xavfsiz matn tahrirlash |
+| **Read** | Faqat fayllarni o'qish — yozish yoki shell yo'q | Rejalashtirish, tadqiqot, kod ko'rib chiqish, auditlar |
+
+## O'rnatilgan agentlar
+
+Bolt qutidan o'nta ixtisoslashgan agent bilan keladi. TUI da <kbd>Tab</kbd> ni bosib ular orasida almashting.
+
+| Agent | Kirish | Tavsif |
+|-------|--------|-------------|
+| `code` | Full | Standart: kodni o'qiydi, yozadi va bajaradi |
+| `plan` | Read | Kodbazani o'rganadi va kodni o'zgartirmasdan reja ishlab chiqadi |
+| `ask` | Read | Savollar va tadqiqot — fayl tahrirlashsiz |
+| `code-review` | Read | O'zgarishlarni to'g'rilik, uslub va xavfsizlik uchun ko'rib chiqadi |
+| `debug` | Full | Ishlamay qolgan testlar, halokatlar va mantiq xatolarini debug qiladi |
+| `refactor` | Full | Har bir bosqichda testlar bilan tekshiruv qilingan xavfsiz refactoring |
+| `docs` | Edit | Hujjatlar va izohlar yozadi va yangilaydi |
+| `security` | Read | Xavfsizlik auditi: zaifliklar, sirlar va xavfli shakllar |
+| `migrate` | Full | Framework yangilanishlari va bog'liqliklarni ko'chirish |
+| `perf` | Full | Ishlash tahlili va optimallashtirish |
+
+## Subagentlar
+
+O'nta asosiy agentdan tashqari, Bolt sessiya davomida asosiy agentlar ish topshirishi mumkin bo'lgan ikkita o'rnatilgan **subagent** taqdim etadi. Siz hech qachon subagentni qo'lda tanlamaysiz — ular asosiy agent birini spawn qilish qarorini qabul qilganda avtomatik yuboriladi.
+
+| Subagent | Rol |
+|----------|------|
+| `@general` | Keng imkoniyatlar talab qiladigan murakkab ko'p bosqichli vazifalarni topshirish |
+| `@explore` | Tez, faqat o'qish rejimidagi kodbaza tadqiqoti — fayllarni yon ta'sirlarsiz kezib chiqadi |
+
+<Tip>
+  Notanish kodbazani tez tushunish kerak bo'lganda, `ask` yoki `plan` agentidan boshlang. Ular pardaortida javob berishdan oldin loyihangizni yuqori tezlikda indekslash uchun `@explore` subagentini yuborishlari mumkin — bitta faylni ham tegmasdan.
+</Tip>
+
+## Agentlarni almashtirish
+
+**TUI da** — sessiya davomida istalgan vaqtda mavjud agentlar ro'yxati bo'ylab aylanish uchun <kbd>Tab</kbd> ni bosing. Faol agent sessiya footerida ko'rsatiladi.
+
+**Interaktiv bo'lmagan tarzda** — o'sha ish davomida ma'lum agentni belgilash uchun `bolt run` ga `--agent <name>` uzating:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Agentlar ro'yxatini olish
+
+Barcha mavjud agentlarni — ham o'rnatilgan, ham custom — ularning rejimlari va ruxsat sozlamalari bilan ko'rish uchun:
+
+```bash
+bolt agent list
+```
+
+## Custom agentlar
+
+O'z agentlaringizni ikki xil usulda yaratishingiz mumkin.
+
+### `bolt agent create` bilan generatsiya qilish
+
+Interaktiv sehrgar LLM yordamida agent faylini generatsiya qiladi va uni diskga yozadi:
+
+```bash
+bolt agent create
+```
+
+Barcha bayroqlar ixtiyoriy. Interaktiv bo'lmagan tarzda ishlatish uchun ularni bering:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Bayroq | Tavsif |
+|------|-------------|
+| `--description` | Agent nima qilishi kerakligi (generatsiya uchun LLM promptasi sifatida ishlatiladi) |
+| `--path` | Generatsiya qilingan agent faylini yozish uchun katalog |
+| `--mode` | `all` (standart), `primary` yoki `subagent` |
+| `--permissions` | Ruxsat berilgan ruxsatlarning vergul bilan ajratilgan ro'yxati. Barchasi uchun bo'sh qoldiring. |
+| `--model` / `-m` | `provider/model` formatida foydalanilishi kerak bo'lgan model |
+
+### Markdown faylini qo'lda yozish
+
+Agent faqat YAML frontmatter bilan markdown fayl. Uni loyihangiz ichidagi `.bolt/agents/` yoki global agentlar katalogiga joylashtiring:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+Fayl nomi (`.md` siz) agentning identifikatoriga aylanadi.
+
+### Mavjud ruxsatlar
+
+Ruxsatlar custom agent yaratganingizda boshqaradigan nozik asboblar darvozalari:
+
+| Ruxsat | Boshqaradi |
+|------------|----------|
+| `bash` | Shell buyruqlarini bajarish |
+| `read` | Fayllarni o'qish |
+| `edit` | Fayllarni yozish va tahrirlash (`write` va `apply_patch` ni ham boshqaradi) |
+| `glob` | Fayl glob/katalog ro'yxatini olish |
+| `grep` | ripgrep orqali fayl qidiruvi |
+| `webfetch` | Web'dan HTTP fetch |
+| `task` | Subagent vazifalarini spawn qilish |
+| `todowrite` | Todo elementlarini yaratish va yangilash |
+| `websearch` | Web qidiruv so'rovlari |
+| `lsp` | Language server protokoli amallari |
+| `skill` | Loyiha ko'nikmalariga (skills) kirish |

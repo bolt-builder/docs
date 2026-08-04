@@ -1,0 +1,52 @@
+---
+title: "Suorita Bolt päättömänä palvelimena"
+sidebarTitle: "Päätön palvelin"
+description: "bolt serve paljastaa täyden Bolt-ajoympäristön HTTP:n yli, jotta mikä tahansa TUI, web-käyttöliittymä, editori-integraatio tai skripti voi liittyä siihen paikallisesti tai verkon yli."
+---
+
+`bolt serve` ajaa päätöntä Bolt-palvelinta, joka paljastaa täyden moottorin HTTP:n yli: istunnot, agentit, työkalut, tarjoajien pääsyn, MCP:n ja tapahtumien suoratoiston. Kaikki mitä Bolt voi tehdä interaktiivisesti, se voi tehdä API:n yli.
+
+## Käynnistä palvelin
+
+```bash
+bolt serve                              # localhost only, random port
+bolt serve --hostname 0.0.0.0 --port 4096
+bolt serve --mdns                       # advertise on the local network
+```
+
+<Warning>
+  Sitominen `0.0.0.0`iin paljastaa Boltin verkossasi. Aseta aina `BOLT_SERVER_USERNAME` ja `BOLT_SERVER_PASSWORD` ennen sitä.
+</Warning>
+
+## Liitä TUI
+
+Miltä tahansa koneelta, joka voi tavoittaa palvelimen:
+
+```bash
+bolt attach http://server:4096
+bolt attach --mini http://server:4096
+```
+
+Tai suorita kertakäyttöinen kehote etäpalvelinta vasten:
+
+```bash
+bolt run --attach http://server:4096 --dir /projects/api "what tests are failing?"
+```
+
+## Perustodennus
+
+Aseta tunnistetiedot ympäristömuuttujien kautta (katso [Ympäristömuuttujat](/reference/environment-variables)):
+
+```bash
+export BOLT_SERVER_USERNAME=teamname
+export BOLT_SERVER_PASSWORD=$(openssl rand -hex 24)
+bolt serve --hostname 0.0.0.0 --port 4096
+```
+
+Kaikkien asiakkaiden on lähetettävä vastaavat tunnistetiedot.
+
+## Liittyvät
+
+- [Etäistunnot](/server/remote-sessions) — liittäminen, mDNS-havaitseminen ja jaetut palvelimet.
+- [Web-käyttöliittymä](/server/web-ui) — selain-etuosa.
+- [ACP](/server/acp) — Boltin ohjaaminen Zedistä ja muista editoreista.

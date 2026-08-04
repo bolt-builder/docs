@@ -1,0 +1,191 @@
+---
+title: "セッション — Bolt の永続的な会話履歴"
+sidebarTitle: "セッション"
+description: "セッションは Bolt の永続的な作業単位です。各セッションはローカル SQLite に完全な会話を保存するため、いつでもデタッチ、再開、フォーク、共有、エクスポートできます。"
+---
+
+**セッション** は Bolt の主要な作業単位です。送信したすべてのプロンプト、エージェントが読み込み・編集したすべてのファイル、モデルが行ったすべてのツール呼び出しは、そのセッションの履歴に永続的に記録されます。セッションはローカルの SQLite データベースに存在するため、プロセスの再起動を生き延び、いつでもリストや照会が可能で、明示的に共有またはエクスポートしない限りマシンから出ることはありません。
+
+<Note>
+  すべてのセッションデータは、あなた自身のマシン上の SQLite データベースにローカルに保存されます。共有を有効にしない限り、外部サーバに何も送信されません。正確なデータベースファイルを見つけるには `bolt db path` を使用してください。
+</Note>
+
+## セッションのライフサイクル
+
+セッションは最初のプロンプトを送った瞬間に始まり、削除するまで終わりません。この 2 点の間で、自由にデタッチ、再開、分岐、引き継ぎができます。
+
+<Steps>
+  <Step title="セッションを作成または継続する">
+    TUI を起動して新しいセッションを対話的に開始するか、`bolt run` にプロンプトを渡して非対話的に作成します。
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="デタッチして後で戻る">
+    いつでも TUI を閉じられます — セッションは自動的に永続化されます。最新のセッションを再開するには `--continue` を、特定のセッションを ID で対象にするには `--session` を使用してください。
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="実験前にフォーク">
+    リスクの高い変更を試す前に、`--fork` を使って現在のセッション履歴から分岐します。フォークは元のセッションに影響を与えない独立したセッションです。
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="共有とコラボレーション">
+    `--share` で共有 URL を生成します。リンクを持つ誰でもブラウザでセッションのトランスクリプトを閲覧できます。
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## セッション管理コマンド
+
+### セッションのリスト表示
+
+```bash
+bolt session list
+```
+
+ID、タイトル、最終更新時刻を持つすべてのセッションのフォーマット済みテーブルを出力します。マシン可読の出力を得るには `--format json` を、直近 N セッションに制限するには `-n <N>` を追加してください。
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### セッションの削除
+
+```bash
+bolt session delete <sessionID>
+```
+
+セッションとそのすべてのメッセージをローカルデータベースから永続的に削除します。
+
+## セッション制御のための実行フラグ
+
+これらのフラグは `bolt run` で利用可能です。
+
+| フラグ | エイリアス | 説明 |
+|------|-------|-------------|
+| `--continue` | `-c` | 最新のセッションを継続 |
+| `--session <id>` | `-s` | 特定のセッションを ID で継続 |
+| `--fork` | | 継続前にセッションをフォーク (`--continue` または `--session` が必要) |
+| `--share` | | セッションの共有 URL を生成 |
+| `--title <title>` | | セッションのタイトルを設定またはオーバーライド |
+
+## セッションのエクスポート
+
+セッションの完全なトランスクリプトを JSON としてエクスポートします。
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize` フラグは、ファイルパス、コードコンテンツ、ツールの入力と出力、その他潜在的に機密なフィールドを `[redacted:kind:id]` プレースホルダで置き換えます — チームメイトとのトランスクリプト共有やバグレポートの提出に便利です。
+
+## セッションのインポート
+
+ローカル JSON ファイルまたは共有 URL から直接セッションをインポートします。
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+インポートされたセッションはローカルのセッションリストに表示され、完全に再開可能です。
+
+## セッションデータベースの照会
+
+Bolt は上級ユーザ向けに基盤となる SQLite データベースを直接公開しています。
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+出力形式はデフォルトでタブ区切り値になります。JSON 出力には `--format json` を追加してください。
+
+## トークン使用量とコスト統計
+
+`bolt stats` は、すべてのセッションにわたってトークン使用量とコストデータを集約します。
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+出力には、合計セッション数、メッセージ数、入力/出力/推論/キャッシュトークン、総コスト、1 日あたりの平均コスト、セッションあたりの平均・中央値トークン、ツール使用の内訳が含まれます。`--models` を渡すと、メッセージ、トークン、コストのモデル別内訳も表示されます。
+
+## フォークと共有のワークフロー
+
+セッションをフォークし、その結果を共有する完全な例です。
+
+<Steps>
+  <Step title="新しいセッションで作業を開始">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="リスクの高い次のステップの前にフォーク">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    フォークされたセッション ID がコンソールに出力されます。元のセッションはそのままです。
+  </Step>
+  <Step title="レビュー用にフォークを共有">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    セッションがアイドルになると共有 URL が出力されます。
+  </Step>
+  <Step title="別のマシンでインポート">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

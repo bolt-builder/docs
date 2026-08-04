@@ -1,0 +1,58 @@
+---
+title: "Ferramentas: O Que os Agentes do Bolt Podem Realmente Fazer"
+sidebarTitle: "Ferramentas"
+description: "A lista completa de ferramentas incorporadas disponíveis para os agentes do Bolt, além de como adicionar as suas próprias ferramentas via plugins, servidores MCP ou o diretório .opencode/tool."
+---
+
+Os agentes no Bolt fazem trabalho ao invocar ferramentas. Cada ação que vê no TUI (ler um ficheiro, executar testes, pesquisar na Web) é o modelo a escolher uma ferramenta e o Bolt a executá-la. Cada agente tem um nível de acesso declarado que determina que ferramentas pode chamar sem lhe pedir autorização (consulte [Permissões](/concepts/permissions)).
+
+## Ferramentas incorporadas
+
+| Ferramenta | O que faz |
+| --- | --- |
+| `read` | Lê um ficheiro do disco. |
+| `write` | Cria um novo ficheiro ou substitui um existente. |
+| `edit` | Aplica uma edição direcionada (find/replace) a um ficheiro. |
+| `apply_patch` | Aplica um patch no estilo unified diff a um ou mais ficheiros. |
+| `glob` | Lista ficheiros que correspondem a um padrão glob. |
+| `grep` | Pesquisa conteúdos de ficheiros por regex/texto. |
+| `bash` | Executa um comando de shell. |
+| `task` | Delega uma subtarefa a um subagente (`@general`, `@explore` ou um subagente personalizado). |
+| `todowrite` | Mantém a lista de tarefas estruturada do agente para trabalho em vários passos. |
+| `webfetch` | Obtém um URL e devolve o seu conteúdo. |
+| `websearch` | Pesquisa na Web. |
+| `skill` | Invoca uma skill nomeada (consulte [Skills](/extending/skills)). |
+| `memory_save` | Persiste um facto na [memória do projeto](/concepts/project-memory). |
+| `memory_recall` | Consulta uma memória previamente guardada. |
+| `question` | Faz-lhe uma pergunta de clarificação e aguarda resposta. |
+| `bash_background` | Inicia um comando de shell como processo gerido em segundo plano (servidores de desenvolvimento, observadores, builds longos). |
+| `process_output` | Lê a saída acumulada e o estado de um processo em segundo plano, opcionalmente esperando que termine. |
+| `list_processes` | Lista os processos em segundo plano com o seu id, estado e comando. |
+| `kill_process` | Termina um processo em segundo plano (e a sua árvore de processos) por id. |
+| `test_run` | Deteta e executa os testes do projeto, devolvendo resultados estruturados de sucesso/falha e detalhes de falhas. |
+
+### Experimentais
+
+| Ferramenta | O que faz |
+| --- | --- |
+| `lsp` | Consulta um language server para obter definições, referências e diagnósticos. |
+| `execute` | Executa código numa sandbox isolada de code-mode. |
+| `plan` | Produz um plano estruturado antes de fazer alterações. |
+
+As ferramentas experimentais podem mudar ou ser renomeadas entre versões.
+
+## Estender o conjunto de ferramentas
+
+Para além das ferramentas incorporadas, o Bolt pode invocar ferramentas de três fontes:
+
+- **Ferramentas personalizadas** em `.opencode/tool/` (ou `.opencode/tools/`) na raiz do projeto. Consulte [Ferramentas Personalizadas](/extending/custom-tools).
+- **Ferramentas de plugin** disponibilizadas por qualquer [plugin](/extending/plugins) instalado.
+- **Ferramentas MCP** de qualquer [servidor MCP](/extending/mcp-servers) configurado para o projeto.
+
+As três são idênticas do ponto de vista do agente: aparecem na lista de ferramentas, respeitam o nível de acesso do agente e aparecem na saída de chamadas de ferramenta do TUI.
+
+## Relacionado
+
+- [Agentes](/concepts/agents) — que agentes podem invocar que ferramentas.
+- [Permissões](/concepts/permissions) — como o acesso às ferramentas é controlado por agente.
+- [Servidores MCP](/extending/mcp-servers) — a forma mais comum de adicionar ferramentas do mundo real.

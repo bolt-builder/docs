@@ -1,0 +1,46 @@
+---
+title: "Projekta atmiņa: noturīgs konteksts starp Bolt sesijām"
+sidebarTitle: "Projekta atmiņa"
+description: "Bolt uzņem to, ko tas uzzina par jūsu projektu katras kārtas beigās, un injicē to jaunās sesijās, lai aģentam nebūtu katru reizi no jauna jāapgūst jūsu koda bāze."
+---
+
+Projekta atmiņa ir tas, kas liek Bolt justies tā, it kā tas jau zinātu jūsu projektu. Kad sesija beidz savu kārtu, Bolt atlasa to, kas bija noderīgs, un ieraksta to katram projektam paredzētā atmiņas krātuvē. Kad jūs atverat jaunu sesiju, Bolt injicē atmiņas indeksu plus jaunāko sesijas kopsavilkumu sistēmas uzvednē, tāpēc aģents sāk ar reālu kontekstu, nevis tukšu lapu.
+
+## Kā notiek uzņemšana
+
+Katras sarunas kārtas beigās Bolt lūdz modelim apkopot noturīgus faktus, kas būs noderīgi nākamreiz: konvencijas, arhitektūras piezīmes, failu izkārtojumu, būvēšanas/testēšanas komandas, viltības un atvērtos pavedienus. Tie tiek ierakstīti diskā projekta atmiņas direktorijā, kopā ar ritinošu jaunāko sesiju kopsavilkumu.
+
+Atmiņa ir katram projektam. Divi tā paša repozitorija norēķini vienā iekārtā koplieto atmiņu; nesaistīti projekti nekad neredz viens otra atmiņu.
+
+## Skaidrie rīki
+
+Aģenti sesijas laikā var arī tieši lasīt un rakstīt atmiņā:
+
+- `memory_save` — ierakstīt konkrētu faktu, kas aģentam nākamreiz jāatceras.
+- `memory_recall` — uzmeklēt kaut ko, ko aģents (vai jūs) iepriekš uztvēra.
+
+Jūs varat lūgt aģentam "atceries, ka mēs izmantojam pnpm, nevis npm", un tas jūsu vietā izsauks `memory_save`.
+
+## Sesijas vadīklas
+
+TUI iekšpusē jūs varat pārslēgt atmiņas uzvedību pašreizējai sesijai ar slīpsvītras komandām:
+
+```text
+/memory use on|off         # vai šī sesija lasa projekta atmiņu
+/memory contribute on|off  # vai šī sesija raksta atpakaļ atmiņā
+```
+
+Tas ir noderīgi, kad vēlaties izmetamu izpētes sesiju, kas nepiesārņo jūsu atmiņu, vai tikai lasāmu sesiju, kas joprojām gūst labumu no iepriekšēja konteksta.
+
+## Atmiņas pārbaude un rediģēšana
+
+```bash
+bolt memory           # pārbaudiet atmiņas krātuvi pašreizējam projektam
+```
+
+Atmiņa tiek glabāta kā vienkārši faili diskā zem projekta Bolt datu direktorijas, tāpēc jūs varat grep, rediģēt vai dzēst ierakstus tieši. Lai atrastu precīzu ceļu savā iekārtā, palaidiet `bolt debug paths`.
+
+## Saistīts
+
+- [Sesijas](/concepts/sessions) — noturīgās sarunas, kas rada atmiņas ierakstus.
+- [Konfigurācija](/concepts/configuration) — kur tiek glabāta atmiņa un kā ignorēt ceļu.

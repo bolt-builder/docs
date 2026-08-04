@@ -1,0 +1,145 @@
+---
+title: "Extinde Bolt cu plugin-uri"
+sidebarTitle: "Plugin-uri"
+description: "Instalează și construiește plugin-uri Bolt pentru a adăuga furnizori AI personalizați, metode de autentificare, instrumente și adaptoare de workspace la orice proiect sau global."
+url: "extending/plugins"
+---
+
+Plugin-urile îți permit să extinzi Bolt dincolo de capabilitățile sale încorporate. Un plugin este un modul Node sau Bun care exportă un manifest de plugin Bolt; când este încărcat, poate înregistra furnizori LLM noi, metode de autentificare personalizate, instrumente suplimentare și adaptoare de workspace. Plugin-urile pot fi instalate pentru un singur proiect sau aplicate global pentru toată activitatea ta.
+
+## Instalarea unui plugin
+
+Folosește `bolt plugin install` (alias: `bolt plug`) pentru a instala un plugin de pe npm și pentru a-l înregistra automat în configurația ta:
+
+```bash
+bolt plugin install <module>
+```
+
+### Opțiuni
+
+| Opțiune | Alias | Descriere |
+|---------|-------|-----------|
+| `--global` | `-g` | Instalează în configurația globală în loc de proiectul curent |
+| `--force` | `-f` | Înlocuiește o intrare existentă pentru același modul |
+
+### Domeniu: proiect versus global
+
+În mod implicit, `bolt plugin install` adaugă plugin-ul la `.bolt/bolt.jsonc` la nivel de proiect. Transmite `--global` pentru a-l adăuga la configurația ta la nivel de utilizator, astfel încât să se încarce în fiecare proiect.
+
+```bash
+# Project-scoped (default)
+bolt plugin install @acme/bolt-plugin-jira
+
+# Global — loads in every project
+bolt plugin install @acme/bolt-plugin-jira --global
+```
+
+<Note>
+  Rulează `bolt --pure` (sau setează `OPENCODE_PURE=1`) pentru a porni Bolt cu toate plugin-urile externe dezactivate. Acest lucru este util pentru a depana dacă un plugin cauzează un comportament neașteptat, fără a-l dezinstala.
+</Note>
+
+---
+
+## Instalarea unui plugin publicat
+
+<Steps>
+  <Step title="Găsește pachetul plugin">
+    Caută pe npm pachete cu `bolt-plugin` sau `opencode-plugin` în nume sau urmează un link din documentația unui furnizor.
+  </Step>
+
+  <Step title="Instalează în proiectul tău">
+    ```bash
+    bolt plugin install @acme/bolt-plugin-jira
+    ```
+
+    Bolt instalează pachetul, citește manifestul acestuia pentru a detecta țintele server și TUI, apoi scrie intrarea în `.bolt/bolt.jsonc`.
+  </Step>
+
+  <Step title="Verifică configurația">
+    Deschide `.bolt/bolt.jsonc` și confirmă că intrarea plugin-ului a fost adăugată:
+
+    ```jsonc
+    {
+      "plugin": [
+        "@acme/bolt-plugin-jira"
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Pornește o sesiune">
+    ```bash
+    bolt
+    ```
+
+    Bolt încarcă plugin-ul la pornire. Orice furnizori sau instrumente pe care le înregistrează sunt imediat disponibile.
+  </Step>
+</Steps>
+
+---
+
+## Configurare manuală a plugin-ului
+
+Poți înregistra plugin-uri editând direct `.bolt/bolt.jsonc`. Acest lucru este util pentru plugin-uri locale aflate în dezvoltare:
+
+```jsonc
+{
+  "plugin": [
+    "./plugins/my-plugin.ts"
+  ]
+}
+```
+
+Căile relative sunt rezolvate din rădăcina proiectului. Sunt acceptate atât punctele de intrare TypeScript, cât și JavaScript.
+
+---
+
+## Construirea unui plugin
+
+Plugin-urile sunt scrise pe baza pachetului `@opencode-ai/plugin`, care oferă interfața `Hooks` pe care modulul tău trebuie să o satisfacă.
+
+```bash
+npm install --save-dev @opencode-ai/plugin
+```
+
+Un plugin minim exportă o funcție care primește un obiect `PluginInput` și returnează un obiect `Hooks`:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const myPlugin: Plugin = async (input) => {
+  return {
+    // auth hook — register custom authentication methods
+    auth: {
+      methods: [
+        {
+          id: "my-provider-auth",
+          name: "My Provider",
+          // ... provider-specific fields
+        },
+      ],
+    },
+  }
+}
+
+export default myPlugin
+```
+
+### Tipuri de hook-uri disponibile
+
+| Hook | Scop |
+|------|------|
+| `auth` | Înregistrează furnizori de autentificare personalizați cu un array `methods` |
+| `event` | Reacționează la evenimente de sesiune (mesaje, apeluri de instrumente, finalizări) |
+| `config` | Răspunde la modificările de configurare la runtime |
+| `dispose` | Curăță resursele când plugin-ul este descărcat |
+
+Obiectul `PluginInput` expune `client` (un client API Bolt tipat), `project`, `worktree`, `directory` și `serverUrl`, astfel încât plugin-ul tău să poată interacționa cu serverul care rulează.
+
+---
+
+## Variabile de mediu
+
+| Variabilă | Descriere |
+|-----------|-----------|
+| `OPENCODE_PURE` | Setează la `1` pentru a rula fără niciun plugin extern |

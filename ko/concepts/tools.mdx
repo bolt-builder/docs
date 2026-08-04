@@ -1,0 +1,58 @@
+---
+title: "Tools: Bolt 에이전트가 실제로 할 수 있는 것"
+sidebarTitle: "Tools"
+description: "Bolt 에이전트가 사용할 수 있는 내장 도구의 전체 목록과, 플러그인, MCP 서버, .opencode/tool 디렉터리를 통해 자체 도구를 추가하는 방법."
+---
+
+Bolt의 에이전트는 도구를 호출하여 작업을 수행합니다. TUI에서 보는 모든 작업(파일 읽기, 테스트 실행, 웹 검색)은 모델이 도구를 선택하고 Bolt가 이를 실행하는 것입니다. 각 에이전트에는 여러분에게 먼저 묻지 않고 호출할 수 있는 도구를 결정하는 선언된 접근 수준이 있습니다 ([Permissions](/concepts/permissions) 참조).
+
+## 내장 도구
+
+| Tool | What it does |
+| --- | --- |
+| `read` | 디스크에서 파일을 읽습니다. |
+| `write` | 새 파일을 생성하거나 기존 파일을 덮어씁니다. |
+| `edit` | 파일에 대상 지정 편집(찾기/바꾸기)을 적용합니다. |
+| `apply_patch` | 하나 이상의 파일에 걸쳐 통합 diff 스타일의 패치를 적용합니다. |
+| `glob` | glob 패턴과 일치하는 파일을 나열합니다. |
+| `grep` | 정규식/텍스트로 파일 콘텐츠를 검색합니다. |
+| `bash` | 셸 명령을 실행합니다. |
+| `task` | 서브에이전트(`@general`, `@explore`, 또는 커스텀 서브에이전트)에 하위 작업을 위임합니다. |
+| `todowrite` | 다단계 작업을 위해 에이전트의 구조화된 작업 목록을 유지합니다. |
+| `webfetch` | URL을 가져와 콘텐츠를 반환합니다. |
+| `websearch` | 웹을 검색합니다. |
+| `skill` | 이름이 지정된 스킬을 호출합니다 ([Skills](/extending/skills) 참조). |
+| `memory_save` | [프로젝트 메모리](/concepts/project-memory)에 사실을 저장합니다. |
+| `memory_recall` | 이전에 저장된 메모리를 조회합니다. |
+| `question` | 명확화 질문을 하고 답변을 기다립니다. |
+| `bash_background` | 셸 명령을 관리되는 백그라운드 프로세스(개발 서버, 감시자, 장기 빌드)로 시작합니다. |
+| `process_output` | 백그라운드 프로세스의 누적 출력과 상태를 읽고, 선택적으로 완료까지 대기합니다. |
+| `list_processes` | 백그라운드 프로세스를 id, 상태, 명령과 함께 나열합니다. |
+| `kill_process` | id로 백그라운드 프로세스(및 프로세스 트리)를 종료합니다. |
+| `test_run` | 프로젝트의 테스트를 감지하고 실행하여 구조화된 통과/실패 결과와 실패 세부 정보를 반환합니다. |
+
+### 실험적
+
+| Tool | What it does |
+| --- | --- |
+| `lsp` | 정의, 참조, 진단에 대해 language server에 쿼리합니다. |
+| `execute` | 격리된 code-mode 샌드박스에서 코드를 실행합니다. |
+| `plan` | 변경 전에 구조화된 계획을 생성합니다. |
+
+실험적 도구는 릴리스 사이에 변경되거나 이름이 바뀔 수 있습니다.
+
+## 도구 세트 확장
+
+내장 외에도, Bolt는 세 가지 소스에서 도구를 호출할 수 있습니다:
+
+- 프로젝트 루트의 `.opencode/tool/` (또는 `.opencode/tools/`)에 있는 **커스텀 도구**. [Custom Tools](/extending/custom-tools) 참조.
+- 설치된 [플러그인](/extending/plugins)에서 기여하는 **플러그인 도구**.
+- 프로젝트에 구성된 [MCP 서버](/extending/mcp-servers)의 **MCP 도구**.
+
+세 가지 모두 에이전트의 관점에서는 동일하게 느껴집니다: 도구 목록에 나타나고, 에이전트의 접근 수준을 따르며, TUI의 도구 호출 출력에 표시됩니다.
+
+## 관련 항목
+
+- [Agents](/concepts/agents) — 어떤 에이전트가 어떤 도구를 호출할 수 있는지.
+- [Permissions](/concepts/permissions) — 에이전트별로 도구 접근이 어떻게 게이트되는지.
+- [MCP Servers](/extending/mcp-servers) — 실제 도구를 추가하는 가장 일반적인 방법.

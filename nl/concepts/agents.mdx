@@ -1,0 +1,135 @@
+---
+title: "Agents — Bolts tien ingebouwde en aangepaste AI-persona's"
+sidebarTitle: "Agents"
+description: "Bolt bevat tien ingebouwde agents, elk met een eigen rol, toolset en toegangsniveau. Leer hoe je van agent wisselt, ze configureert en je eigen agents maakt."
+---
+
+Bolt behandelt elke AI-persona als een benoemde **agent**: een systeemprompt gekoppeld aan een nauwkeurig afgebakende set toolrechten. In plaats van één algemeen model voor elke taak te draaien, kies je de agent wiens toegang en focus past bij wat je nodig hebt — of dat nu is om security te auditen, docs te schrijven of een volledige framework-migratie uit te voeren.
+
+## Toegangsniveaus
+
+Elke ingebouwde agent krijgt een van drie toegangsniveaus toegewezen, die bepalen welke tools hij mag aanroepen:
+
+| Niveau | Verleende rechten | Typisch gebruik |
+|-------|---------------------|-------------|
+| **Full** | Bestanden lezen, bestanden schrijven/bewerken, shell-commando's uitvoeren | Actief coderen, debuggen, refactoren, migraties |
+| **Edit** | Bestanden lezen, bestanden schrijven/bewerken — geen shell | Documentatie, commentaarupdates, veilige tekstbewerkingen |
+| **Read** | Alleen bestanden lezen — geen schrijfacties, geen shell | Planning, onderzoek, code review, audits |
+
+## Ingebouwde agents
+
+Bolt levert standaard tien gespecialiseerde agents. Wissel er tussen in de TUI door op <kbd>Tab</kbd> te drukken.
+
+| Agent | Toegang | Beschrijving |
+|-------|--------|-------------|
+| `code` | Full | Standaard: leest, schrijft en voert code uit |
+| `plan` | Read | Verkent de codebase en produceert een plan zonder code te wijzigen |
+| `ask` | Read | Vragen en onderzoek — geen bestandsbewerkingen |
+| `code-review` | Read | Reviewt wijzigingen op correctheid, stijl en security |
+| `debug` | Full | Debugt falende tests, crashes en logicafouten |
+| `refactor` | Full | Veilig refactoren met testverificatie bij elke stap |
+| `docs` | Edit | Schrijft en werkt documentatie en commentaar bij |
+| `security` | Read | Security-audit: kwetsbaarheden, secrets en gevaarlijke patronen |
+| `migrate` | Full | Framework-upgrades en dependency-migraties |
+| `perf` | Full | Performance-analyse en optimalisatie |
+
+## Subagents
+
+Naast de tien primaire agents biedt Bolt twee ingebouwde **subagents** waaraan primaire agents werk kunnen delegeren tijdens een sessie. Je selecteert een subagent nooit handmatig — ze worden automatisch ingezet wanneer een primaire agent besluit er een te starten.
+
+| Subagent | Rol |
+|----------|------|
+| `@general` | Complexe delegatie van taken met meerdere stappen die brede mogelijkheden vereisen |
+| `@explore` | Snel, alleen-lezen codebase-onderzoek — doorloopt bestanden zonder bijwerkingen |
+
+<Tip>
+  Wanneer je snel een onbekende codebase wilt begrijpen, begin dan met de `ask`- of `plan`-agent. Achter de schermen kunnen ze de `@explore`-subagent inzetten om je project razendsnel te indexeren voordat ze een antwoord produceren — zonder één bestand aan te raken.
+</Tip>
+
+## Van agent wisselen
+
+**In de TUI** — druk op <kbd>Tab</kbd> om op elk moment tijdens een sessie door de lijst met beschikbare agents te bladeren. De actieve agent wordt getoond in de sessievoettekst.
+
+**Niet-interactief** — geef `--agent <name>` mee aan `bolt run` om een specifieke agent vast te zetten voor de duur van die run:
+
+```bash
+bolt run --agent ask "what does the authentication flow do?"
+bolt run --agent security "audit the API layer for injection vulnerabilities"
+bolt run --agent docs "add JSDoc comments to every exported function in src/utils"
+```
+
+## Agents opsommen
+
+Om alle beschikbare agents te zien — zowel ingebouwd als custom — met hun modi en permissieconfiguratie:
+
+```bash
+bolt agent list
+```
+
+## Custom agents
+
+Je kunt op twee manieren je eigen agents maken.
+
+### Genereren met `bolt agent create`
+
+De interactieve wizard genereert een agent-bestand met een LLM en schrijft het naar schijf:
+
+```bash
+bolt agent create
+```
+
+Alle flags zijn optioneel. Geef ze mee om niet-interactief te draaien:
+
+```bash
+bolt agent create \
+  --description "Audit GraphQL resolvers for N+1 problems and suggest DataLoader fixes" \
+  --path .bolt/agents \
+  --mode primary \
+  --permissions read,grep,glob \
+  --model anthropic/claude-opus-4-5
+```
+
+| Flag | Beschrijving |
+|------|-------------|
+| `--description` | Wat de agent moet doen (gebruikt als LLM-prompt voor de generatie) |
+| `--path` | Map waarin het gegenereerde agent-bestand geschreven wordt |
+| `--mode` | `all` (standaard), `primary` of `subagent` |
+| `--permissions` | Door komma's gescheiden lijst van toe te staan permissies. Laat weg voor alle. |
+| `--model` / `-m` | Model om te gebruiken in `provider/model` formaat |
+
+### Handmatig een markdown-bestand schrijven
+
+Een agent is gewoon een markdown-bestand met YAML frontmatter. Plaats het in `.bolt/agents/` in je project of in de globale agents-map:
+
+```markdown
+---
+description: "Audit GraphQL resolvers for N+1 problems"
+mode: primary
+permission:
+  bash: deny
+  edit: deny
+---
+
+You are a GraphQL performance specialist. Your job is to identify N+1 query
+patterns in resolver code and recommend DataLoader-based solutions...
+```
+
+De bestandsnaam (zonder `.md`) wordt de identifier van de agent.
+
+### Beschikbare permissies
+
+Permissies zijn de fijnmazige tool-poorten die je bestuurt bij het maken van een custom agent:
+
+| Permissie | Wat het bepaalt |
+|------------|----------|
+| `bash` | Uitvoeren van shell-commando's |
+| `read` | Bestanden lezen |
+| `edit` | Bestanden schrijven en bewerken (gate ook voor `write` en `apply_patch`) |
+| `glob` | Bestand glob/directory listing |
+| `grep` | Bestand zoeken via ripgrep |
+| `webfetch` | HTTP fetch vanaf het web |
+| `task` | Spawnen van subagent-taken |
+| `todowrite` | Aanmaken en bijwerken van todo-items |
+| `websearch` | Web search queries |
+| `lsp` | Language server protocol-operaties |
+| `skill` | Toegang tot project-skills |

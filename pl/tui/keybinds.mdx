@@ -1,0 +1,38 @@
+---
+title: "Skróty klawiszowe TUI Bolta"
+sidebarTitle: "Skróty klawiszowe"
+description: "Podstawowe skróty TUI Bolta: przełączanie agentów za pomocą Tab, tryb mini, głos push-to-talk i wszystko inne, czym możesz sterować z klawiatury."
+---
+
+TUI Bolta jest zaprojektowane do sterowania od początku do końca z klawiatury. Ta strona listuje skróty, po które będziesz najczęściej sięgał. Dla wyczerpującej listy uruchom `bolt` i otwórz pomoc w aplikacji.
+
+## Podstawy
+
+| Klawisze | Akcja |
+| --- | --- |
+| `Tab` | Cyklicznie przejdź do następnego agenta (`code`, `plan`, `ask`, ...). Bieżący agent pokazywany jest na pasku statusu. |
+| `Shift+Tab` | Cyklicznie przejdź do poprzedniego agenta. |
+| `Enter` | Wyślij bieżącą wiadomość. |
+| `Esc` | Anuluj trwającą turę. |
+| `Ctrl+C` | Przerwij bieżące wywołanie narzędzia. |
+| `Ctrl+D` | Odłącz się od sesji (pozostawia ją uruchomioną na serwerze). |
+
+## Tryby
+
+### Tryb `--mini`
+
+Uruchom Bolta z kompaktowym układem split-footer, który zajmuje mniej miejsca w terminalu, świetny do dzielonych paneli:
+
+```bash
+bolt --mini
+bolt attach --mini <url>
+```
+
+### Głos push-to-talk
+
+Przytrzymaj skonfigurowany klawisz push-to-talk, aby podyktować prompt za pomocą speech-to-text, po czym puść, aby wysłać. Skonfiguruj klawisz i dostawcę STT w `.bolt/bolt.jsonc`.
+
+## Powiązane
+
+- [Komendy slash](/tui/slash-commands) — `/memory`, `/plan`, `/todos`, `/btw` i pokrewne.
+- [Sesje](/concepts/sessions) — odłączaj, wznawiaj, rozgałęziaj i udostępniaj z klawiatury.

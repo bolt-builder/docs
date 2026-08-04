@@ -1,0 +1,395 @@
+---
+title: "일반적인 Bolt 문제 해결"
+sidebarTitle: "Troubleshooting"
+description: "가장 흔한 Bolt 문제에 대한 해결 방법: 시작 실패, 프로바이더 인증 오류, MCP 연결, 세션 문제, 권한, 비용 등."
+---
+
+대부분의 Bolt 문제는 소수의 카테고리로 나뉩니다. 아래 관련 아코디언을 살펴보고, 예상치 못한 일이 발생하면 `bolt logs`로 로그 출력을 확인하세요.
+
+<Note>
+  여기서 답을 찾을 수 없는 질문이 있다면 [Bolt GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions)에서 검색하거나 토론을 시작하세요. 커뮤니티가 더 빨리 도울 수 있도록 게시물에 `bolt debug info`와 `bolt logs --tail 50`의 출력을 포함하세요.
+</Note>
+
+## 먼저 시도할 것들
+
+특정 섹션에 뛰어들기 전에, 이 네 가지 명령이 대부분의 문제를 해결합니다:
+
+| Symptom | First command | Why |
+| --- | --- | --- |
+| 이상한 무언가 | `bolt debug info` | 한 번에 시스템 \+ 플러그인 요약. |
+| 이전에는 작동했지만 이제 아니다 | `bolt logs --tail 100` | 최근 오류, 보통 상단 근처. |
+| 플러그인 의심 | `bolt --pure` | 모든 플러그인 비활성화 상태로 시작. |
+| 설정이 인식되지 않음 | `bolt debug config` | 완전히 해석된 설정 인쇄. |
+
+<Tip>
+  `bolt debug` 계열은 미스터리한 동작에 대한 첫 번째 정거장입니다. 시스템 요약은 `bolt debug info`, 해석된 설정은 `bolt debug config`, 디스크상 위치는 `bolt debug paths`, 세션 상태 검사는 `bolt debug snapshot`을 사용하세요.
+</Tip>
+
+<Accordion title="Bolt가 시작되지 않음 / 실행 시 충돌">
+  **증상:** 터미널이 깜박이며 즉시 종료되거나, TUI가 렌더링되기 전에 스택 트레이스가 표시됩니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="시스템 정보 수집">
+      ```bash
+      bolt debug info
+      ```
+
+      Bolt 버전, OS, 터미널 에뮬레이터, 로드된 플러그인을 인쇄합니다. 버그를 보고할 때 이 출력을 복사하세요.
+    </Step>
+    <Step title="최근 로그 출력 확인">
+      ```bash
+      bolt logs --tail 100
+      ```
+
+      `ERROR` 줄을 찾으세요. 일반적인 원인은 로드에 실패하는 플러그인입니다 — 이 경우 플러그인 이름을 언급하는 오류가 표시됩니다.
+    </Step>
+    <Step title="문제 격리를 위해 플러그인 비활성화">
+      ```bash
+      bolt --pure
+      ```
+
+      `--pure`로 Bolt가 깨끗하게 시작되면 플러그인이 충돌의 원인입니다. 설정에서 문제가 되는 플러그인을 제거하거나 플러그인 저자에게 보고하세요.
+    </Step>
+    <Step title="손상된 설정 확인">
+      ```bash
+      bolt debug config
+      ```
+
+      잘못된 JSON에 대한 오류를 인쇄하면 언급된 설정 파일을 열어 구문을 수정하세요. 데이터베이스 경로에 접근할 수 있는지 확인하려면 `bolt db path`를 실행하세요.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="프로바이더 인증 실패">
+  **증상:** Bolt가 "No providers configured"를 표시하거나, API 요청이 401 오류로 실패하거나, `bolt run`이 출력 없이 즉시 종료됩니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="프로바이더 로그인 흐름 재실행">
+      ```bash
+      bolt providers login
+      ```
+
+      프로바이더를 선택하고 프롬프트를 따르세요. Bolt는 API 키 입력이나 OAuth를 안내합니다.
+    </Step>
+    <Step title="API 키 환경 변수 확인">
+      환경 변수(예: `ANTHROPIC_API_KEY`)를 사용하는 경우, 현재 셸에 실제로 설정되어 있는지 확인하세요:
+
+      ```bash
+      echo $ANTHROPIC_API_KEY
+      ```
+
+      비어 있으면 셸 프로필에 추가하고 터미널을 다시 여세요.
+    </Step>
+    <Step title="해석된 설정 검사">
+      ```bash
+      bolt debug config
+      ```
+
+      `provider` 섹션을 보세요. 프로바이더가 빈 `apiKey`로 나타나면, 설정 파일의 환경 변수 참조가 확장되지 않고 있는 것입니다.
+    </Step>
+    <Step title="저장된 자격 증명 나열">
+      ```bash
+      bolt providers list
+      ```
+
+      `auth.json`에 저장된 모든 자격 증명과 Bolt가 감지한 모든 프로바이더 관련 환경 변수를 표시합니다.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="MCP 서버가 연결되지 않음">
+  **증상:** `bolt mcp list`가 서버를 `failed` 또는 `needs authentication`으로 표시하거나, 에이전트가 해당 서버의 도구를 사용할 수 없습니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="MCP 디버그 프로브 실행">
+      ```bash
+      bolt mcp debug <server-name>
+      ```
+
+      기본 HTTP 연결을 테스트하고, `WWW-Authenticate` 헤더를 검사하며, 해당하는 경우 OAuth 검색 흐름을 진행합니다. 출력은 서버에 도달할 수 있는지, 인증이 필요한지 알려줍니다.
+    </Step>
+    <Step title="서버 URL 확인">
+      `.bolt/bolt.jsonc`의 URL을 확인하세요. 원격 서버의 경우, URL이 호스트뿐만 아니라 MCP 경로(예: `/mcp` 또는 `/tools`)로 끝나는지 확인하세요.
+    </Step>
+    <Step title="OAuth 서버 재인증">
+      ```bash
+      bolt mcp auth <server-name>
+      ```
+
+      브라우저 흐름을 따르세요. 서버가 사전 등록된 클라이언트 ID를 필요로 하면 설정에 추가하세요:
+
+      ```jsonc
+      "mcp": {
+        "my-server": {
+          "type": "remote",
+          "url": "https://mcp.example.com/tools",
+          "oauth": {
+            "clientId": "your-client-id",
+            "clientSecret": "your-client-secret"
+          }
+        }
+      }
+      ```
+    </Step>
+    <Step title="로컬 서버 명령 확인">
+      `local` 서버의 경우, 오류 없이 시작되는지 확인하려면 터미널에서 명령을 수동으로 실행하세요:
+
+      ```bash
+      npx @modelcontextprotocol/server-filesystem /tmp
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="세션을 찾을 수 없음">
+  **증상:** `bolt run --session <id>`가 "Session not found"로 종료되거나, 작업했던 기억의 세션이 사라졌습니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="사용 가능한 모든 세션 나열">
+      ```bash
+      bolt session list
+      ```
+
+      세션은 가장 최근 업데이트된 순으로 정렬됩니다. 세션이 삭제되었거나 데이터베이스가 마이그레이션되었다면 여기에 나타나지 않습니다.
+    </Step>
+    <Step title="데이터베이스 경로 찾기">
+      ```bash
+      bolt db path
+      ```
+
+      SQLite 파일의 전체 경로를 인쇄합니다. 파일이 존재하고 비어 있지 않은지 확인하세요.
+    </Step>
+    <Step title="데이터베이스를 직접 쿼리">
+      ```bash
+      bolt db "SELECT id, title FROM sessions ORDER BY time_updated DESC LIMIT 20"
+      ```
+
+      세션이 데이터베이스에는 있지만 `bolt session list`에는 없으면, 프로젝트 ID 불일치가 있을 수 있습니다 — 세션은 프로젝트로 범위가 지정됩니다.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="TUI의 권한 오류">
+  **증상:** 에이전트가 반복해서 권한을 요청하거나, 파일 쓰기를 거부하거나, "Permission denied" 배너가 표시됩니다.
+
+  **접근 수준 이해:**
+
+  각 내장 에이전트는 묻지 않고 할 수 있는 것을 제어하는 선언된 접근 수준이 있습니다:
+
+  | Access level | What it allows |
+  | --- | --- |
+  | **Full** | 파일 읽기, 파일 쓰기, 셸 명령 실행 |
+  | **Edit** | 파일 읽기와 쓰기, 셸 명령 없음 |
+  | **Read** | 파일 읽기만, 쓰기 또는 명령 없음 |
+
+  `code`, `debug`, `refactor`, `migrate`, `perf` 에이전트는 **Full** 접근을 가집니다. `docs`는 **Edit** 접근을 가집니다. `plan`, `ask`, `code-review`, `security`는 **Read** 접근을 가집니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="Full 접근 에이전트로 전환">
+      파일 쓰기가 필요하면 `code` 에이전트를 사용하세요:
+
+      ```bash
+      bolt run --agent code "implement the feature"
+      ```
+
+      또는 TUI에서 `Tab`을 눌러 에이전트를 순환하세요.
+    </Step>
+    <Step title="--auto로 프롬프트를 비대화형으로 승인">
+      CI나 스크립트 컨텍스트에서는 설정에서 명시적으로 거부되지 않은 권한을 자동 승인하려면 `bolt run`에 `--auto`를 전달하세요.
+    </Step>
+    <Step title="설정 파일에서 권한 구성">
+      `.bolt/bolt.jsonc`에 `permission` 블록을 추가하여 프로젝트의 모든 세션에 대해 특정 도구를 거부할 수 있습니다.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="높은 토큰 사용량 또는 예상치 못한 비용">
+  **증상:** `bolt stats`가 예상보다 높은 토큰 수를 표시하거나, API 청구서가 예상보다 빠르게 증가합니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="사용 통계 검토">
+      ```bash
+      bolt stats
+      bolt stats --days 7 --models
+      ```
+
+      출력은 일별 비용, 세션당 평균 토큰, 모델별 사용량을 분석합니다.
+    </Step>
+    <Step title="추론 효율 낮추기">
+      지원하는 모델의 경우, `--variant`로 추론 효율을 줄이세요:
+
+      ```bash
+      bolt run --model anthropic/claude-opus-4-5 --variant minimal "quick review"
+      ```
+
+      지원 값은 프로바이더별입니다 (예: `minimal`, `low`, `high`, `max`).
+    </Step>
+    <Step title="더 저렴한 모델로 전환">
+      더 작은 모델을 찾으려면 `bolt models`를 사용하세요. 더 작은 모델(예: `claude-haiku`, `gpt-4o-mini`)은 토큰당 비용이 훨씬 저렴하며 많은 작업에서 잘 작동합니다.
+    </Step>
+    <Step title="탐색용으로 ask 또는 plan 에이전트 사용">
+      `ask`와 `plan` 에이전트는 **Read** 접근을 가지며 쓰기 도구를 호출하지 않으므로, 큰 출력 토큰을 생성하는 도구 중심 루프를 피합니다.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="플러그인 충돌 또는 예상치 못한 동작">
+  **증상:** 슬래시 명령이 예상치 못하게 동작하거나, TUI가 잘못 렌더링되거나, 플러그인 설치 후 무언가가 변경되었습니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="기준선을 설정하기 위해 모든 플러그인 비활성화">
+      ```bash
+      bolt --pure
+      ```
+
+      문제가 사라지면 플러그인이 원인입니다.
+    </Step>
+    <Step title="문제가 되는 플러그인 식별">
+      ```bash
+      bolt debug info
+      ```
+
+      출력은 로드된 모든 플러그인을 나열합니다. 문제가 사라질 때까지 설정에서 한 번에 하나씩 일시적으로 제거하고 Bolt를 다시 시작하세요.
+    </Step>
+    <Step title="버전 비호환성 확인">
+      ```bash
+      bolt upgrade
+      ```
+
+      플러그인은 호환되는 Bolt 버전 범위를 선언합니다. 최근 Bolt를 업그레이드했다면 플러그인도 업데이트가 필요할 수 있습니다.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="WSL / Windows 경로 문제">
+  **증상:** WSL이 있는 Windows에서 Bolt가 `less`를 찾을 수 없거나, 파일 경로에 예상치 못한 백슬래시가 포함되거나, `bolt session list`의 페이저가 실행되지 않습니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="Git Bash 경로 설정">
+      Bolt는 Git for Windows 설치에 상대적으로 Unix 유틸리티(`less` 포함)를 찾습니다. 환경 변수를 Git Bash 디렉터리로 설정하세요:
+
+      ```powershell
+      $env:BOLT_GIT_BASH_PATH = "C:\Program Files\Git\bin"
+      ```
+
+      이를 지속하려면 PowerShell 프로필(`$PROFILE`)에 추가하세요.
+    </Step>
+    <Step title="debug info로 확인">
+      ```bash
+      bolt debug info
+      ```
+
+      OS 감지 및 Bolt가 사용하는 경로를 확인합니다.
+    </Step>
+    <Step title="WSL 내부에서 직접 Bolt 실행">
+      Windows에서 최고의 경험을 위해서는 PowerShell이나 Command Prompt가 아닌 WSL 터미널 내에서 `bolt`를 실행하세요.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Bolt를 업그레이드할 수 없음">
+  **증상:** `bolt upgrade`가 오류를 보고하거나 조용히 아무것도 하지 않거나, 실행 후 버전 번호가 변경되지 않습니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title="설치 방법 명시적으로 지정">
+      Bolt는 어떻게 설치되었는지 감지하려고 시도합니다. 감지에 실패하면 재정의하세요:
+
+      ```bash
+      bolt upgrade --method npm
+      bolt upgrade --method curl
+      bolt upgrade --method brew
+      ```
+    </Step>
+    <Step title="설치 스크립트로 재설치">
+      ```bash
+      curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install | bash
+      ```
+    </Step>
+    <Step title="Windows: Chocolatey는 관리자 권한으로 실행">
+      `choco`를 통해 설치했다면 업그레이드에는 승격된 터미널이 필요합니다. `bolt upgrade`를 실행하기 전에 관리자 권한으로 PowerShell을 여세요.
+    </Step>
+    <Step title="새 버전이 활성인지 확인">
+      ```bash
+      bolt --version
+      which bolt    # verify the PATH is picking up the right binary
+      ```
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="에이전트가 파일을 찾을 수 없음 (또는 너무 많이 찾음)">
+  **증상:** 에이전트가 존재하는 파일을 볼 수 없다고 불평하거나, 만지지 않아야 할 파일(`node_modules`, 빌드 출력, 시크릿 등)을 반복적으로 가져옵니다.
+
+  **단계:**
+
+  <Steps>
+    <Step title=".boltignore 확인">
+      Bolt는 프로젝트 루트의 `.boltignore` 파일을 존중하며, 이는 에이전트의 파일 검색 도구가 볼 수 있는 파일을 제어합니다. `.gitignore`와 동일한 구문을 사용합니다.
+
+      ```text
+      # .boltignore
+      node_modules/
+      .env*
+      dist/
+      *.pem
+      ```
+    </Step>
+    <Step title="작업 디렉터리 확인">
+      ```bash
+      bolt debug info
+      ```
+
+      `cwd`가 프로젝트 루트와 일치하는지 확인하세요. 하위 디렉터리에서 Bolt를 시작했다면 에이전트의 파일 검색은 거기서 뿌리를 내립니다.
+    </Step>
+    <Step title="에이전트에게 추측 대신 grep 요청">
+      에이전트가 파일이 존재하지 않는다고 주장하면 `grep` 또는 `glob`을 명시적으로 실행하도록 요청하세요. 이는 오래된 내부 가정을 우회합니다.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="버그 리포트를 위한 디버그 정보 수집">
+  이슈를 제출할 때 다음 정보가 유지 관리자에게 가장 유용합니다:
+
+  <Steps>
+    <Step title="시스템 및 플러그인 정보 수집">
+      ```bash
+      bolt debug info
+      ```
+    </Step>
+    <Step title="최근 로그 출력 수집">
+      ```bash
+      bolt logs --tail 200
+      ```
+    </Step>
+    <Step title="관련 세션 내보내기 (마스킹됨)">
+      문제가 특정 세션 중에 발생했다면 시크릿을 마스킹하여 내보내세요:
+
+      ```bash
+      bolt export --sanitize > session-debug.json
+      ```
+
+      `session-debug.json`을 이슈에 첨부하세요.
+    </Step>
+    <Step title="이슈 또는 토론 열기">
+      [GitHub Discussions](https://github.com/bolt-builder/bolt-cli/discussions)로 가서 `bolt debug info` 출력과 재현 단계 설명을 붙여넣으세요.
+    </Step>
+  </Steps>
+</Accordion>

@@ -1,0 +1,22 @@
+---
+title: "Skill: playbook riutilizzabili per gli agenti"
+sidebarTitle: "Skill"
+description: "Le skill sono playbook nominati e riutilizzabili che l'agente Bolt invoca tramite lo strumento skill — utili per flussi di lavoro predefiniti come il rilascio di release o l'esecuzione di suite di lint."
+---
+
+Le skill sono playbook nominati e riutilizzabili che risiedono accanto al tuo progetto e vengono invocati attraverso lo strumento `skill`. Mentre uno strumento personalizzato è una singola azione eseguibile, una skill è un flusso di lavoro scriptato che l'agente può seguire passo dopo passo: raccogli questi file, esegui questi comandi, decidi cosa fare dopo in base all'output.
+
+Usa le skill quando:
+
+- Hai un flusso di lavoro che continui a rispiegare nei prompt ("prima esegui il linter, poi …").
+- Vuoi che l'agente segua un albero decisionale specifico.
+- Vuoi che lo stesso flusso di lavoro sia disponibile per ogni sessione e ogni agente nel progetto.
+
+## Dove risiedono
+
+Le skill sono file in `.opencode/skill/` (o `.opencode/skills/`) nella radice del progetto. Ogni file descrive il nome del trigger, quando l'agente dovrebbe usarlo e i passi coinvolti. Lo [strumento](/concepts/tools) `skill` le espone al modello.
+
+## Correlati
+
+- [Strumenti personalizzati](/extending/custom-tools) — estensione di livello inferiore a azione singola.
+- [Agenti personalizzati](/extending/custom-agents) — incorpora invece le istruzioni in un agente.

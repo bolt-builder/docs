@@ -1,0 +1,68 @@
+---
+title: "الوكلاء المخصّصون في Bolt"
+sidebarTitle: "الوكلاء المخصّصون"
+description: "عرّف وكلاء Bolt الخاصّين بك كملفات Markdown — اختر نموذجًا، اضبط مستوى الوصول، قيّد الأدوات، وأضف تعليمات خاصة بالمجال."
+---
+
+بعد الوكلاء العشرة المدمجين، يمكنك تعريف وكلاء خاصّين بك. الوكلاء المخصّصون هم ملفات Markdown مع كتلة بيانات وصفية تصف نموذج الوكيل، ومستوى الوصول، والأدوات المتاحة، بالإضافة إلى نص يعمل كموجّه النظام الخاص به.
+
+## إنشاء وكيل
+
+أسرع طريقة هي المولّد المدمج، الذي يطرح بضعة أسئلة ويكتب الملف لك:
+
+```bash
+bolt agent create
+```
+
+يعيش الوكلاء تحت `.opencode/agent/` في المشروع (أو في مجلد إعداداتك العام للوكلاء الشخصيين). كل وكيل هو ملف `.md` واحد يصبح اسم ملفه اسم الوكيل.
+
+## تشريح ملف الوكيل
+
+```md
+---
+name: "e2e-writer"
+description: "Writes and updates Playwright end-to-end tests"
+model: "anthropic/claude-opus-4-5"
+access: "edit"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - bash
+---
+
+You are an expert Playwright end-to-end test author. When asked to add tests:
+
+1. Read existing tests in `e2e/` first to match style.
+2. Prefer role-based selectors.
+3. Always run `pnpm e2e -- --reporter=list` after editing.
+```
+
+حقول البيانات الوصفية الشائعة:
+
+| الحقل | الغرض |
+| --- | --- |
+| `name` | اسم الوكيل المستخدم مع `--agent`. |
+| `description` | ملخّص من سطر واحد يظهر في القوائم. |
+| `model` | النموذج الافتراضي بتنسيق `provider/model`. |
+| `access` | `full` أو `edit` أو `read` (راجع [الأذونات](/concepts/permissions)). |
+| `tools` | قائمة سماح اختيارية تقيّد [الأدوات](/concepts/tools) التي يمكن للوكيل استدعاؤها. |
+
+## استخدام وكيل مخصّص
+
+```bash
+bolt run --agent e2e-writer "add a signup flow test"
+```
+
+في الـ TUI، اضغط `Tab` للتنقّل بين الوكلاء؛ يظهر الوكلاء المخصّصون بجانب المدمجين.
+
+## الوكلاء الفرعيون
+
+يمكن للوكلاء التفويض إلى وكلاء فرعيين عبر أداة `task`. يأتي Bolt مع `@general` و`@explore`، ويمكن استدعاء أي وكيل مخصّص يعيش ملفه تحت `.opencode/agent/` كوكيل فرعي بالاسم.
+
+## ذات صلة
+
+- [الوكلاء](/concepts/agents) — طاقم الوكلاء المدمج.
+- [الأدوات](/concepts/tools) — ما يمكنك إضافته إلى `tools:`.
+- [الأدوات المخصّصة](/extending/custom-tools) — بناء الأداة التي سيستدعيها الوكيل.

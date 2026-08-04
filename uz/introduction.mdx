@@ -1,0 +1,107 @@
+---
+title: "Bolt'ga kirish: ochiq manbali terminal AI agenti"
+sidebarTitle: "Kirish"
+description: "Bolt bilan tanishing: o'nta agent, barqaror sessiyalar, loyiha xotirasi, MCP, 75+ LLM provayderlari, TUI va desktop ilovaga ega ochiq manbali terminal AI kodlash agenti."
+keywords: ["github", "cli", "bolt", "opencode", "claude"]
+---
+
+<Frame>
+  <img
+    src="/images/bolt-logo.png"
+    alt="Bolt logo"
+    width="160"
+  />
+</Frame>
+
+**Sizning terminalingiz, endi ichida to'liq AI muhandislik jamoasi bilan.**
+
+<p align="center">
+  <a href="https://bolt-dev.bolt-builder.workers.dev/" target="_blank" rel="noopener noreferrer">Website</a>
+
+  {" · "}
+
+  <a href="https://github.com/bolt-builder/bolt-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+
+  {" · "}
+
+  <a href="https://www.producthunt.com/products/bolt-cli?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bolt-cli" target="_blank" rel="noopener noreferrer">
+    <img alt="Bolt cli - Your terminal, now with a full AI engineering team inside it. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1211272&theme=light&t=1785541043666" />
+  </a>
+</p>
+
+<Frame>
+  ![Bolt terminal UI demo](https://bolt-dev.bolt-builder.workers.dev/demo.gif)
+</Frame>
+
+Bolt — bu [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) va [SolidJS](https://www.solidjs.com) asosida qurilgan terminal-birinchi AI kodlash agenti. Uni har qanday loyihaga yo'naltiring va u kontekstni avtomatik oladi: kodingizni o'rganadi, konvensiyalaringizga rioya qiladi, shell buyruqlarini bajaradi, fayllarni tahrirlaydi, testlarni ishga tushiradi va o'zgarishlarni jo'natadi.
+
+O'nta o'rnatilgan agent (`code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate`, `perf`) va `@general` va `@explore` subagentlari butun muhandislik siklini qamrab oladi. Sessiyalar barqaror: ajrating, qayta biriktiring (hatto remote serverga), fork qiling, bo'lishing, eksport qiling va istalgan vaqtda import qiling. Loyiha xotirasi agent sessiyalar o'rtasida o'rgangan narsalarni saqlaydi. MCP serverlari (OAuth bilan), plaginlar, custom agentlar va custom asboblar orqali kengaytiriladi.
+
+Bolt PolyForm Noncommercial 1.0.0 litsenziyasi ostida ochiq manbali.
+
+## Nega Bolt?
+
+Bolt ishlab chiquvchilar aslida qanday ishlashi atrofida ishlab chiqilgan: terminalda, bir nechta sessiya bo'ylab, haqiqiy kodbazalarda. Uni ajratib turadigan narsalar:
+
+- **Terminal-birinchi TUI.** [Effect](https://effect.website), [OpenTUI](https://github.com/opentui/opentui) va [SolidJS](https://www.solidjs.com) bilan qurilgan tez, klaviatura orqali boshqariladigan interfeys. U native sifatida his qilinadi, chunki u shunday.
+- **Butun agent jamoasi.** O'nta ixtisoslashgan agent — `code`, `plan`, `ask`, `code-review`, `debug`, `refactor`, `docs`, `security`, `migrate` va `perf` — hamda tadqiqot va ko'p bosqichli topshiriq berish uchun subagentlar. `Tab` bilan ular orasida almashting.
+- **Tark etishingiz va qayta qo'shilishingiz mumkin bo'lgan sessiyalar.** Sessiyadan ajrating va keyinroq biriktiring, hatto remote serverda. Istalgan vaqtda fork, bo'lishish, eksport va import qiling. Sessiyalar SQLite'da saqlanadi va `bolt db` bilan to'liq tekshirilishi mumkin.
+- **Dizayn bo'yicha kengaytiriladigan.** To'liq OAuth qo'llab-quvvatlashi bilan MCP serverlari, plagin tizimi, GitHub integratsiyasi, o'rnatilgan API server va web UI.
+- **Desktop ilova.** Xuddi shu dvigatel ko'p oynali, ko'p tabli desktop tajribasiga o'ralgan — integratsiyalashgan terminal, fayl daraxti, buyruqlar paletasi, 28 ta UI tili va avtomatik yangilanishlar bilan.
+
+## O'rnatilgan agentlar
+
+Bolt o'nta ixtisoslashgan agent bilan keladi. Har bir agent o'z maqsadiga mos keladigan aniq belgilangan fayl tizimi kirish darajasiga ega.
+
+| Agent | Kirish | Tavsif |
+| --- | --- | --- |
+| `code` | Full | Standart: kodni o'qiydi, yozadi va bajaradi |
+| `plan` | Read | Kodbazani o'rganadi va fayllarni o'zgartirmasdan reja ishlab chiqadi |
+| `ask` | Read | Savollar va tadqiqot — fayl tahrirlashsiz |
+| `code-review` | Read | O'zgarishlarni to'g'rilik, uslub va xavfsizlik uchun ko'rib chiqadi |
+| `debug` | Full | Ishlamay qolgan testlar, halokatlar va mantiq xatolarini debug qiladi |
+| `refactor` | Full | Har bir bosqichda testlar bilan tekshiruvli xavfsiz refactoring |
+| `docs` | Edit | Hujjatlar va izohlarni yozadi va yangilaydi |
+| `security` | Read | Xavfsizlik auditi: zaifliklar, sirlar, shakllar |
+| `migrate` | Full | Framework yangilanishlari va bog'liqliklarni ko'chirish |
+| `perf` | Full | Ishlash tahlili va optimallashtirish |
+
+Shuningdek, o'z agentlaringizni Markdown fayllar sifatida aniqlashingiz yoki `bolt agent create` bilan yaratishingiz mumkin.
+
+## Desktop ilova
+
+Bolt shuningdek ko'p oynali va ko'p tabli sessiya boshqaruvi, biriktirma va clipboard rasm joylash qo'llab-quvvatlashi bilan prompt kompozitori, integratsiyalashgan terminal va fayl daraxti, buyruqlar paletasi, keybindings, modellar, provayderlar va serverlar uchun to'liq sozlamalar, native bildirishnomalar, deep havolalar, Windows'da WSL integratsiyasi va dev, beta va production kanallari bo'ylab avtomatik yangilanishlarga ega mustaqil desktop ilova sifatida yetkaziladi.
+
+Desktop ilovani [releases sahifasi](https://github.com/Bolt-builder/bolt-cli/releases) dan yuklab oling yoki macOS'da Gatekeeper aylanishisiz bir qatorda o'rnating:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bolt-builder/bolt-cli/dev/install-desktop | bash
+```
+
+## Hujjatlarni o'rganing
+
+<CardGroup cols={2}>
+  <Card title="O'rnatish" icon="download" href="/installation">
+    Bolt'ni macOS, Linux va Windows'da curl, npm yoki tizim paket menejeringiz orqali o'rnating.
+  </Card>
+
+  <Card title="Tez boshlash" icon="rocket" href="/quickstart">
+    TUI ni oching, birinchi promptingizni ishga tushiring va bir daqiqadan kamroq vaqt ichida AI tomonidan yaratilgan commit'ni jo'nating.
+  </Card>
+
+  <Card title="Agentlar" icon="users" href="/concepts/agents">
+    O'rnatilgan o'nta agent va subagentlar. Har biri nima qilishini va o'zingiznikini qanday yozishni o'rganing.
+  </Card>
+
+  <Card title="Loyiha xotirasi" icon="brain" href="/concepts/project-memory">
+    Bolt loyihangizni sessiyalar o'rtasida qanday eslab qoladi va nimalar qamrab olinishini qanday boshqarish.
+  </Card>
+
+  <Card title="MCP serverlari" icon="plug" href="/extending/mcp-servers">
+    Model Context Protocol orqali Bolt'ga tashqi asboblar va ma'lumot manbalarini ulang.
+  </Card>
+
+  <Card title="Headless server" icon="server" href="/server/headless-server">
+    `bolt serve` ni ishga tushiring, har qanday mashinadan TUI biriktiring va API'dan Bolt'ni boshqaring.
+  </Card>
+</CardGroup>

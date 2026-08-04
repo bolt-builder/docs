@@ -1,0 +1,215 @@
+---
+title: "使用 MCP 伺服器為 Bolt 新增工具"
+sidebarTitle: "MCP 伺服器"
+description: "使用 Model Context Protocol 將外部工具與資源連接到 Bolt。從 CLI 新增、驗證與除錯 MCP 伺服器。"
+url: "extending/mcp-servers"
+---
+
+Model Context Protocol(MCP)是一個開放標準,讓 AI 代理透過共通介面與外部工具與資料來源溝通。Bolt 使用 MCP 擴充代理能做的事 — 已連接的 MCP 伺服器可以公開從資料庫查詢工具到完整網頁搜尋 API 的任何功能。Bolt 管理完整的生命週期:新增伺服器、執行 OAuth 流程、重新整理 token 與探測連線。
+
+## 伺服器類型
+
+Bolt 支援兩種 MCP 伺服器。
+
+| 類型 | 傳輸 | 描述 |
+|------|-----------|-------------|
+| `remote` | HTTP / SSE (Streamable HTTP) | 執行於你可透過網路連線的 URL 的伺服器 |
+| `local` | stdio | Bolt 以子程序衍生的本機命令 |
+
+遠端伺服器開箱即用地支援 OAuth 驗證。Bolt 處理 token 取得、儲存與自動重新整理 — 你永遠不需要手動管理 token。
+
+---
+
+## 命令
+
+### `bolt mcp add`
+
+以互動或一次到位方式新增 MCP 伺服器。
+
+**互動式** — 不帶參數執行 `bolt mcp add` 可逐步進行由提示驅動的精靈,詢問名稱、範圍(專案或全域)、類型、URL 或命令,以及伺服器是否使用 OAuth。
+
+**非互動式** — 提供名稱,並且以 `--url` 指定遠端伺服器,或在 `--` 之後提供本機命令:
+
+<CodeGroup>
+
+```bash Remote server
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+```
+
+```bash Remote server with OAuth credentials
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+# OAuth prompts appear in the interactive flow
+```
+
+```bash Local stdio server
+bolt mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash Remote server with custom HTTP headers
+bolt mcp add my-server --url https://my-mcp-server.example.com/mcp \
+  --header "Authorization=Bearer sk-abc123"
+```
+
+</CodeGroup>
+
+**`bolt mcp add` 的旗標**
+
+| 旗標 | 描述 |
+|------|-------------|
+| `--url <url>` | 遠端 MCP 伺服器的 URL |
+| `--header <KEY=VALUE>` | 送給遠端伺服器的 HTTP header(可重複) |
+| `--env <KEY=VALUE>` | 本機伺服器的環境變數(可重複) |
+
+---
+
+### `bolt mcp list`
+
+列出每個已設定的 MCP 伺服器,連同其連線與驗證狀態。
+
+```bash
+bolt mcp list
+```
+
+每個項目會顯示狀態圖示:
+
+| 圖示 | 意義 |
+|------|---------|
+| `✓` | 已連線(若使用 OAuth 則也已驗證) |
+| `⚠` | 需要驗證,或憑證已過期 |
+| `✗` | 無法連線或需要用戶端註冊 |
+| `○` | 尚未初始化或已停用 |
+
+---
+
+### `bolt mcp auth <name>`
+
+與啟用 OAuth 的遠端 MCP 伺服器驗證。若省略名稱,Bolt 會顯示互動式選擇器,列出所有支援 OAuth 的伺服器及其目前驗證狀態(`✓ authenticated`、`⚠ expired`、`✗ not authenticated`)。
+
+```bash
+# Authenticate a specific server
+bolt mcp auth my-server
+
+# Pick from a list of OAuth-capable servers
+bolt mcp auth
+```
+
+Bolt 會在你的瀏覽器中開啟供應商的授權 URL 並等待回呼 — 完整的 OAuth 握手,包含必要時的動態用戶端註冊,會自動進行。
+
+<Note>
+  Bolt 處理完整的 OAuth 流程,包含 token 儲存與自動 token 重新整理。你不需要複製 token 或手動管理到期。若伺服器需要預先註冊的用戶端 ID,請將 `oauth.clientId`(以及選用的 `oauth.clientSecret`)加入到 `.bolt/bolt.jsonc` 中伺服器的設定項目。
+</Note>
+
+---
+
+### `bolt mcp logout <name>`
+
+移除伺服器儲存的 OAuth 憑證。若省略名稱,Bolt 會提示你從已儲存 token 的伺服器清單中選擇。
+
+```bash
+bolt mcp logout my-server
+```
+
+---
+
+### `bolt mcp debug <name>`
+
+探測遠端伺服器的連線並檢視其 OAuth 狀態,而不啟動完整工作階段。當伺服器顯示 `✗ failed` 或 `⚠ needs authentication` 時,這是第一個要用的工具。
+
+```bash
+bolt mcp debug my-server
+```
+
+`debug` 會回報:
+- 伺服器 URL 與目前的驗證狀態
+- Access token 詳情(遮罩)與到期時間戳記
+- 是否存在 refresh token
+- 來自伺服器的原始 HTTP 回應碼
+- `WWW-Authenticate` header 內容
+- OAuth 探索探測的結果(不完成流程)
+
+---
+
+## 手動設定
+
+你可以直接在 `.bolt/bolt.jsonc` 中新增或編輯 MCP 伺服器,而不使用 CLI 命令。Bolt 會在下一次工作階段啟動時擷取變更。
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp"
+    }
+  }
+}
+```
+
+本機 stdio 伺服器看起來像這樣:
+
+```jsonc
+{
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    }
+  }
+}
+```
+
+若要提供自訂 HTTP header 或在遠端伺服器停用 OAuth:
+
+```jsonc
+{
+  "mcp": {
+    "my-server": {
+      "type": "remote",
+      "url": "https://my-mcp-server.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-abc123"
+      },
+      "oauth": false
+    }
+  }
+}
+```
+
+---
+
+## 新增並驗證遠端 MCP 伺服器
+
+<Steps>
+  <Step title="新增伺服器">
+    執行 `bolt mcp add` 並依照提示操作,或使用非互動式的形式:
+
+    ```bash
+    bolt mcp add my-server --url https://my-mcp-server.example.com/mcp
+    ```
+
+    Bolt 會將項目寫入 `.bolt/bolt.jsonc`(專案範圍)或你的全域設定。
+  </Step>
+
+  <Step title="檢查連線狀態">
+    ```bash
+    bolt mcp list
+    ```
+
+    若伺服器需要驗證,你會在其名稱旁看到 `⚠ needs authentication`。
+  </Step>
+
+  <Step title="以 OAuth 驗證">
+    ```bash
+    bolt mcp auth my-server
+    ```
+
+    Bolt 會開啟你的瀏覽器。核准存取後,終端機會確認驗證成功,伺服器狀態會變成 `✓ connected (OAuth)`。
+  </Step>
+
+  <Step title="驗證工具可用">
+    啟動 Bolt 工作階段。伺服器公開的工具現在都可供所有代理使用。你可以隨時檢視它們:
+
+    ```bash
+    bolt mcp debug my-server
+    ```
+  </Step>
+</Steps>

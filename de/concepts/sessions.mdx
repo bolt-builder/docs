@@ -1,0 +1,191 @@
+---
+title: "Sessions – Dauerhafte Gesprächshistorie in Bolt"
+sidebarTitle: "Sessions"
+description: "Sessions sind Bolts Einheit persistenter Arbeit: Jede speichert ein vollständiges Gespräch in lokalem SQLite, sodass Sie jederzeit trennen, fortsetzen, forken, teilen und exportieren können."
+---
+
+Eine **Session** ist Bolts primäre Arbeitseinheit. Jeder Prompt, den Sie senden, jede Datei, die der Agent liest oder bearbeitet, und jeder Tool-Aufruf des Modells werden dauerhaft in der Historie dieser Session festgehalten. Da Sessions in einer lokalen SQLite-Datenbank leben, überleben sie Prozessneustarts, können jederzeit aufgelistet und abgefragt werden und verlassen niemals Ihren Rechner, es sei denn, Sie geben sie ausdrücklich frei oder exportieren sie.
+
+<Note>
+  Alle Sitzungsdaten werden lokal in einer SQLite-Datenbank auf Ihrem eigenen Rechner gespeichert. Es wird nichts an externe Server gesendet, es sei denn, Sie aktivieren das Teilen. Verwenden Sie `bolt db path`, um die genaue Datenbankdatei zu finden.
+</Note>
+
+## Lebenszyklus einer Session
+
+Eine Session beginnt in dem Moment, in dem Sie Ihren ersten Prompt senden, und endet erst, wenn Sie sie löschen. Zwischen diesen beiden Punkten können Sie sie beliebig trennen, fortsetzen, verzweigen oder weitergeben.
+
+<Steps>
+  <Step title="Session erstellen oder fortsetzen">
+    Starten Sie das TUI, um eine neue Session interaktiv zu beginnen, oder übergeben Sie einen Prompt an `bolt run`, um eine nicht-interaktiv zu erzeugen:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Trennen und später zurückkehren">
+    Schließen Sie das TUI jederzeit – die Session wird automatisch persistiert. Setzen Sie Ihre letzte Session mit `--continue` fort oder gezielt eine bestimmte Session per ID mit `--session`:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Vor dem Experimentieren forken">
+    Verwenden Sie `--fork`, um aus der aktuellen Sitzungshistorie zu verzweigen, bevor Sie eine riskante Änderung versuchen. Der Fork ist eine unabhängige Session, die das Original nicht beeinflusst:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Teilen und zusammenarbeiten">
+    Erzeugen Sie eine Freigabe-URL mit `--share`. Jeder mit dem Link kann das Sitzungsprotokoll im Browser einsehen:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Befehle zur Sitzungsverwaltung
+
+### Sessions auflisten
+
+```bash
+bolt session list
+```
+
+Gibt eine formatierte Tabelle aller Sessions mit ID, Titel und Zeitpunkt der letzten Aktualisierung aus. Fügen Sie `--format json` hinzu, um maschinenlesbare Ausgabe zu erhalten, oder `-n <N>`, um sich auf die N neuesten Sessions zu beschränken:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Eine Session löschen
+
+```bash
+bolt session delete <sessionID>
+```
+
+Entfernt die Session und alle zugehörigen Nachrichten dauerhaft aus der lokalen Datenbank.
+
+## Run-Flags zur Sitzungssteuerung
+
+Diese Flags stehen bei `bolt run` zur Verfügung:
+
+| Flag | Alias | Beschreibung |
+|------|-------|--------------|
+| `--continue` | `-c` | Die letzte Session fortsetzen |
+| `--session <id>` | `-s` | Eine bestimmte Session per ID fortsetzen |
+| `--fork` | | Die Session vor dem Fortsetzen forken (erfordert `--continue` oder `--session`) |
+| `--share` | | Eine Freigabe-URL für die Session erzeugen |
+| `--title <title>` | | Sitzungstitel festlegen oder überschreiben |
+
+## Sessions exportieren
+
+Exportieren Sie das vollständige Protokoll einer Session als JSON:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+Das Flag `--sanitize` ersetzt Dateipfade, Codeinhalte, Tool-Eingaben und -Ausgaben und andere potenziell sensible Felder durch `[redacted:kind:id]`-Platzhalter – nützlich, um Protokolle mit Teamkollegen zu teilen oder Fehlerberichte einzureichen.
+
+## Sessions importieren
+
+Importieren Sie eine Session aus einer lokalen JSON-Datei oder direkt aus einer Freigabe-URL:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Importierte Sessions erscheinen in Ihrer lokalen Sitzungsliste und sind vollständig fortsetzbar.
+
+## Die Sitzungsdatenbank abfragen
+
+Bolt macht die zugrunde liegende SQLite-Datenbank direkt für Power-User zugänglich.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Das Ausgabeformat ist standardmäßig tabgetrennt; fügen Sie `--format json` für JSON-Ausgabe hinzu.
+
+## Tokennutzung und Kostenstatistiken
+
+`bolt stats` aggregiert Tokennutzungs- und Kostendaten über alle Ihre Sessions hinweg:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Die Ausgabe umfasst die Gesamtzahl der Sessions, Nachrichten, Input-/Output-/Reasoning-/Cache-Tokens, die Gesamtkosten, die durchschnittlichen Kosten pro Tag, den Durchschnitt und den Median der Tokens pro Session sowie eine Aufschlüsselung der Tool-Nutzung. Übergeben Sie `--models`, um zusätzlich eine Aufschlüsselung nach Modell für Nachrichten, Tokens und Kosten zu erhalten.
+
+## Workflow für Fork und Freigabe
+
+Hier ein vollständiges Beispiel für das Forken einer Session und das Teilen des Ergebnisses:
+
+<Steps>
+  <Step title="Arbeit in einer neuen Session starten">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Vor dem riskanten nächsten Schritt forken">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Die ID der geforkten Session wird in der Konsole ausgegeben. Die ursprüngliche Session bleibt unangetastet.
+  </Step>
+  <Step title="Den Fork zur Überprüfung teilen">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Die Freigabe-URL wird ausgegeben, sobald die Session inaktiv wird.
+  </Step>
+  <Step title="Auf einem anderen Rechner importieren">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

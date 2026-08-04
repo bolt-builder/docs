@@ -1,0 +1,53 @@
+---
+title: "Jogosultságok: annak vezérlése, mit tehetnek a Bolt ügynökei"
+sidebarTitle: "Jogosultságok"
+description: "Hogyan tartják kordában a Bolt ügynökeit az ügynökönkénti hozzáférési szintek, jogosultsági promptok és konfigurációs szintű engedélyezési/tiltási szabályok, hogy ne tegyenek olyat, amit nem engedélyeztél."
+---
+
+A Bolt ügynökei olvashatnak fájlokat, írhatnak fájlokat és futtathatnak shell parancsokat. Ez a képesség két rétegen keresztül van hatókörbe zárva: egy ügynökönkénti hozzáférési szinten és interaktív jogosultsági prompteken, amelyeket jóváhagyhatsz, elutasíthatsz vagy előre konfigurálhatsz.
+
+## Ügynök hozzáférési szintjei
+
+Minden beépített ügynöknek van egy deklarált hozzáférési szintje:
+
+| Hozzáférési szint | Fájlok olvasása | Fájlok írása | Shell parancsok futtatása |
+| --- | --- | --- | --- |
+| **Full** | ✓ | ✓ | ✓ |
+| **Edit** | ✓ | ✓ | ✗ |
+| **Read** | ✓ | ✗ | ✗ |
+
+Beépített leképezések:
+
+- **Full** — `code`, `debug`, `refactor`, `migrate`, `perf`
+- **Edit** — `docs`
+- **Read** — `plan`, `ask`, `code-review`, `security`
+
+Válts ügynököt a `Tab` billentyűvel a TUI-ban, vagy add át a `--agent <name>` kapcsolót a `bolt run` parancsnak.
+
+## Interaktív promptok
+
+Az ügynök hozzáférési szintjén belül a potenciálisan romboló műveletek továbbra is megerősítést kérnek. Jóváhagyhatod egyszer, jóváhagyhatod a munkamenetre, vagy elutasíthatod. Az elutasított hívások hibát adnak vissza az ügynöknek, és tovább lép.
+
+## Nem interaktív jóváhagyás
+
+CI-hez, szkriptekhez vagy megbízható helyi munkafolyamatokhoz a `bolt run` támogat kapcsolókat, amelyek átugorják a prompokat:
+
+```bash
+bolt run --auto "tidy up imports"                   # auto-approve anything not explicitly denied
+bolt run --yolo "tidy up imports"                   # alias for --auto
+bolt run --dangerously-skip-permissions "..."       # bypass every prompt
+```
+
+<Warning>
+  A `--auto`, `--yolo` és `--dangerously-skip-permissions` engedik, hogy az ügynök kérdés nélkül olvasson, írjon és végrehajtson. Csak megbízható környezetben használd őket.
+</Warning>
+
+## Konfigurációs szintű szabályok
+
+A teljes projekthez előre letilthatsz (vagy előre engedélyezhetsz) konkrét eszközöket a `.bolt/bolt.jsonc` fájlba egy `permission` blokk hozzáadásával. Ez a projekt minden munkamenetére vonatkozik, beleértve a nem interaktív `bolt run` hívásokat is. A sémáért lásd: [Konfiguráció](/concepts/configuration).
+
+## Kapcsolódó
+
+- [Ügynökök](/concepts/agents) — mely ügynököknek milyen hozzáférési szintjük van.
+- [Eszközök](/concepts/tools) — az összes eszköz teljes listája, amelyeket a jogosultságok korlátoznak.
+- [Konfiguráció](/concepts/configuration) — tartós jogosultsági szabályok beállítása.

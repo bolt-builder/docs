@@ -1,0 +1,475 @@
+---
+title: "Referensi perintah CLI Bolt"
+sidebarTitle: "Commands"
+description: "Referensi lengkap untuk setiap perintah CLI Bolt, termasuk flag, argumen, dan contoh penggunaan untuk TUI, run, serve, session, agent, dan lainnya."
+---
+
+Bolt mengekspos satu binary `bolt` dengan set subperintah yang kaya. Menjalankan `bolt` tanpa argumen membuka UI terminal lengkap. Semua subperintah lain didaftarkan di bawah. Gunakan `bolt <command> --help` kapan saja untuk bantuan inline.
+
+<Accordion title="bolt (default — launch TUI)">
+  Membuka UI terminal interaktif di direktori saat ini. Bolt otomatis menemukan konteks proyek kamu, memuat konfigurasi, dan terhubung ke provider apa pun yang dikonfigurasi.
+
+  ```bash
+  bolt
+  bolt --mini          # minimal split-footer interactive mode
+  bolt --log-level DEBUG
+  ```
+
+  **Flag global** — tersedia di setiap perintah:
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--print-logs` | boolean | Cetak output log ke stderr |
+  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Atur level verbositas log |
+  | `--pure` | boolean | Jalankan tanpa memuat plugin eksternal apa pun |
+  | `--help`, `-h` | boolean | Tampilkan teks bantuan |
+  | `--version`, `-v` | boolean | Cetak nomor versi yang terpasang |
+</Accordion>
+
+<Accordion title="bolt run [prompt]">
+  Jalankan Bolt dengan satu prompt dalam mode non-interaktif. Bolt memulai server in-process, mengirim prompt ke sesi aktif, mengalirkan respons ke stdout, lalu keluar. Pipe stdin atau teruskan `--file` untuk melampirkan konteks.
+
+  ```bash
+  # Basic non-interactive prompt
+  bolt run "explain the auth module"
+  
+  # Continue the most recent session
+  bolt run --continue "now add error handling"
+  
+  # Use a specific model with a specific agent
+  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
+  
+  # Stream raw JSON events for tooling integration
+  bolt run --format json "summarize changes"
+  
+  # Fire the same task at multiple models and keep the best result
+  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
+  
+  # Attach a file as context
+  bolt run --file ./openapi.yaml "generate a client SDK"
+  
+  # Attach to a remote server and run a prompt there
+  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
+  
+  # Skip all permission prompts (dangerous)
+  bolt run --auto "delete all TODO comments"
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--command` |  | string | Slash-command yang akan dieksekusi; teruskan argumen sebagai pesan |
+  | `--continue` | `-c` | boolean | Lanjutkan sesi terbaru |
+  | `--session` | `-s` | string | ID sesi yang akan dilanjutkan |
+  | `--fork` |  | boolean | Fork sesi sebelum melanjutkan (memerlukan `--continue` atau `--session`) |
+  | `--share` |  | boolean | Bagikan sesi setelah selesai |
+  | `--model` | `-m` | string | Model yang akan digunakan dalam format `provider/model` |
+  | `--best-of` |  | string | Daftar `provider/model` dipisahkan koma; menjalankan tugas secara paralel, memeringkat hasil, menyimpan pemenang |
+  | `--agent` |  | string | Agent yang akan digunakan (misal `code`, `ask`, `review`) |
+  | `--format` |  | `default`\|`json` | Format output; `json` mengalirkan event JSON mentah yang dipisahkan baris baru |
+  | `--file` | `-f` | string\[\] | File yang dilampirkan sebagai konteks |
+  | `--title` |  | string | Judul untuk sesi |
+  | `--attach` |  | string | Jalankan terhadap server Bolt remote (misal `http://localhost:4096`) |
+  | `--password` | `-p` | string | Password basic auth untuk server remote |
+  | `--username` | `-u` | string | Username basic auth untuk server remote |
+  | `--dir` |  | string | Direktori kerja; jika `--attach` diatur, ini adalah direktori di server remote |
+  | `--port` |  | number | Port untuk server in-process lokal (acak jika dihilangkan) |
+  | `--variant` |  | string | Level reasoning effort, spesifik-provider (misal `high`, `max`, `minimal`) |
+  | `--thinking` |  | boolean | Tampilkan blok reasoning/thinking dalam output |
+  | `--mini` |  | boolean | Mulai UI interaktif minimal split-footer (tersembunyi) |
+  | `--interactive` | `-i` | boolean | Paksa mode split-footer interaktif langsung |
+  | `--auto` |  | boolean | Auto-approve izin yang tidak secara eksplisit ditolak |
+  | `--yolo` |  | boolean | Lewati semua prompt izin (alias untuk `--auto`, tersembunyi) |
+  | `--dangerously-skip-permissions` |  | boolean | Lewati semua pemeriksaan izin (tersembunyi) |
+  | `--demo` |  | boolean | Aktifkan slash command demo interaktif langsung (tersembunyi) |
+</Accordion>
+
+<Accordion title="bolt attach <url>">
+  Attach TUI penuh ke server Bolt yang sedang berjalan. Server dapat berupa lokal atau remote. Teruskan `--mini` untuk menggunakan UI minimal split-footer alih-alih TUI penuh.
+
+  ```bash
+  bolt attach http://localhost:4096
+  bolt attach http://remote-host:4096 --dir /projects/api
+  bolt attach http://remote-host:4096 --session abc123 --mini
+  bolt attach http://remote-host:4096 --password secret --username alice
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--dir` |  | string | Direktori di server remote |
+  | `--continue` | `-c` | boolean | Lanjutkan sesi terbaru di server remote |
+  | `--session` | `-s` | string | ID sesi yang akan dilanjutkan |
+  | `--fork` |  | boolean | Fork sesi saat melanjutkan |
+  | `--password` | `-p` | string | Password basic auth |
+  | `--username` | `-u` | string | Username basic auth |
+  | `--mini` |  | boolean | Gunakan UI interaktif minimal |
+  | `--no-replay` |  | boolean | Nonaktifkan replay riwayat sesi saat resume dan setelah resize (memerlukan `--mini`) |
+  | `--replay-limit` |  | number | Batasi replay yang terlihat ke N pesan terbaru (memerlukan `--mini`) |
+</Accordion>
+
+<Accordion title="bolt serve">
+  Mulai server API Bolt headless. Server mengekspos API REST\+SSE yang dapat dihubungkan oleh TUI, `bolt run --attach`, dan `bolt attach`. Bind ke `0.0.0.0` untuk membuatnya dapat dijangkau dari mesin lain — selalu atur `BOLT_SERVER_PASSWORD` saat melakukannya.
+
+  ```bash
+  bolt serve
+  bolt serve --hostname 0.0.0.0 --port 4096
+  bolt serve --mdns
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--hostname` | string | Alamat yang akan di-bind (default: `127.0.0.1`) |
+  | `--port` | number | Port untuk mendengarkan (acak jika dihilangkan) |
+  | `--mdns` | boolean | Aktifkan penemuan layanan mDNS (default hostname ke `0.0.0.0`) |
+  | `--mdns-domain` | string | Nama domain kustom untuk layanan mDNS (default: `opencode.local`) |
+  | `--cors` | string\[\] | Domain tambahan yang diizinkan untuk CORS |
+
+  <Warning>
+    `BOLT_SERVER_PASSWORD` tidak diatur secara default. Server akan mencatat peringatan dan menerima semua koneksi hingga kamu mengaturnya.
+  </Warning>
+</Accordion>
+
+<Accordion title="bolt web">
+  Mulai server Bolt dan segera buka UI web di browser default kamu. Menerima flag jaringan yang sama dengan `bolt serve`.
+
+  ```bash
+  bolt web
+  bolt web --hostname 0.0.0.0 --port 4096
+  bolt web --mdns
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--hostname` | string | Alamat yang akan di-bind (default: `127.0.0.1`) |
+  | `--port` | number | Port untuk mendengarkan (acak jika dihilangkan) |
+  | `--mdns` | boolean | Aktifkan penemuan layanan mDNS (default hostname ke `0.0.0.0`) |
+  | `--mdns-domain` | string | Nama domain kustom untuk layanan mDNS (default: `opencode.local`) |
+  | `--cors` | string\[\] | Domain tambahan yang diizinkan untuk CORS |
+</Accordion>
+
+<Accordion title="bolt session">
+  Kelola sesi Bolt yang disimpan di database SQLite lokal.
+
+  **Subperintah**
+
+  ```bash
+  bolt session list                         # list all root sessions
+  bolt session list --format json           # machine-readable output
+  bolt session list -n 20                   # show 20 most recent sessions
+  bolt session delete <sessionID>           # permanently delete a session
+  ```
+
+  **Flag `bolt session list`**
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--max-count` | `-n` | number | Batasi output ke N sesi terbaru |
+  | `--format` |  | `table`\|`json` | Format output (default: `table`) |
+</Accordion>
+
+<Accordion title="bolt agent">
+  Daftarkan dan buat agent kustom. Agent adalah file markdown dengan frontmatter YAML yang mendefinisikan system prompt, izin, dan mode.
+
+  ```bash
+  bolt agent list                           # list all available agents
+  bolt agent create                         # interactive agent creation wizard
+  
+  # Non-interactive creation
+  bolt agent create \
+    --description "Audit code for security vulnerabilities" \
+    --mode primary \
+    --permissions "read,grep,glob" \
+    --model anthropic/claude-opus-4-5 \
+    --path .bolt/agents
+  ```
+
+  **Flag `bolt agent create`**
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--path` |  | string | Path direktori untuk menulis file agent |
+  | `--description` |  | string | Deskripsi bahasa alami tentang apa yang harus dilakukan agent |
+  | `--mode` |  | `all`\|`primary`\|`subagent` | Apakah agent bertindak sebagai agent utama, subagent, atau keduanya |
+  | `--permissions` | `--tools` | string | Daftar izin yang diizinkan dipisahkan koma (default: semua) |
+  | `--model` | `-m` | string | Model yang akan digunakan dalam format `provider/model` |
+</Accordion>
+
+<Accordion title="bolt providers (alias: auth)">
+  Kelola kredensial provider AI secara interaktif. Kredensial disimpan di direktori data OS kamu (`~/.local/share/bolt/auth.json` di Linux, `~/Library/Application Support/bolt/auth.json` di macOS).
+
+  ```bash
+  bolt providers             # interactive credential management menu
+  bolt auth                  # alias for bolt providers
+  
+  bolt providers list        # list stored credentials and active env vars
+  bolt providers login       # add a credential for a provider
+  bolt providers login --provider anthropic
+  bolt providers login --provider anthropic --method "API Key"
+  bolt providers logout      # remove a stored credential
+  bolt providers logout --provider openai
+  ```
+</Accordion>
+
+<Accordion title="bolt models [provider]">
+  Daftarkan semua model yang tersedia dari provider yang telah kamu konfigurasi.
+
+  ```bash
+  bolt models                         # list all models from all providers
+  bolt models anthropic               # filter to a single provider
+  bolt models --verbose               # include cost metadata in output
+  bolt models --refresh               # force-refresh the models.dev cache
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--verbose` | boolean | Sertakan metadata biaya JSON untuk setiap model |
+  | `--refresh` | boolean | Refresh cache model dari models.dev |
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Kelola Model Context Protocol (MCP) server. Bolt mendukung server remote (HTTP/SSE) dengan OAuth dan server lokal (stdio).
+
+  ```bash
+  bolt mcp add                              # interactive wizard to add a server
+  bolt mcp add my-server --url https://mcp.example.com/tools
+  bolt mcp add local-server -- npx @my-org/mcp-server
+  bolt mcp list                             # show all configured servers and status
+  bolt mcp auth <name>                      # run the OAuth flow for a server
+  bolt mcp auth list                        # show OAuth status for all servers
+  bolt mcp logout <name>                    # remove stored OAuth tokens
+  bolt mcp debug <name>                     # probe connectivity and OAuth config
+  ```
+
+  **Flag `bolt mcp add`**
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--url` | string | URL untuk server MCP remote |
+  | `--env` | string\[\] | Variabel lingkungan untuk server lokal (`KEY=VALUE`) |
+  | `--header` | string\[\] | Header HTTP untuk server remote (`KEY=VALUE`) |
+</Accordion>
+
+<Accordion title="bolt plugin install <module>">
+  Instal plugin Bolt dari npm dan perbarui file config yang relevan. Plugin dapat memperluas TUI, menambahkan slash command baru, atau mendaftarkan provider baru.
+
+  ```bash
+  bolt plugin install @my-org/bolt-plugin
+  bolt plugin install @my-org/bolt-plugin --global      # install to global config
+  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--global` | `-g` | boolean | Tambahkan plugin ke config global alih-alih config proyek |
+  | `--force` | `-f` | boolean | Ganti versi plugin yang sudah dikonfigurasi |
+</Accordion>
+
+<Accordion title="bolt github">
+  Kelola integrasi GitHub Actions Bolt, yang memungkinkan Bolt merespons pull request, issue, dan event GitHub lainnya.
+
+  ```bash
+  bolt github install           # scaffold the GitHub Actions workflow in your repo
+  bolt github run               # run the GitHub agent locally (for testing)
+  bolt github run --event pull_request --token ghp_xxx
+  ```
+
+  **Flag `bolt github run`**
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--event` | string | Nama event GitHub yang akan disimulasikan (misal `pull_request`) |
+  | `--token` | string | Personal access token GitHub |
+</Accordion>
+
+<Accordion title="bolt pr <number>">
+  Check out pull request GitHub sebagai branch lokal menggunakan CLI `gh`, lalu luncurkan Bolt di direktori yang di-checkout. Jika deskripsi PR berisi tautan share sesi, Bolt mengimpor sesi tersebut secara otomatis.
+
+  ```bash
+  bolt pr 123
+  ```
+
+  <Note>
+    Perintah ini memerlukan [GitHub CLI (`gh`)](https://cli.github.com/) untuk terpasang dan terautentikasi.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt commit">
+  Hasilkan pesan commit untuk perubahan yang di-stage (atau semua yang di-track) menggunakan model AI dan kemudian commit. Model memeriksa riwayat commit terbaru untuk konteks gaya.
+
+  ```bash
+  bolt commit                        # commit staged changes
+  bolt commit --all                  # stage and commit all tracked changes
+  bolt commit --dry-run              # print the generated message without committing
+  bolt commit --model openai/gpt-4o  # use a specific model
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--all` | `-a` | boolean | Commit semua perubahan yang di-track, bukan hanya yang di-stage |
+  | `--dry-run` |  | boolean | Cetak pesan yang dihasilkan tanpa commit |
+  | `--model` | `-m` | string | Model yang akan digunakan dalam format `provider/model` |
+</Accordion>
+
+<Accordion title="bolt review">
+  Jalankan tinjauan kode AI pada diff dan keluar dengan kode `0` (pass) atau `1` (fail). Agent `code-review` memeriksa diff untuk kebenaran, gaya, dan masalah keamanan, lalu memancarkan baris `Verdict: PASS` atau `Verdict: FAIL`.
+
+  ```bash
+  bolt review                          # review uncommitted changes (git diff HEAD)
+  bolt review --staged                 # review only staged changes
+  bolt review --branch main            # review changes since merge base with main
+  bolt review --model openai/o3        # use a specific model
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--staged` |  | boolean | Tinjau perubahan yang di-stage saja |
+  | `--branch` |  | string | Tinjau perubahan sejak merge base dengan branch ini |
+  | `--model` | `-m` | string | Model yang akan digunakan dalam format `provider/model` |
+
+  <Note>
+    Kode exit: `0` = PASS, `1` = FAIL, `2` = verdict tidak dapat ditentukan.
+  </Note>
+</Accordion>
+
+<Accordion title="bolt export [sessionID]">
+  Ekspor sesi sebagai JSON ke stdout. Berguna untuk arsip, berbagi, atau memasukkan ke tool lain. Teruskan `--sanitize` sebelum berbagi secara publik untuk meredaksi path file, prompt, dan konten transkrip sensitif lainnya.
+
+  ```bash
+  bolt export                          # interactive session picker, then write to stdout
+  bolt export abc123                   # export a specific session
+  bolt export abc123 --sanitize        # redact secrets and paths
+  bolt export abc123 > session.json    # write to a file
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--sanitize` | boolean | Redaksi data sensitif (path file, teks prompt, I/O tool) sebelum ekspor |
+</Accordion>
+
+<Accordion title="bolt import <file>">
+  Impor sesi yang sebelumnya diekspor ke database lokal. Menerima file JSON lokal atau URL share sesi.
+
+  ```bash
+  bolt import ./session.json
+  bolt import https://opncd.ai/share/abc123
+  ```
+</Accordion>
+
+<Accordion title="bolt stats">
+  Menampilkan statistik agregat penggunaan token dan biaya di seluruh sesi. Output mencakup tabel ringkasan, rincian biaya dan token, penggunaan model, dan bar chart penggunaan tool.
+
+  ```bash
+  bolt stats
+  bolt stats --days 7             # last 7 days only
+  bolt stats --models             # include per-model breakdown
+  bolt stats --models 5           # show top 5 models
+  bolt stats --tools 10           # show top 10 tools
+  bolt stats --project ""         # filter to the current project only
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--days` | number | Batasi ke N hari terakhir (default: sepanjang waktu) |
+  | `--tools` | number | Jumlah tool yang ditampilkan dalam chart penggunaan tool |
+  | `--models` | boolean\|number | Tampilkan statistik model; teruskan angka untuk membatasi daftar |
+  | `--project` | string | Filter berdasarkan ID proyek; string kosong berarti proyek saat ini |
+</Accordion>
+
+<Accordion title="bolt logs">
+  Cetak log aplikasi Bolt. Log disimpan di direktori log OS (misal `~/.local/state/bolt/opencode.log`).
+
+  ```bash
+  bolt logs                        # print the last 1000 lines
+  bolt logs --tail 200             # print the last 200 lines
+  bolt logs --follow               # stream new lines as they are written
+  bolt logs -f                     # alias for --follow
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--tail` |  | number | Jumlah baris terakhir yang dicetak (default: 1000) |
+  | `--follow` | `-f` | boolean | Alirkan baris log baru secara real time |
+</Accordion>
+
+<Accordion title="bolt db [query]">
+  Kueri atau inspeksi database sesi SQLite lokal secara langsung.
+
+  ```bash
+  bolt db path                                  # print the database file path
+  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
+  bolt db "SELECT * FROM sessions" --format json
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--format` | `json`\|`tsv` | Format output untuk hasil kueri (default: `tsv`) |
+</Accordion>
+
+<Accordion title="bolt upgrade [target]">
+  Upgrade Bolt ke rilis terbaru atau versi tertentu. Bolt mendeteksi metode instalasi secara otomatis dan menggunakan package manager yang sesuai.
+
+  ```bash
+  bolt upgrade                         # upgrade to the latest version
+  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
+  bolt upgrade --method npm            # force a specific installation method
+  bolt upgrade --method curl
+  ```
+
+  | Flag | Alias | Tipe | Deskripsi |
+  | --- | --- | --- | --- |
+  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Metode instalasi yang digunakan |
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Hapus binary Bolt dan semua data terkait.
+
+  ```bash
+  bolt uninstall
+  ```
+</Accordion>
+
+<Accordion title="bolt completion">
+  Hasilkan script shell completion untuk `bash`, `zsh`, atau `fish`.
+
+  ```bash
+  bolt completion >> ~/.bashrc
+  bolt completion >> ~/.zshrc
+  ```
+</Accordion>
+
+<Accordion title="bolt debug">
+  Kumpulan subperintah troubleshooting dan introspeksi. Berguna saat mengajukan laporan bug atau mendiagnosis perilaku tak terduga.
+
+  ```bash
+  bolt debug info          # print version, OS, terminal, and loaded plugins
+  bolt debug config        # print the fully-resolved configuration
+  bolt debug paths         # print all global data/config/cache directories
+  bolt debug lsp           # inspect LSP state
+  bolt debug ripgrep       # test ripgrep availability
+  bolt debug file          # inspect file tool behavior
+  bolt debug scrap         # scratchpad for debugging
+  bolt debug skill         # inspect available skills
+  bolt debug snapshot      # inspect session snapshots
+  bolt debug startup       # measure startup time
+  bolt debug agents        # list agents and their resolved config
+  bolt debug v2            # inspect V2 session core state
+  bolt debug wait          # block indefinitely (for process debugging)
+  ```
+</Accordion>
+
+<Accordion title="bolt acp">
+  Mulai server ACP (Agent Client Protocol). ACP adalah protokol yang digunakan oleh integrasi editor seperti [Zed](https://zed.dev) untuk berkomunikasi dengan Bolt melalui stdin/stdout.
+
+  ```bash
+  bolt acp
+  bolt acp --cwd /path/to/project
+  ```
+
+  | Flag | Tipe | Deskripsi |
+  | --- | --- | --- |
+  | `--cwd` | string | Direktori kerja untuk server (default: `process.cwd()`) |
+  | `--hostname` | string | Hostname bind (default: `127.0.0.1`) |
+  | `--port` | number | Port bind |
+  | `--mdns` | boolean | Aktifkan penemuan layanan mDNS |
+  | `--mdns-domain` | string | Nama domain kustom untuk layanan mDNS (default: `opencode.local`) |
+  | `--cors` | string\[\] | Domain tambahan yang diizinkan untuk CORS |
+</Accordion>

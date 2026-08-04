@@ -1,0 +1,191 @@
+---
+title: "Istunnot — Boltin kestävä keskusteluhistoria"
+sidebarTitle: "Istunnot"
+description: "Istunnot ovat Boltin pysyvän työn yksikkö: kukin tallentaa täyden keskustelun paikalliseen SQLite-tietokantaan, joten voit irrottautua, jatkaa, haarautua, jakaa ja viedä milloin tahansa."
+---
+
+**Istunto** on Boltin ensisijainen työyksikkö. Jokainen lähettämäsi kehote, jokainen tiedosto, jonka agentti lukee tai muokkaa, ja jokainen mallin tekemä työkalukutsu tallennetaan kestävästi kyseisen istunnon historiaan. Koska istunnot elävät paikallisessa SQLite-tietokannassa, ne selviävät prosessin uudelleenkäynnistyksistä, niitä voi listata ja hakea milloin tahansa, eivätkä ne koskaan poistu koneeltasi, ellet erikseen jaa tai vie niitä.
+
+<Note>
+  Kaikki istuntotiedot tallennetaan paikallisesti SQLite-tietokantaan omalla koneellasi. Mitään ei lähetetä ulkoisiin palvelimiin, ellet ota jakoa käyttöön. Käytä komentoa `bolt db path` löytääksesi tarkan tietokantatiedoston.
+</Note>
+
+## Istunnon elinkaari
+
+Istunto alkaa sillä hetkellä, kun lähetät ensimmäisen kehotteesi, ja päättyy vasta, kun poistat sen. Näiden kahden pisteen välillä voit vapaasti irrottautua, jatkaa, haarautua tai luovuttaa.
+
+<Steps>
+  <Step title="Luo tai jatka istuntoa">
+    Käynnistä TUI aloittaaksesi uuden istunnon interaktiivisesti, tai anna kehote `bolt run` -komennolle luodaksesi sellaisen ei-interaktiivisesti:
+
+    ```bash
+    # New session in the TUI
+    bolt
+
+    # New session non-interactively
+    bolt run "add error handling to the payment service"
+    ```
+  </Step>
+  <Step title="Irrottaudu ja palaa myöhemmin">
+    Sulje TUI milloin tahansa — istunto tallennetaan automaattisesti. Jatka uusinta istuntoa `--continue`-lipulla tai kohdista tiettyyn istuntoon ID:n perusteella `--session`-lipulla:
+
+    ```bash
+    # Resume the most recent session
+    bolt run --continue "now write the tests too"
+
+    # Resume a specific session
+    bolt run --session ses_abc123 "continue from where we left off"
+    ```
+  </Step>
+  <Step title="Haaraudu ennen kokeilua">
+    Käytä `--fork`ia haarautuaksesi nykyisestä istuntohistoriasta ennen riskialtista muutosta. Haaroittuma on itsenäinen istunto, joka ei vaikuta alkuperäiseen:
+
+    ```bash
+    bolt run --continue --fork "try rewriting this with a functional approach"
+    ```
+  </Step>
+  <Step title="Jaa ja tee yhteistyötä">
+    Luo jakolinkki `--share`-lipulla. Kuka tahansa, jolla on linkki, voi katsella istunnon transkriptiä selaimessa:
+
+    ```bash
+    bolt run --share --continue "final pass — clean up the diff"
+    ```
+  </Step>
+</Steps>
+
+## Istuntojen hallintakomennot
+
+### Listaa istuntoja
+
+```bash
+bolt session list
+```
+
+Tulostaa muotoillun taulukon kaikista istunnoista niiden ID:n, otsikon ja viimeisen päivitysajan kanssa. Lisää `--format json` saadaksesi koneellisesti luettavan tulosteen tai `-n <N>` rajataksesi N uusimpaan istuntoon:
+
+```bash
+bolt session list --format json
+bolt session list -n 10
+```
+
+### Poista istunto
+
+```bash
+bolt session delete <sessionID>
+```
+
+Poistaa istunnon ja kaikki sen viestit pysyvästi paikallisesta tietokannasta.
+
+## Ajolippujen istuntohallinta
+
+Nämä liput ovat käytettävissä komennossa `bolt run`:
+
+| Lippu | Alias | Kuvaus |
+|------|-------|-------------|
+| `--continue` | `-c` | Jatka uusinta istuntoa |
+| `--session <id>` | `-s` | Jatka tiettyä istuntoa ID:n perusteella |
+| `--fork` | | Haaraudu istunnosta ennen jatkamista (vaatii `--continue`n tai `--session`in) |
+| `--share` | | Luo istunnolle jakolinkki |
+| `--title <title>` | | Aseta tai ohita istunnon otsikko |
+
+## Istuntojen vienti
+
+Vie istunnon täydellinen transkripti JSON-muodossa:
+
+```bash
+# Export the most recent session
+bolt export
+
+# Export a specific session
+bolt export <sessionID>
+
+# Export with sensitive data redacted
+bolt export --sanitize > transcript.json
+```
+
+`--sanitize`-lippu korvaa tiedostopolut, koodisisällön, työkalujen syötteet ja tulosteet sekä muut mahdollisesti arkaluontoiset kentät `[redacted:kind:id]`-paikkamerkeillä — hyödyllinen transkriptien jakamiseen tiimiläisten kanssa tai virheraporttien lähettämiseen.
+
+## Istuntojen tuonti
+
+Tuo istunto paikallisesta JSON-tiedostosta tai suoraan jakolinkistä:
+
+```bash
+# From a local file
+bolt import ./transcript.json
+
+# From a share URL
+bolt import https://opncd.ai/share/abc123
+```
+
+Tuodut istunnot näkyvät paikallisessa istuntoluettelossasi, ja niitä voi jatkaa täydellisesti.
+
+## Istuntotietokannan kyselyt
+
+Bolt paljastaa taustalla olevan SQLite-tietokannan suoraan tehokäyttäjille.
+
+```bash
+# Print the database file path
+bolt db path
+
+# Open an interactive SQLite shell
+bolt db
+
+# Run an ad-hoc query
+bolt db "SELECT id, title, time_updated FROM session ORDER BY time_updated DESC LIMIT 5"
+```
+
+Tulostemuoto on oletuksena tabulaattoreilla erotellut arvot; lisää `--format json` JSON-tulostetta varten.
+
+## Tokenien käyttö ja kustannustilastot
+
+`bolt stats` aggregoi tokenien käytön ja kustannustiedot kaikista istunnoistasi:
+
+```bash
+# All-time stats
+bolt stats
+
+# Last 7 days
+bolt stats --days 7
+
+# Current project only
+bolt stats --project ""
+
+# Show per-model breakdown (top 5 models)
+bolt stats --models 5
+
+# Limit tool-usage table to top 10 tools
+bolt stats --tools 10
+```
+
+Tuloste sisältää istuntojen kokonaismäärän, viestit, syöte-/tuloste-/päättely-/välimuistitokenit, kokonaiskustannukset, keskimääräisen kustannuksen päivässä, keski- ja mediaanitokenit istuntoa kohden sekä työkalujen käytön erittelyn. Anna `--models` näyttääksesi myös mallikohtaisen erittelyn viesteistä, tokeneista ja kustannuksista.
+
+## Haaroittumis- ja jakotyönkulku
+
+Tässä täydellinen esimerkki istunnon haaroittamisesta ja tuloksen jakamisesta:
+
+<Steps>
+  <Step title="Aloita työ uudessa istunnossa">
+    ```bash
+    bolt run "refactor the UserService to use dependency injection"
+    ```
+  </Step>
+  <Step title="Haaraudu ennen riskialttiimpaa seuraavaa vaihetta">
+    ```bash
+    bolt run --continue --fork "also migrate it to the new Repository pattern"
+    ```
+
+    Haaroitetun istunnon ID tulostetaan konsoliin. Alkuperäiseen istuntoon ei kosketa.
+  </Step>
+  <Step title="Jaa haaroittuma katselmointia varten">
+    ```bash
+    bolt run --session <forked-id> --share "final cleanup and comments"
+    ```
+
+    Jakolinkki tulostetaan, kun istunto asettuu lepotilaan.
+  </Step>
+  <Step title="Tuo toiselle koneelle">
+    ```bash
+    bolt import https://opncd.ai/share/<slug>
+    ```
+  </Step>
+</Steps>

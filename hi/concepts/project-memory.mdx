@@ -1,0 +1,46 @@
+---
+title: "Project Memory: Bolt Sessions में स्थायी संदर्भ"
+sidebarTitle: "Project Memory"
+description: "Bolt हर turn के अंत में जो कुछ आपके प्रोजेक्ट के बारे में सीखता है उसे कैप्चर करता है और उसे नए सेशन में इंजेक्ट करता है ताकि agent हर बार आपके कोडबेस को दोबारा न सीखना पड़े।"
+---
+
+Project memory वह है जो Bolt को ऐसा महसूस कराती है जैसे वह पहले से आपके प्रोजेक्ट को जानता है। जब कोई सेशन अपना turn समाप्त करता है, Bolt वह जानकारी distill करता है जो उपयोगी थी और उसे per-project memory store में लिख देता है। जब आप नया सेशन खोलते हैं, Bolt system prompt में memory index और नवीनतम सेशन डाइजेस्ट इंजेक्ट करता है ताकि agent खाली स्लेट के बजाय वास्तविक संदर्भ के साथ शुरू करे।
+
+## कैप्चर कैसे काम करता है
+
+हर संवादात्मक turn के अंत में, Bolt मॉडल से टिकाऊ तथ्यों को सारांशित करने के लिए कहता है जो अगली बार उपयोगी होंगे: कन्वेंशन्स, आर्किटेक्चर नोट्स, फ़ाइल लेआउट, build/test कमांड, चेतावनियाँ, और खुले thread। ये प्रोजेक्ट की memory डायरेक्टरी के अंदर डिस्क पर लिखे जाते हैं, नवीनतम सेशन के rolling डाइजेस्ट के साथ।
+
+Memory per-project है। एक ही मशीन पर एक ही repo के दो checkouts memory साझा करते हैं; असंबंधित प्रोजेक्ट्स कभी एक-दूसरे की memory नहीं देखते।
+
+## स्पष्ट tools
+
+Agents सेशन के दौरान सीधे memory को पढ़ और लिख भी सकते हैं:
+
+- `memory_save` — एक विशिष्ट तथ्य रिकॉर्ड करें जिसे agent को अगली बार याद रखना चाहिए।
+- `memory_recall` — कुछ ऐसा देखें जो agent (या आपने) पहले कैप्चर किया था।
+
+आप agent से कह सकते हैं "याद रखो हम pnpm का उपयोग करते हैं, npm का नहीं" और वह आपके लिए `memory_save` कॉल कर देगा।
+
+## Per-session नियंत्रण
+
+TUI के अंदर आप slash commands से मौजूदा सेशन के लिए memory व्यवहार को टॉगल कर सकते हैं:
+
+```text
+/memory use on|off         # whether this session reads project memory
+/memory contribute on|off  # whether this session writes back to memory
+```
+
+यह तब उपयोगी है जब आप एक फेंकने योग्य अन्वेषण सत्र चाहते हैं जो आपकी memory को प्रदूषित न करे, या केवल-पढ़ने योग्य सेशन जो अभी भी पिछले संदर्भ से लाभान्वित हो।
+
+## Memory का निरीक्षण और संपादन
+
+```bash
+bolt memory           # inspect the memory store for the current project
+```
+
+Memory प्रोजेक्ट की Bolt data डायरेक्टरी के अंदर डिस्क पर plain फ़ाइलों के रूप में संग्रहीत है, ताकि आप entries को सीधे grep, edit, या delete कर सकें। अपनी मशीन पर सटीक path खोजने के लिए `bolt debug paths` चलाएँ।
+
+## संबंधित
+
+- [Sessions](/concepts/sessions) — टिकाऊ बातचीत जो memory entries उत्पन्न करती है।
+- [Configuration](/concepts/configuration) — memory कहाँ संग्रहीत होती है और path को कैसे ओवरराइड करें।
