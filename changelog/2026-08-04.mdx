@@ -1,0 +1,14 @@
+---
+title: "Week of August 4, 2026"
+description: "Weekly Bolt changelog: GPT-5 reasoning effort now varies per model version, file selection toggles off on repeat click, and diff annotation polish."
+---
+
+## Updates
+
+- **GPT-5 reasoning effort matches model version** — Reasoning effort tiers (including `none` and `xhigh`) are now offered only for the GPT-5 variants that support them, so `--variant` no longer surfaces options a given model would reject. See [Controlling reasoning effort](/concepts/providers-and-models#variant-controlling-reasoning-effort).
+- **Diff annotation polish** — Comment indicators, gutter behavior, and light/dark syntax colors in the session UI diff view have been tightened up for better readability.
+
+## Bug fixes
+
+- **Toggle file selections off** — Clicking a file selection a second time now clears it, so you can undo a selection without picking a different one first.
+- **Cleaner draft comment interactions** — Starting or dismissing a draft comment now clears the underlying selection consistently and no longer competes with hover state.
