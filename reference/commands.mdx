@@ -84,9 +84,9 @@ Bolt exposes a single `bolt` binary with a rich set of subcommands. Running `bol
 </Accordion>
 
 <Accordion title="bolt arena [message..]">
-  Race the same task across several agents in parallel, each isolated in its own git worktree, then have a judge model rank the results. Unlike `bolt run --best-of` (which shares one working directory and compares answer text only), arena contenders can freely edit files without stepping on each other, and the judge sees each contender's final answer **plus its git diff** — so it ranks on what was actually built.
+  Race the same task across several agents in parallel, each isolated in its own git worktree, then have a judge model rank the results. Unlike `bolt run --best-of`, which shares one working directory and compares only answer text, arena contenders can freely edit files without stepping on each other. The judge sees each contender's final answer **plus its git diff**, so it ranks on what was actually built.
 
-  The winning answer is written to stdout; the scoreboard, worktree paths, and progress notes go to stderr. All worktrees are kept by default so you can inspect or merge the winning branch. Pass `--cleanup` to delete the losers' worktrees and branches after judging.
+  Bolt writes the winning answer to stdout and sends the scoreboard, worktree paths, and progress notes to stderr. All worktrees are kept by default so you can inspect or merge the winning branch. Pass `--cleanup` to delete the losers' worktrees and branches after judging.
 
   ```bash
   # Race Claude and GPT on the same task
@@ -117,7 +117,7 @@ Bolt exposes a single `bolt` binary with a rich set of subcommands. Running `bol
   | `--cleanup` | boolean | Remove losing worktrees and their branches after judging (default: `false`) |
 
   <Note>
-    Arena needs at least two `--models` entries and works inside a git repository. Contender prompts are run with `question`, `plan_enter`, and `plan_exit` permissions denied, so agents cannot pause to ask for input mid-race.
+    Arena needs at least two `--models` entries and works inside a git repository. Bolt runs contenders with `question`, `plan_enter`, and `plan_exit` permissions denied, so agents cannot pause to ask for input mid-race.
   </Note>
 </Accordion>
 
