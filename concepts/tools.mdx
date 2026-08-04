@@ -25,6 +25,11 @@ Agents in Bolt do work by calling tools. Every action you see in the TUI (readin
 | `memory_save` | Persist a fact to [project memory](/concepts/project-memory). |
 | `memory_recall` | Look up a previously-saved memory. |
 | `question` | Ask you a clarifying question and wait for a reply. |
+| `bash_background` | Start a shell command as a managed background process (dev servers, watchers, long builds). |
+| `process_output` | Read accumulated output and status for a background process, optionally waiting for it to finish. |
+| `list_processes` | List background processes with their id, status, and command. |
+| `kill_process` | Terminate a background process (and its process tree) by id. |
+| `test_run` | Detect and run the project's tests, returning structured pass/fail results and failure details. |
 
 ### Experimental
 
