@@ -1,10 +1,12 @@
 ---
 title: "Week of August 4, 2026"
-description: "Weekly Bolt changelog: 11 new UI languages, locale-aware pluralization, richer Markdown and math rendering, GPT-5 polish, and locale fixes."
+description: "Weekly Bolt changelog: right-to-left layout support, Poolside provider, 11 new UI languages, locale-aware pluralization, richer Markdown, and workspace fixes."
 ---
 
 ## New features
 
+- **Right-to-left layout support** — Arabic, Urdu, and Punjabi now render with mirrored navigation, controls, icons, tabs, drawers, and text handling throughout the desktop app, so RTL users get a native reading direction end to end. Switch languages in **Settings → Appearance → Language**. See [Desktop features](/desktop/features).
+- **Poolside provider** — Sign in to [Poolside](https://poolside.ai) with `/connect`, then pick a model with `/models`. Self-hosted Poolside deployments can be wired up as a custom OpenAI-compatible provider. See [Providers and models](/concepts/providers-and-models).
 - **11 new UI languages** — The desktop app and TUI now ship translations for Hindi, Dutch, Indonesian, Vietnamese, Italian, Urdu, Punjabi, Azerbaijani, Finnish, Swedish, and Thai, bringing the total to 28 supported languages. Switch languages in **Settings → Appearance → Language**. See [Desktop features](/desktop/features) and [Install](/desktop/install#28-ui-languages).
 - **Locale-aware pluralization** — Counts, statuses, files, and session list items now pluralize correctly per language, so timeline and status text reads naturally across all supported locales.
 - **Richer Markdown rendering** — Assistant messages get improved Markdown formatting, smoother streaming updates, better syntax highlighting, and support for mathematical content, making long-form and technical replies easier to read.
@@ -14,6 +16,8 @@ description: "Weekly Bolt changelog: 11 new UI languages, locale-aware pluraliza
 - **GPT-5 reasoning effort matches model version** — Reasoning effort tiers (including `none` and `xhigh`) are now offered only for the GPT-5 variants that support them, so `--variant` no longer surfaces options a given model would reject. See [Controlling reasoning effort](/concepts/providers-and-models#variant-controlling-reasoning-effort).
 - **Diff annotation polish** — The session UI diff view tightens up comment indicators, gutter behavior, and light/dark syntax colors for better readability.
 - **Refined existing translations** — Existing languages get clearer terminology and expanded UI labels for a more consistent experience across the app.
+- **Broader localization coverage** — Menus, dialogs, prompts, errors, accessibility labels, and desktop controls (including WSL, terminal, file picker, updater, and recovery messages) now translate in every supported language, so fewer strings fall back to English.
+- **More visible proxy errors** — Proxy failures now surface a clear message in the session UI instead of failing silently, making it easier to spot and diagnose connectivity problems.
 
 ## Bug fixes
 
@@ -23,3 +27,6 @@ description: "Weekly Bolt changelog: 11 new UI languages, locale-aware pluraliza
 - **Cleaner draft comment interactions** — Starting or dismissing a draft comment now clears the underlying selection consistently and no longer competes with hover state.
 - **Animated reasoning header restored** — The reasoning header in the TUI shows an animated spinner again while thinking, and its gradient dims when expanded so the collapsed and open states are easier to tell apart.
 - **Background process and test tools restored** — `bash_background`, `process_output`, `list_processes`, `kill_process`, and `test_run` are available to agents again after being dropped in an earlier merge. Agents can start long-running commands like dev servers and watchers, read their output, and run the project's tests with structured pass/fail results. See [Built-in tools](/concepts/tools#built-in-tools).
+- **Session completion events reliable** — Sessions now fire their completion event even when a run ends through an unusual path, so the timeline, status, and follow-up automations no longer get stuck on "running".
+- **Workspace routing fixed** — Opening a session from a different workspace now routes to the correct project instead of landing on the wrong workspace's session list. See [Sessions](/concepts/sessions).
+- **Geographic stats map** — The public stats map now renders every region correctly and no longer drops countries under some filter combinations.
