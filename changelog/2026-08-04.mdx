@@ -1,10 +1,11 @@
 ---
 title: "Week of August 4, 2026"
-description: "Weekly Bolt changelog: 11 new UI languages, right-to-left layouts, native desktop translations, Poolside provider, GPT-5 polish, and bug fixes."
+description: "Weekly Bolt changelog: bolt arena command, 11 new UI languages, right-to-left layouts, native desktop translations, Poolside provider, GPT-5 polish, and bug fixes."
 ---
 
 ## New features
 
+- **`bolt arena` command** — Race the same task across multiple models in parallel, each in its own isolated git worktree so contenders can freely edit files without stepping on each other. A judge model then ranks the anonymized results using both the final answer and the actual git diff, and the winner's output goes to stdout. Losing worktrees are kept by default so you can inspect or merge any branch, or pass `--cleanup` to drop them. Duplicates in `--models` are allowed, so you can race a model against itself. Run `bolt arena --models anthropic/claude-sonnet-4,openai/gpt-5 "add retry logic to the fetch helper"`, or pass `--format json` for machine-readable output. See [Providers and models](/concepts/providers-and-models#best-of-n-parallel-runs).
 - **11 new UI languages** — The desktop app and TUI now ship translations for Hindi, Dutch, Indonesian, Vietnamese, Italian, Urdu, Punjabi, Azerbaijani, Finnish, Swedish, and Thai, bringing the total to 28 supported languages. Switch languages in **Settings → Appearance → Language**. See [Desktop features](/desktop/features) and [Install](/desktop/install#28-ui-languages).
 - **Right-to-left layout support** — Navigation, editors, dialogs, controls, and text rendering now mirror correctly for right-to-left languages like Arabic, Hebrew, and Urdu, so the entire interface reads naturally in those locales.
 - **Native desktop translations** — OS-level menus, updater dialogs, the recovery flow, WSL onboarding, and native file pickers are now localized alongside the in-app UI, so the whole desktop experience follows your language setting.
