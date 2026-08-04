@@ -1,7 +1,7 @@
 ---
 title: "Providers & Models — LLM Authentication and Selection"
 sidebarTitle: "Providers & Models"
-description: "Bolt supports any LLM provider via the Vercel AI SDK. Authenticate providers, list models, tune reasoning effort, and run best-of-N parallel comparisons."
+description: "Bolt supports any LLM provider via the Vercel AI SDK. Authenticate providers, list models, tune reasoning effort, and race models with best-of-N or arena."
 ---
 
 Bolt is model-agnostic by design. Under the hood it uses the **Vercel AI SDK** to speak to providers, which means any provider the SDK supports — Anthropic, OpenAI, Google, Amazon Bedrock, OpenRouter, and more — works out of the box. The provider and model catalog is sourced from [models.dev](https://models.dev), a community-maintained database of provider metadata and pricing.
@@ -137,3 +137,21 @@ The judge defaults to the model passed via `--model`, or to the first entry in t
 <Tip>
   Best-of-N is especially useful for complex algorithmic problems or architecture decisions where different models may bring genuinely different approaches. Let Bolt run them in parallel and pick the winner automatically.
 </Tip>
+
+## Arena — parallel runs in isolated worktrees
+
+`bolt arena` takes the same idea further: it races several agents on the same task, but each contender gets its own git worktree so they can freely edit files without stepping on each other. When they finish, a judge model ranks them on **the final answer plus the actual git diff** — not just the text they wrote.
+
+```bash
+bolt arena --models anthropic/claude-sonnet-4,openai/gpt-5 \
+  "add retry logic to the fetch helper"
+```
+
+Reach for arena instead of `--best-of` when the task involves editing files (refactors, feature work, test writing) rather than pure Q&A. The winning worktree stays on disk so you can inspect it, run tests, or merge the branch. The scoreboard and worktree paths print to stderr; the winner's answer goes to stdout.
+
+- `--models` accepts 2+ `provider/model` entries. Duplicates are allowed — racing a model against itself in separate worktrees is a legitimate setup.
+- `--judge` picks the ranking model (defaults to the first entry in `--models`).
+- `--cleanup` deletes losing worktrees and their branches after judging. Without it, every worktree sticks around for you to review.
+- `--format json` emits a single JSON payload with the winner, ranking, and every candidate for scripting.
+
+See [`bolt arena`](/reference/commands) in the command reference for the full flag list.
