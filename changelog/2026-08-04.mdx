@@ -1,10 +1,12 @@
 ---
 title: "Week of August 4, 2026"
-description: "Weekly Bolt changelog: 11 new UI languages, right-to-left layouts, native desktop translations, Poolside provider, GPT-5 polish, and bug fixes."
+description: "Weekly Bolt changelog: Homebrew and npx install, 11 new UI languages, right-to-left layouts, Poolside provider, GPT-5 polish, and bug fixes."
 ---
 
 ## New features
 
+- **Install Bolt with Homebrew** — Bolt now ships through its own Homebrew tap, so macOS and Linux users can install and upgrade with `brew install bolt-builder/tap/bolt-cli`. `bolt upgrade` also detects Homebrew installs and updates through the tap. See [Installation](/installation).
+- **Run without installing via `npx`** — You can now try Bolt without a global install by running `npx @bolt-builder/bolt-cli`, which fetches and runs the latest release on demand. See [Installation](/installation).
 - **11 new UI languages** — The desktop app and TUI now ship translations for Hindi, Dutch, Indonesian, Vietnamese, Italian, Urdu, Punjabi, Azerbaijani, Finnish, Swedish, and Thai, bringing the total to 28 supported languages. Switch languages in **Settings → Appearance → Language**. See [Desktop features](/desktop/features) and [Install](/desktop/install#28-ui-languages).
 - **Right-to-left layout support** — Navigation, editors, dialogs, controls, and text rendering now mirror correctly for right-to-left languages like Arabic, Hebrew, and Urdu, so the entire interface reads naturally in those locales.
 - **Native desktop translations** — OS-level menus, updater dialogs, the recovery flow, WSL onboarding, and native file pickers are now localized alongside the in-app UI, so the whole desktop experience follows your language setting.
