@@ -1,11 +1,15 @@
 ---
 title: "Week of August 4, 2026"
-description: "Weekly Bolt changelog: 11 new UI languages, locale-aware pluralization, richer Markdown and math rendering, GPT-5 polish, and locale fixes."
+description: "Weekly Bolt changelog: 11 new UI languages, right-to-left layout support, native desktop translations, Poolside provider, richer Markdown and math rendering, GPT-5 polish, and bug fixes."
 ---
 
 ## New features
 
 - **11 new UI languages** — The desktop app and TUI now ship translations for Hindi, Dutch, Indonesian, Vietnamese, Italian, Urdu, Punjabi, Azerbaijani, Finnish, Swedish, and Thai, bringing the total to 28 supported languages. Switch languages in **Settings → Appearance → Language**. See [Desktop features](/desktop/features) and [Install](/desktop/install#28-ui-languages).
+- **Right-to-left layout support** — Navigation, editors, dialogs, controls, and text rendering now mirror correctly for right-to-left languages like Arabic, Hebrew, and Urdu, so the entire interface reads naturally in those locales.
+- **Native desktop translations** — OS-level menus, updater dialogs, the recovery flow, WSL onboarding, and native file pickers are now localized alongside the in-app UI, so the whole desktop experience follows your language setting.
+- **Expanded localization coverage** — Menus, dialogs, prompts, help content, error messages, and accessibility labels are now translated in every supported language, closing gaps where strings previously fell back to English.
+- **Poolside provider** — Bolt now connects to [Poolside](https://poolside.ai) through its OpenAI-compatible API. Run `/connect`, choose **Poolside**, and paste your API key from [platform.poolside.ai](https://platform.poolside.ai). Self-hosted Poolside deployments can also be configured as a custom provider. See [Providers and models](/concepts/providers-and-models).
 - **Locale-aware pluralization** — Counts, statuses, files, and session list items now pluralize correctly per language, so timeline and status text reads naturally across all supported locales.
 - **Richer Markdown rendering** — Assistant messages get improved Markdown formatting, smoother streaming updates, better syntax highlighting, and support for mathematical content, making long-form and technical replies easier to read.
 
@@ -17,6 +21,10 @@ description: "Weekly Bolt changelog: 11 new UI languages, locale-aware pluraliza
 
 ## Bug fixes
 
+- **Session action timing** — Session actions now record and report their timing more accurately, so the timeline reflects when work actually started and finished.
+- **Clearer remote workspace errors** — Failures when connecting to or running commands in a remote workspace now surface more descriptive error messages instead of generic ones.
+- **Workspace proxy no longer leaks working directory** — Requests routed through the workspace proxy no longer include working-directory details, keeping local paths off the wire.
+- **Map fills in empty regions** — The activity map now stays visible in regions with no recorded activity instead of collapsing to a blank area.
 - **Locale detection fixed** — Bolt now picks up your system locale reliably at startup, so the interface opens in the right language on more platforms.
 - **German timeline translation fixed** — Timeline entries in German now render with the correct strings instead of falling back to English or misformatted text.
 - **Toggle file selections off** — Clicking a file selection a second time now clears it, so you can undo a selection without picking a different one first.
