@@ -29,6 +29,7 @@
           {
             "group": "Changelog",
             "pages": [
+              "changelog/2026-08-04",
               "changelog/2026-08-03"
             ]
           }

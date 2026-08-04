@@ -1,15 +1,24 @@
 ---
 title: "Week of August 4, 2026"
-description: "Weekly Bolt changelog: GPT-5 reasoning effort scoped to supported variants, diff polish, TUI spinner restored, and background and test tools back."
+description: "Weekly Bolt changelog: 11 new UI languages, locale-aware pluralization, richer Markdown and math rendering, GPT-5 polish, and locale fixes."
 ---
+
+## New features
+
+- **11 new UI languages** — The desktop app and TUI now ship translations for Hindi, Dutch, Indonesian, Vietnamese, Italian, Urdu, Punjabi, Azerbaijani, Finnish, Swedish, and Thai, bringing the total to 28 supported languages. Switch languages in **Settings → Appearance → Language**. See [Desktop features](/desktop/features) and [Install](/desktop/install#28-ui-languages).
+- **Locale-aware pluralization** — Counts, statuses, files, and session list items now pluralize correctly per language, so timeline and status text reads naturally across all supported locales.
+- **Richer Markdown rendering** — Assistant messages get improved Markdown formatting, smoother streaming updates, better syntax highlighting, and support for mathematical content, making long-form and technical replies easier to read.
 
 ## Updates
 
 - **GPT-5 reasoning effort matches model version** — Reasoning effort tiers (including `none` and `xhigh`) are now offered only for the GPT-5 variants that support them, so `--variant` no longer surfaces options a given model would reject. See [Controlling reasoning effort](/concepts/providers-and-models#variant-controlling-reasoning-effort).
 - **Diff annotation polish** — The session UI diff view tightens up comment indicators, gutter behavior, and light/dark syntax colors for better readability.
+- **Refined existing translations** — Existing languages get clearer terminology and expanded UI labels for a more consistent experience across the app.
 
 ## Bug fixes
 
+- **Locale detection fixed** — Bolt now picks up your system locale reliably at startup, so the interface opens in the right language on more platforms.
+- **German timeline translation fixed** — Timeline entries in German now render with the correct strings instead of falling back to English or misformatted text.
 - **Toggle file selections off** — Clicking a file selection a second time now clears it, so you can undo a selection without picking a different one first.
 - **Cleaner draft comment interactions** — Starting or dismissing a draft comment now clears the underlying selection consistently and no longer competes with hover state.
 - **Animated reasoning header restored** — The reasoning header in the TUI shows an animated spinner again while thinking, and its gradient dims when expanded so the collapsed and open states are easier to tell apart.
