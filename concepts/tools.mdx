@@ -17,6 +17,11 @@ Agents in Bolt do work by calling tools. Every action you see in the TUI (readin
 | `glob` | List files matching a glob pattern. |
 | `grep` | Search file contents by regex/text. |
 | `bash` | Run a shell command. |
+| `bash_background` | Start a shell command as a background process (dev servers, watchers, long builds) and get back a process id. |
+| `process_output` | Read accumulated stdout/stderr and status for a background process, optionally waiting for it to finish. |
+| `kill_process` | Terminate a background process (and its child tree) by id. |
+| `list_processes` | List all background processes started in the current session with their id, status, and command. |
+| `test_run` | Run the project's tests and return structured pass/fail results, detecting the right command (npm/pnpm/yarn/bun, cargo, go, pytest) automatically. |
 | `task` | Delegate a subtask to a subagent (`@general`, `@explore`, or a custom subagent). |
 | `todowrite` | Maintain the agent's structured task list for multi-step work. |
 | `webfetch` | Fetch a URL and return its contents. |
