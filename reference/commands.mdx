@@ -83,6 +83,44 @@ Bolt exposes a single `bolt` binary with a rich set of subcommands. Running `bol
   | `--demo` |  | boolean | Enable direct interactive demo slash commands (hidden) |
 </Accordion>
 
+<Accordion title="bolt arena [message..]">
+  Race the same task across several agents in parallel, each isolated in its own git worktree, then have a judge model rank the results. Unlike `bolt run --best-of`, which shares one working directory and compares only answer text, arena contenders can freely edit files without stepping on each other. The judge sees each contender's final answer **plus its git diff**, so it ranks on what was actually built.
+
+  Bolt writes the winning answer to stdout and sends the scoreboard, worktree paths, and progress notes to stderr. All worktrees are kept by default so you can inspect or merge the winning branch. Pass `--cleanup` to delete the losers' worktrees and branches after judging.
+
+  ```bash
+  # Race Claude and GPT on the same task
+  bolt arena --models anthropic/claude-sonnet-4,openai/gpt-5 \
+    "add retry logic to the fetch helper"
+
+  # Race the same model against itself (duplicates are allowed)
+  bolt arena --models anthropic/claude-opus-4-5,anthropic/claude-opus-4-5 \
+    "refactor the auth module"
+
+  # Pick an explicit judge and clean up losing worktrees
+  bolt arena --models "anthropic/claude-opus-4-5,openai/gpt-4o,google/gemini-2.5-pro" \
+    --judge anthropic/claude-opus-4-5 --cleanup \
+    "port this helper to TypeScript"
+
+  # Machine-readable output
+  bolt arena --models anthropic/claude-sonnet-4,openai/gpt-5 --format json \
+    "write unit tests for parser.ts"
+  ```
+
+  | Flag | Type | Description |
+  | --- | --- | --- |
+  | `--models` | string | **Required.** Comma-separated `provider/model` list (2+ entries, duplicates allowed) — one worktree per entry |
+  | `--judge` | string | Judge model as `provider/model` (defaults to the first entry in `--models`) |
+  | `--agent` | string | Agent to use for every contender |
+  | `--variant` | string | Model variant for contenders (provider-specific reasoning effort, e.g. `high`, `max`, `minimal`) |
+  | `--format` | `default`\|`json` | Output format; `json` emits a single JSON result with the winner, ranking, and every candidate |
+  | `--cleanup` | boolean | Remove losing worktrees and their branches after judging (default: `false`) |
+
+  <Note>
+    Arena needs at least two `--models` entries and works inside a git repository. Bolt runs contenders with `question`, `plan_enter`, and `plan_exit` permissions denied, so agents cannot pause to ask for input mid-race.
+  </Note>
+</Accordion>
+
 <Accordion title="bolt attach <url>">
   Attach the full TUI to a running Bolt server. The server can be local or remote. Pass `--mini` to use the minimal split-footer UI instead of the full TUI.
 
