@@ -1,0 +1,81 @@
+---
+title: "Week of August 8, 2026"
+description: "Weekly Bolt changelog: v1.21.0 ships the full CLI-first round with 46 new capabilities, from JSON envelopes and porcelain output to session handoff, config profiles, and a plan-only CI gate."
+---
+
+## v1.21.0: the CLI-first round, complete
+
+This release closes out the entire CLI-first roadmap: 46 new capabilities across scripting, sessions, config, speed, and self-ops. The CLI now has 86 commands, all documented in the regenerated [command reference](/reference/commands).
+
+### Unix citizen
+
+- **`bolt ask`** — Pipe-friendly one-shot Q&A: `cat error.log | bolt ask "why is this failing"`. Answer to stdout, nothing else.
+- **`--json` everywhere** — Every command emits a stable, versioned JSON envelope for scripting.
+- **`--porcelain` mode** — Line-oriented, grep-safe output that never changes shape between versions.
+- **Stdin as context on every command** — `git diff | bolt review`, `pbpaste | bolt run "fix this"`.
+- **Stable exit-code catalog** — Documented codes per failure class (verdict fail, budget hit, auth, timeout, plan gate) so scripts can branch on `$?`. See [Scripting & CI](/reference/scripting).
+- **Run chaining** — `bolt run ... --emit context | bolt run ...` pipes one run's findings into the next.
+- **Output discipline** — Full `NO_COLOR`, `--quiet`, and `--verbose` support across every command; progress goes to stderr.
+- **Shell completions** — bash, zsh, and fish, with dynamic completion of session ids, agents, and models.
+- **Man pages** — Generated from the CLI definitions: `man bolt-run`.
+- **$PAGER and $EDITOR integration** — Long output pages automatically; `bolt config edit` opens your editor.
+
+### Scripting and CI
+
+- **`bolt exec -f playbook.md`** — Run a markdown playbook of steps non-interactively, stopping on the first failure.
+- **`bolt batch <file>`** — A queue of prompts run sequentially or with `--parallel N`, with a summary table.
+- **`--output-schema <file>`** — Force the final answer to validate against a JSON Schema, retrying until it does.
+- **Plan-only CI gate** — `bolt run --plan-only` prints the intended diff and commands, and exits nonzero if anything looks destructive.
+- **`bolt diff-gate`** — Pipe a diff in; exit 1 when defects reach a severity threshold. Made for PR checks.
+- **Official GitHub Action** — `bolt-builder/bolt-action` wraps headless runs with sane caching.
+- **`--timeout` and `--retries`** — On every agent-run command, with partial-result capture on timeout.
+- **Per-run cost report** — `--cost-report` prints tokens, cache hits, dollars, and wall time to stderr or as a JSON event.
+
+### Sessions from the shell
+
+- **`bolt sessions ls`** — Filters (`--since`, `--project`, `--failed`, `--tag`), sorting, and `--json`.
+- **`bolt resume`** — Fuzzy picker when no id is given, zero dependencies.
+- **Session tags** — `bolt tag <id> billing-bug`; filter and resume by tag.
+- **`bolt fork <id>`** — Branch a session at any message and continue down a different path.
+- **`bolt export --md` and `--jsonl`** — Transcripts as clean markdown or line-delimited JSON.
+- **`bolt grep <pattern>`** — Full-text search across every session transcript on disk.
+- **Retention policy** — `bolt session prune --days N --dry-run` auto-archives stale sessions.
+- **`--attach <path>`** — Inject files or dirs as context without mentioning them in the prompt.
+- **Session handoff** — Start on your laptop, `bolt push <id>`, resume on another machine with `bolt pull`.
+
+### Config and profiles
+
+- **Named profiles** — `--profile work` switches provider, model, memory scope, and gateways in one flag.
+- **`bolt config doctor`** — Explains which config files loaded, in what order, and what won each key.
+- **`bolt config get/set/unset`** — Dot-path access so scripts never hand-edit JSON.
+- **`BOLT_*` env-var overrides** — Every config key, documented and typo-checked. See [Env Variables](/reference/environment-variables).
+- **`bolt init --preset library|webapp|monorepo`** — Seeds config, agents, and commands.
+- **Alias system** — `bolt alias deploy-check="run --agent reviewer 'audit the deploy diff'"`.
+- **Config schema validation** — Actionable errors with did-you-mean suggestions.
+- **`bolt config diff`** — What differs between local config and the committed project config.
+
+### Cold start and speed
+
+- **Sub-50ms startup** — Help, version, and completions load lazily; enforced by a CI benchmark.
+- **`bolt daemon`** — Keeps a warm server running so one-shots skip boot entirely.
+- **`bolt warm`** — Pre-loads project context and prompt cache before you start typing.
+- **Prompt-cache reuse** — Across consecutive one-shot runs in the same project.
+- **Incremental context** — Reuses the last run's file reads when the tree hasn't changed.
+- **`--offline`** — Fails fast with a clear message instead of hanging without network.
+
+### Self-ops
+
+- **`bolt doctor`** — Checks binary, config, credentials, gateway reachability, and disk state; prints fixes.
+- **`bolt stats`** — Local terminal dashboard: runs, cost, top projects, busiest hours.
+- **`bolt logs --follow`** — With level and session filters.
+- **Crash reports** — Written locally with automatic secret redaction; `bolt bug` picks them up.
+- **Release channels** — `bolt update --channel stable|beta|nightly` with rollback via `bolt update --undo`.
+- **Clean uninstall** — `bolt uninstall` removes state dirs too.
+
+### And from the "later" list, shipped early
+
+- **Remote exec** — `bolt run --host ssh://dev-box` runs the agent on another machine and streams locally.
+- **Multiplexed TUI** — `bolt mux` splits panes for parallel sessions in one terminal.
+- **Versioned REST API** — `bolt serve --api` pins a stable local API surface for tools.
+- **Plugin subcommands** — Plugins can register their own `bolt <command>` entries.
+- **Voice input** — `bolt run --voice` records a prompt and transcribes it locally with whisper.cpp.

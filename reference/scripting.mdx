@@ -1,0 +1,122 @@
+---
+title: "Scripting Bolt in pipelines and CI"
+sidebarTitle: "Scripting & CI"
+description: "Use Bolt as a well-behaved Unix citizen: JSON envelopes, porcelain output, stable exit codes, stdin context, run chaining, timeouts and retries, budgets, and CI gates."
+---
+
+Bolt is built to compose with shells, pipelines, and CI systems. This page covers the machine-facing surface: stable output formats, exit codes, and the flags that keep runs bounded and predictable.
+
+## Stable exit codes
+
+Every command exits with a documented code per failure class, so scripts can branch on `$?`. Codes are part of the CLI contract: existing entries are never renumbered, only appended.
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Success (or a PASS verdict from verdict-style commands) |
+| `1` | Generic failure, or a FAIL verdict from commands like `bolt review` |
+| `2` | No verdict could be determined from the model output |
+| `3` | A `--max-cost` or `--max-tokens` budget was hit |
+| `4` | Authentication is missing, invalid, or expired |
+| `5` | An operation timed out |
+| `6` | The `--plan-only` gate detected destructive actions |
+
+```bash
+bolt review --branch main
+case $? in
+  0) echo "clean" ;;
+  1) echo "review failed, blocking merge" ; exit 1 ;;
+  2) echo "no verdict, flag for human review" ;;
+esac
+```
+
+## Machine-readable output
+
+Two complementary modes, mutually exclusive per invocation:
+
+- `--json` prints a stable, versioned JSON envelope on stdout. Available on every command that produces a result.
+- `--porcelain` prints line-oriented, grep-safe records that never change shape between versions. One record per line, kind first.
+
+```bash
+# JSON envelope for tooling
+bolt stats --json | jq .totalCost
+
+# Porcelain for shell pipelines
+bolt models --porcelain | grep anthropic
+bolt export <session-id> --porcelain | awk '$1 == "message"'
+```
+
+Progress chatter always goes to stderr, so stdout stays clean for consumers. `NO_COLOR`, `--quiet`, and `--verbose` are honored globally.
+
+## Stdin as context
+
+Pipe anything into `run`, `ask`, or `review` and it becomes context without polluting the prompt text:
+
+```bash
+git diff | bolt review
+cat error.log | bolt ask "why is this failing"
+pbpaste | bolt run "fix this"
+```
+
+Use `--attach <path>` to inject files or directories as context explicitly (repeatable; an `http(s)` URL instead attaches to a running server):
+
+```bash
+bolt run --attach src/auth/ --attach openapi.yaml "align the client with the spec"
+```
+
+## Chaining runs
+
+`--emit context` prints a run's findings in a pipeable form so one run feeds the next:
+
+```bash
+bolt run "audit the error handling" --emit context | bolt run "fix the top three issues"
+```
+
+## Bounded runs: timeouts, retries, budgets
+
+```bash
+# Retry failed or timed-out attempts, capture partial results on timeout
+bolt run --timeout 300 --retries 2 "migrate the config loader"
+
+# Hard cost and token ceilings (exit code 3 on breach)
+bolt run --max-cost 0.50 --max-tokens 200000 "summarize the changelog"
+
+# Per-run cost report on stderr (or as a cost_report JSON event with --format json)
+bolt run --cost-report "refactor utils"
+```
+
+## CI gates
+
+- `bolt run --plan-only` prints the intended diff and commands without executing, and exits `6` if anything looks destructive.
+- `bolt diff-gate` reads a diff from stdin and exits `1` when the agent finds defects above a severity threshold.
+- `bolt review --staged | --branch <base>` gives one-shot AI diff review with verdict exit codes.
+- The official GitHub Action wraps headless runs with sane caching: `bolt-builder/bolt-action`.
+
+```yaml
+# .github/workflows/bolt-gate.yml
+jobs:
+  plan-gate:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bolt-builder/bolt-action@v1
+        with:
+          args: run --plan-only "apply the requested dependency bump"
+```
+
+## Batch and playbooks
+
+```bash
+# Queue of prompts, sequential or parallel, with a summary table
+bolt batch prompts.txt --parallel 4
+
+# Markdown playbook of steps, non-interactive, stop on first failure
+bolt exec -f playbook.md
+```
+
+## Structured answers
+
+Force the final answer to validate against a JSON Schema; Bolt retries with the validation errors until it passes or the attempt budget runs out:
+
+```bash
+bolt run --output-schema schema.json --json "extract the API endpoints" | jq .
+```

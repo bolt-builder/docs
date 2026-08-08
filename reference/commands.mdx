@@ -1,475 +1,2560 @@
 ---
 title: "Bolt CLI command reference"
 sidebarTitle: "Commands"
-description: "Complete reference for every Bolt CLI command, including flags, arguments, and usage examples for the TUI, run, serve, session, agent, and more."
+description: "Complete generated reference for all 86 Bolt CLI commands, grouped by area, with full flag listings straight from --help."
 ---
 
-Bolt exposes a single `bolt` binary with a rich set of subcommands. Running `bolt` with no arguments opens the full terminal UI. All other subcommands are listed below. Use `bolt <command> --help` at any time for inline help.
+Bolt exposes a single `bolt` binary with 86 subcommands. Running `bolt` with no arguments opens the terminal UI. This page is generated from the CLI's own `--help` output, so it always matches the released binary. Use `bolt <command> --help` for the same text inline.
 
-<Accordion title="bolt (default — launch TUI)">
-  Opens the interactive terminal UI in the current directory. Bolt automatically discovers your project context, loads configuration, and connects to any configured providers.
+Global flags available on every command: `--print-logs`, `--log-level`, `--pure`, `--profile <name>`, `--quiet`, `--verbose`, `--offline`, `--help`, `--version`.
 
-  ```bash
-  bolt
-  bolt --mini          # minimal split-footer interactive mode
-  bolt --log-level DEBUG
-  ```
+Stable exit codes for scripting: `0` success, `1` failure or FAIL verdict, `2` no verdict determined, `3` budget hit, `4` auth error, `5` timeout, `6` plan gate found destructive actions.
 
-  **Global flags** — available on every command:
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--print-logs` | boolean | Print log output to stderr |
-  | `--log-level` | `DEBUG`\|`INFO`\|`WARN`\|`ERROR` | Set the log verbosity level |
-  | `--pure` | boolean | Run without loading any external plugins |
-  | `--help`, `-h` | boolean | Show help text |
-  | `--version`, `-v` | boolean | Print the installed version number |
-</Accordion>
-
-<Accordion title="bolt run [prompt]">
-  Run Bolt with a single prompt in non-interactive mode. Bolt starts an in-process server, sends the prompt to the active session, streams the response to stdout, then exits. Pipe stdin or pass `--file` to attach context.
-
-  ```bash
-  # Basic non-interactive prompt
-  bolt run "explain the auth module"
-  
-  # Continue the most recent session
-  bolt run --continue "now add error handling"
-  
-  # Use a specific model with a specific agent
-  bolt run --model anthropic/claude-opus-4-5 --agent code "refactor auth.ts"
-  
-  # Stream raw JSON events for tooling integration
-  bolt run --format json "summarize changes"
-  
-  # Fire the same task at multiple models and keep the best result
-  bolt run --best-of "anthropic/claude-opus-4-5,openai/gpt-4o" "write unit tests"
-  
-  # Attach a file as context
-  bolt run --file ./openapi.yaml "generate a client SDK"
-  
-  # Attach to a remote server and run a prompt there
-  bolt run --attach http://my-server:4096 --dir /projects/api "what tests are failing?"
-  
-  # Skip all permission prompts (dangerous)
-  bolt run --auto "delete all TODO comments"
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--command` |  | string | Slash-command to execute; pass arguments as the message |
-  | `--continue` | `-c` | boolean | Continue the most recent session |
-  | `--session` | `-s` | string | Session ID to continue |
-  | `--fork` |  | boolean | Fork the session before continuing (requires `--continue` or `--session`) |
-  | `--share` |  | boolean | Share the session after it completes |
-  | `--model` | `-m` | string | Model to use in `provider/model` format |
-  | `--best-of` |  | string | Comma-separated `provider/model` list; runs the task in parallel, ranks results, keeps the winner |
-  | `--agent` |  | string | Agent to use (e.g. `code`, `ask`, `review`) |
-  | `--format` |  | `default`\|`json` | Output format; `json` streams raw newline-delimited JSON events |
-  | `--file` | `-f` | string\[\] | File(s) to attach as context |
-  | `--title` |  | string | Title for the session |
-  | `--attach` |  | string | Run against a remote Bolt server (e.g. `http://localhost:4096`) |
-  | `--password` | `-p` | string | Basic auth password for the remote server |
-  | `--username` | `-u` | string | Basic auth username for the remote server |
-  | `--dir` |  | string | Working directory; if `--attach` is set, this is the directory on the remote server |
-  | `--port` |  | number | Port for the local in-process server (random if omitted) |
-  | `--variant` |  | string | Reasoning effort level, provider-specific (e.g. `high`, `max`, `minimal`) |
-  | `--thinking` |  | boolean | Show reasoning/thinking blocks in output |
-  | `--mini` |  | boolean | Start the minimal split-footer interactive UI (hidden) |
-  | `--interactive` | `-i` | boolean | Force direct interactive split-footer mode |
-  | `--auto` |  | boolean | Auto-approve permissions that are not explicitly denied |
-  | `--yolo` |  | boolean | Skip all permission prompts (alias for `--auto`, hidden) |
-  | `--dangerously-skip-permissions` |  | boolean | Skip all permission checks (hidden) |
-  | `--demo` |  | boolean | Enable direct interactive demo slash commands (hidden) |
-</Accordion>
-
-<Accordion title="bolt attach <url>">
-  Attach the full TUI to a running Bolt server. The server can be local or remote. Pass `--mini` to use the minimal split-footer UI instead of the full TUI.
-
-  ```bash
-  bolt attach http://localhost:4096
-  bolt attach http://remote-host:4096 --dir /projects/api
-  bolt attach http://remote-host:4096 --session abc123 --mini
-  bolt attach http://remote-host:4096 --password secret --username alice
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--dir` |  | string | Directory on the remote server |
-  | `--continue` | `-c` | boolean | Continue the most recent session on the remote server |
-  | `--session` | `-s` | string | Session ID to continue |
-  | `--fork` |  | boolean | Fork the session when continuing |
-  | `--password` | `-p` | string | Basic auth password |
-  | `--username` | `-u` | string | Basic auth username |
-  | `--mini` |  | boolean | Use the minimal interactive UI |
-  | `--no-replay` |  | boolean | Disable session history replay on resume and after resize (requires `--mini`) |
-  | `--replay-limit` |  | number | Cap visible replay to the newest N messages (requires `--mini`) |
-</Accordion>
-
-<Accordion title="bolt serve">
-  Start a headless Bolt API server. The server exposes a REST\+SSE API that the TUI, `bolt run --attach`, and `bolt attach` can connect to. Bind on `0.0.0.0` to make it reachable from other machines — always set `BOLT_SERVER_PASSWORD` when doing so.
-
-  ```bash
-  bolt serve
-  bolt serve --hostname 0.0.0.0 --port 4096
-  bolt serve --mdns
-  ```
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--hostname` | string | Address to bind (default: `127.0.0.1`) |
-  | `--port` | number | Port to listen on (random if omitted) |
-  | `--mdns` | boolean | Enable mDNS service discovery (defaults hostname to `0.0.0.0`) |
-  | `--mdns-domain` | string | Custom domain name for mDNS service (default: `opencode.local`) |
-  | `--cors` | string\[\] | Additional domains to allow for CORS |
-
-  <Warning>
-    `BOLT_SERVER_PASSWORD` is not set by default. The server will log a warning and accept all connections until you set it.
-  </Warning>
-</Accordion>
-
-<Accordion title="bolt web">
-  Start the Bolt server and immediately open the web UI in your default browser. Accepts the same network flags as `bolt serve`.
-
-  ```bash
-  bolt web
-  bolt web --hostname 0.0.0.0 --port 4096
-  bolt web --mdns
-  ```
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--hostname` | string | Address to bind (default: `127.0.0.1`) |
-  | `--port` | number | Port to listen on (random if omitted) |
-  | `--mdns` | boolean | Enable mDNS service discovery (defaults hostname to `0.0.0.0`) |
-  | `--mdns-domain` | string | Custom domain name for mDNS service (default: `opencode.local`) |
-  | `--cors` | string\[\] | Additional domains to allow for CORS |
-</Accordion>
-
-<Accordion title="bolt session">
-  Manage Bolt sessions stored in the local SQLite database.
-
-  **Subcommands**
-
-  ```bash
-  bolt session list                         # list all root sessions
-  bolt session list --format json           # machine-readable output
-  bolt session list -n 20                   # show 20 most recent sessions
-  bolt session delete <sessionID>           # permanently delete a session
-  ```
-
-  **`bolt session list` flags**
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--max-count` | `-n` | number | Limit output to the N most recent sessions |
-  | `--format` |  | `table`\|`json` | Output format (default: `table`) |
-</Accordion>
-
-<Accordion title="bolt agent">
-  List and create custom agents. Agents are markdown files with YAML frontmatter that define a system prompt, permissions, and mode.
-
-  ```bash
-  bolt agent list                           # list all available agents
-  bolt agent create                         # interactive agent creation wizard
-  
-  # Non-interactive creation
-  bolt agent create \
-    --description "Audit code for security vulnerabilities" \
-    --mode primary \
-    --permissions "read,grep,glob" \
-    --model anthropic/claude-opus-4-5 \
-    --path .bolt/agents
-  ```
-
-  **`bolt agent create` flags**
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--path` |  | string | Directory path to write the agent file |
-  | `--description` |  | string | Natural language description of what the agent should do |
-  | `--mode` |  | `all`\|`primary`\|`subagent` | Whether the agent acts as a primary agent, subagent, or both |
-  | `--permissions` | `--tools` | string | Comma-separated list of allowed permissions (default: all) |
-  | `--model` | `-m` | string | Model to use in `provider/model` format |
-</Accordion>
-
-<Accordion title="bolt providers (alias: auth)">
-  Interactively manage AI provider credentials. Credentials are stored in your OS data directory (`~/.local/share/bolt/auth.json` on Linux, `~/Library/Application Support/bolt/auth.json` on macOS).
-
-  ```bash
-  bolt providers             # interactive credential management menu
-  bolt auth                  # alias for bolt providers
-  
-  bolt providers list        # list stored credentials and active env vars
-  bolt providers login       # add a credential for a provider
-  bolt providers login --provider anthropic
-  bolt providers login --provider anthropic --method "API Key"
-  bolt providers logout      # remove a stored credential
-  bolt providers logout --provider openai
-  ```
-</Accordion>
-
-<Accordion title="bolt models [provider]">
-  List all models available from your configured providers.
-
-  ```bash
-  bolt models                         # list all models from all providers
-  bolt models anthropic               # filter to a single provider
-  bolt models --verbose               # include cost metadata in output
-  bolt models --refresh               # force-refresh the models.dev cache
-  ```
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--verbose` | boolean | Include JSON cost metadata for each model |
-  | `--refresh` | boolean | Refresh the models cache from models.dev |
-</Accordion>
-
-<Accordion title="bolt mcp">
-  Manage Model Context Protocol (MCP) servers. Bolt supports both remote (HTTP/SSE) servers with OAuth and local (stdio) servers.
-
-  ```bash
-  bolt mcp add                              # interactive wizard to add a server
-  bolt mcp add my-server --url https://mcp.example.com/tools
-  bolt mcp add local-server -- npx @my-org/mcp-server
-  bolt mcp list                             # show all configured servers and status
-  bolt mcp auth <name>                      # run the OAuth flow for a server
-  bolt mcp auth list                        # show OAuth status for all servers
-  bolt mcp logout <name>                    # remove stored OAuth tokens
-  bolt mcp debug <name>                     # probe connectivity and OAuth config
-  ```
-
-  **`bolt mcp add` flags**
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--url` | string | URL for a remote MCP server |
-  | `--env` | string\[\] | Environment variable for a local server (`KEY=VALUE`) |
-  | `--header` | string\[\] | HTTP header for a remote server (`KEY=VALUE`) |
-</Accordion>
-
-<Accordion title="bolt plugin install <module>">
-  Install a Bolt plugin from npm and update the relevant config file. Plugins can extend the TUI, add new slash-commands, or register new providers.
-
-  ```bash
-  bolt plugin install @my-org/bolt-plugin
-  bolt plugin install @my-org/bolt-plugin --global      # install to global config
-  bolt plugin install @my-org/bolt-plugin --force        # replace existing version
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--global` | `-g` | boolean | Add the plugin to the global config instead of the project config |
-  | `--force` | `-f` | boolean | Replace an already-configured plugin version |
-</Accordion>
-
-<Accordion title="bolt github">
-  Manage the Bolt GitHub Actions integration, which allows Bolt to respond to pull requests, issues, and other GitHub events.
-
-  ```bash
-  bolt github install           # scaffold the GitHub Actions workflow in your repo
-  bolt github run               # run the GitHub agent locally (for testing)
-  bolt github run --event pull_request --token ghp_xxx
-  ```
-
-  **`bolt github run` flags**
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--event` | string | GitHub event name to simulate (e.g. `pull_request`) |
-  | `--token` | string | GitHub personal access token |
-</Accordion>
-
-<Accordion title="bolt pr <number>">
-  Check out a GitHub pull request as a local branch using the `gh` CLI, then launch Bolt in the checked-out directory. If the PR description contains a session share link, Bolt imports that session automatically.
-
-  ```bash
-  bolt pr 123
-  ```
-
-  <Note>
-    This command requires the [GitHub CLI (`gh`)](https://cli.github.com/) to be installed and authenticated.
-  </Note>
-</Accordion>
-
-<Accordion title="bolt commit">
-  Generate a commit message for staged (or all tracked) changes using an AI model and then commit. The model inspects recent commit history for style context.
-
-  ```bash
-  bolt commit                        # commit staged changes
-  bolt commit --all                  # stage and commit all tracked changes
-  bolt commit --dry-run              # print the generated message without committing
-  bolt commit --model openai/gpt-4o  # use a specific model
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--all` | `-a` | boolean | Commit all tracked changes, not just staged ones |
-  | `--dry-run` |  | boolean | Print the generated message without committing |
-  | `--model` | `-m` | string | Model to use in `provider/model` format |
-</Accordion>
-
-<Accordion title="bolt review">
-  Run an AI code review on a diff and exit with code `0` (pass) or `1` (fail). The `code-review` agent examines the diff for correctness, style, and security issues, then emits a `Verdict: PASS` or `Verdict: FAIL` line.
-
-  ```bash
-  bolt review                          # review uncommitted changes (git diff HEAD)
-  bolt review --staged                 # review only staged changes
-  bolt review --branch main            # review changes since merge base with main
-  bolt review --model openai/o3        # use a specific model
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--staged` |  | boolean | Review staged changes only |
-  | `--branch` |  | string | Review changes since the merge base with this branch |
-  | `--model` | `-m` | string | Model to use in `provider/model` format |
-
-  <Note>
-    Exit codes: `0` = PASS, `1` = FAIL, `2` = verdict could not be determined.
-  </Note>
-</Accordion>
-
-<Accordion title="bolt export [sessionID]">
-  Export a session as JSON to stdout. Useful for archiving, sharing, or feeding into other tools. Pass `--sanitize` before sharing publicly to redact file paths, prompts, and other sensitive transcript content.
-
-  ```bash
-  bolt export                          # interactive session picker, then write to stdout
-  bolt export abc123                   # export a specific session
-  bolt export abc123 --sanitize        # redact secrets and paths
-  bolt export abc123 > session.json    # write to a file
-  ```
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--sanitize` | boolean | Redact sensitive data (file paths, prompt text, tool I/O) before exporting |
-</Accordion>
-
-<Accordion title="bolt import <file>">
-  Import a previously exported session into the local database. Accepts either a local JSON file or a session share URL.
-
-  ```bash
-  bolt import ./session.json
-  bolt import https://opncd.ai/share/abc123
-  ```
-</Accordion>
-
-<Accordion title="bolt stats">
-  Display aggregate token usage and cost statistics across all sessions. Output includes an overview table, cost and token breakdown, model usage, and a tool usage bar chart.
-
-  ```bash
-  bolt stats
-  bolt stats --days 7             # last 7 days only
-  bolt stats --models             # include per-model breakdown
-  bolt stats --models 5           # show top 5 models
-  bolt stats --tools 10           # show top 10 tools
-  bolt stats --project ""         # filter to the current project only
-  ```
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--days` | number | Limit to the last N days (default: all time) |
-  | `--tools` | number | Number of tools to show in the tool usage chart |
-  | `--models` | boolean\|number | Show model statistics; pass a number to cap the list |
-  | `--project` | string | Filter by project ID; empty string means current project |
-</Accordion>
-
-<Accordion title="bolt logs">
-  Print the Bolt application log. The log is stored at the OS log directory (e.g. `~/.local/state/bolt/opencode.log`).
-
-  ```bash
-  bolt logs                        # print the last 1000 lines
-  bolt logs --tail 200             # print the last 200 lines
-  bolt logs --follow               # stream new lines as they are written
-  bolt logs -f                     # alias for --follow
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--tail` |  | number | Number of trailing lines to print (default: 1000) |
-  | `--follow` | `-f` | boolean | Stream new log lines in real time |
-</Accordion>
-
-<Accordion title="bolt db [query]">
-  Query or inspect the local SQLite session database directly.
-
-  ```bash
-  bolt db path                                  # print the database file path
-  bolt db "SELECT id, title FROM sessions"      # run a SQL query (TSV output)
-  bolt db "SELECT * FROM sessions" --format json
-  ```
-
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--format` | `json`\|`tsv` | Output format for query results (default: `tsv`) |
-</Accordion>
-
-<Accordion title="bolt upgrade [target]">
-  Upgrade Bolt to the latest release or a specific version. Bolt detects the installation method automatically and uses the appropriate package manager.
-
-  ```bash
-  bolt upgrade                         # upgrade to the latest version
-  bolt upgrade 0.2.0                   # upgrade (or downgrade) to a specific version
-  bolt upgrade --method npm            # force a specific installation method
-  bolt upgrade --method curl
-  ```
-
-  | Flag | Alias | Type | Description |
-  | --- | --- | --- | --- |
-  | `--method` | `-m` | `curl`\|`npm`\|`pnpm`\|`bun`\|`brew`\|`choco`\|`scoop` | Installation method to use |
-</Accordion>
-
-<Accordion title="bolt uninstall">
-  Remove the Bolt binary and all associated data.
-
-  ```bash
-  bolt uninstall
-  ```
-</Accordion>
+## Core
 
 <Accordion title="bolt completion">
-  Generate a shell completion script for `bash`, `zsh`, or `fish`.
+  Generate shell completion script (pass 'fish' for fish).
 
-  ```bash
-  bolt completion >> ~/.bashrc
-  bolt completion >> ~/.zshrc
-  ```
-</Accordion>
+  ```text
+  Unknown argument: completion
+   /$$$$$$$   /$$$$$$  /$$    /$$$$$$$$       /$$$$$$  /$$       /$$$$$$
+  | $$__  $$ /$$__  $$| $$   |__  $$__/      /$$__  $$| $$      |_  $$_/
+  | $$  \ $$| $$  \ $$| $$    | | $$        | $$  \__/| $$        | $$
+  | $$$$$$$ | $$  | $$| $$      | $$        | $$      | $$        | $$
+  | $$__  $$| $$  | $$| $$      | $$        | $$      | $$        | $$
+  | $$  \ $$| $$  | $$| $$      | $$        | $$    $$| $$        | $$
+  | $$$$$$$/|  $$$$$$/| $$$$$$$$| $$        |  $$$$$$/| $$$$$$$$ /$$$$$$
+  |_______/  \______/ |________/|__/         \______/ |________/|______/
 
-<Accordion title="bolt debug">
-  A collection of troubleshooting and introspection subcommands. Useful when filing bug reports or diagnosing unexpected behavior.
+  Commands:
+    bolt completion                     generate shell completion script (pass 'fish' for fish)
+    bolt acp                            start ACP (Agent Client Protocol) server
+    bolt mcp                            manage MCP (Model Context Protocol) servers
+    bolt [project]                      start bolt tui                                       [default]
+    bolt attach <url>                   attach to a running bolt server
+    bolt run [message..]                run bolt with a message
+    bolt ask <question..>               ask a one-shot question and print only the answer to stdout
+    bolt arena [message..]              race agents on the same task in isolated worktrees and keep
+                                        the best result
+    bolt init [directory]               initialize bolt config, agents, and commands for a project
+    bolt debug                          debugging and troubleshooting tools
+    bolt config                         inspect and manage configuration
+    bolt providers                      manage AI providers and credentials            [aliases: auth]
+    bolt agent                          manage agents
+    bolt upgrade [target]               upgrade bolt to the latest or a specific version
+                                                                                     [aliases: update]
+    bolt uninstall                      uninstall bolt and remove all related files
+    bolt serve                          starts a headless bolt server
+    bolt daemon                         keep a warm bolt server running so one-shot commands skip boot
+    bolt warm                           pre-load project context and prompt cache before you start
+                                        typing
+    bolt web                            start bolt server and open web interface
+    bolt models [provider]              list all available models
+    bolt stats                          show token usage and cost statistics
+    bolt eval [paths..]                 run agent evaluation cases and grade the results
+    bolt logs                           print the agent log
+    bolt map                            draw a markdown + mermaid map of source directory dependencies
+    bolt arch                           detect imports that violate the declared module contract
+    bolt migrate [package] [target]     generate a major-version upgrade playbook for a dependency
+    bolt deps                           report outdated, vulnerable, deprecated, and abandoned
+                                        dependencies
+    bolt diff-gate                      review a diff from stdin and exit 1 when defects reach a
+                                        severity threshold
+    bolt owners                         map directory ownership from git history and CODEOWNERS
+    bolt hotspots                       flag files with high churn and high complexity for refactoring
+    bolt packages                       map the monorepo package graph and its build order
+    bolt api [ref]                      diff the exported API surface against a git ref
+    bolt index [query]                  build an incrementally updated whole-repo vector index and
+                                        query it
+    bolt dead                           find unused exports ranked by deletion safety
+    bolt dupes                          find near-identical code blocks across the repo
+    bolt exec                           run a markdown playbook of steps non-interactively, stopping
+                                        on the first failure
+    bolt export [sessionID]             export session data as JSON, markdown, JSONL, or an HTML
+                                        replay
+    bolt import <file>                  import session data from JSON file or URL
+    bolt github                         manage GitHub agent
+    bolt pr <number>                    fetch and checkout a GitHub PR branch, then run bolt
+    bolt push <sessionID> <url>         push a session to a bolt server on another machine
+    bolt pull <sessionID> <url>         pull a session from a bolt server on another machine
+    bolt stack                          split the current branch into an ordered stack of reviewable
+                                        branches
+    bolt commit                         commit staged changes with a generated message
+    bolt commitlint                     lint commit messages against this repo's own conventions
+    bolt port <commit>                  port a fix onto other branches with cherry-pick
+    bolt split                          split a messy worktree into logical commits with the agent
+    bolt review                         review code changes with the code-review agent
+    bolt blast                          estimate the blast radius of pending changes
+    bolt undo                           roll back the last agent turn (files and conversation)
+    bolt analyze                        run lint, typecheck, and dead-code checks over the current
+                                        diff before handoff
+    bolt checkpoint                     save and rewind named checkpoints
+    bolt rebase                         plan an interactive rebase with the agent and explain every
+                                        decision
+    bolt invariants <action> [files..]  state invariants before a refactor and verify them after
+    bolt resolve [file..]               resolve merge conflicts by intent with the agent
+    bolt codemod [description]          generate an ast-grep transform, preview the diff, and apply it
+                                        with --apply
+    bolt asserts [files..]              find tests with missing or weak assertions and suggest better
+                                        ones
+    bolt pipeline <task>                run a plan, code, review agent pipeline on a task
+    bolt refactor <instruction>         refactor with a test-verified loop: change, run, verify,
+                                        repeat until green
+    bolt tighten [files..]              find loose types in changed code and propose stricter ones
+    bolt learn                          learn this repository's conventions into project memory
+    bolt drift                          flag READMEs and comments that the current diff just made
+                                        stale
+    bolt memory                         inspect project memory
+    bolt watch <command>                rerun a command on every file change, optionally fixing
+                                        failures with the agent
+    bolt jobs <action> [id]             manage background jobs started with run --background
+    bolt cron <action> [args..]         schedule recurring agent chores (dependency bumps, triage,
+                                        drafts)
+    bolt flaky <command>                detect flaky tests by rerunning a command, and quarantine
+                                        offenders
+    bolt proptest <file>                generate property-based tests for the pure functions in a file
+    bolt guard <bug>                    generate a failing regression test from a bug description
+                                        before fixing it
+    bolt mutate <file>                  mutate a file and rerun the tests to prove they catch bugs
+    bolt mux [dirs..]                   run parallel bolt sessions in tmux split panes
+    bolt bisect <command>               find the commit that broke a command, show blame, and propose
+                                        a fix
+    bolt batch <file>                   run a queue of prompts sequentially or in parallel with a
+                                        summary table
+    bolt why <question>                 answer when and why a behavior changed, with commit evidence
+    bolt bench <command>                benchmark a command on this change and on the base ref, and
+                                        flag regressions
+    bolt figma <url>                    generate components from a Figma design node
+    bolt pair                           share a live session between two terminals
+    bolt session                        manage sessions                            [aliases: sessions]
+    bolt resume [sessionID]             resume a session, with a fuzzy picker when no id is given
+    bolt grep <pattern>                 full-text search across every session transcript on disk
+    bolt tag <sessionID> [tags..]       tag a session (alias of session tag)
+    bolt fork <sessionID> [messageID]   fork a session at any message and continue down a different
+                                        path
+    bolt submodules                     report submodule drift and bring submodules in sync
+    bolt worktree                       create, list, and clean agent worktrees
+    bolt plugin <module>                install plugin and update config               [aliases: plug]
+    bolt db                             database tools
+    bolt alias [entry]                  list aliases, show one, or set one with name="expansion"
 
-  ```bash
-  bolt debug info          # print version, OS, terminal, and loaded plugins
-  bolt debug config        # print the fully-resolved configuration
-  bolt debug paths         # print all global data/config/cache directories
-  bolt debug lsp           # inspect LSP state
-  bolt debug ripgrep       # test ripgrep availability
-  bolt debug file          # inspect file tool behavior
-  bolt debug scrap         # scratchpad for debugging
-  bolt debug skill         # inspect available skills
-  bolt debug snapshot      # inspect session snapshots
-  bolt debug startup       # measure startup time
-  bolt debug agents        # list agents and their resolved config
-  bolt debug v2            # inspect V2 session core state
-  bolt debug wait          # block indefinitely (for process debugging)
+  Positionals:
+    project  path to start bolt in                                                            [string]
+
+  Options:
+    -h, --help          show help                                                            [boolean]
+    -v, --version       show version number                                                  [boolean]
+        --print-logs    print logs to stderr                                                 [boolean]
+        --log-level     log level                 [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure          run without external plugins                                         [boolean]
+        --profile       use a named config profile                                            [string]
+        --quiet         suppress non-essential output on stderr (errors still print)         [boolean]
+        --verbose       print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline       fail fast on network access instead of hanging                       [boolean]
+        --port          port to listen on                                        [number] [default: 0]
+        --hostname      hostname to listen on                          [string] [default: "127.0.0.1"]
+        --mdns          enable mDNS service discovery (defaults hostname to 0.0.0.0)
+                                                                            [boolean] [default: false]
+        --mdns-domain   custom domain name for mDNS service (default: opencode.local)
+                                                                  [string] [default: "opencode.local"]
+        --cors          additional domains to allow for CORS                     [array] [default: []]
+    -m, --model         model to use in the format of provider/model                          [string]
+    -c, --continue      continue the last session                                            [boolean]
+    -s, --session       session id to continue                                                [string]
+        --fork          fork the session when continuing (use with --continue or --session)  [boolean]
+        --prompt        prompt to use                                                         [string]
+        --agent         agent to use                                                          [string]
+        --auto          auto-approve permissions that are not explicitly denied (dangerous!)
+                                                                            [boolean] [default: false]
+        --mini          start the minimal interactive interface             [boolean] [default: false]
+        --no-replay     disable mini session history replay on resume and after resize       [boolean]
+        --replay-limit  cap visible mini replay to the newest N messages                      [number]
   ```
 </Accordion>
 
 <Accordion title="bolt acp">
-  Start an ACP (Agent Client Protocol) server. ACP is the protocol used by editor integrations such as [Zed](https://zed.dev) to communicate with Bolt over stdin/stdout.
+  Start ACP (Agent Client Protocol) server.
 
-  ```bash
+  ```text
   bolt acp
-  bolt acp --cwd /path/to/project
-  ```
 
-  | Flag | Type | Description |
-  | --- | --- | --- |
-  | `--cwd` | string | Working directory for the server (default: `process.cwd()`) |
-  | `--hostname` | string | Bind hostname (default: `127.0.0.1`) |
-  | `--port` | number | Bind port |
-  | `--mdns` | boolean | Enable mDNS service discovery |
-  | `--mdns-domain` | string | Custom domain name for mDNS service (default: `opencode.local`) |
-  | `--cors` | string\[\] | Additional domains to allow for CORS |
+  start ACP (Agent Client Protocol) server
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+        --port         port to listen on                                         [number] [default: 0]
+        --hostname     hostname to listen on                           [string] [default: "127.0.0.1"]
+        --mdns         enable mDNS service discovery (defaults hostname to 0.0.0.0)
+                                                                            [boolean] [default: false]
+        --mdns-domain  custom domain name for mDNS service (default: opencode.local)
+                                                                  [string] [default: "opencode.local"]
+        --cors         additional domains to allow for CORS                      [array] [default: []]
+        --cwd          working directory               [string] [default: "/home/blacksmith/bolt-cli"]
+  ```
+</Accordion>
+
+<Accordion title="bolt mcp">
+  Manage MCP (Model Context Protocol) servers.
+
+  ```text
+  bolt mcp
+
+  manage MCP (Model Context Protocol) servers
+
+  Commands:
+    bolt mcp add [name]     add an MCP server
+    bolt mcp list           list MCP servers and their status                            [aliases: ls]
+    bolt mcp auth [name]    authenticate with an OAuth-enabled MCP server
+    bolt mcp logout [name]  remove OAuth credentials for an MCP server
+    bolt mcp debug <name>   debug OAuth connection for an MCP server
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt attach">
+  Attach to a running bolt server.
+
+  ```text
+  bolt attach <url>
+
+  attach to a running bolt server
+
+  Positionals:
+    url  http://localhost:4096                                                     [string] [required]
+
+  Options:
+    -h, --help          show help                                                            [boolean]
+    -v, --version       show version number                                                  [boolean]
+        --print-logs    print logs to stderr                                                 [boolean]
+        --log-level     log level                 [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure          run without external plugins                                         [boolean]
+        --profile       use a named config profile                                            [string]
+        --quiet         suppress non-essential output on stderr (errors still print)         [boolean]
+        --verbose       print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline       fail fast on network access instead of hanging                       [boolean]
+        --dir           directory to run in                                                   [string]
+    -c, --continue      continue the last session                                            [boolean]
+    -s, --session       session id to continue                                                [string]
+        --fork          fork the session when continuing (use with --continue or --session)  [boolean]
+    -p, --password      basic auth password (defaults to OPENCODE_SERVER_PASSWORD)            [string]
+    -u, --username      basic auth username (defaults to OPENCODE_SERVER_USERNAME or 'opencode')
+                                                                                              [string]
+        --mini          start the minimal interactive interface             [boolean] [default: false]
+        --no-replay     disable mini session history replay on resume and after resize       [boolean]
+        --replay-limit  cap visible mini replay to the newest N messages                      [number]
+  ```
+</Accordion>
+
+<Accordion title="bolt run">
+  Run bolt with a message.
+
+  ```text
+  bolt run [message..]
+
+  run bolt with a message
+
+  Positionals:
+    message  message to send                                                     [array] [default: []]
+
+  Options:
+    -h, --help              show help                                                        [boolean]
+    -v, --version           show version number                                              [boolean]
+        --print-logs        print logs to stderr                                             [boolean]
+        --log-level         log level             [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure              run without external plugins                                     [boolean]
+        --profile           use a named config profile                                        [string]
+        --quiet             suppress non-essential output on stderr (errors still print)     [boolean]
+        --verbose           print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline           fail fast on network access instead of hanging                   [boolean]
+        --command           the command to run, use message for args                          [string]
+    -c, --continue          continue the last session                                        [boolean]
+    -s, --session           session id to continue                                            [string]
+        --fork              fork the session before continuing (requires --continue or --session)
+                                                                                             [boolean]
+        --share             share the session                                                [boolean]
+    -m, --model             model to use in the format of provider/model (or 'auto' for cheapest
+                            available)                                                        [string]
+        --best-of           comma-separated provider/model list: run the same task on every model in
+                            parallel, rank the results with a judge (--model, or the first entry),
+                            keep the winner                                                   [string]
+        --agent             agent to use (or 'auto' for automatic selection)                  [string]
+        --auto-agent        route the prompt to the best matching agent based on agent descriptions
+                                                                            [boolean] [default: false]
+        --format            format: default (formatted) or json (raw JSON events)
+                                            [string] [choices: "default", "json"] [default: "default"]
+        --json              emit a versioned JSON envelope on stdout:
+                            {"version":1,"ok":true,"result":...} on success,
+                            {"version":1,"ok":false,"error":{"name":...,"message":...}} on failure
+                                                                            [boolean] [default: false]
+        --porcelain         guarantee line-oriented, grep-safe output that never changes shape between
+                            versions (one record per line, tab-separated fields, first field is the
+                            record kind)                                    [boolean] [default: false]
+        --emit              emit machine-consumable output on stdout after the run: 'context' prints
+                            the run's findings so they can be piped into another run (`bolt run ...
+                            --emit context | bolt run ...`)              [string] [choices: "context"]
+    -f, --file              file(s) to attach to message                                       [array]
+        --title             title for the session (uses truncated prompt if no value provided)[string]
+        --max-cost          abort the run once its cost in USD reaches this budget            [number]
+        --timeout           abort the run after this many seconds, capturing any partial result
+                                                                                              [number]
+        --retries           retry a failed or timed-out run this many times      [number] [default: 0]
+        --max-tokens        abort the run once its total token usage reaches this budget      [number]
+        --output-schema     JSON Schema file the final answer must validate against (retries until it
+                            does, bounded)                                                    [string]
+        --cost-report       report per-run tokens, cache hits, dollars, and wall time to stderr (or as
+                            a cost_report JSON event)                       [boolean] [default: false]
+        --attach            attach to a running bolt server (e.g., http://localhost:4096), or inject
+                            file/dir paths as context without mentioning them in the prompt
+                            (repeatable)                                                       [array]
+        --host              run the agent on a remote machine over ssh (e.g., ssh://dev-box); requires
+                            bolt preinstalled on the remote                                   [string]
+        --voice             record a voice prompt and transcribe it locally with whisper.cpp (press
+                            Enter to stop)                                  [boolean] [default: false]
+    -p, --password          basic auth password (defaults to OPENCODE_SERVER_PASSWORD)        [string]
+    -u, --username          basic auth username (defaults to OPENCODE_SERVER_USERNAME or 'opencode')
+                                                                                              [string]
+        --dir               directory to run in, path on remote server if attaching           [string]
+        --port              port for the local server (defaults to random port if no value provided)
+                                                                                              [number]
+        --variant           model variant (provider-specific reasoning effort, e.g., high, max,
+                            minimal)                                                          [string]
+        --thinking          show thinking blocks                                             [boolean]
+    -i, --interactive       run in direct interactive split-footer mode     [boolean] [default: false]
+        --auto              auto-approve permissions that are not explicitly denied (dangerous!)
+                                                                            [boolean] [default: false]
+        --dry-run           show every file write and command the plan would execute without doing it
+                                                                            [boolean] [default: false]
+        --plan-only         CI gate: dry-run the prompt, print the full intended diff and commands,
+                            and exit nonzero if anything looks destructive  [boolean] [default: false]
+        --background, --bg  run detached as a background job (manage with bolt jobs list/tail/kill)
+                                                                            [boolean] [default: false]
+
+  exit codes: 0 success, 1 failure, 3 budget hit (--max-cost/--max-tokens)
+  ```
+</Accordion>
+
+<Accordion title="bolt ask">
+  Ask a one-shot question and print only the answer to stdout.
+
+  ```text
+  bolt ask <question..>
+
+  ask a one-shot question and print only the answer to stdout
+
+  Positionals:
+    question  the question to ask                                     [array] [required] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -m, --model       model to use in the format of provider/model                            [string]
+        --agent       agent to answer with                                                    [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt serve">
+  Starts a headless bolt server.
+
+  ```text
+  bolt serve
+
+  starts a headless bolt server
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+        --port         port to listen on                                         [number] [default: 0]
+        --hostname     hostname to listen on                           [string] [default: "127.0.0.1"]
+        --mdns         enable mDNS service discovery (defaults hostname to 0.0.0.0)
+                                                                            [boolean] [default: false]
+        --mdns-domain  custom domain name for mDNS service (default: opencode.local)
+                                                                  [string] [default: "opencode.local"]
+        --cors         additional domains to allow for CORS                      [array] [default: []]
+        --api          print the stable REST API surface as JSON, then keep serving
+                                                                            [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt daemon">
+  Keep a warm bolt server running so one-shot commands skip boot.
+
+  ```text
+  bolt daemon
+
+  keep a warm bolt server running so one-shot commands skip boot
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+        --port         port to listen on                                         [number] [default: 0]
+        --hostname     hostname to listen on                           [string] [default: "127.0.0.1"]
+        --mdns         enable mDNS service discovery (defaults hostname to 0.0.0.0)
+                                                                            [boolean] [default: false]
+        --mdns-domain  custom domain name for mDNS service (default: opencode.local)
+                                                                  [string] [default: "opencode.local"]
+        --cors         additional domains to allow for CORS                      [array] [default: []]
+        --stop         stop the running daemon                                               [boolean]
+        --status       print the running daemon, if any                                      [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt warm">
+  Pre-load project context and prompt cache before you start typing.
+
+  ```text
+  bolt warm
+
+  pre-load project context and prompt cache before you start typing
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --index       refresh the vector index (disable with --no-index)     [boolean] [default: true]
+  ```
+</Accordion>
+
+<Accordion title="bolt web">
+  Start bolt server and open web interface.
+
+  ```text
+  bolt web
+
+  start bolt server and open web interface
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+        --port         port to listen on                                         [number] [default: 0]
+        --hostname     hostname to listen on                           [string] [default: "127.0.0.1"]
+        --mdns         enable mDNS service discovery (defaults hostname to 0.0.0.0)
+                                                                            [boolean] [default: false]
+        --mdns-domain  custom domain name for mDNS service (default: opencode.local)
+                                                                  [string] [default: "opencode.local"]
+        --cors         additional domains to allow for CORS                      [array] [default: []]
+  ```
+</Accordion>
+
+## Sessions
+
+<Accordion title="bolt stats">
+  Show token usage and cost statistics.
+
+  ```text
+  bolt stats
+
+  show token usage and cost statistics
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --days        show stats for the last N days (default: all time)                      [number]
+        --tools       number of tools to show (default: all)                                  [number]
+        --models      show model statistics (default: hidden). Pass a number to show top N, otherwise
+                      shows all
+        --project     filter by project (default: all projects, empty string: current project)[string]
+        --json        emit a versioned JSON envelope on stdout: {"version":1,"ok":true,"result":...}
+                      on success, {"version":1,"ok":false,"error":{"name":...,"message":...}} on
+                      failure                                               [boolean] [default: false]
+        --porcelain   guarantee line-oriented, grep-safe output that never changes shape between
+                      versions (one record per line, tab-separated fields, first field is the record
+                      kind)                                                 [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt export">
+  Export session data as JSON, markdown, JSONL, or an HTML replay.
+
+  ```text
+  bolt export [sessionID]
+
+  export session data as JSON, markdown, JSONL, or an HTML replay
+
+  Positionals:
+    sessionID  session id to export                                                           [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --sanitize    redact sensitive transcript and file data                              [boolean]
+        --html        write a self-contained HTML replay instead of JSON                     [boolean]
+        --md          print the transcript as clean markdown                                 [boolean]
+        --jsonl       print one JSON message per line for piping                             [boolean]
+        --out         output file for the HTML replay                [string] [default: "replay.html"]
+        --json        emit a versioned JSON envelope on stdout: {"version":1,"ok":true,"result":...}
+                      on success, {"version":1,"ok":false,"error":{"name":...,"message":...}} on
+                      failure                                               [boolean] [default: false]
+        --porcelain   guarantee line-oriented, grep-safe output that never changes shape between
+                      versions (one record per line, tab-separated fields, first field is the record
+                      kind)                                                 [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt import">
+  Import session data from JSON file or URL.
+
+  ```text
+  bolt import <file>
+
+  import session data from JSON file or URL
+
+  Positionals:
+    file  path to JSON file or share URL                                           [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt push">
+  Push a session to a bolt server on another machine.
+
+  ```text
+  bolt push <sessionID> <url>
+
+  push a session to a bolt server on another machine
+
+  Positionals:
+    sessionID  session id to push                                                  [string] [required]
+    url        remote bolt server url (start one there with: bolt serve)           [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -p, --password    basic auth password (defaults to OPENCODE_SERVER_PASSWORD)              [string]
+    -u, --username    basic auth username (defaults to OPENCODE_SERVER_USERNAME or 'opencode')[string]
+        --dir         project directory on the remote machine (defaults to the remote server's working
+                      directory)                                                              [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt pull">
+  Pull a session from a bolt server on another machine.
+
+  ```text
+  bolt pull <sessionID> <url>
+
+  pull a session from a bolt server on another machine
+
+  Positionals:
+    sessionID  session id to pull                                                  [string] [required]
+    url        remote bolt server url (start one there with: bolt serve)           [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -p, --password    basic auth password (defaults to OPENCODE_SERVER_PASSWORD)              [string]
+    -u, --username    basic auth username (defaults to OPENCODE_SERVER_USERNAME or 'opencode')[string]
+        --dir         project directory on the remote machine (defaults to the remote server's working
+                      directory)                                                              [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt session">
+  Manage sessions [aliases: sessions].
+
+  ```text
+  bolt session
+
+  manage sessions
+
+  Commands:
+    bolt session list                            list sessions                           [aliases: ls]
+    bolt session delete <sessionID>              delete a session
+    bolt session branch <sessionID> [messageID]  branch a session into a new one sharing its prefix
+    bolt session tag <sessionID> [tags..]        add, remove, or list session tags
+    bolt session prune                           archive sessions older than a retention window
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt resume">
+  Resume a session, with a fuzzy picker when no id is given.
+
+  ```text
+  bolt resume [sessionID]
+
+  resume a session, with a fuzzy picker when no id is given
+
+  Positionals:
+    sessionID  session id to resume; omit to pick interactively                               [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt grep">
+  Full-text search across every session transcript on disk.
+
+  ```text
+  bolt grep <pattern>
+
+  full-text search across every session transcript on disk
+
+  Positionals:
+    pattern  regular expression to search for                                      [string] [required]
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+    -i, --ignore-case  case-insensitive matching                            [boolean] [default: false]
+        --limit        stop after this many matching lines                                    [number]
+        --json         output matches as JSON                               [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt tag">
+  Tag a session (alias of session tag).
+
+  ```text
+  bolt tag <sessionID> [tags..]
+
+  tag a session (alias of session tag)
+
+  Positionals:
+    sessionID  session id to tag                                                   [string] [required]
+    tags       tags to add; omit to list the session's tags                      [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --remove      remove the given tags instead of adding them          [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt fork">
+  Fork a session at any message and continue down a different path.
+
+  ```text
+  bolt fork <sessionID> [messageID]
+
+  fork a session at any message and continue down a different path
+
+  Positionals:
+    sessionID  session id to fork                                                  [string] [required]
+    messageID  fork at this message (inclusive); defaults to the full history                 [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --resume      open the fork interactively right away                [boolean] [default: false]
+  ```
+</Accordion>
+
+## Scripting and CI
+
+<Accordion title="bolt diff-gate">
+  Review a diff from stdin and exit 1 when defects reach a severity threshold.
+
+  ```text
+  bolt diff-gate
+
+  review a diff from stdin and exit 1 when defects reach a severity threshold
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --threshold   lowest severity that fails the gate
+                                   [string] [choices: "minor", "major", "critical"] [default: "major"]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt exec">
+  Run a markdown playbook of steps non-interactively, stopping on the first failure.
+
+  ```text
+  bolt exec
+
+  run a markdown playbook of steps non-interactively, stopping on the first failure
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -f, --file        markdown playbook file to execute                            [string] [required]
+    -m, --model       model to use in the format of provider/model                            [string]
+        --agent       agent to use for every step                                             [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt github">
+  Manage GitHub agent.
+
+  ```text
+  bolt github
+
+  manage GitHub agent
+
+  Commands:
+    bolt github install  install the GitHub agent
+    bolt github run      run the GitHub agent
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt pr">
+  Fetch and checkout a GitHub PR branch, then run bolt.
+
+  ```text
+  bolt pr <number>
+
+  fetch and checkout a GitHub PR branch, then run bolt
+
+  Positionals:
+    number  PR number to checkout                                                  [number] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt stack">
+  Split the current branch into an ordered stack of reviewable branches.
+
+  ```text
+  bolt stack
+
+  split the current branch into an ordered stack of reviewable branches
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --base        base ref for the stack (defaults to the default branch)                 [string]
+        --apply       create the stack branches locally                     [boolean] [default: false]
+        --push        push the created branches to origin (implies --apply; plain push, never force)
+                                                                            [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt commit">
+  Commit staged changes with a generated message.
+
+  ```text
+  bolt commit
+
+  commit staged changes with a generated message
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -a, --all         commit all tracked changes, not just staged ones      [boolean] [default: false]
+        --dry-run     print the generated message without committing        [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt commitlint">
+  Lint commit messages against this repo's own conventions.
+
+  ```text
+  bolt commitlint
+
+  lint commit messages against this repo's own conventions
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --range       commit range to lint (defaults to the merge base with the default branch to
+                      HEAD)                                                                   [string]
+        --history     how many commits of history to learn the conventions from[number] [default: 200]
+  ```
+</Accordion>
+
+<Accordion title="bolt port">
+  Port a fix onto other branches with cherry-pick.
+
+  ```text
+  bolt port <commit>
+
+  port a fix onto other branches with cherry-pick
+
+  Positionals:
+    commit  the commit to port, e.g. the sha of a fix on dev                       [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --to          target branch to port onto (repeatable)         [array] [required] [default: []]
+        --apply       create a port branch per target and cherry-pick onto it
+                                                                            [boolean] [default: false]
+        --push        push the created port branches to origin (plain push, never force)
+                                                                            [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt split">
+  Split a messy worktree into logical commits with the agent.
+
+  ```text
+  bolt split
+
+  split a messy worktree into logical commits with the agent
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --apply       create the planned commits (never pushes)             [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt review">
+  Review code changes with the code-review agent.
+
+  ```text
+  bolt review
+
+  review code changes with the code-review agent
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --staged      review staged changes only                            [boolean] [default: false]
+        --branch      review changes since the merge base with a branch (defaults to the default
+                      branch)                                                                 [string]
+    -m, --model       model to use in the format of provider/model                            [string]
+        --confidence  ask the model to report how confident it is in the review
+                                                                            [boolean] [default: false]
+        --json        emit a versioned JSON envelope on stdout: {"version":1,"ok":true,"result":...}
+                      on success, {"version":1,"ok":false,"error":{"name":...,"message":...}} on
+                      failure                                               [boolean] [default: false]
+        --porcelain   guarantee line-oriented, grep-safe output that never changes shape between
+                      versions (one record per line, tab-separated fields, first field is the record
+                      kind)                                                 [boolean] [default: false]
+
+  exit codes: 0 pass, 1 fail verdict, 2 no verdict determined
+  ```
+</Accordion>
+
+<Accordion title="bolt rebase">
+  Plan an interactive rebase with the agent and explain every decision.
+
+  ```text
+  bolt rebase
+
+  plan an interactive rebase with the agent and explain every decision
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --onto        base ref to rebase onto (defaults to the merge base with the default branch)
+                                                                                              [string]
+        --apply       execute the plan (rewrites local history; never pushes)
+                                                                            [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt watch">
+  Rerun a command on every file change, optionally fixing failures with the agent.
+
+  ```text
+  bolt watch <command>
+
+  rerun a command on every file change, optionally fixing failures with the agent
+
+  Positionals:
+    command  command to run when files change, e.g. "bun test"                     [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --fix         send failures to the agent so it can fix them         [boolean] [default: false]
+        --attempts    max consecutive fix attempts before waiting for a manual change
+                                                                                 [number] [default: 3]
+    -m, --model       model to use for fixes in the format of provider/model                  [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt jobs">
+  Manage background jobs started with run --background.
+
+  ```text
+  bolt jobs <action> [id]
+
+  manage background jobs started with run --background
+
+  Positionals:
+    action  list jobs, tail a job's output, kill a running job, or supervise one with restarts
+                                    [string] [required] [choices: "list", "tail", "kill", "supervise"]
+    id      job id (prefix match)                                                             [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -f, --follow      with tail, stream new output as it is written         [boolean] [default: false]
+        --health      with supervise, an http(s) URL to poll or a command whose exit code marks the
+                      job healthy                                                             [string]
+        --interval    with supervise, seconds between health polls               [number] [default: 5]
+        --retries     with supervise, consecutive health failures before a restart
+                                                                                 [number] [default: 3]
+        --limit       with supervise, maximum restarts before giving up          [number] [default: 5]
+  ```
+</Accordion>
+
+<Accordion title="bolt cron">
+  Schedule recurring agent chores (dependency bumps, triage, drafts).
+
+  ```text
+  bolt cron <action> [args..]
+
+  schedule recurring agent chores (dependency bumps, triage, drafts)
+
+  Positionals:
+    action  add a schedule, list them, remove one, or start the scheduler
+                                           [string] [required] [choices: "add", "list", "rm", "start"]
+    args    add: "<schedule>" "<prompt>"; rm: <id>                               [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt batch">
+  Run a queue of prompts sequentially or in parallel with a summary table.
+
+  ```text
+  bolt batch <file>
+
+  run a queue of prompts sequentially or in parallel with a summary table
+
+  Positionals:
+    file  file with one prompt per line (# comments, backslash continuations)      [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --parallel    number of prompts to run concurrently                      [number] [default: 1]
+    -m, --model       model to use in the format of provider/model                            [string]
+        --agent       agent to use for every prompt                                           [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt submodules">
+  Report submodule drift and bring submodules in sync.
+
+  ```text
+  bolt submodules
+
+  report submodule drift and bring submodules in sync
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --sync        run git submodule sync and update --init --recursive  [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt worktree">
+  Create, list, and clean agent worktrees.
+
+  ```text
+  bolt worktree
+
+  create, list, and clean agent worktrees
+
+  Commands:
+    bolt worktree list               list agent worktrees for this project
+    bolt worktree create [name]      create a new agent worktree on its own branch
+    bolt worktree remove <worktree>  remove one agent worktree and its branch
+    bolt worktree clean              remove every agent worktree for this project
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+## Config and setup
+
+<Accordion title="bolt init">
+  Initialize bolt config, agents, and commands for a project.
+
+  ```text
+  bolt init [directory]
+
+  initialize bolt config, agents, and commands for a project
+
+  Positionals:
+    directory  project directory (defaults to the current directory)                          [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --preset      seed config, agents, and commands for a project type
+                                                   [string] [choices: "library", "webapp", "monorepo"]
+  ```
+</Accordion>
+
+<Accordion title="bolt config">
+  Inspect and manage configuration.
+
+  ```text
+  bolt config
+
+  inspect and manage configuration
+
+  Commands:
+    bolt config diff               show what differs between local config files and the committed
+                                   project config
+    bolt config doctor             explain which config files loaded, in what order, and which source
+                                   won each key
+    bolt config edit               open the global config in $EDITOR
+    bolt config get <key>          print the resolved config value at a dot path
+    bolt config set <key> <value>  write a config value at a dot path (comments in .jsonc files are
+                                   preserved)
+    bolt config unset <key>        remove a config value at a dot path (comments in .jsonc files are
+                                   preserved)
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt providers">
+  Manage AI providers and credentials [aliases: auth].
+
+  ```text
+  bolt providers
+
+  manage AI providers and credentials
+
+  Commands:
+    bolt providers list               list providers and credentials                     [aliases: ls]
+    bolt providers login [url]        log in to a provider
+    bolt providers logout [provider]  log out from a configured provider
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt agent">
+  Manage agents.
+
+  ```text
+  bolt agent
+
+  manage agents
+
+  Commands:
+    bolt agent create  create a new agent
+    bolt agent list    list all available agents
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt upgrade">
+  Upgrade bolt to the latest or a specific version [aliases: update].
+
+  ```text
+  bolt upgrade [target]
+
+  upgrade bolt to the latest or a specific version
+
+  Positionals:
+    target  version to upgrade to, for ex '0.1.48' or 'v0.1.48'                               [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -m, --method      installation method to use
+                            [string] [choices: "curl", "npm", "pnpm", "bun", "brew", "choco", "scoop"]
+        --channel     release channel to follow        [string] [choices: "stable", "beta", "nightly"]
+        --undo        roll back to the previously installed version                          [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt uninstall">
+  Uninstall bolt and remove all related files.
+
+  ```text
+  bolt uninstall
+
+  uninstall bolt and remove all related files
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+    -c, --keep-config  keep configuration files                             [boolean] [default: false]
+    -d, --keep-data    keep session data and snapshots                      [boolean] [default: false]
+        --dry-run      show what would be removed without removing          [boolean] [default: false]
+    -f, --force        skip confirmation prompts                            [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt models">
+  List all available models.
+
+  ```text
+  bolt models [provider]
+
+  list all available models
+
+  Positionals:
+    provider  provider ID to filter models by                                                 [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     use more verbose model output (includes metadata like costs)           [boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --refresh     refresh the models cache from models.dev                               [boolean]
+        --json        emit a versioned JSON envelope on stdout: {"version":1,"ok":true,"result":...}
+                      on success, {"version":1,"ok":false,"error":{"name":...,"message":...}} on
+                      failure                                               [boolean] [default: false]
+        --porcelain   guarantee line-oriented, grep-safe output that never changes shape between
+                      versions (one record per line, tab-separated fields, first field is the record
+                      kind)                                                 [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt logs">
+  Print the agent log.
+
+  ```text
+  bolt logs
+
+  print the agent log
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --tail        number of trailing lines to print                       [number] [default: 1000]
+    -f, --follow      stream new log lines as they are written              [boolean] [default: false]
+        --level       minimum log level to show   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --session     only show lines mentioning this session ID                              [string]
+        --json        emit a versioned JSON envelope on stdout: {"version":1,"ok":true,"result":...}
+                      on success, {"version":1,"ok":false,"error":{"name":...,"message":...}} on
+                      failure                                               [boolean] [default: false]
+        --porcelain   guarantee line-oriented, grep-safe output that never changes shape between
+                      versions (one record per line, tab-separated fields, first field is the record
+                      kind)                                                 [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt alias">
+  List aliases, show one, or set one with name="expansion".
+
+  ```text
+  bolt alias [entry]
+
+  list aliases, show one, or set one with name="expansion"
+
+  Positionals:
+    entry  alias name to show, or name="run --agent reviewer ..." to set                      [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --rm          remove the alias                                      [boolean] [default: false]
+
+  Examples:
+    bolt alias deploy-check="run --agent reviewer       persist an alias
+    'audit the deploy diff'"
+    bolt alias                                          list aliases
+    bolt alias --rm deploy-check                        remove an alias
+  ```
+</Accordion>
+
+## Code intelligence
+
+<Accordion title="bolt arena">
+  Race agents on the same task in isolated worktrees and keep the best result.
+
+  ```text
+  bolt arena [message..]
+
+  race agents on the same task in isolated worktrees and keep the best result
+
+  Positionals:
+    message  task to send to every contender                                     [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --models      comma-separated provider/model list (duplicates allowed, one worktree each)
+                                                                                   [string] [required]
+        --judge       judge model as provider/model (defaults to the first entry in --models) [string]
+        --agent       agent to use for every contender                                        [string]
+        --variant     model variant (provider-specific reasoning effort, e.g., high, max, minimal)
+                                                                                              [string]
+        --format      format: default (formatted) or json (single JSON result)
+                                            [string] [choices: "default", "json"] [default: "default"]
+        --cleanup     remove losing worktrees and their branches after judging
+                                                                            [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt eval">
+  Run agent evaluation cases and grade the results.
+
+  ```text
+  bolt eval [paths..]
+
+  run agent evaluation cases and grade the results
+
+  Positionals:
+    paths  eval case files or directories (default: ./evals)              [array] [default: ["evals"]]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -m, --model       default model in provider/model format (cases can override)             [string]
+        --agent       default agent (cases can override)                                      [string]
+        --format      format: default (formatted) or json (one JSON object per line)
+                                            [string] [choices: "default", "json"] [default: "default"]
+        --timeout     per-case timeout in seconds (cases can override)         [number] [default: 300]
+        --keep        keep case workspaces on disk for debugging            [boolean] [default: false]
+
+  exit codes: 0 all passed, 1 a case failed, 5 a case timed out
+  ```
+</Accordion>
+
+<Accordion title="bolt map">
+  Draw a markdown + mermaid map of source directory dependencies.
+
+  ```text
+  bolt map
+
+  draw a markdown + mermaid map of source directory dependencies
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --out         output markdown file                       [string] [default: "codebase-map.md"]
+        --depth       directory depth to aggregate to                            [number] [default: 2]
+  ```
+</Accordion>
+
+<Accordion title="bolt arch">
+  Detect imports that violate the declared module contract.
+
+  ```text
+  bolt arch
+
+  detect imports that violate the declared module contract
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --contract    contract file declaring allowed directory dependencies
+                                                               [string] [default: "architecture.json"]
+  ```
+</Accordion>
+
+<Accordion title="bolt deps">
+  Report outdated, vulnerable, deprecated, and abandoned dependencies.
+
+  ```text
+  bolt deps
+
+  report outdated, vulnerable, deprecated, and abandoned dependencies
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt owners">
+  Map directory ownership from git history and CODEOWNERS.
+
+  ```text
+  bolt owners
+
+  map directory ownership from git history and CODEOWNERS
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --since       history window, any git-parseable date              [string] [default: "1 year"]
+        --depth       directory depth to aggregate to                            [number] [default: 2]
+  ```
+</Accordion>
+
+<Accordion title="bolt hotspots">
+  Flag files with high churn and high complexity for refactoring.
+
+  ```text
+  bolt hotspots
+
+  flag files with high churn and high complexity for refactoring
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --since       history window, any git-parseable date             [string] [default: "90 days"]
+        --limit       maximum files to report                                   [number] [default: 20]
+  ```
+</Accordion>
+
+<Accordion title="bolt packages">
+  Map the monorepo package graph and its build order.
+
+  ```text
+  bolt packages
+
+  map the monorepo package graph and its build order
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --out         optional markdown output file, prints to stdout when omitted            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt api">
+  Diff the exported API surface against a git ref.
+
+  ```text
+  bolt api [ref]
+
+  diff the exported API surface against a git ref
+
+  Positionals:
+    ref  git ref to compare against                                         [string] [default: "HEAD"]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt index">
+  Build an incrementally updated whole-repo vector index and query it.
+
+  ```text
+  bolt index [query]
+
+  build an incrementally updated whole-repo vector index and query it
+
+  Positionals:
+    query  search the index instead of only building it                                       [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --out         index file path                        [string] [default: "codebase-index.json"]
+        --limit       maximum search hits                                       [number] [default: 10]
+        --watch       keep running and reindex files as they are saved      [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt dead">
+  Find unused exports ranked by deletion safety.
+
+  ```text
+  bolt dead
+
+  find unused exports ranked by deletion safety
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --limit       maximum findings to report                                [number] [default: 40]
+  ```
+</Accordion>
+
+<Accordion title="bolt dupes">
+  Find near-identical code blocks across the repo.
+
+  ```text
+  bolt dupes
+
+  find near-identical code blocks across the repo
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --window      minimum duplicate size in normalized lines                 [number] [default: 6]
+        --limit       maximum clusters to report                                [number] [default: 20]
+  ```
+</Accordion>
+
+<Accordion title="bolt analyze">
+  Run lint, typecheck, and dead-code checks over the current diff before handoff.
+
+  ```text
+  bolt analyze
+
+  run lint, typecheck, and dead-code checks over the current diff before handoff
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --staged      analyze staged changes only                           [boolean] [default: false]
+        --branch      analyze changes since the merge base with a branch (defaults to the default
+                      branch)                                                                 [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt why">
+  Answer when and why a behavior changed, with commit evidence.
+
+  ```text
+  bolt why <question>
+
+  answer when and why a behavior changed, with commit evidence
+
+  Positionals:
+    question  the question, e.g. "when did retries stop being unlimited?"          [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --file        narrow the search to one file's history                                 [string]
+        --lines       line range within --file, e.g. "120" or "120,160"                       [string]
+        --term        search history for commits that added or removed this string (git pickaxe)
+                                                                                              [string]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt bench">
+  Benchmark a command on this change and on the base ref, and flag regressions.
+
+  ```text
+  bolt bench <command>
+
+  benchmark a command on this change and on the base ref, and flag regressions
+
+  Positionals:
+    command  command to time, e.g. "bun test ./test/hot.test.ts"                   [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -b, --base        ref to compare against (defaults to the merge base with the default branch)
+                                                                                              [string]
+    -n, --runs        timed runs per side                                        [number] [default: 5]
+        --warmup      untimed warmup runs per side                               [number] [default: 1]
+    -t, --threshold   percentage slowdown that counts as a regression           [number] [default: 10]
+  ```
+</Accordion>
+
+## Safety and quality
+
+<Accordion title="bolt migrate">
+  Generate a major-version upgrade playbook for a dependency.
+
+  ```text
+  bolt migrate [package] [target]
+
+  generate a major-version upgrade playbook for a dependency
+
+  Positionals:
+    package  dependency to upgrade; omit to list applicable curated playbooks                 [string]
+    target   target major version, defaults to one hop up                                     [number]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt blast">
+  Estimate the blast radius of pending changes.
+
+  ```text
+  bolt blast
+
+  estimate the blast radius of pending changes
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --staged      analyze staged changes only                           [boolean] [default: false]
+        --branch      analyze changes since the merge base with a branch (defaults to the default
+                      branch)                                                                 [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt undo">
+  Roll back the last agent turn (files and conversation).
+
+  ```text
+  bolt undo
+
+  roll back the last agent turn (files and conversation)
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -s, --session     session id to undo (defaults to the most recent session)                [string]
+        --redo        restore what the last undo rolled back                [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt checkpoint">
+  Save and rewind named checkpoints.
+
+  ```text
+  bolt checkpoint
+
+  save and rewind named checkpoints
+
+  Commands:
+    bolt checkpoint save <name>    save the repo and the current conversation as a named checkpoint
+    bolt checkpoint list           list saved checkpoints                                [aliases: ls]
+    bolt checkpoint rewind <name>  rewind the repo and the conversation to a checkpoint
+    bolt checkpoint remove <name>  delete a checkpoint                                   [aliases: rm]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt invariants">
+  State invariants before a refactor and verify them after.
+
+  ```text
+  bolt invariants <action> [files..]
+
+  state invariants before a refactor and verify them after
+
+  Positionals:
+    action  state invariants before refactoring, or verify them afterwards
+                                                      [string] [required] [choices: "state", "verify"]
+    files   files about to be refactored (state only)                            [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --range       git diff range for verify (defaults to HEAD, i.e. uncommitted changes)  [string]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt resolve">
+  Resolve merge conflicts by intent with the agent.
+
+  ```text
+  bolt resolve [file..]
+
+  resolve merge conflicts by intent with the agent
+
+  Positionals:
+    file  conflicted files to resolve (defaults to every unmerged file)          [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --apply       write resolutions to the worktree and stage them      [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt codemod">
+  Generate an ast-grep transform, preview the diff, and apply it with --apply.
+
+  ```text
+  bolt codemod [description]
+
+  generate an ast-grep transform, preview the diff, and apply it with --apply
+
+  Positionals:
+    description  natural language description of the transform to generate                    [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --pattern     explicit ast-grep pattern; skips the agent (requires --rewrite)         [string]
+        --rewrite     explicit ast-grep rewrite; skips the agent (requires --pattern)         [string]
+        --lang        ast-grep language identifier, e.g. typescript, tsx, python              [string]
+        --apply       write the rewrites to disk (default is preview only)  [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt asserts">
+  Find tests with missing or weak assertions and suggest better ones.
+
+  ```text
+  bolt asserts [files..]
+
+  find tests with missing or weak assertions and suggest better ones
+
+  Positionals:
+    files  test files to scan (defaults to the test files changed in the current diff)
+                                                                                 [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --branch      scan test files changed since the merge base with a branch instead of the
+                      working tree                                                            [string]
+        --suggest     ask the agent to suggest the missing assertions       [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt pipeline">
+  Run a plan, code, review agent pipeline on a task.
+
+  ```text
+  bolt pipeline <task>
+
+  run a plan, code, review agent pipeline on a task
+
+  Positionals:
+    task  task to plan, implement, and review                                      [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --attempts    maximum code attempts before giving up                     [number] [default: 2]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt refactor">
+  Refactor with a test-verified loop: change, run, verify, repeat until green.
+
+  ```text
+  bolt refactor <instruction>
+
+  refactor with a test-verified loop: change, run, verify, repeat until green
+
+  Positionals:
+    instruction  refactor instruction for the agent                                [string] [required]
+
+  Options:
+    -h, --help         show help                                                             [boolean]
+    -v, --version      show version number                                                   [boolean]
+        --print-logs   print logs to stderr                                                  [boolean]
+        --log-level    log level                  [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure         run without external plugins                                          [boolean]
+        --profile      use a named config profile                                             [string]
+        --quiet        suppress non-essential output on stderr (errors still print)          [boolean]
+        --verbose      print debug logs to stderr (implies --print-logs and --log-level DEBUG)
+                                                                                             [boolean]
+        --offline      fail fast on network access instead of hanging                        [boolean]
+        --test         test command that must exit 0 for the refactor to count as done
+                                                                                   [string] [required]
+        --attempts     maximum number of test-and-fix iterations                 [number] [default: 5]
+    -m, --model        model to use in the format of provider/model                           [string]
+        --confidence   ask the model to report how confident it is in the refactor
+                                                                            [boolean] [default: false]
+        --self-review  review the resulting diff with the code-review agent once tests are green
+                                                                            [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt tighten">
+  Find loose types in changed code and propose stricter ones.
+
+  ```text
+  bolt tighten [files..]
+
+  find loose types in changed code and propose stricter ones
+
+  Positionals:
+    files  files to scan (defaults to the files changed in the current diff)     [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --branch      scan files changed since the merge base with a branch instead of the working
+                      tree                                                                    [string]
+        --suggest     ask the agent to propose stricter types for each finding
+                                                                            [boolean] [default: false]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt flaky">
+  Detect flaky tests by rerunning a command, and quarantine offenders.
+
+  ```text
+  bolt flaky <command>
+
+  detect flaky tests by rerunning a command, and quarantine offenders
+
+  Positionals:
+    command  test command to rerun, e.g. "bun test ./test/foo.test.ts"             [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -n, --runs        number of repetitions                                     [number] [default: 10]
+    -q, --quarantine  record the command in .bolt/quarantine.json when it turns out flaky
+                                                                            [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt proptest">
+  Generate property-based tests for the pure functions in a file.
+
+  ```text
+  bolt proptest <file>
+
+  generate property-based tests for the pure functions in a file
+
+  Positionals:
+    file  source file whose exported pure functions should get property tests      [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --name        only target the exported function with this name                        [string]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt guard">
+  Generate a failing regression test from a bug description before fixing it.
+
+  ```text
+  bolt guard <bug>
+
+  generate a failing regression test from a bug description before fixing it
+
+  Positionals:
+    bug  bug description, e.g. "parse() drops the last row when the file has no trailing newline"
+                                                                                   [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt mutate">
+  Mutate a file and rerun the tests to prove they catch bugs.
+
+  ```text
+  bolt mutate <file>
+
+  mutate a file and rerun the tests to prove they catch bugs
+
+  Positionals:
+    file  source file to mutate                                                    [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -c, --command     test command to run per mutant (detected from the project when omitted) [string]
+    -n, --limit       maximum number of mutants to test                         [number] [default: 25]
+        --timeout     per-run timeout in milliseconds                       [number] [default: 120000]
+  ```
+</Accordion>
+
+<Accordion title="bolt bisect">
+  Find the commit that broke a command, show blame, and propose a fix.
+
+  ```text
+  bolt bisect <command>
+
+  find the commit that broke a command, show blame, and propose a fix
+
+  Positionals:
+    command  command that fails on HEAD, e.g. "bun test ./test/foo.test.ts"        [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -g, --good        a ref where the command still passed, e.g. origin/dev~20     [string] [required]
+        --fix         ask the agent to analyze the culprit and propose a patch
+                                                                            [boolean] [default: false]
+    -m, --model       model to use for the fix proposal in the format of provider/model       [string]
+  ```
+</Accordion>
+
+## Memory and learning
+
+<Accordion title="bolt learn">
+  Learn this repository's conventions into project memory.
+
+  ```text
+  bolt learn
+
+  learn this repository's conventions into project memory
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt drift">
+  Flag READMEs and comments that the current diff just made stale.
+
+  ```text
+  bolt drift
+
+  flag READMEs and comments that the current diff just made stale
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --staged      inspect staged changes only                           [boolean] [default: false]
+        --branch      inspect changes since the merge base with a branch (defaults to the default
+                      branch)                                                                 [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt memory">
+  Inspect project memory.
+
+  ```text
+  bolt memory
+
+  inspect project memory
+
+  Commands:
+    bolt memory why <question>         ask why the agent believes something and where it learned it
+    bolt memory team <action> [query]  opt-in shared project memory committed to the repository
+    bolt memory diff                   show memory staged by sessions before it persists
+    bolt memory review <mode>          toggle review mode for auto-captured memory
+    bolt memory search <query>         search everything stored in project memory
+    bolt memory conflicts              detect and resolve contradictory facts in project memory
+    bolt memory export                 export project memory as a single markdown document
+    bolt memory import <file>          import memory entries from an exported markdown document
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+## Collaboration and extras
+
+<Accordion title="bolt debug">
+  Debugging and troubleshooting tools.
+
+  ```text
+  bolt debug
+
+  debugging and troubleshooting tools
+
+  Commands:
+    bolt debug config                      show resolved configuration
+    bolt debug context <sessionID> [turn]  inspect exactly what the model saw for a past turn
+    bolt debug lsp                         LSP debugging utilities
+    bolt debug rg                          ripgrep debugging utilities
+    bolt debug file                        file system debugging utilities
+    bolt debug scrap                       list all known projects
+    bolt debug skill                       list all available skills
+    bolt debug snapshot                    snapshot debugging utilities
+    bolt debug startup                     print startup timing
+    bolt debug agent <name>                show agent configuration details
+    bolt debug v2                          debug v2 catalog and built-in plugins
+    bolt debug info                        show debug information
+    bolt debug paths                       show global paths (data, config, cache, state)
+    bolt debug wait                        wait indefinitely (for debugging)
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+  ```
+</Accordion>
+
+<Accordion title="bolt mux">
+  Run parallel bolt sessions in tmux split panes.
+
+  ```text
+  bolt mux [dirs..]
+
+  run parallel bolt sessions in tmux split panes
+
+  Positionals:
+    dirs  directories to open, one pane each (defaults to --count panes in the current directory)
+                                                                                 [array] [default: []]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -n, --count       number of panes when no directories are given              [number] [default: 2]
+        --layout      tmux layout for the panes
+                    [string] [choices: "tiled", "even-horizontal", "even-vertical", "main-horizontal",
+                                                                   "main-vertical"] [default: "tiled"]
+        --name        tmux session name when starting outside tmux          [string] [default: "bolt"]
+  ```
+</Accordion>
+
+<Accordion title="bolt figma">
+  Generate components from a Figma design node.
+
+  ```text
+  bolt figma <url>
+
+  generate components from a Figma design node
+
+  Positionals:
+    url  Figma file or design URL including a node-id                              [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --out         directory to write generated components to (defaults to the current directory)
+                                                                                              [string]
+    -m, --model       model to use in the format of provider/model                            [string]
+  ```
+</Accordion>
+
+<Accordion title="bolt pair">
+  Share a live session between two terminals.
+
+  ```text
+  bolt pair
+
+  share a live session between two terminals
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --join        join a pair session on a running bolt server (e.g., http://localhost:4096)
+                                                                                              [string]
+    -s, --session     session id to join (defaults to the most recent session on the server)  [string]
+        --port        port for the local server (defaults to a random port)      [number] [default: 0]
+        --hostname    hostname for the local server                    [string] [default: "127.0.0.1"]
+    -p, --password    basic auth password (defaults to OPENCODE_SERVER_PASSWORD)              [string]
+    -u, --username    basic auth username (defaults to OPENCODE_SERVER_USERNAME or 'opencode')[string]
+  ```
+</Accordion>
+
+<Accordion title="bolt plugin">
+  Install plugin and update config [aliases: plug].
+
+  ```text
+  bolt plugin <module>
+
+  install plugin and update config
+
+  Positionals:
+    module  npm module name                                                        [string] [required]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+    -g, --global      install in global config                              [boolean] [default: false]
+    -f, --force       replace existing plugin version                       [boolean] [default: false]
+  ```
+</Accordion>
+
+<Accordion title="bolt db">
+  Database tools.
+
+  ```text
+  bolt db
+
+  database tools
+
+  Commands:
+    bolt db [query]     open an interactive sqlite3 shell or run a query                     [default]
+    bolt db path        print the database path
+
+  Positionals:
+    query  SQL query to execute                                                               [string]
+
+  Options:
+    -h, --help        show help                                                              [boolean]
+    -v, --version     show version number                                                    [boolean]
+        --print-logs  print logs to stderr                                                   [boolean]
+        --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+        --pure        run without external plugins                                           [boolean]
+        --profile     use a named config profile                                              [string]
+        --quiet       suppress non-essential output on stderr (errors still print)           [boolean]
+        --verbose     print debug logs to stderr (implies --print-logs and --log-level DEBUG)[boolean]
+        --offline     fail fast on network access instead of hanging                         [boolean]
+        --format      Output format                 [string] [choices: "json", "tsv"] [default: "tsv"]
+  ```
 </Accordion>

@@ -33,6 +33,7 @@
               {
                 "group": "Changelog",
                 "pages": [
+                  "changelog/2026-08-08",
                   "changelog/2026-08-04",
                   "changelog/2026-08-03"
                 ]
@@ -101,6 +102,7 @@
                 "group": "Reference",
                 "pages": [
                   "reference/commands",
+                  "reference/scripting",
                   "reference/configuration-schema",
                   "reference/environment-variables",
                   "reference/local-database",
