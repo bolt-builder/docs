@@ -1,0 +1,85 @@
+---
+title: Bookmarks
+description: Managing bookmarks in Bolt
+---
+
+
+Bolt, as a fork of Firefox, inherits its webpage bookmarking system primarily from Firefox itself, with some additional Bolt enhancements. Bolt offers two vertical tab layouts: **Single toolbar layout**, which integrates a compact address bar into the vertical tabs toolbar, and **Multiple toolbars layout**, featuring a traditional, full-size address bar in a separate horizontal toolbar. This guide covers the basics of creating and managing bookmarks, tailored to your chosen Bolt layout.
+
+## How Do I Bookmark a Page
+
+To bookmark a page, find and click on the bookmark icon in the address bar. A pop up dialog will allow you to name and move your bookmark.
+
+
+<Note>
+**Tips:.** 
+    Did you know Bolt offers Workspaces specific bookmarks?
+</Note>
+
+{/* TODO: insert video of popup dialog */}
+<Tabs groupId="toolbar" items={['Single Toolbar', 'Multiple Toolbars']} persist>
+  <Tab title="Single Toolbar">
+    In **Single toolbar layout**, you must first expand your compact address bar by clicking on it then find the icon there.
+    ![Bookmark Popup](/images/browser/user-manual/bookmarks/bookmark-popup-single-toolbar.png)
+  </Tab>
+  <Tab title="Multiple Toolbars">
+    In **Multiple toolbars layout**, you will find the bookmark icon exposed on the right of your address bar.
+    ![Bookmark Popup](/images/browser/user-manual/bookmarks/bookmark-popup-multiple-toolbars.png)
+  </Tab>
+</Tabs>
+
+
+<Note>
+**Tips:.** 
+    While you could use your mouse to click the bookmark icon, we recommend using the keyboard shortcut `Ctrl + D` for bookmarking, especially in **Single toolbar layout**.
+</Note>
+
+Alternatively, you can bookmark a single tab by right-clicking it and selecting `"Bookmark Tab..."` from the context menu, which opens a detailed bookmarking dialog with options for *tagging* and *keywords*. 
+
+To bookmark multiple or all open tabs, select them in the vertical tabs toolbar, right-click, and choose `"Bookmark Tabs..."` from the context menu. This will bookmark the selected tabs into a new bookmark folder.
+
+## How Do I Find and Manage My Bookmarks
+
+You can access, edit, organize and delete your bookmarks in a variety of ways in Bolt.
+
+### Recent Bookmarks
+
+You can find your recently added bookmarks through Bolt's application menu. Click the `...` icon located in Bolt's toolbar to open the application menu. In the expanded menu, locate and select the `"Bookmarks >"` option to view a list of your recently added bookmarks, making it easy to find any you may have lost track of.
+
+### Bookmarks Toolbar and Bookmarks Menu
+
+Taken from the default behavior of Gecko, Bolt offers 3 locations (or, groups) for bookmarks:
+- **Bookmarks Toolbar**: This can be considered a public location for bookmarks, displayed in the browser's [chrome](https://developer.mozilla.org/en-US/docs/Glossary/Chrome). You typically find it beneath the main browser toolbar, which is featured in **Multiple toolbars layout** in Bolt, while in **Single toolbar layout**, hovering your cursor to the top edge will display the hidden Bookmarks Toolbar, next to your window controls. To toggle the visibility of your Bookmarks Toolbar, use the shortcut `Ctrl + Shift + B`
+
+{/* TODO: *insert video* */}
+![Bookmarks Toolbar](/images/browser/user-manual/bookmarks/bookmarks-toolbar.png)
+
+<Note>
+**Tips:.** 
+    If you want to fully hide the Bookmarks Toolbar, you can change these settings in `about:config`
+    - `browser.toolbars.bookmarks.visibility = 'never'`: Never show your Bookmarks, revert by changing value to `'always'`.
+    - `zen.view.experimental-no-window-controls = 'true'`: disable hovering window controls in **Single toolbar layout**,  effectively remove access to the Bookmarks Toolbar.
+</Note>
+
+- **Bookmarks Menu**: This can be considered a private location for bookmarks, only accessible via opening the Bookmarks Sidebar or the Bookmarks Library.
+
+- **Other Bookmarks**: Location for your miscellaneous unorganized bookmarks. Other Bookmarks will show up at the end of the Bookmarks Toolbar but you can choose to hide it by right clicking and disable `"Show Other Bookmarks"`.
+
+### Bookmarks Sidebar
+
+Your bookmarks are also available via what is known as the [Firefox Sidebar](https://support.mozilla.org/kb/use-firefox-sidebar-access-bookmarks-history-synced). The Sidebar can be opened by adding a Sidebar button to your controls, or preferably by using the shortcut `Ctrl + B` to open the Bookmarks Sidebar. You can find all of your bookmarks here including entries from both Bookmarks Toolbar and Bookmarks Menu, in the form of a tree structure explorer with access to a searching function at the top.
+
+{/* TODO: *insert video/image* */}
+![Bookmarks Sidebar](/images/browser/user-manual/bookmarks/bookmarks-sidebar.png)
+
+### Bookmarks Library
+
+The Firefox Library is a unified manager for Bookmarks, History, and Downloads. You can access the Library by the shortcut `Ctrl + Shift + O` or from the application menu `"Bookmarks"`>`"Manage bookmarks"`. While most of its functions here have already been offered via the Bookmarks Sidebar, the Library is important for your purpose of Importing and Backing up Bolt's bookmarks.
+
+![Bookmarks Library](/images/browser/user-manual/bookmarks/bookmarks-library.png)
+
+<Note>
+_All shortcuts can be modified via `Settings > Keyboard Shortcuts`._
+</Note>
+
+Learn more about Bookmarks in Mozilla Support: https://support.mozilla.org/kb/bookmarks-firefox
