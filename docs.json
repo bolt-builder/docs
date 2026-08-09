@@ -111,6 +111,52 @@
                 ]
               }
             ]
+          },
+          {
+            "tab": "Browser",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "browser/index"
+                ]
+              },
+              {
+                "group": "User Manual",
+                "pages": [
+                  "browser/user-manual/index",
+                  "browser/user-manual/urlbar",
+                  "browser/user-manual/workspaces",
+                  "browser/user-manual/compact-mode",
+                  "browser/user-manual/glance",
+                  "browser/user-manual/split-view",
+                  "browser/user-manual/extensions",
+                  "browser/user-manual/bookmarks",
+                  "browser/user-manual/pip",
+                  "browser/user-manual/translate",
+                  "browser/user-manual/window-sync",
+                  "browser/user-manual/shortcuts"
+                ]
+              },
+              {
+                "group": "Guides",
+                "pages": [
+                  "browser/guides/install-linux",
+                  "browser/guides/manage-profiles",
+                  "browser/guides/live-editing",
+                  "browser/guides/about-config-flags",
+                  "browser/guides/generic-optimized",
+                  "browser/guides/1password"
+                ]
+              },
+              {
+                "group": "Help",
+                "pages": [
+                  "browser/faq",
+                  "browser/security"
+                ]
+              }
+            ]
           }
         ]
       },
