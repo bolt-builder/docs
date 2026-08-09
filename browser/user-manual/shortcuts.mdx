@@ -1,0 +1,188 @@
+---
+title: Keyboard Shortcuts
+description: Enhance your Bolt experience with customizable keybinds
+---
+
+
+Bolt Browser supported lots of keyboard shortcuts to help you do common tasks quicker. Access `"Settings" > "Keyboard Shortcuts"` and edit the available shortcuts to suit your workflow even more!
+
+### Change or rebind keyboard shortcuts in Bolt
+
+<video width="100%" loop autoPlay>
+    <source src="/images/browser/user-manual/shortcuts/edit-shortcut.mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+- In Keyboard Shortcuts setting page, to change or rebind shortcut of a feature, click the text field beside it, press your shortcuts, and press Esc to save your new shortcut.
+  - The text field will show a dark green outline quickly when the new shortcut is succesfully assigned and saved.
+  - The text field will show a red outline if the new shortcut you assign is already taken as default shortcut for other feature in Bolt. Below the field, a *Conflict with another shortcut* warning will be shown. If you encounter this, you can try assign another shortcut, or press Backspace to clear the shortcut field. You can also clear the shortcut field of a feature you don't need, before assigning it as a new shortcut for other features.
+  - Some Bolt features might not have conflict when its original shortcut got reassigned for other features, but when the shortcut is called, it will resort to do the original feature. You can check the Keyboard Settings if the shortcut you're assigning is already set for other feature, and try assign other shortcut to make it work.
+- Not all features are available in the Keyboard Shortcuts settings, especially alternative shortcuts derived from Firefox ([Check default Firefox shortcut lists](https://support.mozilla.org/en-US/kb/keyboard-shortcuts-perform-firefox-tasks-quickly)). This might result in failure when applying or accessing the feature using a custom shortcut you assigned. If a Firefox shortcut is not available in the Keyboard Shortcuts settings, you won't be able to use it as a custom shortcut yet. Kindly report it to [Bolt Github Issues page](https://github.com/bolt-builder/bolt-browser/issues) first!
+
+
+## List of editable keyboard shortcuts in Bolt
+
+### Compact Mode
+
+| **Action**              | **Shortcut**                                   |
+| ----------------------- | ---------------------------------------------- | 
+| Toggle Floating Toolbar | `Alt + Ctrl + T` |
+| Toggle Floating Sidebar | `Alt + Ctrl + S` |
+| Toggle Compact Mode     | `Alt + Ctrl + C` |
+
+### Workspaces
+
+| **Action**                 | **Shortcut**                                   |
+| -------------------------- | ---------------------------------------------- |
+| Backward Workspace         | `Alt + Ctrl + Q` |
+| Forward Workspace          | `Alt + Ctrl + E` |
+| Switch to Workspace (1-10) | Not set by default                             |
+
+You can assign custom keyboard shortcuts to switch into up to 10 workspaces.
+
+### Split View
+
+The "Toggle Split View" shortcuts currently only applicable when selecting multiple tabs in tab sidebar, and doesn't work when used inside a split view.
+
+| **Action**                     | **Shortcut**                                   |
+| ------------------------------ | ---------------------------------------------- |
+| Close Split View (Unsplit All) | `Alt + Ctrl + U` |
+| Toggle Split View Horizontal   | `Alt + Ctrl + H` |
+| Toggle Split View Vertical     | `Alt + Ctrl + V` |
+| Toggle Split View Grid         | `Alt + Ctrl + G` |
+
+### Window & Tab Management
+
+| **Action**              | **Shortcut**                                     |
+| ----------------------- | ------------------------------------------------ |
+| New Window              | `Crtl + N`         |
+| New Tab                 | `Ctrl + T`         |
+| Close Tab               | `Ctrl + W`         |
+| Close Window            | `Shift + Ctrl + W` |
+| Quit Application        | `Ctrl + Q`         |
+| Restore Last Closed Tab | `Shift + Ctrl + T` |
+| Undo Close Window       | `Shift + Ctrl + N` |
+| Select tab #1 - #8 ^    | `Alt + 1/2/.../8`  |
+| Select last tab         | `Alt + 9`          |
+
+- By default, you can **switch to next tab** using the `Ctrl + Tab` shortcut and **switch to previous tab** using the `Ctrl + Shift + Tab` shortcut.
+- When you're in Compact Mode and switching tabs using `Ctrl + Tab` or `Ctrl + Shift + Tab`, you can peek into the tab you're switching in by enabling the **"Briefly make the toolbar popup when switching or opening new tabs in compact mode"** option in `Settings` > `Look and Feel` > `Theme Settings`.
+- Pressing `Ctrl + Tab` when you're in the last tab will switch you to the first available tab (Essentials first, then pinned tabs, and lastly, regular tabs).
+- ^ Tab numbers listed for these keyboard shortcuts includes Essentials and pinned tabs. Example: If you have three Essentials, four pinned tabs, and five regular tabs:
+  - `Alt + 1` until `Alt + 3` will switch you to your Essentials,
+  - `Alt + 4` until `Alt + 7` will switch you to your pinned tabs,
+  - `Alt + 8` will switch you to your first regular tab,
+  - `Alt + 9` will switch you to your last tab (12th).
+- Bolt can also let you cycle through recently used tabs, instead of cycling through all of your tabs. Enable it by go to `Settings` > `General` > `Tabs` and check the `Ctrl + Tab cycles through tabs in recently used order`. A popup containing up to 7 recently used tabs will show up when you press `Ctrl + Tab`.
+  
+### Navigation
+
+| **Action**                           | **Shortcut**                                     |
+| ------------------------------------ | ------------------------------------------------ |
+| Go Back                              | `Alt + ←`          |
+| Go Forward                           | `Alt + →`          |
+| Navigate Back (Alternative)          | `Ctrl + [`         |
+| Navigate Forward (Alternative)       | `Ctrl + ]`         |
+| Go Home                              | `Alt + Home`       |
+| Reload Page                          | `Ctrl + R`         |
+| Reload Page (Skip Current Cache)     | `Shift + Ctrl + R` |
+| Go to History (Open History Sidebar) | `Ctrl + H`         |
+| Open Private Browsing Window         | `Shift + Ctrl + P` |
+  
+### Search & Find
+
+| **Action**                              | **Shortcut**                                     |
+| --------------------------------------- | ------------------------------------------------ |
+| Focus Search ^                          | `Ctrl + K`         |
+| Focus Search ^ (Alternative)            | `Ctrl + J`         |
+| Find on Page                            | `Ctrl + F`         |
+| Find Again (Jump to Next Result)        | `Ctrl + G`         |
+| Find Previous (Jump to Previous Result) | `Shift + Ctrl + G` |
+
+^ Focus Search shortcut will open your URL bar, shift focus and enable Search mode using your default search engine.
+  
+### Page Operations
+
+| **Action**                              | **Shortcut**                                     |
+| --------------------------------------- | ------------------------------------------------ |
+| Open Location (Current link in URL Bar) | `Ctrl + L`         |
+| Open Location (Alternative)             | `Alt + D`          |
+| Save Page                               | `Ctrl + S`         |
+| Print Page                              | `Ctrl + P`         |
+| Toggle Reader Mode                      | `Alt + Ctrl + R`   |
+| Toggle Picture-in-Picture               | `Shift + Ctrl + ]` |
+| View Page Source                        | `Ctrl + U`         |
+| View Page Info                          | `Ctrl + [`         |
+
+### History & Bookmarks
+
+| **Action**                       | **Shortcut**                                     |
+| -------------------------------- | ------------------------------------------------ |
+| Show All History                 | `Shift + Ctrl + H` |
+| Bookmark This Page               | `Ctrl + D`         |
+| Bookmark This Page (Alternative) | `Shift + Ctrl + D` |
+| Show Bookmarks Library           | `Shift + Ctrl + O` |
+
+### Media & Display
+
+| **Action**            | **Shortcut**                                     |
+| --------------------- | ------------------------------------------------ |
+| Toggle Mute           | `Ctrl + M`         |
+| Zoom Out              | `Ctrl + -`         |
+| Zoom In               | `Ctrl + Plus`         |
+| Reset Zoom Level      | `Ctrl + 0`         |
+| Switch Text Direction | `Shift + Ctrl + X` |
+| Take Screenshot       | `Shift + Ctrl + S` |
+
+### Developer Tools
+
+| **Action**                    | **Shortcut**                                           |
+| ----------------------------- | ------------------------------------------------------ |
+| Toggle DevTools               | `Shift + Ctrl + I`       |
+| Toggle Browser Toolbox        | `Alt + Shift + Ctrl + I` |
+| Toggle Browser Console        | `Shift + Ctrl + J`       |
+| Toggle Responsive Design Mode | `Shift + Ctrl + M`       |
+| Toggle Inspector              | `Shift + Ctrl + L`       |
+| Toggle Web Console            | `Shift + Ctrl + K`       |
+| Toggle JavaScript Debugger    | `Shift + Ctrl + Z`       |
+| Toggle Network Monitor        | `Shift + Ctrl + E`       |
+| Toggle Style Editor           | `Shift + F7`             |
+| Toggle Performance            | `Shift + F5`             |
+| Toggle Storage                | `Shift + F9`             |
+| Toggle DOM                    | `Shift + Ctrl + W`       |
+| Toggle Accessibility          | `Shift + F12`            |
+
+### Bolt Features
+
+| **Action**                     | **Shortcut**                                           |
+| ------------------------------ | ------------------------------------------------------ |
+| Copy Current URL as Markdown   | `Alt + Shift + Ctrl + C` |
+| Copy Current URL               | `Shift + Ctrl + C`       |
+| Toggle Sidebar Width           | `Alt + B`                |
+| Reset Pinned Tab to Pinned URL | Not set by default                                     |
+
+### Other Features
+
+| **Action**                 | **Shortcut**                                          |
+| -------------------------- | ----------------------------------------------------- |
+| Open Downloads             | `Shift + Ctrl + Y`      |
+| Open Add-ons               | `Shift + Ctrl + A`      |
+| Open File                  | `Ctrl + O`              |
+| Delete Key                 | `Delete`                |
+| Enter Full Screen          | `F11`                   |
+| Exit Full Screen           | `F11`                   |
+| About Processes            | `Shift + Escape`        |
+| Show Bookmarks Sidebar     | `Ctrl + B`              |
+| Show Bookmarks Toolbar     | `Shift + Ctrl + B`      |
+| Stop Loading               | `Escape`                |
+| Toggle AI Chatbot Sidebar^ | `Alt + Ctrl + X`        |
+| Toggle Firefox Sidebar     | `Alt + Ctrl + Z`        |
+| Show All Tabs              | `Shift + Ctrl + Tab`    |
+| Clear Browsing Data        | `Shift + Ctrl + Delete` |
+| WR Capture Command         | `Ctrl + #`              |
+| Toggle WR Capture Sequence | `Ctrl + ^`              |
+  
+---
+
+Read more about default keyboard shortcuts in Firefox: 
+[Keyboard shortcuts - Perform common Firefox tasks quickly | Firefox Help](https://support.mozilla.org/en-US/kb/keyboard-shortcuts-perform-firefox-tasks-quickly)
