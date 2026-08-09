@@ -1,0 +1,88 @@
+---
+title: Window Sync & Recovery
+description: Your opened windows mirror with each other instantly
+---
+
+Bolt now **syncs windows on the same device**, so changes in one window are reflected across the others instantly. Creating new window will automatically start at your existing Space, showing all of your existing tabs.
+
+{
+<video width="100%" loop autoPlay>
+    <source src="/assets/user-manual/window-sync/new_window.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+}
+
+Unlike previous implementation where Essentials and pinned tabs were duplicated during new window creation, Bolt now just mirror the tabs state. Enabling 4 windows of Bolt will keep single process of each tabs, despite displaying the same list on different windows. If you open two windows and select the same tab, the inactive window will show dimmed preview of the website.
+
+## Improve Your Flows with Window Sync
+
+- After opening new Bolt window, **create new Space** to start fresh while keeping easy access to Essential tabs. The Space will persist upon restarts.
+- **Use multiple Spaces** to separate tabs for specific browsing tasks. Freely create or delete them based on your needs.
+- If you use multiple windows regularly, use **Quit** option from main menu or `Ctrl + Q` shortcut to quit the browser. Bolt will save the state of all your open windows and restore them properly upon reopening.
+<details>
+<summary>Alternatively, use **New blank window** option from the main menu or `Ctrl + Shift + N`. *(Click to toggle details)*</summary>
+
+  - The window will inherit container and cookies from your original Space, with a **Move to..** button to easily move the tabs back to one of your existing Spaces.
+  - Tabs in blank windows are temporary and won't be restored upon restarts.
+
+!["Move To..." option showing existing Spaces when using a blank window in Zen](/images/browser/user-manual/window-sync/move-to.png)
+</details>
+
+## Recovering Lost Window Sessions
+
+<details>
+
+<summary>Look up directory of your current Bolt profile: *(Click to toggle details)*</summary>
+
+<Note>
+	- Open `about:support` in Bolt, navigate to **Applications Basics** section, find **Profile Directory**, and click **Open Directory** button.
+	- For Flatpak version of Bolt, the profile root directory will be located at `~/.var/app/app.zen_browser.zen/.zen` and titled `<profile-id>.Default (release)`.
+</Note>
+
+</details>
+
+### Updating from Bolt v1.17.15 or older
+
+- Open your current Bolt profile directory.
+- **Make sure Bolt is fully closed**.
+- In the profile directory, rename `zen-sessions.jsonlz4` to **zen-sessions.jsonlz4.bak**.
+- If there is `sessionstore.jsonlz4` in the directory, rename it to **sessionstore.jsonlz4.bak** too.
+
+<details>
+
+<summary>Open the `sessionstore-backups` folder. You will see multiple backup files in .jsonlz4 format. *(Click to open image)*</summary>
+
+![File manager showing a Bolt profile root directory with `sessionstore-backups` folder expanded, containing backups of saved sessions](/images/browser/user-manual/window-sync/sessionstore-backups.png)
+
+</details>
+
+- **Duplicate the latest file**. This could be `recovery.jsonlz4` or one of the `upgrade.jsonlz4-<date-metadata>`.
+- Rename it to **sessionstore.jsonlz4**.
+- Copy the **sessionstore.jsonlz4** file to your profile directory (one folder above `sessionstore-backups`).
+- Open Bolt and tabs from the session backup should be restored.
+- If failed, close Bolt and retry the steps with another backup files from `sessionstore-backups` folder.
+
+### Session backup system on Bolt v1.18 onwards
+
+Alongside Window Sync, Bolt provides new session backup system that regularly saved tab state of all synced windows, including changes to their status (essentials, pinning, split view). This significantly improves the accuracy of session restoration by Bolt and facilitates manual restoration if tabs are lost. Follow these steps to restore:
+
+- Open your current Bolt profile directory. Open `about:support` and find `Profile Directory` -> Click on `Open directory`
+- **Make sure Bolt is fully closed.**
+
+<details>
+
+<summary>Open the `zen-sessions-backup` folder. You will see multiple backup files in .jsonlz4 format: *(Click to open image)*</summary>
+
+![Two windows of file managers showing a Bolt profile root directory and its `zen-session-backup` folder, containing regular backups of saved sessions](/images/browser/user-manual/window-sync/zen-sessions-backup.png)
+
+</details>
+
+- Duplicate the latest `zen-sessions-<date-metadata>.jsonlz4` file, rename it to **zen-sessions.jsonlz4**.
+- Copy **zen-sessions.jsonlz4** to your profile directory (one folder above `zen-sessions-backup`).
+- Open Bolt and tabs from the session backup should be restored.
+
+<Note>
+**Can we sync Bolt tabs and windows across devices?.** 
+    The current window sync only works on the same device, but multi-device sync support is planned. For now, you can use the **Send to Device** option to send tabs between devices that logged in to the same Mozilla account.
+</Note>
+
